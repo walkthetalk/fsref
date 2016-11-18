@@ -1,4 +1,6 @@
 *.jou
 *.log
 *.str
+*.xml
+*xgui*
 fsref.*
