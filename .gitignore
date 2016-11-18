@@ -1,6 +1,4 @@
 *.jou
 *.log
-fsref.cache/*
-fsref.hw/*
-fsref.xpr
 *.str
+fsref.*
