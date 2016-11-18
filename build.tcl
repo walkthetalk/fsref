@@ -13,7 +13,6 @@ ipx::create_xgui_files [ipx::current_core]
 ipx::update_checksums [ipx::current_core]
 ipx::save_core [ipx::current_core]
 close_project -delete
-source $origin_dir/fsref.tmp/edit_ip_project.hw/webtalk/labtool_webtalk.tcl -notrace
 set_property  ip_repo_paths  $origin_dir/ip/lcd [current_project]
 update_ip_catalog
 
