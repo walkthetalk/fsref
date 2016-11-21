@@ -20,11 +20,20 @@ update_ip_catalog
 create_bd_design "bd1"
 # 1. cpu
 startgroup
-create_bd_cell -type ip -vlnv xilinx.com:ip:processing_system7:5.5 processing_system7_0
+create_bd_cell -type ip -vlnv xilinx.com:ip:processing_system7:5.5 cpu
 endgroup
 startgroup
-set_property -dict [list CONFIG.PCW_FPGA0_PERIPHERAL_FREQMHZ {75} CONFIG.PCW_FPGA1_PERIPHERAL_FREQMHZ {150} CONFIG.PCW_FPGA2_PERIPHERAL_FREQMHZ {10} CONFIG.PCW_USE_FABRIC_INTERRUPT {1} CONFIG.PCW_EN_CLK1_PORT {1} CONFIG.PCW_EN_CLK2_PORT {1} CONFIG.PCW_IRQ_F2P_INTR {1} CONFIG.PCW_PRESET_BANK1_VOLTAGE {LVCMOS 1.8V} CONFIG.PCW_UIPARAM_DDR_PARTNO {MT41K256M16 RE-125} CONFIG.PCW_UIPARAM_DDR_USE_INTERNAL_VREF {1} CONFIG.PCW_QSPI_PERIPHERAL_ENABLE {1} CONFIG.PCW_QSPI_GRP_SINGLE_SS_ENABLE {1} CONFIG.PCW_QSPI_GRP_FBCLK_ENABLE {1} CONFIG.PCW_ENET0_PERIPHERAL_ENABLE {1} CONFIG.PCW_ENET0_ENET0_IO {MIO 16 .. 27} CONFIG.PCW_ENET0_GRP_MDIO_ENABLE {0} CONFIG.PCW_SD0_PERIPHERAL_ENABLE {1} CONFIG.PCW_UART1_PERIPHERAL_ENABLE {1} CONFIG.PCW_USB0_PERIPHERAL_ENABLE {1} CONFIG.PCW_I2C0_PERIPHERAL_ENABLE {1} CONFIG.PCW_USE_S_AXI_HP0 {1}] [get_bd_cells processing_system7_0]
+set_property -dict [list CONFIG.PCW_FPGA0_PERIPHERAL_FREQMHZ {75} CONFIG.PCW_FPGA1_PERIPHERAL_FREQMHZ {150} CONFIG.PCW_FPGA2_PERIPHERAL_FREQMHZ {10} CONFIG.PCW_EN_RST0_PORT {1} CONFIG.PCW_EN_RST1_PORT {1} CONFIG.PCW_EN_RST2_PORT {1} CONFIG.PCW_USE_FABRIC_INTERRUPT {1} CONFIG.PCW_EN_CLK1_PORT {1} CONFIG.PCW_EN_CLK2_PORT {1} CONFIG.PCW_IRQ_F2P_INTR {1} CONFIG.PCW_PRESET_BANK1_VOLTAGE {LVCMOS 1.8V} CONFIG.PCW_UIPARAM_DDR_PARTNO {MT41K256M16 RE-125} CONFIG.PCW_UIPARAM_DDR_USE_INTERNAL_VREF {1} CONFIG.PCW_QSPI_PERIPHERAL_ENABLE {1} CONFIG.PCW_QSPI_GRP_SINGLE_SS_ENABLE {1} CONFIG.PCW_QSPI_GRP_FBCLK_ENABLE {1} CONFIG.PCW_ENET0_PERIPHERAL_ENABLE {1} CONFIG.PCW_ENET0_ENET0_IO {MIO 16 .. 27} CONFIG.PCW_ENET0_GRP_MDIO_ENABLE {0} CONFIG.PCW_SD0_PERIPHERAL_ENABLE {1} CONFIG.PCW_UART1_PERIPHERAL_ENABLE {1} CONFIG.PCW_USB0_PERIPHERAL_ENABLE {1} CONFIG.PCW_I2C0_PERIPHERAL_ENABLE {1} CONFIG.PCW_USE_S_AXI_HP0 {1}] [get_bd_cells cpu]
 endgroup
+
+startgroup
+create_bd_cell -type ip -vlnv xilinx.com:ip:axi_interconnect:2.1 cpu_axi_periph
+endgroup
+
+startgroup
+create_bd_cell -type ip -vlnv xilinx.com:ip:axi_interconnect:2.1 axi_mem_intercon
+endgroup
+
 # 2. osd
 startgroup
 create_bd_cell -type ip -vlnv xilinx.com:ip:v_osd:6.0 v_osd_0
@@ -59,14 +68,118 @@ endgroup
 startgroup
 create_bd_cell -type ip -vlnv user.org:user:fslcd:1.0 fslcd_0
 endgroup
-# 7. auto connect
+# 7. constant 1
 startgroup
-apply_bd_automation -rule xilinx.com:bd_rule:processing_system7 -config {make_external "FIXED_IO, DDR" Master "Disable" Slave "Disable" }  [get_bd_cells processing_system7_0]
-apply_bd_automation -rule xilinx.com:bd_rule:axi4 -config {Master "/processing_system7_0/M_AXI_GP0" Clk "/processing_system7_0/FCLK_CLK0 (76 MHz)" }  [get_bd_intf_pins v_osd_0/ctrl]
-apply_bd_automation -rule xilinx.com:bd_rule:axi4 -config {Master "/processing_system7_0/M_AXI_GP0" Clk "/processing_system7_0/FCLK_CLK0 (76 MHz)" }  [get_bd_intf_pins axi_vdma_0/S_AXI_LITE]
-apply_bd_automation -rule xilinx.com:bd_rule:axi4 -config {Master "/axi_vdma_0/M_AXI_MM2S" Clk "/processing_system7_0/FCLK_CLK1 (142 MHz)" }  [get_bd_intf_pins processing_system7_0/S_AXI_HP0]
+create_bd_cell -type ip -vlnv xilinx.com:ip:xlconstant:1.1 xlconstant_0
 endgroup
-# 8. address
-set_property offset 0x43C10000 [get_bd_addr_segs {processing_system7_0/Data/SEG_v_osd_0_Reg}]
+# reset for fclock
+startgroup
+create_bd_cell -type ip -vlnv xilinx.com:ip:proc_sys_reset:5.0 rst_cpu_fclk0
+create_bd_cell -type ip -vlnv xilinx.com:ip:proc_sys_reset:5.0 rst_cpu_fclk1
+create_bd_cell -type ip -vlnv xilinx.com:ip:proc_sys_reset:5.0 rst_cpu_fclk2
+endgroup
+# 8. auto connect
+startgroup
+apply_bd_automation -rule xilinx.com:bd_rule:processing_system7 -config {make_external "FIXED_IO, DDR" Master "Disable" Slave "Disable" }  [get_bd_cells cpu]
+#apply_bd_automation -rule xilinx.com:bd_rule:axi4 -config {Master "/cpu/M_AXI_GP0" Clk "/cpu/FCLK_CLK0 (76 MHz)" }  [get_bd_intf_pins v_osd_0/ctrl]
+#apply_bd_automation -rule xilinx.com:bd_rule:axi4 -config {Master "/cpu/M_AXI_GP0" Clk "/cpu/FCLK_CLK0 (76 MHz)" }  [get_bd_intf_pins axi_vdma_0/S_AXI_LITE]
+#apply_bd_automation -rule xilinx.com:bd_rule:axi4 -config {Master "/axi_vdma_0/M_AXI_MM2S" Clk "/cpu/FCLK_CLK1 (142 MHz)" }  [get_bd_intf_pins cpu/S_AXI_HP0]
+endgroup
+
+# connect clocks
+connect_bd_net [get_bd_pins cpu/FCLK_CLK0] [get_bd_pins rst_cpu_fclk0/slowest_sync_clk]
+connect_bd_net [get_bd_pins cpu/FCLK_CLK0] [get_bd_pins axi_vdma_0/s_axi_lite_aclk]
+connect_bd_net [get_bd_pins cpu/FCLK_CLK0] [get_bd_pins cpu/M_AXI_GP0_ACLK]
+connect_bd_net [get_bd_pins cpu/FCLK_CLK0] [get_bd_pins cpu_axi_periph/ACLK]
+connect_bd_net [get_bd_pins cpu/FCLK_CLK0] [get_bd_pins cpu_axi_periph/S00_ACLK]
+connect_bd_net [get_bd_pins cpu/FCLK_CLK0] [get_bd_pins cpu_axi_periph/M00_ACLK]
+connect_bd_net [get_bd_pins cpu/FCLK_CLK0] [get_bd_pins cpu_axi_periph/M01_ACLK]
+connect_bd_net [get_bd_pins cpu/FCLK_CLK0] [get_bd_pins v_osd_0/s_axi_aclk]
+
+connect_bd_net [get_bd_pins cpu/FCLK_RESET0_N] [get_bd_pins rst_cpu_fclk0/ext_reset_in]
+connect_bd_net [get_bd_pins rst_cpu_fclk0/interconnect_aresetn] [get_bd_pins cpu_axi_periph/ARESETN]
+connect_bd_net [get_bd_pins rst_cpu_fclk0/peripheral_aresetn] [get_bd_pins axi_vdma_0/axi_resetn]
+connect_bd_net [get_bd_pins rst_cpu_fclk0/peripheral_aresetn] [get_bd_pins cpu_axi_periph/S00_ARESETN]
+connect_bd_net [get_bd_pins rst_cpu_fclk0/peripheral_aresetn] [get_bd_pins cpu_axi_periph/M00_ARESETN]
+connect_bd_net [get_bd_pins rst_cpu_fclk0/peripheral_aresetn] [get_bd_pins cpu_axi_periph/M01_ARESETN]
+connect_bd_net [get_bd_pins rst_cpu_fclk0/peripheral_aresetn] [get_bd_pins v_osd_0/s_axi_aresetn]
+
+connect_bd_net [get_bd_pins cpu/FCLK_CLK1] [get_bd_pins rst_cpu_fclk1/slowest_sync_clk]
+connect_bd_net [get_bd_pins cpu/FCLK_CLK1] [get_bd_pins cpu/S_AXI_HP0_ACLK]
+connect_bd_net [get_bd_pins cpu/FCLK_CLK1] [get_bd_pins axi_vdma_0/m_axi_mm2s_aclk]
+connect_bd_net [get_bd_pins cpu/FCLK_CLK1] [get_bd_pins axi_vdma_0/m_axis_mm2s_aclk]
+connect_bd_net [get_bd_pins cpu/FCLK_CLK1] [get_bd_pins axi_mem_intercon/ACLK]
+connect_bd_net [get_bd_pins cpu/FCLK_CLK1] [get_bd_pins axi_mem_intercon/S00_ACLK]
+connect_bd_net [get_bd_pins cpu/FCLK_CLK1] [get_bd_pins axi_mem_intercon/M00_ACLK]
+connect_bd_net [get_bd_pins cpu/FCLK_CLK1] [get_bd_pins axi_mem_intercon/M01_ACLK]
+connect_bd_net [get_bd_pins cpu/FCLK_CLK1] [get_bd_pins v_osd_0/aclk]
+connect_bd_net [get_bd_pins cpu/FCLK_CLK1] [get_bd_pins v_axi4s_vid_out_0/aclk]
+
+connect_bd_net [get_bd_pins cpu/FCLK_RESET1_N] [get_bd_pins rst_cpu_fclk1/ext_reset_in]
+connect_bd_net [get_bd_pins rst_cpu_fclk1/interconnect_aresetn] [get_bd_pins axi_mem_intercon/ARESETN]
+connect_bd_net [get_bd_pins rst_cpu_fclk1/peripheral_aresetn] [get_bd_pins axi_mem_intercon/S00_ARESETN]
+connect_bd_net [get_bd_pins rst_cpu_fclk1/peripheral_aresetn] [get_bd_pins axi_mem_intercon/M00_ARESETN]
+connect_bd_net [get_bd_pins rst_cpu_fclk1/peripheral_aresetn] [get_bd_pins axi_mem_intercon/M01_ARESETN]
+connect_bd_net [get_bd_pins rst_cpu_fclk1/peripheral_aresetn] [get_bd_pins v_osd_0/aresetn]
+connect_bd_net [get_bd_pins rst_cpu_fclk1/peripheral_aresetn] [get_bd_pins v_axi4s_vid_out_0/aresetn]
+
+connect_bd_net [get_bd_pins cpu/FCLK_CLK2] [get_bd_pins rst_cpu_fclk2/slowest_sync_clk]
+connect_bd_net [get_bd_pins cpu/FCLK_CLK2] [get_bd_pins v_tc_0/clk]
+connect_bd_net [get_bd_pins cpu/FCLK_CLK2] [get_bd_pins v_axi4s_vid_out_0/vid_io_out_clk]
+connect_bd_net [get_bd_pins cpu/FCLK_CLK2] [get_bd_pins fslcd_0/clk]
+connect_bd_net [get_bd_pins cpu/FCLK_RESET2_N] [get_bd_pins rst_cpu_fclk2/ext_reset_in]
+connect_bd_net [get_bd_pins rst_cpu_fclk2/peripheral_reset] [get_bd_pins v_axi4s_vid_out_0/vid_io_out_reset]
+connect_bd_net [get_bd_pins rst_cpu_fclk2/peripheral_aresetn] [get_bd_pins v_tc_0/resetn]
+
+# connect data
+connect_bd_intf_net [get_bd_intf_pins cpu/M_AXI_GP0] -boundary_type upper [get_bd_intf_pins cpu_axi_periph/S00_AXI]
+connect_bd_intf_net -boundary_type upper [get_bd_intf_pins cpu_axi_periph/M00_AXI] [get_bd_intf_pins axi_vdma_0/S_AXI_LITE]
+connect_bd_intf_net -boundary_type upper [get_bd_intf_pins cpu_axi_periph/M01_AXI] [get_bd_intf_pins v_osd_0/ctrl]
+
+connect_bd_intf_net [get_bd_intf_pins cpu/S_AXI_HP0] -boundary_type upper [get_bd_intf_pins axi_mem_intercon/M00_AXI]
+connect_bd_intf_net -boundary_type upper [get_bd_intf_pins axi_mem_intercon/S00_AXI] [get_bd_intf_pins axi_vdma_0/M_AXI_MM2S]
+connect_bd_intf_net [get_bd_intf_pins axi_vdma_0/M_AXIS_MM2S] [get_bd_intf_pins v_osd_0/video_s0_in]
+connect_bd_intf_net [get_bd_intf_pins v_osd_0/video_out] [get_bd_intf_pins v_axi4s_vid_out_0/video_in]
+
+# maybe should optimize fslcd
+connect_bd_net [get_bd_pins v_axi4s_vid_out_0/vid_active_video] [get_bd_pins fslcd_0/vid_active]
+connect_bd_net [get_bd_pins v_axi4s_vid_out_0/vid_data] [get_bd_pins fslcd_0/vid_data]
+connect_bd_net [get_bd_pins v_axi4s_vid_out_0/vid_hsync] [get_bd_pins fslcd_0/hsync]
+connect_bd_net [get_bd_pins v_axi4s_vid_out_0/vid_vsync] [get_bd_pins fslcd_0/vsync]
+
+connect_bd_net [get_bd_pins xlconstant_0/dout] [get_bd_pins v_tc_0/clken]
+connect_bd_net [get_bd_pins xlconstant_0/dout] [get_bd_pins v_tc_0/gen_clken]
+connect_bd_net [get_bd_pins xlconstant_0/dout] [get_bd_pins v_osd_0/aclken]
+connect_bd_net [get_bd_pins xlconstant_0/dout] [get_bd_pins v_osd_0/s_axi_aclken]
+connect_bd_net [get_bd_pins xlconstant_0/dout] [get_bd_pins v_axi4s_vid_out_0/aclken]
+connect_bd_net [get_bd_pins xlconstant_0/dout] [get_bd_pins v_axi4s_vid_out_0/vid_io_out_ce]
+
+connect_bd_intf_net [get_bd_intf_pins v_tc_0/vtiming_out] [get_bd_intf_pins v_axi4s_vid_out_0/vtiming_in]
+
+# output
+startgroup
+create_bd_port -dir O lcd_clk
+connect_bd_net [get_bd_pins /fslcd_0/clk_out] [get_bd_ports lcd_clk]
+create_bd_port -dir O -from 5 -to 0 lcd_R
+connect_bd_net [get_bd_pins /fslcd_0/r] [get_bd_ports lcd_R]
+create_bd_port -dir O -from 5 -to 0 lcd_G
+connect_bd_net [get_bd_pins /fslcd_0/g] [get_bd_ports lcd_G]
+create_bd_port -dir O -from 5 -to 0 lcd_B
+connect_bd_net [get_bd_pins /fslcd_0/b] [get_bd_ports lcd_B]
+
+create_bd_port -dir O lcd_hsync
+connect_bd_net [get_bd_pins /fslcd_0/hsync_out] [get_bd_ports lcd_hsync]
+create_bd_port -dir O lcd_vsync
+connect_bd_net [get_bd_pins /fslcd_0/vsync_out] [get_bd_ports lcd_vsync]
+create_bd_port -dir O -from 3 -to 0 lcd_ctrl
+connect_bd_net [get_bd_pins /fslcd_0/ctrl_out] [get_bd_ports lcd_ctrl]
+endgroup
+
+# 9. address
+# auto assign all addresses
+assign_bd_address
+set_property -dict [list offset {0x00000000} range {1G}] [get_bd_addr_segs {cpu/S_AXI_HP0/HP0_DDR_LOWOCM }]
+set_property -dict [list offset {0x43000000} range {64K}] [get_bd_addr_segs {axi_vdma_0/S_AXI_LITE/Reg }]
+set_property -dict [list offset {0x43C10000} range {64K}] [get_bd_addr_segs {cpu/Data/SEG_v_osd_0_Reg}]
 
 save_bd_design
