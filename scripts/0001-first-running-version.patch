@@ -1,0 +1,798 @@
+From 1835804f8bec19a14b6f81305d596e504878d4e6 Mon Sep 17 00:00:00 2001
+From: Yi Qingliang <niqingliang2003@gmail.com>
+Date: Fri, 25 Nov 2016 18:21:21 +0000
+Subject: [PATCH] first running version
+
+Signed-off-by: Yi Qingliang <niqingliang2003@gmail.com>
+---
+ arch/arm/configs/fsref_defconfig            | 225 ++++++++++++++++++++
+ drivers/dma/xilinx/xilinx_dma.c             |   4 +-
+ drivers/gpu/drm/drm_drv.c                   |   2 +-
+ drivers/gpu/drm/xilinx/Makefile             |   2 +-
+ drivers/gpu/drm/xilinx/xilinx_drm_crtc.c    |  13 +-
+ drivers/gpu/drm/xilinx/xilinx_drm_drv.c     |  23 ++-
+ drivers/gpu/drm/xilinx/xilinx_drm_drv.h     |   2 +-
+ drivers/gpu/drm/xilinx/xilinx_drm_plane.c   |   6 +-
+ drivers/gpu/drm/xilinx/xilinx_drm_virtual.c | 309 ++++++++++++++++++++++++++++
+ drivers/gpu/drm/xilinx/xilinx_osd.c         |   1 +
+ drivers/gpu/drm/xilinx/xilinx_vtc.c         |   1 +
+ 11 files changed, 571 insertions(+), 17 deletions(-)
+ create mode 100644 arch/arm/configs/fsref_defconfig
+ create mode 100644 drivers/gpu/drm/xilinx/xilinx_drm_virtual.c
+
+diff --git a/arch/arm/configs/fsref_defconfig b/arch/arm/configs/fsref_defconfig
+new file mode 100644
+index 0000000..dfa95bf
+--- /dev/null
++++ b/arch/arm/configs/fsref_defconfig
+@@ -0,0 +1,227 @@
++CONFIG_LOCALVERSION="-xilinx"
++CONFIG_SYSVIPC=y
++CONFIG_NO_HZ=y
++CONFIG_HIGH_RES_TIMERS=y
++CONFIG_IKCONFIG=y
++CONFIG_IKCONFIG_PROC=y
++CONFIG_LOG_BUF_SHIFT=14
++CONFIG_CGROUPS=y
++CONFIG_BLK_DEV_INITRD=y
++CONFIG_CC_OPTIMIZE_FOR_SIZE=y
++CONFIG_SYSCTL_SYSCALL=y
++# CONFIG_BUG is not set
++CONFIG_EMBEDDED=y
++CONFIG_PERF_EVENTS=y
++CONFIG_SLAB=y
++CONFIG_MODULES=y
++CONFIG_MODULE_UNLOAD=y
++CONFIG_MODULE_FORCE_UNLOAD=y
++CONFIG_MODVERSIONS=y
++# CONFIG_BLK_DEV_BSG is not set
++CONFIG_ARCH_VEXPRESS=y
++CONFIG_ARCH_ZYNQ=y
++CONFIG_PL310_ERRATA_588369=y
++CONFIG_PL310_ERRATA_727915=y
++CONFIG_PL310_ERRATA_769419=y
++CONFIG_ARM_ERRATA_754322=y
++CONFIG_ARM_ERRATA_754327=y
++CONFIG_ARM_ERRATA_764369=y
++CONFIG_ARM_ERRATA_775420=y
++CONFIG_SMP=y
++CONFIG_SCHED_MC=y
++CONFIG_SCHED_SMT=y
++CONFIG_PREEMPT=y
++CONFIG_AEABI=y
++CONFIG_HIGHMEM=y
++# CONFIG_COMPACTION is not set
++CONFIG_CMA=y
++CONFIG_ZBOOT_ROM_TEXT=0x0
++CONFIG_ZBOOT_ROM_BSS=0x0
++CONFIG_CPU_FREQ=y
++CONFIG_CPU_FREQ_STAT_DETAILS=y
++CONFIG_CPU_FREQ_DEFAULT_GOV_USERSPACE=y
++CONFIG_CPU_FREQ_GOV_PERFORMANCE=y
++CONFIG_CPU_FREQ_GOV_POWERSAVE=y
++CONFIG_CPU_FREQ_GOV_ONDEMAND=y
++CONFIG_CPU_FREQ_GOV_CONSERVATIVE=y
++CONFIG_CPU_IDLE=y
++CONFIG_ARM_ZYNQ_CPUIDLE=y
++CONFIG_VFP=y
++CONFIG_NEON=y
++# CONFIG_CORE_DUMP_DEFAULT_ELF_HEADERS is not set
++CONFIG_NET=y
++CONFIG_PACKET=y
++CONFIG_UNIX=y
++CONFIG_INET=y
++CONFIG_IP_MULTICAST=y
++CONFIG_IP_PNP=y
++CONFIG_IP_PNP_DHCP=y
++CONFIG_IP_PNP_BOOTP=y
++CONFIG_IP_PNP_RARP=y
++CONFIG_NET_IPIP=m
++CONFIG_UEVENT_HELPER_PATH="/sbin/hotplug"
++CONFIG_DEVTMPFS=y
++CONFIG_DEVTMPFS_MOUNT=y
++CONFIG_DMA_CMA=y
++CONFIG_CONNECTOR=y
++CONFIG_MTD=y
++CONFIG_MTD_CMDLINE_PARTS=y
++CONFIG_MTD_BLOCK=y
++CONFIG_MTD_CFI=y
++CONFIG_MTD_CFI_AMDSTD=y
++CONFIG_MTD_PHYSMAP=y
++CONFIG_MTD_PHYSMAP_OF=y
++CONFIG_MTD_M25P80=y
++CONFIG_MTD_NAND=y
++CONFIG_MTD_NAND_PL35X=y
++CONFIG_MTD_SPI_NOR=y
++CONFIG_BLK_DEV_LOOP=y
++CONFIG_BLK_DEV_RAM=y
++CONFIG_BLK_DEV_RAM_SIZE=16384
++CONFIG_SRAM=y
++CONFIG_XILINX_TRAFGEN=y
++CONFIG_EEPROM_AT24=y
++CONFIG_EEPROM_AT25=y
++CONFIG_SCSI=y
++CONFIG_BLK_DEV_SD=y
++CONFIG_CHR_DEV_SG=y
++CONFIG_NETDEVICES=y
++CONFIG_MACB=y
++# CONFIG_NET_VENDOR_ARC is not set
++# CONFIG_NET_VENDOR_BROADCOM is not set
++# CONFIG_NET_VENDOR_CIRRUS is not set
++# CONFIG_NET_VENDOR_FARADAY is not set
++# CONFIG_NET_VENDOR_EZCHIP is not set
++# CONFIG_NET_VENDOR_HISILICON is not set
++# CONFIG_NET_VENDOR_INTEL is not set
++# CONFIG_NET_VENDOR_MARVELL is not set
++# CONFIG_NET_VENDOR_MICREL is not set
++# CONFIG_NET_VENDOR_MICROCHIP is not set
++# CONFIG_NET_VENDOR_NATSEMI is not set
++# CONFIG_NET_VENDOR_NETRONOME is not set
++# CONFIG_NET_VENDOR_QUALCOMM is not set
++# CONFIG_NET_VENDOR_RENESAS is not set
++# CONFIG_NET_VENDOR_ROCKER is not set
++# CONFIG_NET_VENDOR_SAMSUNG is not set
++# CONFIG_NET_VENDOR_SEEQ is not set
++# CONFIG_NET_VENDOR_SMSC is not set
++# CONFIG_NET_VENDOR_STMICRO is not set
++# CONFIG_NET_VENDOR_SYNOPSYS is not set
++# CONFIG_NET_VENDOR_VIA is not set
++# CONFIG_NET_VENDOR_WIZNET is not set
++# CONFIG_NET_VENDOR_XILINX is not set
++# USB_NET_DRIVERS is not set
++# CONFIG_WLAN is not set
++CONFIG_INPUT_SPARSEKMAP=y
++# CONFIG_INPUT_MOUSEDEV_PSAUX is not set
++CONFIG_INPUT_EVDEV=y
++# CONFIG_KEYBOARD_ATKBD is not set
++CONFIG_KEYBOARD_GPIO=y
++CONFIG_KEYBOARD_GPIO_POLLED=y
++# CONFIG_MOUSE_PS2 is not set
++# CONFIG_SERIO is not set
++# CONFIG_LEGACY_PTYS is not set
++# CONFIG_DEVKMEM is not set
++CONFIG_SERIAL_XILINX_PS_UART=y
++CONFIG_SERIAL_XILINX_PS_UART_CONSOLE=y
++# CONFIG_HW_RANDOM is not set
++CONFIG_XILINX_DEVCFG=y
++CONFIG_I2C_CHARDEV=y
++CONFIG_I2C_CADENCE=y
++CONFIG_SPI=y
++CONFIG_SPI_CADENCE=y
++CONFIG_SPI_XILINX=y
++CONFIG_SPI_ZYNQ_QSPI=y
++CONFIG_GPIO_SYSFS=y
++CONFIG_GPIO_ZYNQ=y
++CONFIG_THERMAL=y
++CONFIG_CPU_THERMAL=y
++CONFIG_WATCHDOG=y
++CONFIG_XILINX_WATCHDOG=y
++CONFIG_CADENCE_WATCHDOG=y
++CONFIG_REGULATOR=y
++CONFIG_MEDIA_SUPPORT=y
++CONFIG_MEDIA_CAMERA_SUPPORT=y
++CONFIG_MEDIA_CONTROLLER=y
++CONFIG_VIDEO_V4L2_SUBDEV_API=y
++CONFIG_V4L_PLATFORM_DRIVERS=y
++CONFIG_VIDEO_XILINX=y
++CONFIG_VIDEO_XILINX_CFA=y
++CONFIG_VIDEO_XILINX_CRESAMPLE=y
++CONFIG_VIDEO_XILINX_REMAPPER=y
++CONFIG_VIDEO_XILINX_RGB2YUV=y
++CONFIG_VIDEO_XILINX_SCALER=y
++CONFIG_VIDEO_XILINX_SWITCH=y
++# CONFIG_MEDIA_SUBDRV_AUTOSELECT is not set
++# CONFIG_DVB_TUNER_DIB0070 is not set
++# CONFIG_DVB_TUNER_DIB0090 is not set
++CONFIG_DRM=y
++CONFIG_DRM_XILINX=y
++CONFIG_FRAMEBUFFER_CONSOLE=y
++CONFIG_USB=y
++CONFIG_USB_EHCI_HCD=y
++# CONFIG_USB_EHCI_TT_NEWSCHED is not set
++CONFIG_USB_STORAGE=y
++CONFIG_NOP_USB_XCEIV=y
++CONFIG_USB_ULPI=y
++CONFIG_USB_GADGET=y
++CONFIG_USB_GADGET_XILINX=y
++CONFIG_USB_CONFIGFS=m
++CONFIG_USB_CONFIGFS_MASS_STORAGE=y
++CONFIG_USB_ZERO=m
++CONFIG_MMC=y
++CONFIG_MMC_SDHCI=y
++CONFIG_MMC_SDHCI_PLTFM=y
++CONFIG_MMC_SDHCI_OF_ARASAN=y
++CONFIG_NEW_LEDS=y
++CONFIG_LEDS_CLASS=y
++CONFIG_LEDS_GPIO=y
++CONFIG_LEDS_TRIGGERS=y
++CONFIG_LEDS_TRIGGER_TIMER=y
++CONFIG_LEDS_TRIGGER_ONESHOT=y
++CONFIG_LEDS_TRIGGER_HEARTBEAT=y
++CONFIG_LEDS_TRIGGER_BACKLIGHT=y
++CONFIG_LEDS_TRIGGER_CPU=y
++CONFIG_LEDS_TRIGGER_GPIO=y
++CONFIG_LEDS_TRIGGER_DEFAULT_ON=y
++CONFIG_LEDS_TRIGGER_TRANSIENT=y
++CONFIG_LEDS_TRIGGER_CAMERA=y
++CONFIG_EDAC=y
++CONFIG_EDAC_MM_EDAC=y
++CONFIG_EDAC_SYNOPSYS=y
++CONFIG_RTC_CLASS=y
++CONFIG_RTC_DRV_PCF8563=y
++CONFIG_DMADEVICES=y
++CONFIG_PL330_DMA=y
++CONFIG_XILINX_DMA_ENGINES=y
++CONFIG_XILINX_DMA=y
++CONFIG_UIO=y
++CONFIG_UIO_PDRV_GENIRQ=y
++CONFIG_UIO_XILINX_APM=y
++CONFIG_COMMON_CLK_SI570=y
++CONFIG_MEMORY=y
++CONFIG_IIO=y
++CONFIG_XILINX_XADC=y
++CONFIG_AUTOFS4_FS=y
++CONFIG_EXT4_FS=y
++# CONFIG_EXT4_USE_FOR_EXT2 is not set
++# CONFIG_DNOTIFY is not set
++# CONFIG_MSDOS_FS is not set
++CONFIG_VFAT_FS=y
++CONFIG_NTFS_FS=y
++CONFIG_TMPFS=y
++CONFIG_PRINTK_TIME=y
++CONFIG_DEBUG_ZYNQ_UART1=y
++CONFIG_EARLY_PRINTK=y
++CONFIG_NLS_CODEPAGE_437=y
++CONFIG_NLS_ASCII=y
++CONFIG_NLS_ISO8859_1=y
++CONFIG_NLS_UTF8=y
++# CONFIG_SCHED_DEBUG is not set
++CONFIG_TIMER_STATS=y
++# CONFIG_DEBUG_PREEMPT is not set
++CONFIG_RCU_CPU_STALL_TIMEOUT=60
++# CONFIG_FTRACE is not set
++# CONFIG_FONTS=y
++# CONFIG_FONT_8x8=y
++# CONFIG_FONT_8x16=y
+diff --git a/drivers/dma/xilinx/xilinx_dma.c b/drivers/dma/xilinx/xilinx_dma.c
+index df499c3..0aa9226 100644
+--- a/drivers/dma/xilinx/xilinx_dma.c
++++ b/drivers/dma/xilinx/xilinx_dma.c
+@@ -1008,6 +1008,8 @@ static void xilinx_vdma_start_transfer(struct xilinx_dma_chan *chan)
+ 	u32 reg;
+ 	struct xilinx_vdma_tx_segment *tail_segment;
+ 
++	config->park = true;
++
+ 	/* This function was invoked with lock held */
+ 	if (chan->err)
+ 		return;
+@@ -2338,7 +2340,7 @@ static int xilinx_dma_chan_probe(struct xilinx_dma_device *xdev,
+ 	chan->desc_pendingcount = 0x0;
+ 	chan->ext_addr = xdev->ext_addr;
+ 	chan->idle = true;
+-	
++
+ 	spin_lock_init(&chan->lock);
+ 	INIT_LIST_HEAD(&chan->pending_list);
+ 	INIT_LIST_HEAD(&chan->done_list);
+diff --git a/drivers/gpu/drm/drm_drv.c b/drivers/gpu/drm/drm_drv.c
+index 167c8d3..77787a7 100644
+--- a/drivers/gpu/drm/drm_drv.c
++++ b/drivers/gpu/drm/drm_drv.c
+@@ -37,7 +37,7 @@
+ #include "drm_legacy.h"
+ #include "drm_internal.h"
+ 
+-unsigned int drm_debug = 0;	/* bitmask of DRM_UT_x */
++unsigned int drm_debug = 0xff;	/* bitmask of DRM_UT_x */
+ EXPORT_SYMBOL(drm_debug);
+ 
+ MODULE_AUTHOR(CORE_AUTHOR);
+diff --git a/drivers/gpu/drm/xilinx/Makefile b/drivers/gpu/drm/xilinx/Makefile
+index 705472c..be44930 100644
+--- a/drivers/gpu/drm/xilinx/Makefile
++++ b/drivers/gpu/drm/xilinx/Makefile
+@@ -4,7 +4,7 @@
+ 
+ xilinx_drm-y := xilinx_drm_crtc.o xilinx_drm_connector.o xilinx_drm_drv.o \
+ 		xilinx_drm_encoder.o xilinx_drm_fb.o xilinx_drm_gem.o \
+-		xilinx_drm_plane.o
++		xilinx_drm_plane.o xilinx_drm_virtual.o
+ xilinx_drm-y += xilinx_cresample.o xilinx_osd.o xilinx_rgb2yuv.o xilinx_vtc.o
+ 
+ obj-$(CONFIG_DRM_XILINX) += xilinx_drm.o
+diff --git a/drivers/gpu/drm/xilinx/xilinx_drm_crtc.c b/drivers/gpu/drm/xilinx/xilinx_drm_crtc.c
+index 33a7931..8cbc29b 100644
+--- a/drivers/gpu/drm/xilinx/xilinx_drm_crtc.c
++++ b/drivers/gpu/drm/xilinx/xilinx_drm_crtc.c
+@@ -129,7 +129,7 @@ static int xilinx_drm_crtc_mode_set(struct drm_crtc *base_crtc,
+ 	int ret;
+ 
+ 	/* set pixel clock */
+-	ret = clk_set_rate(crtc->pixel_clock, adjusted_mode->clock * 1000);
++	ret = clk_set_rate(crtc->pixel_clock, 6400 * 1000);
+ 	if (ret) {
+ 		DRM_ERROR("failed to set a pixel clock\n");
+ 		return ret;
+@@ -142,6 +142,7 @@ static int xilinx_drm_crtc_mode_set(struct drm_crtc *base_crtc,
+ 
+ 	if (crtc->vtc) {
+ 		/* set video timing */
++#if 1
+ 		vm.hactive = adjusted_mode->hdisplay;
+ 		vm.hfront_porch = adjusted_mode->hsync_start -
+ 				  adjusted_mode->hdisplay;
+@@ -157,7 +158,17 @@ static int xilinx_drm_crtc_mode_set(struct drm_crtc *base_crtc,
+ 				 adjusted_mode->vsync_end;
+ 		vm.vsync_len = adjusted_mode->vsync_end -
+ 			       adjusted_mode->vsync_start;
++#else
++		vm.hactive = adjusted_mode->hdisplay;
++		vm.hfront_porch = 18;
++		vm.hback_porch = 65;
++		vm.hsync_len = 5;
+ 
++		vm.vactive = adjusted_mode->vdisplay;
++		vm.vfront_porch = 10;
++		vm.vback_porch = 12;
++		vm.vsync_len = 1;
++#endif
+ 		xilinx_vtc_config_sig(crtc->vtc, &vm);
+ 	}
+ 
+diff --git a/drivers/gpu/drm/xilinx/xilinx_drm_drv.c b/drivers/gpu/drm/xilinx/xilinx_drm_drv.c
+index 9af14a91..af3a733 100644
+--- a/drivers/gpu/drm/xilinx/xilinx_drm_drv.c
++++ b/drivers/gpu/drm/xilinx/xilinx_drm_drv.c
+@@ -96,7 +96,7 @@ static const struct xilinx_video_format_desc xilinx_video_formats[] = {
+ 	{ "abgr8888", 32, 32, XILINX_VIDEO_FORMAT_NONE, DRM_FORMAT_ABGR8888 },
+ 	{ "argb8888", 32, 32, XILINX_VIDEO_FORMAT_NONE, DRM_FORMAT_ARGB8888 },
+ 	{ "bgra8888", 32, 32, XILINX_VIDEO_FORMAT_NONE, DRM_FORMAT_BGRA8888 },
+-	{ "rgba8888", 32, 32, XILINX_VIDEO_FORMAT_NONE, DRM_FORMAT_RGBA8888 },
++	{ "rgba8888", 32, 32, XILINX_VIDEO_FORMAT_RGB, DRM_FORMAT_RGBA8888 },
+ };
+ 
+ /**
+@@ -200,20 +200,20 @@ static void xilinx_drm_mode_config_init(struct drm_device *drm)
+ }
+ 
+ /* convert xilinx format to drm format by code */
+-int xilinx_drm_format_by_code(unsigned int xilinx_format, uint32_t *drm_format)
++int xilinx_drm_format_to_code(unsigned int drm_format, uint32_t *xilinx_format)
+ {
+ 	const struct xilinx_video_format_desc *format;
+ 	unsigned int i;
+ 
+ 	for (i = 0; i < ARRAY_SIZE(xilinx_video_formats); i++) {
+ 		format = &xilinx_video_formats[i];
+-		if (format->xilinx_format == xilinx_format) {
+-			*drm_format = format->drm_format;
++		if (format->drm_format == drm_format) {
++			*xilinx_format = format->xilinx_format;
+ 			return 0;
+ 		}
+ 	}
+ 
+-	DRM_ERROR("Unknown Xilinx video format: %d\n", xilinx_format);
++	DRM_ERROR("Unknown drm format: %d\n", drm_format);
+ 
+ 	return -EINVAL;
+ }
+@@ -267,6 +267,8 @@ unsigned int xilinx_drm_format_depth(uint32_t drm_format)
+ 	return 0;
+ }
+ 
++extern int xilinx_drm_virtual_init(struct drm_device *dev, int num_output);
++
+ /* load xilinx drm */
+ static int xilinx_drm_load(struct drm_device *drm, unsigned long flags)
+ {
+@@ -299,22 +301,25 @@ static int xilinx_drm_load(struct drm_device *drm, unsigned long flags)
+ 		if (IS_ERR(encoder)) {
+ 			DRM_DEBUG_DRIVER("failed to create xilinx encoder\n");
+ 			ret = PTR_ERR(encoder);
+-			goto err_out;
++// 			goto err_out;
+ 		}
+ 
+ 		connector = xilinx_drm_connector_create(drm, encoder, i);
+ 		if (IS_ERR(connector)) {
+ 			DRM_DEBUG_DRIVER("failed to create xilinx connector\n");
+ 			ret = PTR_ERR(connector);
+-			goto err_out;
++// 			goto err_out;
+ 		}
+ 
+ 		i++;
+ 	}
+ 
+ 	if (i == 0) {
+-		DRM_ERROR("failed to get an encoder slave node\n");
+-		return -ENODEV;
++		ret = xilinx_drm_virtual_init(drm, 0);
++		if (ret < 0) {
++			DRM_ERROR("failed to get an encoder slave node\n");
++			return -ENODEV;
++		}
+ 	}
+ 
+ 	ret = drm_vblank_init(drm, 1);
+diff --git a/drivers/gpu/drm/xilinx/xilinx_drm_drv.h b/drivers/gpu/drm/xilinx/xilinx_drm_drv.h
+index 223fc80..3469e9b 100644
+--- a/drivers/gpu/drm/xilinx/xilinx_drm_drv.h
++++ b/drivers/gpu/drm/xilinx/xilinx_drm_drv.h
+@@ -28,7 +28,7 @@ enum xilinx_video_format {
+ };
+ 
+ /* convert the xilinx format to the drm format */
+-int xilinx_drm_format_by_code(unsigned int xilinx_format, uint32_t *drm_format);
++int xilinx_drm_format_to_code(unsigned int drm_format, uint32_t *xilinx_format);
+ int xilinx_drm_format_by_name(const char *name, uint32_t *drm_format);
+ 
+ unsigned int xilinx_drm_format_bpp(uint32_t drm_format);
+diff --git a/drivers/gpu/drm/xilinx/xilinx_drm_plane.c b/drivers/gpu/drm/xilinx/xilinx_drm_plane.c
+index 2646763..6a5a1ef 100644
+--- a/drivers/gpu/drm/xilinx/xilinx_drm_plane.c
++++ b/drivers/gpu/drm/xilinx/xilinx_drm_plane.c
+@@ -980,7 +980,7 @@ static int
+ xilinx_drm_plane_init_manager(struct xilinx_drm_plane_manager *manager)
+ {
+ 	unsigned int format;
+-	uint32_t drm_format;
++	unsigned int out_format;
+ 	int ret = 0;
+ 
+ 	if (manager->osd) {
+@@ -988,8 +988,8 @@ xilinx_drm_plane_init_manager(struct xilinx_drm_plane_manager *manager)
+ 		manager->max_width = xilinx_osd_get_max_width(manager->osd);
+ 
+ 		format = xilinx_osd_get_format(manager->osd);
+-		ret = xilinx_drm_format_by_code(format, &drm_format);
+-		if (drm_format != manager->format)
++		ret = xilinx_drm_format_to_code(manager->format, &out_format);
++		if (format != out_format)
+ 			ret = -EINVAL;
+ 	} else if (manager->dp_sub) {
+ 		manager->num_planes = XILINX_DRM_DP_SUB_NUM_LAYERS;
+diff --git a/drivers/gpu/drm/xilinx/xilinx_drm_virtual.c b/drivers/gpu/drm/xilinx/xilinx_drm_virtual.c
+new file mode 100644
+index 0000000..5108881
+--- /dev/null
++++ b/drivers/gpu/drm/xilinx/xilinx_drm_virtual.c
+@@ -0,0 +1,309 @@
++/*
++ * Copyright 2013 Red Hat Inc.
++ *
++ * Permission is hereby granted, free of charge, to any person obtaining a
++ * copy of this software and associated documentation files (the "Software"),
++ * to deal in the Software without restriction, including without limitation
++ * the rights to use, copy, modify, merge, publish, distribute, sublicense,
++ * and/or sell copies of the Software, and to permit persons to whom the
++ * Software is furnished to do so, subject to the following conditions:
++ *
++ * The above copyright notice and this permission notice shall be included in
++ * all copies or substantial portions of the Software.
++ *
++ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
++ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
++ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL
++ * THE COPYRIGHT HOLDER(S) OR AUTHOR(S) BE LIABLE FOR ANY CLAIM, DAMAGES OR
++ * OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
++ * ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
++ * OTHER DEALINGS IN THE SOFTWARE.
++ *
++ * Authors: Dave Airlie
++ *          Alon Levy
++ */
++#include <drm/drmP.h>
++#include <drm/drm_crtc.h>
++#include <drm/drm_crtc_helper.h>
++#include <drm/drm_encoder_slave.h>
++
++#include <linux/device.h>
++
++#include "xilinx_drm_drv.h"
++#include "xilinx_drm_connector.h"
++
++
++//#include "xilinx_drm_drv.h"
++//#include "drm_crtc_helper.h"
++//#include <drm/drm_plane_helper.h>
++
++
++struct xilinx_drm_output {
++	int index;
++	struct drm_connector base;
++	struct drm_encoder enc;
++};
++
++#define drm_connector_to_xilinx_drm_output(x) container_of(x, struct xilinx_drm_output, base)
++#define drm_encoder_to_xilinx_drm_output(x) container_of(x, struct xilinx_drm_output, enc)
++
++static void xilinx_drm_enc_dpms(struct drm_encoder *encoder, int mode)
++{
++	DRM_DEBUG("\n");
++}
++
++static bool xilinx_drm_enc_mode_fixup(struct drm_encoder *encoder,
++			       const struct drm_display_mode *mode,
++			       struct drm_display_mode *adjusted_mode)
++{
++	DRM_DEBUG("\n");
++	return true;
++}
++
++static void xilinx_drm_enc_prepare(struct drm_encoder *encoder)
++{
++	DRM_DEBUG("\n");
++}
++
++#if 0
++static void xilinx_drm_write_monitors_config_for_encoder(struct xilinx_drm_device *qdev,
++		struct drm_encoder *encoder)
++{
++	int i;
++	struct xilinx_drm_output *output = drm_encoder_to_xilinx_drm_output(encoder);
++	struct xilinx_drm_head *head;
++	struct drm_display_mode *mode;
++
++	BUG_ON(!encoder);
++	/* TODO: ugly, do better */
++	i = output->index;
++	if (!qdev->monitors_config ||
++	    qdev->monitors_config->max_allowed <= i) {
++		DRM_ERROR(
++		"head number too large or missing monitors config: %p, %d",
++		qdev->monitors_config,
++		qdev->monitors_config ?
++			qdev->monitors_config->max_allowed : -1);
++		return;
++	}
++	if (!encoder->crtc) {
++		DRM_ERROR("missing crtc on encoder %p\n", encoder);
++		return;
++	}
++	if (i != 0)
++		DRM_DEBUG("missing for multiple monitors: no head holes\n");
++	head = &qdev->monitors_config->heads[i];
++	head->id = i;
++	if (encoder->crtc->enabled) {
++		mode = &encoder->crtc->mode;
++		head->width = mode->hdisplay;
++		head->height = mode->vdisplay;
++		head->x = encoder->crtc->x;
++		head->y = encoder->crtc->y;
++		if (qdev->monitors_config->count < i + 1)
++			qdev->monitors_config->count = i + 1;
++	} else {
++		head->width = 0;
++		head->height = 0;
++		head->x = 0;
++		head->y = 0;
++	}
++	DRM_DEBUG_KMS("setting head %d to +%d+%d %dx%d out of %d\n",
++		      i, head->x, head->y, head->width, head->height, qdev->monitors_config->count);
++	head->flags = 0;
++	/* TODO - somewhere else to call this for multiple monitors
++	 * (config_commit?) */
++	xilinx_drm_send_monitors_config(qdev);
++}
++
++static void xilinx_drm_enc_commit(struct drm_encoder *encoder)
++{
++	struct xilinx_drm_device *qdev = encoder->dev->dev_private;
++
++	xilinx_drm_write_monitors_config_for_encoder(qdev, encoder);
++	DRM_DEBUG("\n");
++}
++#else
++static void xilinx_drm_enc_commit(struct drm_encoder *encoder)
++{
++	DRM_DEBUG("\n");
++}
++#endif
++
++static void xilinx_drm_enc_mode_set(struct drm_encoder *encoder,
++				struct drm_display_mode *mode,
++				struct drm_display_mode *adjusted_mode)
++{
++	DRM_DEBUG("\n");
++}
++
++
++static struct mode_size {
++	int w;
++	int h;
++} common_modes[] = {
++	{ 320,  240},
++	{ 640,  480},
++	{ 720,  480},
++	{ 800,  600},
++	{ 848,  480},
++	{1024,  768},
++	{1152,  768},
++	{1280,  720},
++	{1280,  800},
++	{1280,  854},
++	{1280,  960},
++	{1280, 1024},
++	{1440,  900},
++	{1400, 1050},
++	{1680, 1050},
++	{1600, 1200},
++	{1920, 1080},
++	{1920, 1200}
++};
++
++static int xilinx_drm_conn_get_modes(struct drm_connector *connector)
++{
++	struct drm_device *dev = connector->dev;
++	struct drm_display_mode *mode = NULL;
++	int i;
++	for (i = 0; i < ARRAY_SIZE(common_modes); i++) {
++		mode = drm_cvt_mode(dev, common_modes[i].w, common_modes[i].h,
++				    60, false, false, false);
++		if (i == 0)
++			mode->type |= DRM_MODE_TYPE_PREFERRED;
++		drm_mode_probed_add(connector, mode);
++	}
++	return i - 1;
++}
++
++static int xilinx_drm_conn_mode_valid(struct drm_connector *connector,
++			       struct drm_display_mode *mode)
++{
++	int i;
++
++	for (i = 0; i < ARRAY_SIZE(common_modes); i++) {
++		if (common_modes[i].w == mode->hdisplay && common_modes[i].h == mode->vdisplay)
++			return MODE_OK;
++	}
++	return MODE_BAD;
++}
++
++static struct drm_encoder *xilinx_drm_best_encoder(struct drm_connector *connector)
++{
++	struct xilinx_drm_output *xilinx_drm_output =
++		drm_connector_to_xilinx_drm_output(connector);
++
++	DRM_DEBUG("\n");
++	return &xilinx_drm_output->enc;
++}
++
++
++static const struct drm_encoder_helper_funcs xilinx_drm_enc_helper_funcs = {
++	.dpms = xilinx_drm_enc_dpms,
++	.mode_fixup = xilinx_drm_enc_mode_fixup,
++	.prepare = xilinx_drm_enc_prepare,
++	.mode_set = xilinx_drm_enc_mode_set,
++	.commit = xilinx_drm_enc_commit,
++};
++
++static const struct drm_connector_helper_funcs xilinx_drm_connector_helper_funcs = {
++	.get_modes = xilinx_drm_conn_get_modes,
++	.mode_valid = xilinx_drm_conn_mode_valid,
++	.best_encoder = xilinx_drm_best_encoder,
++};
++
++static enum drm_connector_status xilinx_drm_conn_detect(
++			struct drm_connector *connector,
++			bool force)
++{
++	return connector_status_connected;
++}
++
++static int xilinx_drm_conn_set_property(struct drm_connector *connector,
++				   struct drm_property *property,
++				   uint64_t value)
++{
++	DRM_DEBUG("\n");
++	return 0;
++}
++
++static void xilinx_drm_conn_destroy(struct drm_connector *connector)
++{
++	struct xilinx_drm_output *xilinx_drm_output =
++		drm_connector_to_xilinx_drm_output(connector);
++
++	drm_connector_unregister(connector);
++	drm_connector_cleanup(connector);
++	kfree(xilinx_drm_output);
++}
++
++static const struct drm_connector_funcs xilinx_drm_virtual_connector_funcs = {
++	.dpms = drm_helper_connector_dpms,
++	.detect = xilinx_drm_conn_detect,
++	.fill_modes = drm_helper_probe_single_connector_modes,
++	.set_property = xilinx_drm_conn_set_property,
++	.destroy = xilinx_drm_conn_destroy,
++};
++
++static void xilinx_drm_enc_destroy(struct drm_encoder *encoder)
++{
++	drm_encoder_cleanup(encoder);
++}
++
++static const struct drm_encoder_funcs xilinx_drm_enc_funcs = {
++	.destroy = xilinx_drm_enc_destroy,
++};
++
++#if 0
++static int xilinx_drm_mode_create_hotplug_mode_update_property(struct xilinx_drm_device *qdev)
++{
++	if (qdev->hotplug_mode_update_property)
++		return 0;
++
++	qdev->hotplug_mode_update_property =
++		drm_property_create_range(qdev->ddev, DRM_MODE_PROP_IMMUTABLE,
++					  "hotplug_mode_update", 0, 1);
++
++	return 0;
++}
++#endif
++
++int xilinx_drm_virtual_init(struct drm_device *dev, int num_output)
++{
++	//struct xilinx_drm_device *qdev = dev->dev_private;
++	struct xilinx_drm_output *virtual_output;
++	struct drm_connector *connector;
++	struct drm_encoder *encoder;
++
++	virtual_output = kzalloc(sizeof(struct xilinx_drm_output), GFP_KERNEL);
++	if (!virtual_output)
++		return -ENOMEM;
++
++	virtual_output->index = num_output;
++
++	connector = &virtual_output->base;
++	encoder = &virtual_output->enc;
++	drm_connector_init(dev, connector,
++			   &xilinx_drm_virtual_connector_funcs, DRM_MODE_CONNECTOR_VIRTUAL);
++
++	drm_encoder_init(dev, encoder, &xilinx_drm_enc_funcs,
++			 DRM_MODE_ENCODER_VIRTUAL, NULL);
++
++	/* we get HPD via client monitors config */
++	connector->polled = DRM_CONNECTOR_POLL_HPD;
++	encoder->possible_crtcs = 1 << num_output;
++	drm_mode_connector_attach_encoder(connector,
++					  encoder);
++	drm_encoder_helper_add(encoder, &xilinx_drm_enc_helper_funcs);
++	drm_connector_helper_add(connector, &xilinx_drm_connector_helper_funcs);
++
++	//drm_object_attach_property(&connector->base,
++	//			   qdev->hotplug_mode_update_property, 0);
++// 	drm_object_attach_property(&connector->base,
++// 				   dev->mode_config.suggested_x_property, 0);
++// 	drm_object_attach_property(&connector->base,
++// 				   dev->mode_config.suggested_y_property, 0);
++	drm_connector_register(connector);
++	return 0;
++}
+diff --git a/drivers/gpu/drm/xilinx/xilinx_osd.c b/drivers/gpu/drm/xilinx/xilinx_osd.c
+index b777fbb..35b3111 100644
+--- a/drivers/gpu/drm/xilinx/xilinx_osd.c
++++ b/drivers/gpu/drm/xilinx/xilinx_osd.c
+@@ -317,6 +317,7 @@ void xilinx_osd_disable_rue(struct xilinx_osd *osd)
+ 
+ static const struct of_device_id xilinx_osd_of_match[] = {
+ 	{ .compatible = "xlnx,v-osd-5.01.a" },
++	{ .compatible = "xlnx,v-osd-6.0" },
+ 	{ /* end of table */ },
+ };
+ 
+diff --git a/drivers/gpu/drm/xilinx/xilinx_vtc.c b/drivers/gpu/drm/xilinx/xilinx_vtc.c
+index 160f720..f7cd2e0 100644
+--- a/drivers/gpu/drm/xilinx/xilinx_vtc.c
++++ b/drivers/gpu/drm/xilinx/xilinx_vtc.c
+@@ -540,6 +540,7 @@ void xilinx_vtc_disable_vblank_intr(struct xilinx_vtc *vtc)
+ 
+ static const struct of_device_id xilinx_vtc_of_match[] = {
+ 	{ .compatible = "xlnx,v-tc-5.01.a" },
++	{ .compatible = "xlnx,v-tc-6.1" },
+ 	{ /* end of table */ },
+ };
+ 
+-- 
+2.10.2
+
