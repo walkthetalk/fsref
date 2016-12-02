@@ -13,7 +13,20 @@ ipx::create_xgui_files [ipx::current_core]
 ipx::update_checksums [ipx::current_core]
 ipx::save_core [ipx::current_core]
 close_project -delete
-set_property  ip_repo_paths  $origin_dir/ip/lcd [current_project]
+
+# new ip: fscmos
+ipx::infer_core -vendor user.org -library user -taxonomy /UserIP $origin_dir/ip/cmos
+ipx::edit_ip_in_project -upgrade true -name edit_ip_project -directory $origin_dir/fsref.tmp $origin_dir/ip/cmos/component.xml
+ipx::current_core $origin_dir/ip/cmos/component.xml
+set_property core_revision 2 [ipx::current_core]
+ipx::create_xgui_files [ipx::current_core]
+ipx::update_checksums [ipx::current_core]
+ipx::save_core [ipx::current_core]
+close_project -delete
+
+# update ips
+# @note: must use [list xx yy]. the {xx yy} form cannot extent $ rightly.
+set_property ip_repo_paths  [list $origin_dir/ip/cmos $origin_dir/ip/lcd] [current_project]
 update_ip_catalog
 
 # create board design
