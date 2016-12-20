@@ -6,3 +6,4 @@
 fsref.*
 dts/device-tree.mss
 output/*
+.Xil/*
