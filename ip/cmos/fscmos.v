@@ -18,21 +18,26 @@
 // Additional Comments:
 //
 //////////////////////////////////////////////////////////////////////////////////
-module fscmos(
-	input		cmos_pclk,
+module fscmos #
+(
+	// Users to add parameters here
+	parameter integer C_DATA_WIDTH	= 8
+)
+(
+	input wire		cmos_pclk,
 
-	input		cmos_vsync,
-	input		cmos_href,
-	input[7:0]	cmos_data,
+	input wire		cmos_vsync,
+	input wire		cmos_href,
+	input wire [C_DATA_WIDTH-1:0]	cmos_data,
 
-	output		vid_active_video,
-	output[7:0]	vid_data,
-	output		vid_hblank,
-	output		vid_hsync,
-	output		vid_vblank,
-	output		vid_vsync,
+	output wire		vid_active_video,
+	output wire[C_DATA_WIDTH-1:0]	vid_data,
+	output wire		vid_hblank,
+	output wire		vid_hsync,
+	output wire		vid_vblank,
+	output wire		vid_vsync,
 
-	output		vid_io_out_clk
+	output wire		vid_io_out_clk
 );
 
 	assign vid_io_out_clk = cmos_pclk;

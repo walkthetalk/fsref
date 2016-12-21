@@ -1,5 +1,44 @@
 set origin_dir [lindex $argv 0]
 
+proc clr_def_if_par {core_inst} {
+	ipx::remove_all_bus_interface $core_inst
+	ipx::remove_all_user_parameter $core_inst
+	ipgui::remove_page -component [ipx::current_core] [ipgui::get_pagespec -name "Page 0" -component $core_inst]
+}
+
+proc add_bus_if {core_inst bus_name bus_prop port_map {para_set {}}} {
+	ipx::add_bus_interface $bus_name $core_inst
+	set bus_inst [ipx::get_bus_interfaces $bus_name -of_objects $core_inst]
+
+	foreach {i j} $bus_prop {
+		set_property $i $j $bus_inst
+	}
+
+	foreach {i j} $port_map {
+		ipx::add_port_map $i $bus_inst
+		set_property physical_name $j [ipx::get_port_maps $i -of_objects $bus_inst]
+	}
+
+	foreach {i j} $para_set {
+		ipx::add_bus_parameter $i $bus_inst
+		set_property value vid_io_out [ipx::get_bus_parameters $i -of_objects $bus_inst]
+	}
+}
+
+proc add_usr_par {core_inst par_name gui_par usr_par hdl_par} {
+	ipx::add_user_parameter $par_name $core_inst
+	ipgui::add_param -name $par_name -component $core_inst
+	foreach {i j} $gui_par {
+		set_property $i $j [ipgui::get_guiparamspec -name $par_name -component $core_inst ]
+	}
+	foreach {i j} $usr_par {
+		set_property $i $j [ipx::get_user_parameters $par_name -of_objects $core_inst]
+	}
+	foreach {i j} $hdl_par {
+		set_property $i $j [ipx::get_hdl_parameters $par_name -of_objects $core_inst]
+	}
+}
+
 # create project
 create_project fsref $origin_dir -part xc7z020clg400-1
 set_property simulator_language Verilog [current_project]
@@ -8,6 +47,60 @@ set_property simulator_language Verilog [current_project]
 ipx::infer_core -vendor user.org -library user -taxonomy /UserIP $origin_dir/ip/lcd
 ipx::edit_ip_in_project -upgrade true -name edit_ip_project -directory $origin_dir/fsref.tmp $origin_dir/ip/lcd/component.xml
 ipx::current_core $origin_dir/ip/lcd/component.xml
+
+clr_def_if_par [ipx::current_core]
+
+add_bus_if [ipx::current_core] vid_io_in { \
+	abstraction_type_vlnv {xilinx.com:interface:vid_io_rtl:1.0} \
+	bus_type_vlnv {xilinx.com:interface:vid_io:1.0} \
+	interface_mode {slave} \
+} { \
+	ACTIVE_VIDEO vid_active_video \
+	DATA vid_data \
+	HSYNC vid_hsync \
+	VSYNC vid_vsync \
+}
+
+add_bus_if [ipx::current_core] vid_io_in_clk { \
+	abstraction_type_vlnv xilinx.com:signal:clock_rtl:1.0 \
+	bus_type_vlnv xilinx.com:signal:clock:1.0 \
+	interface_mode slave \
+} { \
+	CLK vid_io_in_clk \
+} { \
+	ASSOCIATED_BUSIF vid_io_in \
+}
+
+add_usr_par [ipx::current_core] {C_IN_COMP_WIDTH} {
+	display_name {Single Component In Data Width}
+	tooltip {SINGLE COMPONENT In DATA WIDTH}
+	widget {comboBox}
+} {
+	value_resolve_type user
+	value 8
+	value_format long
+	value_validation_type list
+	value_validation_list {6 8 10 12}
+} {
+	value 8
+	value_format long
+}
+
+add_usr_par [ipx::current_core] {C_OUT_COMP_WIDTH} {
+	display_name {Single Component Out Data Width}
+	tooltip {SINGLE COMPONENT Out DATA WIDTH}
+	widget {comboBox}
+} {
+	value_resolve_type user
+	value 8
+	value_format long
+	value_validation_type list
+	value_validation_list {6 8 10 12}
+} {
+	value 8
+	value_format long
+}
+
 set_property core_revision 2 [ipx::current_core]
 ipx::create_xgui_files [ipx::current_core]
 ipx::update_checksums [ipx::current_core]
@@ -18,6 +111,47 @@ close_project -delete
 ipx::infer_core -vendor user.org -library user -taxonomy /UserIP $origin_dir/ip/cmos
 ipx::edit_ip_in_project -upgrade true -name edit_ip_project -directory $origin_dir/fsref.tmp $origin_dir/ip/cmos/component.xml
 ipx::current_core $origin_dir/ip/cmos/component.xml
+
+clr_def_if_par [ipx::current_core]
+
+add_bus_if [ipx::current_core] vid_io_out { \
+	abstraction_type_vlnv {xilinx.com:interface:vid_io_rtl:1.0} \
+	bus_type_vlnv {xilinx.com:interface:vid_io:1.0} \
+	interface_mode {master} \
+} { \
+	ACTIVE_VIDEO vid_active_video \
+	DATA vid_data \
+	HBLANK vid_hblank \
+	HSYNC vid_hsync \
+	VBLANK vid_vblank \
+	VSYNC vid_vsync \
+}
+
+add_bus_if [ipx::current_core] vid_io_out_clk { \
+	abstraction_type_vlnv xilinx.com:signal:clock_rtl:1.0 \
+	bus_type_vlnv xilinx.com:signal:clock:1.0 \
+	interface_mode master \
+} { \
+	CLK vid_io_out_clk \
+} { \
+	ASSOCIATED_BUSIF vid_io_out \
+}
+
+add_usr_par [ipx::current_core] {C_DATA_WIDTH} {
+	display_name {Data Width}
+	tooltip {DATA WIDTH}
+	widget {comboBox}
+} {
+	value_resolve_type user
+	value 8
+	value_format long
+	value_validation_type list
+	value_validation_list {6 8 10 12}
+} {
+	value 8
+	value_format long
+}
+
 set_property core_revision 2 [ipx::current_core]
 ipx::create_xgui_files [ipx::current_core]
 ipx::update_checksums [ipx::current_core]
@@ -188,6 +322,10 @@ endgroup
 # 6. lcd
 startgroup
 create_bd_cell -type ip -vlnv user.org:user:fslcd:1.0 fslcd_0
+set_property -dict [list \
+    CONFIG.C_IN_COMP_WIDTH {8} \
+    CONFIG.C_OUT_COMP_WIDTH {6} \
+] [get_bd_cells fslcd_0]
 endgroup
 
 # 7. cmos
@@ -267,7 +405,7 @@ copy_bd_objs /  [get_bd_cells {axi_vdma_cmos_disp_0}]
 
 startgroup
 create_bd_cell -type ip -vlnv xilinx.com:ip:axi_interconnect:2.1 axi_mem_intercon_cmos_0
-set_property -dict [list CONFIG.NUM_SI {3} CONFIG.NUM_MI {1}] [get_bd_cells axi_mem_intercon_cmos_0]
+set_property -dict [list CONFIG.NUM_SI {2} CONFIG.NUM_MI {1}] [get_bd_cells axi_mem_intercon_cmos_0]
 endgroup
 copy_bd_objs /  [get_bd_cells {axi_mem_intercon_cmos_0}]
 
@@ -336,12 +474,10 @@ connect_bd_net [get_bd_pins rst_cpu_fclk1/peripheral_aresetn] [get_bd_pins v_vid
 connect_bd_net [get_bd_pins cpu/FCLK_CLK2] [get_bd_pins rst_cpu_fclk2/slowest_sync_clk]
 connect_bd_net [get_bd_pins cpu/FCLK_CLK2] [get_bd_pins v_tc_0/clk]
 connect_bd_net [get_bd_pins cpu/FCLK_CLK2] [get_bd_pins v_axi4s_vid_out_0/vid_io_out_clk]
-connect_bd_net [get_bd_pins cpu/FCLK_CLK2] [get_bd_pins fslcd_0/clk]
+connect_bd_net [get_bd_pins cpu/FCLK_CLK2] [get_bd_pins fslcd_0/vid_io_in_clk]
 connect_bd_net [get_bd_pins cpu/FCLK_RESET2_N] [get_bd_pins rst_cpu_fclk2/ext_reset_in]
 connect_bd_net [get_bd_pins rst_cpu_fclk2/peripheral_reset] [get_bd_pins v_axi4s_vid_out_0/vid_io_out_reset]
 connect_bd_net [get_bd_pins rst_cpu_fclk2/peripheral_aresetn] [get_bd_pins v_tc_0/resetn]
-
-connect_bd_net [get_bd_pins cpu/FCLK_CLK3] [get_bd_pins fscmos_*/cmos_xclk]
 
 # connect data
 
@@ -362,43 +498,29 @@ connect_bd_intf_net [get_bd_intf_pins axi_vdma_0/M_AXIS_MM2S] [get_bd_intf_pins 
 connect_bd_intf_net [get_bd_intf_pins axi_vdma_1/M_AXIS_MM2S] [get_bd_intf_pins v_osd_0/video_s1_in]
 connect_bd_intf_net [get_bd_intf_pins v_osd_0/video_out] [get_bd_intf_pins v_axi4s_vid_out_0/video_in]
 
-# TODO: maybe should optimize fslcd
-connect_bd_net [get_bd_pins v_axi4s_vid_out_0/vid_active_video] [get_bd_pins fslcd_0/vid_active]
-connect_bd_net [get_bd_pins v_axi4s_vid_out_0/vid_data] [get_bd_pins fslcd_0/vid_data]
-connect_bd_net [get_bd_pins v_axi4s_vid_out_0/vid_hsync] [get_bd_pins fslcd_0/hsync]
-connect_bd_net [get_bd_pins v_axi4s_vid_out_0/vid_vsync] [get_bd_pins fslcd_0/vsync]
+connect_bd_intf_net -boundary_type upper [get_bd_intf_pins v_axi4s_vid_out_0/vid_io_out] [get_bd_intf_pins fslcd_0/vid_io_in]
 
 # connect data: cmos0 -> osd & cpu
-connect_bd_net [get_bd_pins fscmos_0/vid_active_video] [get_bd_pins v_vid_in_axi4s_0/vid_active_video]
-connect_bd_net [get_bd_pins fscmos_0/vid_data] [get_bd_pins v_vid_in_axi4s_0/vid_data]
-connect_bd_net [get_bd_pins fscmos_0/vid_hblank] [get_bd_pins v_vid_in_axi4s_0/vid_hblank]
-connect_bd_net [get_bd_pins fscmos_0/vid_hsync] [get_bd_pins v_vid_in_axi4s_0/vid_hsync]
-connect_bd_net [get_bd_pins fscmos_0/vid_vblank] [get_bd_pins v_vid_in_axi4s_0/vid_vblank]
-connect_bd_net [get_bd_pins fscmos_0/vid_vsync] [get_bd_pins v_vid_in_axi4s_0/vid_vsync]
+connect_bd_intf_net -boundary_type upper [get_bd_intf_pins fscmos_0/vid_io_out] [get_bd_intf_pins v_vid_in_axi4s_0/vid_io_in]
 connect_bd_net [get_bd_pins fscmos_0/vid_io_out_clk] [get_bd_pins v_vid_in_axi4s_0/vid_io_in_clk]
 
 connect_bd_intf_net [get_bd_intf_pins v_vid_in_axi4s_0/video_out] [get_bd_intf_pins v_cfa_0/video_in]
 connect_bd_intf_net [get_bd_intf_pins v_cfa_0/video_out] [get_bd_intf_pins v_rgb2ycrcb_0/video_in]
 connect_bd_intf_net [get_bd_intf_pins v_rgb2ycrcb_0/video_out] [get_bd_intf_pins axi_vdma_cmos_sw_0/S_AXIS_S2MM]
 connect_bd_intf_net [get_bd_intf_pins axi_vdma_cmos_sw_0/M_AXI_S2MM] -boundary_type upper [get_bd_intf_pins axi_mem_intercon_cmos_0/S00_AXI]
-connect_bd_intf_net [get_bd_intf_pins axi_vdma_cmos_disp_0/M_AXI_MM2S] -boundary_type upper [get_bd_intf_pins axi_mem_intercon_cmos_0/S02_AXI]
+connect_bd_intf_net [get_bd_intf_pins axi_vdma_cmos_disp_0/M_AXI_MM2S] -boundary_type upper [get_bd_intf_pins axi_mem_intercon_cmos_0/S01_AXI]
 connect_bd_intf_net [get_bd_intf_pins axi_vdma_cmos_disp_0/M_AXIS_MM2S] [get_bd_intf_pins v_osd_0/video_s2_in]
 connect_bd_intf_net -boundary_type upper [get_bd_intf_pins axi_mem_intercon_cmos_0/M00_AXI] [get_bd_intf_pins cpu/S_AXI_HP2]
 
 # connect data: cmos1 -> osd & cpu
-connect_bd_net [get_bd_pins fscmos_1/vid_active_video] [get_bd_pins v_vid_in_axi4s_1/vid_active_video]
-connect_bd_net [get_bd_pins fscmos_1/vid_data]         [get_bd_pins v_vid_in_axi4s_1/vid_data]
-connect_bd_net [get_bd_pins fscmos_1/vid_hblank]       [get_bd_pins v_vid_in_axi4s_1/vid_hblank]
-connect_bd_net [get_bd_pins fscmos_1/vid_hsync]        [get_bd_pins v_vid_in_axi4s_1/vid_hsync]
-connect_bd_net [get_bd_pins fscmos_1/vid_vblank]       [get_bd_pins v_vid_in_axi4s_1/vid_vblank]
-connect_bd_net [get_bd_pins fscmos_1/vid_vsync]        [get_bd_pins v_vid_in_axi4s_1/vid_vsync]
+connect_bd_intf_net -boundary_type upper [get_bd_intf_pins fscmos_1/vid_io_out] [get_bd_intf_pins v_vid_in_axi4s_1/vid_io_in]
 connect_bd_net [get_bd_pins fscmos_1/vid_io_out_clk]   [get_bd_pins v_vid_in_axi4s_1/vid_io_in_clk]
 
 connect_bd_intf_net [get_bd_intf_pins v_vid_in_axi4s_1/video_out] [get_bd_intf_pins v_cfa_1/video_in]
 connect_bd_intf_net [get_bd_intf_pins v_cfa_1/video_out] [get_bd_intf_pins v_rgb2ycrcb_1/video_in]
 connect_bd_intf_net [get_bd_intf_pins v_rgb2ycrcb_1/video_out] [get_bd_intf_pins axi_vdma_cmos_sw_1/S_AXIS_S2MM]
 connect_bd_intf_net [get_bd_intf_pins axi_vdma_cmos_sw_1/M_AXI_S2MM] -boundary_type upper [get_bd_intf_pins axi_mem_intercon_cmos_1/S00_AXI]
-connect_bd_intf_net [get_bd_intf_pins axi_vdma_cmos_disp_1/M_AXI_MM2S] -boundary_type upper [get_bd_intf_pins axi_mem_intercon_cmos_1/S02_AXI]
+connect_bd_intf_net [get_bd_intf_pins axi_vdma_cmos_disp_1/M_AXI_MM2S] -boundary_type upper [get_bd_intf_pins axi_mem_intercon_cmos_1/S01_AXI]
 connect_bd_intf_net [get_bd_intf_pins axi_vdma_cmos_disp_1/M_AXIS_MM2S] [get_bd_intf_pins v_osd_0/video_s3_in]
 connect_bd_intf_net -boundary_type upper [get_bd_intf_pins axi_mem_intercon_cmos_1/M00_AXI] [get_bd_intf_pins cpu/S_AXI_HP3]
 
@@ -420,7 +542,7 @@ connect_bd_intf_net [get_bd_intf_pins v_tc_0/vtiming_out] [get_bd_intf_pins v_ax
 # connect from/to external cmos
 startgroup
 create_bd_port -type clk -dir O cmos0_xclk
-connect_bd_net [get_bd_pins /fscmos_0/cmos_out_xclk] [get_bd_ports cmos0_xclk]
+connect_bd_net [get_bd_pins cpu/FCLK_CLK3] [get_bd_ports cmos0_xclk]
 create_bd_port -dir I cmos0_pclk
 connect_bd_net [get_bd_pins /fscmos_0/cmos_pclk] [get_bd_ports cmos0_pclk]
 create_bd_port -dir I cmos0_href
@@ -432,7 +554,7 @@ connect_bd_net [get_bd_pins /fscmos_0/cmos_data] [get_bd_ports cmos0_data]
 endgroup
 startgroup
 create_bd_port -type clk -dir O cmos1_xclk
-connect_bd_net [get_bd_pins /fscmos_1/cmos_out_xclk] [get_bd_ports cmos1_xclk]
+connect_bd_net [get_bd_pins cpu/FCLK_CLK3] [get_bd_ports cmos1_xclk]
 create_bd_port -dir I cmos1_pclk
 connect_bd_net [get_bd_pins /fscmos_1/cmos_pclk] [get_bd_ports cmos1_pclk]
 create_bd_port -dir I cmos1_href
