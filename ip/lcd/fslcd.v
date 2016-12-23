@@ -47,13 +47,13 @@ module fslcd #
 
 	function integer com_lsb_shrink (input integer com_idx);
 	begin
-		com_msb = C_IN_COMP_WIDTH * (com_idx + 1) - C_OUT_COMP_WIDTH;
+		com_lsb_shrink = C_IN_COMP_WIDTH * (com_idx + 1) - C_OUT_COMP_WIDTH;
 	end
 	endfunction
 
 	function integer com_lsb_extent (input integer com_idx);
 	begin
-		com_msb = C_IN_COMP_WIDTH * com_idx;
+		com_lsb_extent = C_IN_COMP_WIDTH * com_idx;
 	end
 	endfunction
 

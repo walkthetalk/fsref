@@ -1,166 +1,14 @@
 set origin_dir [lindex $argv 0]
 
-proc clr_def_if_par {core_inst} {
-	ipx::remove_all_bus_interface $core_inst
-	ipx::remove_all_user_parameter $core_inst
-	ipgui::remove_page -component [ipx::current_core] [ipgui::get_pagespec -name "Page 0" -component $core_inst]
-}
-
-proc add_bus_if {core_inst bus_name bus_prop port_map {para_set {}}} {
-	ipx::add_bus_interface $bus_name $core_inst
-	set bus_inst [ipx::get_bus_interfaces $bus_name -of_objects $core_inst]
-
-	foreach {i j} $bus_prop {
-		set_property $i $j $bus_inst
-	}
-
-	foreach {i j} $port_map {
-		ipx::add_port_map $i $bus_inst
-		set_property physical_name $j [ipx::get_port_maps $i -of_objects $bus_inst]
-	}
-
-	foreach {i j} $para_set {
-		ipx::add_bus_parameter $i $bus_inst
-		set_property value vid_io_out [ipx::get_bus_parameters $i -of_objects $bus_inst]
-	}
-}
-
-proc add_usr_par {core_inst par_name gui_par usr_par hdl_par} {
-	ipx::add_user_parameter $par_name $core_inst
-	ipgui::add_param -name $par_name -component $core_inst
-	foreach {i j} $gui_par {
-		set_property $i $j [ipgui::get_guiparamspec -name $par_name -component $core_inst ]
-	}
-	foreach {i j} $usr_par {
-		set_property $i $j [ipx::get_user_parameters $par_name -of_objects $core_inst]
-	}
-	foreach {i j} $hdl_par {
-		set_property $i $j [ipx::get_hdl_parameters $par_name -of_objects $core_inst]
-	}
-}
+source $origin_dir/scripts/util.tcl
 
 # create project
 create_project fsref $origin_dir -part xc7z020clg400-1
 set_property simulator_language Verilog [current_project]
 
-# new ip: fslcd
-ipx::infer_core -vendor user.org -library user -taxonomy /UserIP $origin_dir/ip/lcd
-ipx::edit_ip_in_project -upgrade true -name edit_ip_project -directory $origin_dir/fsref.tmp $origin_dir/ip/lcd/component.xml
-ipx::current_core $origin_dir/ip/lcd/component.xml
-
-clr_def_if_par [ipx::current_core]
-
-add_bus_if [ipx::current_core] vid_io_in { \
-	abstraction_type_vlnv {xilinx.com:interface:vid_io_rtl:1.0} \
-	bus_type_vlnv {xilinx.com:interface:vid_io:1.0} \
-	interface_mode {slave} \
-} { \
-	ACTIVE_VIDEO vid_active_video \
-	DATA vid_data \
-	HSYNC vid_hsync \
-	VSYNC vid_vsync \
-}
-
-add_bus_if [ipx::current_core] vid_io_in_clk { \
-	abstraction_type_vlnv xilinx.com:signal:clock_rtl:1.0 \
-	bus_type_vlnv xilinx.com:signal:clock:1.0 \
-	interface_mode slave \
-} { \
-	CLK vid_io_in_clk \
-} { \
-	ASSOCIATED_BUSIF vid_io_in \
-}
-
-add_usr_par [ipx::current_core] {C_IN_COMP_WIDTH} {
-	display_name {Single Component In Data Width}
-	tooltip {SINGLE COMPONENT In DATA WIDTH}
-	widget {comboBox}
-} {
-	value_resolve_type user
-	value 8
-	value_format long
-	value_validation_type list
-	value_validation_list {6 8 10 12}
-} {
-	value 8
-	value_format long
-}
-
-add_usr_par [ipx::current_core] {C_OUT_COMP_WIDTH} {
-	display_name {Single Component Out Data Width}
-	tooltip {SINGLE COMPONENT Out DATA WIDTH}
-	widget {comboBox}
-} {
-	value_resolve_type user
-	value 8
-	value_format long
-	value_validation_type list
-	value_validation_list {6 8 10 12}
-} {
-	value 8
-	value_format long
-}
-
-set_property core_revision 2 [ipx::current_core]
-ipx::create_xgui_files [ipx::current_core]
-ipx::update_checksums [ipx::current_core]
-ipx::save_core [ipx::current_core]
-close_project -delete
-
-# new ip: fscmos
-ipx::infer_core -vendor user.org -library user -taxonomy /UserIP $origin_dir/ip/cmos
-ipx::edit_ip_in_project -upgrade true -name edit_ip_project -directory $origin_dir/fsref.tmp $origin_dir/ip/cmos/component.xml
-ipx::current_core $origin_dir/ip/cmos/component.xml
-
-clr_def_if_par [ipx::current_core]
-
-add_bus_if [ipx::current_core] vid_io_out { \
-	abstraction_type_vlnv {xilinx.com:interface:vid_io_rtl:1.0} \
-	bus_type_vlnv {xilinx.com:interface:vid_io:1.0} \
-	interface_mode {master} \
-} { \
-	ACTIVE_VIDEO vid_active_video \
-	DATA vid_data \
-	HBLANK vid_hblank \
-	HSYNC vid_hsync \
-	VBLANK vid_vblank \
-	VSYNC vid_vsync \
-}
-
-add_bus_if [ipx::current_core] vid_io_out_clk { \
-	abstraction_type_vlnv xilinx.com:signal:clock_rtl:1.0 \
-	bus_type_vlnv xilinx.com:signal:clock:1.0 \
-	interface_mode master \
-} { \
-	CLK vid_io_out_clk \
-} { \
-	ASSOCIATED_BUSIF vid_io_out \
-}
-
-add_usr_par [ipx::current_core] {C_DATA_WIDTH} {
-	display_name {Data Width}
-	tooltip {DATA WIDTH}
-	widget {comboBox}
-} {
-	value_resolve_type user
-	value 8
-	value_format long
-	value_validation_type list
-	value_validation_list {6 8 10 12}
-} {
-	value 8
-	value_format long
-}
-
-set_property core_revision 2 [ipx::current_core]
-ipx::create_xgui_files [ipx::current_core]
-ipx::update_checksums [ipx::current_core]
-ipx::save_core [ipx::current_core]
-close_project -delete
-
 # update ips
 # @note: must use [list xx yy]. the {xx yy} form cannot extent $ rightly.
-set_property ip_repo_paths  [list $origin_dir/ip/cmos $origin_dir/ip/lcd] [current_project]
+set_property ip_repo_paths $origin_dir/ip [current_project]
 update_ip_catalog
 
 # create board design
@@ -321,7 +169,7 @@ set_property -dict [list \
 endgroup
 # 6. lcd
 startgroup
-create_bd_cell -type ip -vlnv user.org:user:fslcd:1.0 fslcd_0
+create_bd_cell -type ip -vlnv $VENDOR:$LIBRARY:fslcd:1.0 fslcd_0
 set_property -dict [list \
     CONFIG.C_IN_COMP_WIDTH {8} \
     CONFIG.C_OUT_COMP_WIDTH {6} \
@@ -330,7 +178,7 @@ endgroup
 
 # 7. cmos
 startgroup
-create_bd_cell -type ip -vlnv user.org:user:fscmos:1.0 fscmos_0
+create_bd_cell -type ip -vlnv $VENDOR:$LIBRARY:fscmos:1.0 fscmos_0
 endgroup
 copy_bd_objs /  [get_bd_cells {fscmos_0}]
 

@@ -95,14 +95,14 @@ module PVDMA_M_AXI_R #
 	// function called clogb2 that returns an integer which has the
 	//value of the ceiling of the log base 2
 
-	  // function called clogb2 that returns an integer which has the
-	  // value of the ceiling of the log base 2.
-	  function integer clogb2 (input integer bit_depth);
-	  begin
-	    for(clogb2=0; bit_depth>0; clogb2=clogb2+1)
-	      bit_depth = bit_depth >> 1;
-	    end
-	  endfunction
+	// function called clogb2 that returns an integer which has the
+	// value of the ceiling of the log base 2.
+	function integer clogb2 (input integer bit_depth);
+	begin
+	for(clogb2=0; bit_depth>0; clogb2=clogb2+1)
+	bit_depth = bit_depth >> 1;
+	end
+	endfunction
 
 	// C_TRANSACTIONS_NUM is the width of the index counter for
 	// number of write or read transaction.

@@ -20,5 +20,5 @@ rm -rf output
 cd ip
 for i in `find -maxdepth 1 -mindepth 1 -type d`; do
     rm -rf $i/xgui
-    rm -rf $i/component.xml
+    rm -rf $i/*.xml
 done
