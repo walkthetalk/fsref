@@ -31,10 +31,12 @@ module PVDMA_M_AXI_R #
 	// Users to add ports here
 	output wire sof,
 	output wire eol,
-	input wire [C_M_AXI_ADDR_WIDTH-1 : 0] base_addr,
 	output wire [C_M_AXI_DATA_WIDTH-1 : 0] dout,
 	output wire wr_en,
 	input wire full,
+
+	output reg frame_pulse,
+	input wire [C_M_AXI_ADDR_WIDTH-1 : 0] base_addr,
 
 	// User ports ends
 	// Do not modify the ports beyond this line
@@ -273,21 +275,28 @@ module PVDMA_M_AXI_R #
 		if (M_AXI_ARESETN == 1'b0 ) begin
 			// reset condition
 			// All the signals are assigned default values under reset condition
-			start_single_burst_read  <= 1'b0;
+			frame_pulse  <= 1'b0;
 		end
 		else begin
 			// This state is responsible to issue start_single_read pulse to
 			// initiate a read transaction. Read transactions will be
 			// issued until burst_read_active signal is asserted.
 			// read controller
-			if (~axi_arvalid && ~burst_read_active && ~start_single_burst_read) begin
-				start_single_burst_read <= 1'b1;
+			if (~axi_arvalid && ~burst_read_active && ~frame_pulse) begin
+				frame_pulse <= 1'b1;
 			end
 			else begin
-				start_single_burst_read <= 1'b0; //Negate to generate a pulse
+				frame_pulse <= 1'b0; //Negate to generate a pulse
 			end
 		end
 	end //MASTER_EXECUTION_PROC
+
+	always @(posedge M_AXI_ACLK) begin
+		if (M_AXI_ARESETN == 1'b0)
+			start_single_burst_read <= 1'b0;
+		else
+			start_single_burst_read <= frame_pulse;
+	end
 
 	// burst_read_active signal is asserted when there is a burst write transaction
 	// is initiated by the assertion of start_single_burst_write. start_single_burst_read

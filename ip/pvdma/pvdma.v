@@ -29,6 +29,11 @@ module pvdma #
 	output wire [C_M_AXI_DATA_WIDTH/C_PIXEL_WIDTH*(C_PIXEL_WIDTH+2)-1 : 0] wr_data,
 	output wire wr_en,
 
+	output wire w_sof,
+	input wire [C_M_AXI_ADDR_WIDTH-1:0] w_addr,
+	output wire r_sof,
+	input wire [C_M_AXI_ADDR_WIDTH-1:0] r_addr,
+
 	// User ports ends
 	// Do not modify the ports beyond this line
 
@@ -153,10 +158,12 @@ module pvdma #
 		.C_M_AXI_DATA_WIDTH(C_M_AXI_DATA_WIDTH)
 	) PVDMA_M_AXI_W_inst (
 		.sof(s_rd_sof),
-		.base_addr(0),
 		.din(s_rd_data),
 		.empty(s_empty),
 		.rd_en(s_rd_en),
+
+		.frame_pulse(w_sof),
+		.base_addr(w_addr),
 
 		.M_AXI_ACLK(m_axi_aclk),
 		.M_AXI_ARESETN(m_axi_aresetn),
@@ -217,6 +224,10 @@ module pvdma #
 		.dout(s_wr_data),
 		.wr_en(s_wr_en),
 		.full(s_full),
+
+		.frame_pulse(r_sof),
+		.base_addr(r_addr),
+
 		.M_AXI_ACLK(m_axi_aclk),
 		.M_AXI_ARESETN(m_axi_aresetn),
 		.M_AXI_ARID(m_axi_arid),

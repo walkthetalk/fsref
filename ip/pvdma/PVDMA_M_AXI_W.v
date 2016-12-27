@@ -25,10 +25,12 @@ module PVDMA_M_AXI_W #
 (
 	// Users to add ports here
 	input wire sof,
-	input wire [C_M_AXI_ADDR_WIDTH-1 : 0] base_addr,
 	input wire [C_M_AXI_DATA_WIDTH-1 : 0] din,
 	input wire empty,
 	output wire rd_en,
+
+	output reg frame_pulse,
+	input wire [C_M_AXI_ADDR_WIDTH-1 : 0] base_addr,
 
 	// User ports ends
 	// Do not modify the ports beyond this line
@@ -137,12 +139,8 @@ module PVDMA_M_AXI_W #
 	always @(posedge M_AXI_ACLK) begin
 		if (M_AXI_ARESETN == 0)
 			r_dvalid <= 1'b0;
-		else if (rd_en)
-			r_dvalid <= 1'b1;
-		else if (wnext)
-			r_dvalid <= 1'b0;
 		else
-			r_dvalid <= r_dvalid;
+			r_dvalid <= rd_en;
 	end
 
 	always @(posedge M_AXI_ACLK) begin
@@ -380,7 +378,7 @@ module PVDMA_M_AXI_W #
 		if (M_AXI_ARESETN == 1'b0 ) begin
 			// reset condition
 			// All the signals are assigned default values under reset condition
-			start_single_burst_write <= 1'b0;
+			frame_pulse <= 1'b0;
 		end
 		else begin
 			// This state is responsible to issue start_single_write pulse to
@@ -388,12 +386,20 @@ module PVDMA_M_AXI_W #
 			// issued until burst_write_active signal is asserted.
 			// write controller
 			// @note: start a burst when receiving a single valid data at least
-			if (~axi_awvalid && ~start_single_burst_write && ~burst_write_active && r_dvalid)
-				start_single_burst_write <= 1'b1;
+			if (~axi_awvalid && ~frame_pulse && ~burst_write_active && r_dvalid)
+				frame_pulse <= 1'b1;
 			else
-				start_single_burst_write <= 1'b0; //Negate to generate a pulse
+				frame_pulse <= 1'b0; //Negate to generate a pulse
 		end
 	end //MASTER_EXECUTION_PROC
+
+	/// @note: delay one clock cycle to wait base_addr!
+	always @(posedge M_AXI_ACLK) begin
+		if (M_AXI_ARESETN == 1'b0)
+			start_single_burst_write <= 1'b0;
+		else
+			start_single_burst_write <= frame_pulse;
+	end
 
 
 	  // burst_write_active signal is asserted when there is a burst write transaction
