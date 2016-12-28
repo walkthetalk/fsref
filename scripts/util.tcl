@@ -6,6 +6,7 @@ proc pip_clr_def_if_par {
 } {
 	ipx::remove_all_bus_interface $core_inst
 	ipx::remove_all_user_parameter $core_inst
+	ipx::remove_all_address_space $core_inst
 	ipgui::remove_page -component [ipx::current_core] [ipgui::get_pagespec -name "Page 0" -component $core_inst]
 }
 
@@ -60,6 +61,21 @@ proc pip_add_usr_par {
 	pip_set_prop [ipgui::get_guiparamspec -name $par_name -component $core_inst ] $gui_par
 	pip_set_prop [ipx::get_user_parameters $par_name -of_objects $core_inst] $usr_par
 	pip_set_prop [ipx::get_hdl_parameters $par_name -of_objects $core_inst] $hdl_par
+}
+
+proc pip_add_address_space {
+	core_inst
+	if_inst
+	as_name
+	{para_set {}}
+} {
+	ipx::add_address_space $as_name $core_inst
+
+	set_property master_address_space_ref $as_name [ipx::get_bus_interfaces $if_inst -of_objects $core_inst]
+
+	foreach {i j} $para_set {
+		set_property $i $j [ipx::get_address_spaces $as_name -of_objects $core_inst]
+	}
 }
 
 proc pip_clr_dir {dir} {

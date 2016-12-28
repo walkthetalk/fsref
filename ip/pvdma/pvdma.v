@@ -5,13 +5,9 @@ module pvdma #
 (
 	// Users to add parameters here
 	parameter integer C_PIXEL_WIDTH	= 8,
-
+	parameter integer C_IMG_WH_WIDTH = 12,
 	// User parameters ends
 	// Do not modify the parameters beyond this line
-
-	// Parameters of Axi Slave Bus Interface S_AXI_LITE
-	parameter integer C_S_AXI_LITE_DATA_WIDTH	= 32,
-	parameter integer C_S_AXI_LITE_ADDR_WIDTH	= 7,
 
 	// Parameters of Axi Master Bus Interface M_AXI
 	parameter integer C_M_AXI_BURST_LEN	= 16,
@@ -21,6 +17,9 @@ module pvdma #
 )
 (
 	// Users to add ports here
+	input wire  clk,
+	input wire  resetn,
+
 	input wire [C_M_AXI_DATA_WIDTH/C_PIXEL_WIDTH*(C_PIXEL_WIDTH+2)-1 : 0] rd_data,
 	input wire empty,
 	output wire rd_en,
@@ -34,36 +33,13 @@ module pvdma #
 	output wire r_sof,
 	input wire [C_M_AXI_ADDR_WIDTH-1:0] r_addr,
 
+	input wire [C_IMG_WH_WIDTH-1:0] img_width,
+	input wire [C_IMG_WH_WIDTH-1:0] img_height,
+
 	// User ports ends
 	// Do not modify the ports beyond this line
 
-
-	// Ports of Axi Slave Bus Interface S_AXI_LITE
-	input wire  s_axi_lite_aclk,
-	input wire  s_axi_lite_aresetn,
-	input wire [C_S_AXI_LITE_ADDR_WIDTH-1 : 0] s_axi_lite_awaddr,
-	input wire [2 : 0] s_axi_lite_awprot,
-	input wire  s_axi_lite_awvalid,
-	output wire  s_axi_lite_awready,
-	input wire [C_S_AXI_LITE_DATA_WIDTH-1 : 0] s_axi_lite_wdata,
-	input wire [(C_S_AXI_LITE_DATA_WIDTH/8)-1 : 0] s_axi_lite_wstrb,
-	input wire  s_axi_lite_wvalid,
-	output wire  s_axi_lite_wready,
-	output wire [1 : 0] s_axi_lite_bresp,
-	output wire  s_axi_lite_bvalid,
-	input wire  s_axi_lite_bready,
-	input wire [C_S_AXI_LITE_ADDR_WIDTH-1 : 0] s_axi_lite_araddr,
-	input wire [2 : 0] s_axi_lite_arprot,
-	input wire  s_axi_lite_arvalid,
-	output wire  s_axi_lite_arready,
-	output wire [C_S_AXI_LITE_DATA_WIDTH-1 : 0] s_axi_lite_rdata,
-	output wire [1 : 0] s_axi_lite_rresp,
-	output wire  s_axi_lite_rvalid,
-	input wire  s_axi_lite_rready,
-
 	// Ports of Axi Master Bus Interface M_AXI
-	input wire  m_axi_aclk,
-	input wire  m_axi_aresetn,
 	output wire [C_M_AXI_ID_WIDTH-1 : 0] m_axi_awid,
 	output wire [C_M_AXI_ADDR_WIDTH-1 : 0] m_axi_awaddr,
 	output wire [7 : 0] m_axi_awlen,
@@ -103,33 +79,6 @@ module pvdma #
 	input wire  m_axi_rvalid,
 	output wire  m_axi_rready
 );
-// Instantiation of Axi Bus Interface S_AXI_LITE
-	PVDMA_S_AXI_LITE # (
-		.C_S_AXI_DATA_WIDTH(C_S_AXI_LITE_DATA_WIDTH),
-		.C_S_AXI_ADDR_WIDTH(C_S_AXI_LITE_ADDR_WIDTH)
-	) PVDMA_S_AXI_LITE_inst (
-		.S_AXI_ACLK(s_axi_lite_aclk),
-		.S_AXI_ARESETN(s_axi_lite_aresetn),
-		.S_AXI_AWADDR(s_axi_lite_awaddr),
-		.S_AXI_AWPROT(s_axi_lite_awprot),
-		.S_AXI_AWVALID(s_axi_lite_awvalid),
-		.S_AXI_AWREADY(s_axi_lite_awready),
-		.S_AXI_WDATA(s_axi_lite_wdata),
-		.S_AXI_WSTRB(s_axi_lite_wstrb),
-		.S_AXI_WVALID(s_axi_lite_wvalid),
-		.S_AXI_WREADY(s_axi_lite_wready),
-		.S_AXI_BRESP(s_axi_lite_bresp),
-		.S_AXI_BVALID(s_axi_lite_bvalid),
-		.S_AXI_BREADY(s_axi_lite_bready),
-		.S_AXI_ARADDR(s_axi_lite_araddr),
-		.S_AXI_ARPROT(s_axi_lite_arprot),
-		.S_AXI_ARVALID(s_axi_lite_arvalid),
-		.S_AXI_ARREADY(s_axi_lite_arready),
-		.S_AXI_RDATA(s_axi_lite_rdata),
-		.S_AXI_RRESP(s_axi_lite_rresp),
-		.S_AXI_RVALID(s_axi_lite_rvalid),
-		.S_AXI_RREADY(s_axi_lite_rready)
-	);
 
 // Instantiation of Axi Bus Interface M_AXI_W
 
@@ -165,8 +114,8 @@ module pvdma #
 		.frame_pulse(w_sof),
 		.base_addr(w_addr),
 
-		.M_AXI_ACLK(m_axi_aclk),
-		.M_AXI_ARESETN(m_axi_aresetn),
+		.M_AXI_ACLK(clk),
+		.M_AXI_ARESETN(resetn),
 		.M_AXI_AWID(m_axi_awid),
 		.M_AXI_AWADDR(m_axi_awaddr),
 		.M_AXI_AWLEN(m_axi_awlen),
@@ -228,8 +177,8 @@ module pvdma #
 		.frame_pulse(r_sof),
 		.base_addr(r_addr),
 
-		.M_AXI_ACLK(m_axi_aclk),
-		.M_AXI_ARESETN(m_axi_aresetn),
+		.M_AXI_ACLK(clk),
+		.M_AXI_ARESETN(resetn),
 		.M_AXI_ARID(m_axi_arid),
 		.M_AXI_ARADDR(m_axi_araddr),
 		.M_AXI_ARLEN(m_axi_arlen),
