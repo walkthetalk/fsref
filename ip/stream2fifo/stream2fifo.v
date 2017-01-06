@@ -18,6 +18,9 @@
 // Additional Comments:
 //
 //////////////////////////////////////////////////////////////////////////////////
+
+/// @note the frame must be multi of data_width
+/// @note the data_width must be multi of pixel_width
 module stream2fifo #
 (
 	C_PIXEL_WIDTH = 8,

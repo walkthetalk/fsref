@@ -16,6 +16,7 @@ rm -rf dts/system.dts
 rm -rf dts/zynq-7000.dtsi
 rm -rf dts/device-tree.mss
 rm -rf output
+rm -rf vivado*
 
 cd ip
 for i in `find -maxdepth 1 -mindepth 1 -type d`; do
