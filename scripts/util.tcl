@@ -1,3 +1,5 @@
+config_webtalk -user off
+
 set VENDOR user.org
 set LIBRARY user
 
