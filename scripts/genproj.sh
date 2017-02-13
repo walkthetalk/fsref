@@ -2,9 +2,9 @@
 set -e
 
 dir_self=`dirname "$0"`
-dir_main="`readlink -fe "${dir_self}"`"
+dir_main="`readlink -fe "${dir_self}/.."`"
 
-VIVADO_BIN="/mnt/xilinx/Vivado/2016.3/bin/vivado"
+source ${dir_main}/scripts/setenv
 
 dir_ip="$dir_main/ip"
 for ip in `find ${dir_ip} -mindepth 1 -maxdepth 1 -type d`; do

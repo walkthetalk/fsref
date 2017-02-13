@@ -2,7 +2,7 @@
 set -e
 
 dir_self=`dirname "$0"`
-dir_main="`readlink -fe "${dir_self}"`"
+dir_main="`readlink -fe "${dir_self}/.."`"
 
 out_dir="${dir_main}/output"
 if [ ! -d "${out_dir}" ]; then
@@ -15,7 +15,7 @@ if [ ! -d "${repo_dt}" ]; then
 	exit 1
 fi
 
-/mnt/xilinx/SDK/2016.3/bin/hsi \
+${HSI_BIN} \
 	-nojournal -nolog \
 	-mode batch \
 	-source ${dir_main}/scripts/gendts.tcl \

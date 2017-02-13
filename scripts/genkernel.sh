@@ -2,7 +2,7 @@
 set -e
 
 dir_self=`dirname "$0"`
-dir_main="`readlink -fe "${dir_self}"`"
+dir_main="`readlink -fe "${dir_self}/.."`"
 
 kernel_src="`dirname "$1"`"
 if [ ! -d "${kernel_src}" ]; then

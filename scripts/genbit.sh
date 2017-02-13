@@ -2,7 +2,7 @@
 set -e
 
 dir_self=`dirname "$0"`
-dir_main="`readlink -fe "${dir_self}"`"
+dir_main="`readlink -fe "${dir_self}/.."`"
 
 out_dir="${dir_main}/output"
 if [ ! -d "${out_dir}" ]; then
