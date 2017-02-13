@@ -33,6 +33,8 @@ module yscaler #
 	input wire [C_RESO_WIDTH-1 : 0] scale_width,
 	input wire [C_RESO_WIDTH-1 : 0] scale_height,
 
+	output wire	fifo_rst,
+
 	input wire	f0_full,
 	output wire [C_PIXEL_WIDTH+1 : 0] f0_wr_data,
 	output wire	f0_wr_en,

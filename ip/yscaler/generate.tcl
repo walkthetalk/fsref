@@ -84,6 +84,17 @@ pip_add_bus_if [ipx::current_core] resetn {
 	POLARITY {ACTIVE_LOW}
 }
 
+# the rst of FIFO is undef, so we do not need make the fifo_rst as interface
+#pip_add_bus_if [ipx::current_core] fifo_rst {
+#	abstraction_type_vlnv xilinx.com:signal:reset_rtl:1.0
+#	bus_type_vlnv xilinx.com:signal:reset:1.0
+#	interface_mode master
+#} {
+#	FIFO_RST fifo_rst
+#} {
+#	POLARITY {ACTIVE_HIGH}
+#}
+
 pip_add_bus_if [ipx::current_core] clk {
 	abstraction_type_vlnv xilinx.com:signal:clock_rtl:1.0
 	bus_type_vlnv xilinx.com:signal:clock:1.0
@@ -93,6 +104,15 @@ pip_add_bus_if [ipx::current_core] clk {
 } {
 	ASSOCIATED_BUSIF {S_AXIS:M_AXIS:FIFO0_WRITE:FIFO0_READ:FIFO1_WRITE:FIFO1_READ}
 	ASSOCIATED_RESET {resetn}
+}
+
+pip_add_bus_if [ipx::current_core] fsync {
+	abstraction_type_vlnv xilinx.com:signal:video_frame_sync_rtl:1.0
+	bus_type_vlnv xilinx.com:signal:video_frame_sync:1.0
+	interface_mode slave
+} {
+	FSYNC fsync
+} {
 }
 
 # parameters
