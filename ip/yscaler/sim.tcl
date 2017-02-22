@@ -42,8 +42,6 @@ connect_bd_net [get_bd_pins /yscaler_0/clk] [get_bd_ports clk]
 connect_bd_net [get_bd_ports clk] [get_bd_pins fifo_generator_0/clk]
 connect_bd_net [get_bd_ports clk] [get_bd_pins fifo_generator_1/clk]
 
-create_bd_port -dir I fsync
-connect_bd_net [get_bd_pins /yscaler_0/fsync] [get_bd_ports fsync]
 create_bd_intf_port -mode Slave -vlnv xilinx.com:interface:axis_rtl:1.0 S_AXIS
 set_property -dict [list CONFIG.TUSER_WIDTH [get_property CONFIG.TUSER_WIDTH [get_bd_intf_pins yscaler_0/S_AXIS]] CONFIG.HAS_TLAST [get_property CONFIG.HAS_TLAST [get_bd_intf_pins yscaler_0/S_AXIS]]] [get_bd_intf_ports S_AXIS]
 connect_bd_intf_net [get_bd_intf_pins yscaler_0/S_AXIS] [get_bd_intf_ports S_AXIS]

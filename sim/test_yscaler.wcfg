@@ -1,0 +1,410 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<wave_config>
+   <wave_state>
+   </wave_state>
+   <db_ref_list>
+      <db_ref path="test_behav.wdb" id="1">
+         <top_modules>
+            <top_module name="glbl" />
+            <top_module name="test" />
+         </top_modules>
+      </db_ref>
+   </db_ref_list>
+   <zoom_setting>
+      <ZoomStartTime time="132880000fs"></ZoomStartTime>
+      <ZoomEndTime time="181930001fs"></ZoomEndTime>
+      <Cursor1Time time="161930000fs"></Cursor1Time>
+   </zoom_setting>
+   <column_width_setting>
+      <NameColumnWidth column_width="221"></NameColumnWidth>
+      <ValueColumnWidth column_width="76"></ValueColumnWidth>
+   </column_width_setting>
+   <WVObjectSize size="87" />
+   <wvobject type="array" fp_name="/test/M_AXIS_tdata_tb">
+      <obj_property name="ElementShortName">M_AXIS_tdata_tb[7:0]</obj_property>
+      <obj_property name="ObjectShortName">M_AXIS_tdata_tb[7:0]</obj_property>
+      <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
+   </wvobject>
+   <wvobject type="logic" fp_name="/test/M_AXIS_tlast_tb">
+      <obj_property name="ElementShortName">M_AXIS_tlast_tb</obj_property>
+      <obj_property name="ObjectShortName">M_AXIS_tlast_tb</obj_property>
+   </wvobject>
+   <wvobject type="logic" fp_name="/test/M_AXIS_tready_tb">
+      <obj_property name="ElementShortName">M_AXIS_tready_tb</obj_property>
+      <obj_property name="ObjectShortName">M_AXIS_tready_tb</obj_property>
+   </wvobject>
+   <wvobject type="logic" fp_name="/test/M_AXIS_tuser_tb">
+      <obj_property name="ElementShortName">M_AXIS_tuser_tb</obj_property>
+      <obj_property name="ObjectShortName">M_AXIS_tuser_tb</obj_property>
+   </wvobject>
+   <wvobject type="logic" fp_name="/test/M_AXIS_tvalid_tb">
+      <obj_property name="ElementShortName">M_AXIS_tvalid_tb</obj_property>
+      <obj_property name="ObjectShortName">M_AXIS_tvalid_tb</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/test/S_AXIS_tdata_tb">
+      <obj_property name="ElementShortName">S_AXIS_tdata_tb[7:0]</obj_property>
+      <obj_property name="ObjectShortName">S_AXIS_tdata_tb[7:0]</obj_property>
+      <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
+   </wvobject>
+   <wvobject type="logic" fp_name="/test/S_AXIS_tlast_tb">
+      <obj_property name="ElementShortName">S_AXIS_tlast_tb</obj_property>
+      <obj_property name="ObjectShortName">S_AXIS_tlast_tb</obj_property>
+   </wvobject>
+   <wvobject type="logic" fp_name="/test/S_AXIS_tready_tb">
+      <obj_property name="ElementShortName">S_AXIS_tready_tb</obj_property>
+      <obj_property name="ObjectShortName">S_AXIS_tready_tb</obj_property>
+   </wvobject>
+   <wvobject type="logic" fp_name="/test/S_AXIS_tuser_tb">
+      <obj_property name="ElementShortName">S_AXIS_tuser_tb</obj_property>
+      <obj_property name="ObjectShortName">S_AXIS_tuser_tb</obj_property>
+   </wvobject>
+   <wvobject type="logic" fp_name="/test/S_AXIS_tvalid_tb">
+      <obj_property name="ElementShortName">S_AXIS_tvalid_tb</obj_property>
+      <obj_property name="ObjectShortName">S_AXIS_tvalid_tb</obj_property>
+   </wvobject>
+   <wvobject type="logic" fp_name="/test/clk">
+      <obj_property name="ElementShortName">clk</obj_property>
+      <obj_property name="ObjectShortName">clk</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/test/cnt">
+      <obj_property name="ElementShortName">cnt[23:0]</obj_property>
+      <obj_property name="ObjectShortName">cnt[23:0]</obj_property>
+      <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/test/ori_height_tb">
+      <obj_property name="ElementShortName">ori_height_tb[11:0]</obj_property>
+      <obj_property name="ObjectShortName">ori_height_tb[11:0]</obj_property>
+      <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/test/ori_width_tb">
+      <obj_property name="ElementShortName">ori_width_tb[11:0]</obj_property>
+      <obj_property name="ObjectShortName">ori_width_tb[11:0]</obj_property>
+      <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/test/outcnt">
+      <obj_property name="ElementShortName">outcnt[23:0]</obj_property>
+      <obj_property name="ObjectShortName">outcnt[23:0]</obj_property>
+      <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/test/outline">
+      <obj_property name="ElementShortName">outline[11:0]</obj_property>
+      <obj_property name="ObjectShortName">outline[11:0]</obj_property>
+      <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
+   </wvobject>
+   <wvobject type="logic" fp_name="/test/resetn_tb">
+      <obj_property name="ElementShortName">resetn_tb</obj_property>
+      <obj_property name="ObjectShortName">resetn_tb</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/test/scale_height_tb">
+      <obj_property name="ElementShortName">scale_height_tb[11:0]</obj_property>
+      <obj_property name="ObjectShortName">scale_height_tb[11:0]</obj_property>
+      <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/test/scale_width_tb">
+      <obj_property name="ElementShortName">scale_width_tb[11:0]</obj_property>
+      <obj_property name="ObjectShortName">scale_width_tb[11:0]</obj_property>
+      <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/test/uut/test_yscaler_i/yscaler_0/inst/C_CMP_WIDTH">
+      <obj_property name="ElementShortName">C_CMP_WIDTH[31:0]</obj_property>
+      <obj_property name="ObjectShortName">C_CMP_WIDTH[31:0]</obj_property>
+      <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/test/uut/test_yscaler_i/yscaler_0/inst/C_FIFO_RST_KEEP">
+      <obj_property name="ElementShortName">C_FIFO_RST_KEEP[31:0]</obj_property>
+      <obj_property name="ObjectShortName">C_FIFO_RST_KEEP[31:0]</obj_property>
+      <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/test/uut/test_yscaler_i/yscaler_0/inst/C_PIXEL_WIDTH">
+      <obj_property name="ElementShortName">C_PIXEL_WIDTH[31:0]</obj_property>
+      <obj_property name="ObjectShortName">C_PIXEL_WIDTH[31:0]</obj_property>
+      <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/test/uut/test_yscaler_i/yscaler_0/inst/C_RESET_DELAY_NUM">
+      <obj_property name="ElementShortName">C_RESET_DELAY_NUM[31:0]</obj_property>
+      <obj_property name="ObjectShortName">C_RESET_DELAY_NUM[31:0]</obj_property>
+      <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/test/uut/test_yscaler_i/yscaler_0/inst/C_RESO_WIDTH">
+      <obj_property name="ElementShortName">C_RESO_WIDTH[31:0]</obj_property>
+      <obj_property name="ObjectShortName">C_RESO_WIDTH[31:0]</obj_property>
+      <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/test/uut/test_yscaler_i/yscaler_0/inst/ODELAY">
+      <obj_property name="ElementShortName">ODELAY[31:0]</obj_property>
+      <obj_property name="ObjectShortName">ODELAY[31:0]</obj_property>
+      <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
+   </wvobject>
+   <wvobject type="logic" fp_name="/test/uut/test_yscaler_i/yscaler_0/inst/clk">
+      <obj_property name="ElementShortName">clk</obj_property>
+      <obj_property name="ObjectShortName">clk</obj_property>
+   </wvobject>
+   <wvobject type="logic" fp_name="/test/uut/test_yscaler_i/yscaler_0/inst/dov4repeat">
+      <obj_property name="ElementShortName">dov4repeat</obj_property>
+      <obj_property name="ObjectShortName">dov4repeat</obj_property>
+   </wvobject>
+   <wvobject type="logic" fp_name="/test/uut/test_yscaler_i/yscaler_0/inst/f0_empty">
+      <obj_property name="ElementShortName">f0_empty</obj_property>
+      <obj_property name="ObjectShortName">f0_empty</obj_property>
+   </wvobject>
+   <wvobject type="logic" fp_name="/test/uut/test_yscaler_i/yscaler_0/inst/f0_full">
+      <obj_property name="ElementShortName">f0_full</obj_property>
+      <obj_property name="ObjectShortName">f0_full</obj_property>
+   </wvobject>
+   <wvobject type="logic" fp_name="/test/uut/test_yscaler_i/yscaler_0/inst/f0_rd_en_d1">
+      <obj_property name="ElementShortName">f0_rd_en_d1</obj_property>
+      <obj_property name="ObjectShortName">f0_rd_en_d1</obj_property>
+   </wvobject>
+   <wvobject type="logic" fp_name="/test/uut/test_yscaler_i/yscaler_0/inst/f0_ready">
+      <obj_property name="ElementShortName">f0_ready</obj_property>
+      <obj_property name="ObjectShortName">f0_ready</obj_property>
+   </wvobject>
+   <wvobject type="logic" fp_name="/test/uut/test_yscaler_i/yscaler_0/inst/f0_wr_en">
+      <obj_property name="ElementShortName">f0_wr_en</obj_property>
+      <obj_property name="ObjectShortName">f0_wr_en</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/test/uut/test_yscaler_i/yscaler_0/inst/f0_wr_data">
+      <obj_property name="ElementShortName">f0_wr_data[9:0]</obj_property>
+      <obj_property name="ObjectShortName">f0_wr_data[9:0]</obj_property>
+      <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
+   </wvobject>
+   <wvobject type="logic" fp_name="/test/uut/test_yscaler_i/yscaler_0/inst/f0_rd_en">
+      <obj_property name="ElementShortName">f0_rd_en</obj_property>
+      <obj_property name="ObjectShortName">f0_rd_en</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/test/uut/test_yscaler_i/yscaler_0/inst/f0_rd_data">
+      <obj_property name="ElementShortName">f0_rd_data[9:0]</obj_property>
+      <obj_property name="ObjectShortName">f0_rd_data[9:0]</obj_property>
+      <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/test/uut/test_yscaler_i/yscaler_0/inst/f1_rd_data">
+      <obj_property name="ElementShortName">f1_rd_data[9:0]</obj_property>
+      <obj_property name="ObjectShortName">f1_rd_data[9:0]</obj_property>
+      <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
+   </wvobject>
+   <wvobject type="logic" fp_name="/test/uut/test_yscaler_i/yscaler_0/inst/f1_rd_en">
+      <obj_property name="ElementShortName">f1_rd_en</obj_property>
+      <obj_property name="ObjectShortName">f1_rd_en</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/test/uut/test_yscaler_i/yscaler_0/inst/f1_wr_data">
+      <obj_property name="ElementShortName">f1_wr_data[9:0]</obj_property>
+      <obj_property name="ObjectShortName">f1_wr_data[9:0]</obj_property>
+      <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
+   </wvobject>
+   <wvobject type="logic" fp_name="/test/uut/test_yscaler_i/yscaler_0/inst/f1_wr_en">
+      <obj_property name="ElementShortName">f1_wr_en</obj_property>
+      <obj_property name="ObjectShortName">f1_wr_en</obj_property>
+   </wvobject>
+   <wvobject type="logic" fp_name="/test/uut/test_yscaler_i/yscaler_0/inst/f1_full">
+      <obj_property name="ElementShortName">f1_full</obj_property>
+      <obj_property name="ObjectShortName">f1_full</obj_property>
+   </wvobject>
+   <wvobject type="logic" fp_name="/test/uut/test_yscaler_i/yscaler_0/inst/f1_empty">
+      <obj_property name="ElementShortName">f1_empty</obj_property>
+      <obj_property name="ObjectShortName">f1_empty</obj_property>
+   </wvobject>
+   <wvobject type="logic" fp_name="/test/uut/test_yscaler_i/yscaler_0/inst/fifo_rst">
+      <obj_property name="ElementShortName">fifo_rst</obj_property>
+      <obj_property name="ObjectShortName">fifo_rst</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/test/uut/test_yscaler_i/yscaler_0/inst/fifo_rst_keep">
+      <obj_property name="ElementShortName">fifo_rst_keep[4:0]</obj_property>
+      <obj_property name="ObjectShortName">fifo_rst_keep[4:0]</obj_property>
+      <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/test/uut/test_yscaler_i/yscaler_0/inst/i_line">
+      <obj_property name="ElementShortName">i_line[11:0]</obj_property>
+      <obj_property name="ObjectShortName">i_line[11:0]</obj_property>
+      <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
+   </wvobject>
+   <wvobject type="logic" fp_name="/test/uut/test_yscaler_i/yscaler_0/inst/int_resetn">
+      <obj_property name="ElementShortName">int_resetn</obj_property>
+      <obj_property name="ObjectShortName">int_resetn</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/test/uut/test_yscaler_i/yscaler_0/inst/m_axis_tdata">
+      <obj_property name="ElementShortName">m_axis_tdata[7:0]</obj_property>
+      <obj_property name="ObjectShortName">m_axis_tdata[7:0]</obj_property>
+      <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
+   </wvobject>
+   <wvobject type="logic" fp_name="/test/uut/test_yscaler_i/yscaler_0/inst/m_axis_tlast">
+      <obj_property name="ElementShortName">m_axis_tlast</obj_property>
+      <obj_property name="ObjectShortName">m_axis_tlast</obj_property>
+   </wvobject>
+   <wvobject type="logic" fp_name="/test/uut/test_yscaler_i/yscaler_0/inst/m_axis_tready">
+      <obj_property name="ElementShortName">m_axis_tready</obj_property>
+      <obj_property name="ObjectShortName">m_axis_tready</obj_property>
+   </wvobject>
+   <wvobject type="logic" fp_name="/test/uut/test_yscaler_i/yscaler_0/inst/m_axis_tuser">
+      <obj_property name="ElementShortName">m_axis_tuser</obj_property>
+      <obj_property name="ObjectShortName">m_axis_tuser</obj_property>
+   </wvobject>
+   <wvobject type="logic" fp_name="/test/uut/test_yscaler_i/yscaler_0/inst/m_axis_tvalid">
+      <obj_property name="ElementShortName">m_axis_tvalid</obj_property>
+      <obj_property name="ObjectShortName">m_axis_tvalid</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/test/uut/test_yscaler_i/yscaler_0/inst/m_line">
+      <obj_property name="ElementShortName">m_line[11:0]</obj_property>
+      <obj_property name="ObjectShortName">m_line[11:0]</obj_property>
+      <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/test/uut/test_yscaler_i/yscaler_0/inst/m_mul">
+      <obj_property name="ElementShortName">m_mul[25:0]</obj_property>
+      <obj_property name="ObjectShortName">m_mul[25:0]</obj_property>
+      <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/test/uut/test_yscaler_i/yscaler_0/inst/m_mul_nl">
+      <obj_property name="ElementShortName">m_mul_nl[25:0]</obj_property>
+      <obj_property name="ObjectShortName">m_mul_nl[25:0]</obj_property>
+      <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/test/uut/test_yscaler_i/yscaler_0/inst/mdata">
+      <obj_property name="ElementShortName">mdata[0:0][8:0]</obj_property>
+      <obj_property name="ObjectShortName">mdata[0:0][8:0]</obj_property>
+      <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/test/uut/test_yscaler_i/yscaler_0/inst/mready">
+      <obj_property name="ElementShortName">mready[1:0]</obj_property>
+      <obj_property name="ObjectShortName">mready[1:0]</obj_property>
+      <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/test/uut/test_yscaler_i/yscaler_0/inst/msof">
+      <obj_property name="ElementShortName">msof[0:0]</obj_property>
+      <obj_property name="ObjectShortName">msof[0:0]</obj_property>
+      <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
+   </wvobject>
+   <wvobject type="logic" fp_name="/test/uut/test_yscaler_i/yscaler_0/inst/msof_ed">
+      <obj_property name="ElementShortName">msof_ed</obj_property>
+      <obj_property name="ObjectShortName">msof_ed</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/test/uut/test_yscaler_i/yscaler_0/inst/mvalid">
+      <obj_property name="ElementShortName">mvalid[0:0]</obj_property>
+      <obj_property name="ObjectShortName">mvalid[0:0]</obj_property>
+      <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
+   </wvobject>
+   <wvobject type="logic" fp_name="/test/uut/test_yscaler_i/yscaler_0/inst/o_last">
+      <obj_property name="ElementShortName">o_last</obj_property>
+      <obj_property name="ObjectShortName">o_last</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/test/uut/test_yscaler_i/yscaler_0/inst/o_line">
+      <obj_property name="ElementShortName">o_line[11:0]</obj_property>
+      <obj_property name="ObjectShortName">o_line[11:0]</obj_property>
+      <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/test/uut/test_yscaler_i/yscaler_0/inst/o_mul">
+      <obj_property name="ElementShortName">o_mul[25:0]</obj_property>
+      <obj_property name="ObjectShortName">o_mul[25:0]</obj_property>
+      <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/test/uut/test_yscaler_i/yscaler_0/inst/o_mul_nl">
+      <obj_property name="ElementShortName">o_mul_nl[25:0]</obj_property>
+      <obj_property name="ObjectShortName">o_mul_nl[25:0]</obj_property>
+      <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/test/uut/test_yscaler_i/yscaler_0/inst/o_pix">
+      <obj_property name="ElementShortName">o_pix[11:0]</obj_property>
+      <obj_property name="ObjectShortName">o_pix[11:0]</obj_property>
+      <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/test/uut/test_yscaler_i/yscaler_0/inst/ori_height">
+      <obj_property name="ElementShortName">ori_height[11:0]</obj_property>
+      <obj_property name="ObjectShortName">ori_height[11:0]</obj_property>
+      <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/test/uut/test_yscaler_i/yscaler_0/inst/ori_width">
+      <obj_property name="ElementShortName">ori_width[11:0]</obj_property>
+      <obj_property name="ObjectShortName">ori_width[11:0]</obj_property>
+      <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
+   </wvobject>
+   <wvobject type="logic" fp_name="/test/uut/test_yscaler_i/yscaler_0/inst/p1_valid">
+      <obj_property name="ElementShortName">p1_valid</obj_property>
+      <obj_property name="ObjectShortName">p1_valid</obj_property>
+   </wvobject>
+   <wvobject type="logic" fp_name="/test/uut/test_yscaler_i/yscaler_0/inst/p1m_valid">
+      <obj_property name="ElementShortName">p1m_valid</obj_property>
+      <obj_property name="ObjectShortName">p1m_valid</obj_property>
+   </wvobject>
+   <wvobject type="logic" fp_name="/test/uut/test_yscaler_i/yscaler_0/inst/p1rd_ready">
+      <obj_property name="ElementShortName">p1rd_ready</obj_property>
+      <obj_property name="ObjectShortName">p1rd_ready</obj_property>
+   </wvobject>
+   <wvobject type="logic" fp_name="/test/uut/test_yscaler_i/yscaler_0/inst/r_f0_rd_en">
+      <obj_property name="ElementShortName">r_f0_rd_en</obj_property>
+      <obj_property name="ObjectShortName">r_f0_rd_en</obj_property>
+   </wvobject>
+   <wvobject type="logic" fp_name="/test/uut/test_yscaler_i/yscaler_0/inst/r_f0_wr_en">
+      <obj_property name="ElementShortName">r_f0_wr_en</obj_property>
+      <obj_property name="ObjectShortName">r_f0_wr_en</obj_property>
+   </wvobject>
+   <wvobject type="logic" fp_name="/test/uut/test_yscaler_i/yscaler_0/inst/r_f1_wr_en">
+      <obj_property name="ElementShortName">r_f1_wr_en</obj_property>
+      <obj_property name="ObjectShortName">r_f1_wr_en</obj_property>
+   </wvobject>
+   <wvobject type="logic" fp_name="/test/uut/test_yscaler_i/yscaler_0/inst/ready_for_next_pixel">
+      <obj_property name="ElementShortName">ready_for_next_pixel</obj_property>
+      <obj_property name="ObjectShortName">ready_for_next_pixel</obj_property>
+   </wvobject>
+   <wvobject type="logic" fp_name="/test/uut/test_yscaler_i/yscaler_0/inst/repeat_line">
+      <obj_property name="ElementShortName">repeat_line</obj_property>
+      <obj_property name="ObjectShortName">repeat_line</obj_property>
+   </wvobject>
+   <wvobject type="logic" fp_name="/test/uut/test_yscaler_i/yscaler_0/inst/resetn">
+      <obj_property name="ElementShortName">resetn</obj_property>
+      <obj_property name="ObjectShortName">resetn</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/test/uut/test_yscaler_i/yscaler_0/inst/resetn_delay">
+      <obj_property name="ElementShortName">resetn_delay[6:0]</obj_property>
+      <obj_property name="ObjectShortName">resetn_delay[6:0]</obj_property>
+      <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/test/uut/test_yscaler_i/yscaler_0/inst/s_axis_tdata">
+      <obj_property name="ElementShortName">s_axis_tdata[7:0]</obj_property>
+      <obj_property name="ObjectShortName">s_axis_tdata[7:0]</obj_property>
+      <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
+   </wvobject>
+   <wvobject type="logic" fp_name="/test/uut/test_yscaler_i/yscaler_0/inst/s_axis_tlast">
+      <obj_property name="ElementShortName">s_axis_tlast</obj_property>
+      <obj_property name="ObjectShortName">s_axis_tlast</obj_property>
+   </wvobject>
+   <wvobject type="logic" fp_name="/test/uut/test_yscaler_i/yscaler_0/inst/s_axis_tready">
+      <obj_property name="ElementShortName">s_axis_tready</obj_property>
+      <obj_property name="ObjectShortName">s_axis_tready</obj_property>
+   </wvobject>
+   <wvobject type="logic" fp_name="/test/uut/test_yscaler_i/yscaler_0/inst/s_axis_tuser">
+      <obj_property name="ElementShortName">s_axis_tuser</obj_property>
+      <obj_property name="ObjectShortName">s_axis_tuser</obj_property>
+   </wvobject>
+   <wvobject type="logic" fp_name="/test/uut/test_yscaler_i/yscaler_0/inst/s_axis_tvalid">
+      <obj_property name="ElementShortName">s_axis_tvalid</obj_property>
+      <obj_property name="ObjectShortName">s_axis_tvalid</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/test/uut/test_yscaler_i/yscaler_0/inst/scale_height">
+      <obj_property name="ElementShortName">scale_height[11:0]</obj_property>
+      <obj_property name="ObjectShortName">scale_height[11:0]</obj_property>
+      <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/test/uut/test_yscaler_i/yscaler_0/inst/scale_width">
+      <obj_property name="ElementShortName">scale_width[11:0]</obj_property>
+      <obj_property name="ObjectShortName">scale_width[11:0]</obj_property>
+      <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
+   </wvobject>
+   <wvobject type="logic" fp_name="/test/uut/test_yscaler_i/yscaler_0/inst/snext">
+      <obj_property name="ElementShortName">snext</obj_property>
+      <obj_property name="ObjectShortName">snext</obj_property>
+   </wvobject>
+   <wvobject type="logic" fp_name="/test/uut/test_yscaler_i/yscaler_0/inst/ssof">
+      <obj_property name="ElementShortName">ssof</obj_property>
+      <obj_property name="ObjectShortName">ssof</obj_property>
+   </wvobject>
+   <wvobject type="logic" fp_name="/test/uut/test_yscaler_i/yscaler_0/inst/update_imul">
+      <obj_property name="ElementShortName">update_imul</obj_property>
+      <obj_property name="ObjectShortName">update_imul</obj_property>
+   </wvobject>
+   <wvobject type="logic" fp_name="/test/uut/test_yscaler_i/yscaler_0/inst/update_mmul">
+      <obj_property name="ElementShortName">update_mmul</obj_property>
+      <obj_property name="ObjectShortName">update_mmul</obj_property>
+   </wvobject>
+   <wvobject type="logic" fp_name="/test/uut/test_yscaler_i/yscaler_0/inst/update_omul">
+      <obj_property name="ElementShortName">update_omul</obj_property>
+      <obj_property name="ObjectShortName">update_omul</obj_property>
+   </wvobject>
+</wave_config>

@@ -106,15 +106,6 @@ pip_add_bus_if [ipx::current_core] clk {
 	ASSOCIATED_RESET {resetn}
 }
 
-pip_add_bus_if [ipx::current_core] fsync {
-	abstraction_type_vlnv xilinx.com:signal:video_frame_sync_rtl:1.0
-	bus_type_vlnv xilinx.com:signal:video_frame_sync:1.0
-	interface_mode slave
-} {
-	FSYNC fsync
-} {
-}
-
 # parameters
 pip_add_usr_par [ipx::current_core] {C_PIXEL_WIDTH} {
 	display_name {Pixel Width}

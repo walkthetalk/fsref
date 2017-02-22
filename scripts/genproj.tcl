@@ -471,3 +471,4 @@ update_compile_order -fileset sim_yscaler
 source $origin_dir/ip/yscaler/sim.tcl
 make_wrapper -files [get_files $origin_dir/fsref.srcs/sim_yscaler/bd/test_yscaler/test_yscaler.bd] -top
 add_files -fileset sim_yscaler -norecurse $origin_dir/fsref.srcs/sim_yscaler/bd/test_yscaler/hdl/test_yscaler_wrapper.v
+add_files -fileset sim_yscaler $origin_dir/ip/yscaler/test
