@@ -94,7 +94,7 @@ module yscaler #
 	wire update_omul;
 
 	/// misc
-	reg f0_dout_valid;
+	//reg f0_dout_valid;
 
 	/// counter
 	reg [C_RESO_WIDTH-1:0] i_line;	/// [h,1][0]
@@ -191,20 +191,18 @@ module yscaler #
 			mdata[0] <= 0;
 		end
 		else if (p1m_valid && mready[0]) begin
-			//if (f0_ready)
+			/// @note: don't need f0_dout_valid, just use f0_ready, see p1m_valid
+			$write("(");
+			if (f0_ready)
+				$write(f0_rd_data[C_PIXEL_WIDTH-1:0]);
+			else
+				$write("   ");
+			$write(" ", f1_rd_data[C_PIXEL_WIDTH-1:0], ")");
+
+			//if (f0_ready && m_mul_p < o_mul)
 			//	mdata[0] <= f0_rd_data + (f1_rd_data - f0_rd_data) * (m_mul - o_mul) / (scale_height*2);
 			//else
-				$write("(");
-				if (f0_dout_valid)
-					$write(f0_rd_data[C_PIXEL_WIDTH-1:0]);
-				else
-					$write("   ");
-				$write(" ", f1_rd_data[C_PIXEL_WIDTH-1:0], ")");
-
-				//if (f0_dout_valid && m_mul_p < o_mul)
-				//	mdata[0] <= f0_rd_data + (f1_rd_data - f0_rd_data) * (m_mul - o_mul) / (scale_height*2);
-				//else
-					mdata[0] <= f1_rd_data[C_PIXEL_WIDTH:0];
+				mdata[0] <= f1_rd_data[C_PIXEL_WIDTH:0];
 		end
 		else begin
 			mdata[0] <= mdata[0];
@@ -443,13 +441,13 @@ module yscaler #
 		end
 	end
 
-	always @(posedge clk) begin
-		if (int_resetn == 1'b0)
-			f0_dout_valid <= 1'b0;
-		else if (f0_rd_en)
-			f0_dout_valid <= 1'b1;
-		else
-			f0_dout_valid <= f0_dout_valid;
-	end
+	//always @(posedge clk) begin
+	//	if (int_resetn == 1'b0)
+	//		f0_dout_valid <= 1'b0;
+	//	else if (f0_rd_en)
+	//		f0_dout_valid <= 1'b1;
+	//	else
+	//		f0_dout_valid <= f0_dout_valid;
+	//end
 endmodule
 
