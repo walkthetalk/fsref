@@ -62,8 +62,6 @@ module yscaler #
 	output wire m_axis_tlast,
 	input wire m_axis_tready
 );
-	localparam C_CMP_WIDTH = C_RESO_WIDTH * 2 + 1 + 1;
-
 	wire int_resetn;
 
 	reg [C_RESO_WIDTH-1:0] out_line;
@@ -103,10 +101,8 @@ module yscaler #
 
 	/// counter
 	reg [C_RESO_WIDTH-1:0] i_line;	/// [h,1][0]
-	reg [C_RESO_WIDTH-1:0] m_line;	/// [h,1] @note: keep last 1
 	reg [C_RESO_WIDTH-1:0] m_pix;
 	reg m_last;
-	reg [C_RESO_WIDTH-1:0] o_line;	/// [h, 1][0]
 	reg o_last_pix;
 	/*
 	 * @note: m_pix->m_last is only for burr on fifo read enable.
@@ -115,21 +111,27 @@ module yscaler #
 	 */
 
 	/// mul for compare
-	reg [C_CMP_WIDTH-1:0] m_mul_p;
-	reg [C_CMP_WIDTH-1:0] m_mul;
-	reg [C_CMP_WIDTH-1:0] o_mul;
-
-	reg [C_CMP_WIDTH-1:0] m_mul_nl;
-	reg [C_CMP_WIDTH-1:0] o_mul_nl;
-
 	wire update_imul;
 	assign update_imul = s_axis_tlast && s_axis_tready && s_axis_tvalid;
+
 	wire m_repeat_line;
-	assign m_repeat_line = (m_mul >= o_mul_nl);
-	wire update_mmul; /// @note: update even repeat, (for last input line, iow, extenting)
-	assign update_mmul = int_f1_rd_en && m_last && (~m_repeat_line || m_line == 1);
-	wire update_omul;
-	assign update_omul = int_f1_rd_en && m_last && (m_mul >= o_mul);
+	wire [C_RESO_WIDTH-1 : 0] m_line;	/// [h,1]
+	wire [C_RESO_WIDTH-1 : 0] o_line;	/// [h,1][0]
+	wire m_valid;	/// for output
+
+	bilinear_scaler # (
+		.C_RESO_WIDTH(C_RESO_WIDTH)
+	) scaler_inst (
+		.clk(clk),
+		.resetn(int_resetn),
+		.ori_size(ori_height),
+		.scale_size(scale_height),
+		.update_mul(int_f1_rd_en && m_last),
+		.m_repeat_line(m_repeat_line),
+		.m_inv_cnt(m_line),
+		.o_inv_cnt(o_line),
+		.m_ovalid(m_valid)
+	);
 
 	/// s_axis
 	wire snext;
@@ -261,69 +263,16 @@ module yscaler #
 			p1_valid <= p1_valid;
 	end
 
-	assign p1m_valid = p1_valid && (m_mul >= o_mul);
+	assign p1m_valid = p1_valid && m_valid;
 	/// @note: if you ensure more than 3 pixels per line, you can remove `f1_rd_en_d2',
 	///        and move `f0_ready' one clock ahead of current implementation.
-	assign p1rd_ready = ((~p1_valid || mready[0] || m_mul < o_mul)
+	assign p1rd_ready = ((~p1_valid || mready[0] || ~m_valid)
 			&& (m_repeat_line	/// if need repeat
 				? (i_line < m_line)	/// wait for recieved full line
 				: (~m_last || (~f1_rd_en_d1 && ~f1_rd_en_d2))	/// wait the line full stored in fifo0
 			));
 
-	/// compare counter for checking if ready
-	/// @note: max value is ori_height * scale_height * 2 + (ori_height or scale_height)/2
 
-	always @(posedge clk) begin
-		if (int_resetn == 1'b0)
-			m_mul_nl <= (ori_height == 1 ? scale_height * 2 : scale_height * 3);
-		else if (update_mmul) begin
-			case (m_line)
-			1:	m_mul_nl <= m_mul_nl;
-			2:	m_mul_nl <= m_mul_nl + scale_height;
-			default:m_mul_nl <= m_mul_nl + scale_height * 2;
-			endcase
-		end
-		else
-			m_mul_nl <= m_mul_nl;
-	end
-	always @(posedge clk) begin
-		if (int_resetn == 1'b0)	m_mul <= scale_height;
-		else if (update_mmul)	m_mul <= m_mul_nl;
-		else			m_mul <= m_mul;
-	end
-	always @(posedge clk) begin
-		if (int_resetn == 1'b0)	m_mul_p <= 0;
-		else if (update_mmul)	m_mul_p <= m_mul;
-		else			m_mul_p <= m_mul_p;
-	end
-
-	always @(posedge clk) begin
-		if (int_resetn == 1'b0)	o_mul <= ori_height;
-		else if (update_omul)	o_mul <= o_mul_nl;
-		else			o_mul <= o_mul;
-	end
-
-	always @(posedge clk) begin
-		if (int_resetn == 1'b0)
-			o_mul_nl <= ori_height*3;
-		else if (update_omul) begin
-			o_mul_nl <= o_mul_nl + ori_height * 2;
-		end
-		else
-			o_mul_nl <= o_mul_nl;
-	end
-
-	always @(posedge clk) begin
-		if (int_resetn == 1'b0)	o_line <= scale_height;
-		else if (update_omul)	o_line <= o_line - 1;
-		else			o_line <= o_line;
-	end
-
-	always @(posedge clk) begin
-		if (int_resetn == 1'b0)	m_line <= ori_height;
-		else if (update_mmul && m_line != 1)	m_line <= m_line - 1;	/// @note: don't modify counter when repeating 1st line
-		else			m_line <= m_line;
-	end
 	always @(posedge clk) begin
 		if (int_resetn == 1'b0)
 			i_line <= ori_height;
@@ -360,7 +309,7 @@ module yscaler #
 	always @(posedge clk) begin
 		if (int_resetn == 1'b0)
 			o_last_pix <= 1'b0;
-		else if (int_f1_rd_en && m_mul >= o_mul && m_pix == 1 && o_line == 1)
+		else if (int_f1_rd_en && m_valid && m_pix == 1 && o_line == 1)
 			o_last_pix <= 1'b1;
 		else
 			o_last_pix <= o_last_pix;
