@@ -1,6 +1,5 @@
 `timescale 1ns / 1ps
 
-/// 1. at least 5 pixel every line
 /// 2. first line output : if f0 valid
 /// 3. sof for reset
 
@@ -21,7 +20,7 @@ reg S_AXIS_tvalid_tb;
 reg[11:0] ori_height_tb = 10;
 reg[11:0] ori_width_tb = 10;
 reg resetn_tb;
-reg[11:0] scale_height_tb = 50;
+reg[11:0] scale_height_tb = 2;
 reg[11:0] scale_width_tb = 10;
 
 reg clk;
@@ -53,6 +52,7 @@ initial begin
 	M_AXIS_tready_tb <= 1'b0;
 	#0.2 M_AXIS_tready_tb <= 1'b1;
 	forever begin
+		//#2 M_AXIS_tready_tb <= 1'b1;
 		#2 M_AXIS_tready_tb <= {$random}%2;
 	end
 end
@@ -68,52 +68,71 @@ reg[23:0] cnt = 0;
 reg[23:0] outcnt = 0;
 reg[11:0] outline = 0;
 
-initial begin
-	while (cnt != ori_height_tb * ori_width_tb
-			|| outcnt != scale_height_tb * scale_width_tb) begin
-			#2;
-	end
-	$display ("input and output all done!");
-end
-
 always @(posedge clk) begin
-	if (resetn_tb == 1'b0 || (cnt >= ori_width_tb * ori_height_tb)) begin
-		//cnt <= 0;
+	if (resetn_tb == 1'b0 || (cnt > ori_width_tb * ori_height_tb)) begin
+		cnt <= 0;
 		S_AXIS_tvalid_tb <= 1'b0;
 		S_AXIS_tdata_tb <= 0;
 		S_AXIS_tlast_tb <= 1'b0;
 		S_AXIS_tuser_tb <= 1'b0;
 	end
-	else if (~S_AXIS_tvalid_tb || S_AXIS_tready_tb)  begin
-		S_AXIS_tvalid_tb <= 1'b1;
-		if (cnt == 0) begin
+	else if (cnt == 0 && ~S_AXIS_tvalid_tb) begin
+		if ({$random}%2) begin
+			S_AXIS_tvalid_tb <= 1'b1;
 			S_AXIS_tuser_tb <= 1'b1;
 			S_AXIS_tdata_tb <= 0;
+			S_AXIS_tlast_tb <= (ori_width_tb == 1);
+			cnt <= 1;
+		end
+	end
+	else if (S_AXIS_tvalid_tb && S_AXIS_tready_tb)  begin
+		if (cnt == ori_width_tb * ori_height_tb) begin
+			cnt <= 0;
+			S_AXIS_tvalid_tb <= 1'b0;
+			S_AXIS_tdata_tb <= 0;
 			S_AXIS_tlast_tb <= 1'b0;
+			S_AXIS_tuser_tb <= 1'b0;
+		end
+		else if ({$random}%2) begin
+			S_AXIS_tvalid_tb <= 1'b1;
+			S_AXIS_tdata_tb <= (cnt / ori_width_tb * 10 + cnt % ori_width_tb);
+			S_AXIS_tlast_tb <= ((cnt+1) % ori_width_tb == 0);
+			S_AXIS_tuser_tb <= 1'b0;
+			cnt <= cnt + 1;
 		end
 		else begin
-			S_AXIS_tuser_tb <= 1'b0;
-			S_AXIS_tdata_tb <= (cnt / ori_width_tb * 10 + cnt % ori_width_tb);
-			S_AXIS_tlast_tb <= ((cnt + 1) % ori_width_tb == 0);
+			S_AXIS_tvalid_tb <= 1'b0;
 		end
-		cnt <= cnt + 1;
+	end
+	else if (~S_AXIS_tvalid_tb) begin
+		if ({$random}%2) begin
+			S_AXIS_tvalid_tb <= 1'b1;
+			S_AXIS_tdata_tb <= (cnt / ori_width_tb * 10 + cnt % ori_width_tb);
+			S_AXIS_tlast_tb <= ((cnt+1) % ori_width_tb == 0);
+			S_AXIS_tuser_tb <= 1'b0;
+			cnt <= cnt + 1;
+		end
 	end
 
-	if (resetn_tb == 1'b1) begin
-		if (M_AXIS_tready_tb && M_AXIS_tvalid_tb) begin
-			if (M_AXIS_tuser_tb != (outcnt == 0)) begin
-				$display("error sof");
-			end
-			if (M_AXIS_tlast_tb != ((outcnt+1) % ori_width_tb == 0)) begin
-				$display("error eol");
-			end
-			$write(M_AXIS_tdata_tb, "  ");
-			if (M_AXIS_tlast_tb) begin
-				$write(outline+1, "\n");
-				outline <= outline + 1;
-			end
-			outcnt <= outcnt + 1;
+
+	if (resetn_tb == 1'b0 || (outcnt >= scale_height_tb * scale_width_tb && M_AXIS_tready_tb)) begin
+		if (outcnt > 0) $display ("new output!");
+		outcnt <= 0;
+		outline <= 0;
+	end
+	else if (M_AXIS_tready_tb && M_AXIS_tvalid_tb) begin
+		if (M_AXIS_tuser_tb != (outcnt == 0)) begin
+			$display("error sof");
 		end
+		if (M_AXIS_tlast_tb != ((outcnt+1) % ori_width_tb == 0)) begin
+			$display("error eol");
+		end
+		$write(M_AXIS_tdata_tb, "  ");
+		if (M_AXIS_tlast_tb) begin
+			$write(outline+1, "\n");
+			outline <= outline + 1;
+		end
+		outcnt <= outcnt + 1;
 	end
 end
 
