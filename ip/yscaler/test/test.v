@@ -18,10 +18,10 @@ reg S_AXIS_tuser_tb;
 reg S_AXIS_tvalid_tb;
 
 reg[11:0] ori_height_tb = 10;
-reg[11:0] ori_width_tb = 10;
+reg[11:0] ori_width_tb = 1;
 reg resetn_tb;
 reg[11:0] scale_height_tb = 2;
-reg[11:0] scale_width_tb = 10;
+reg[11:0] scale_width_tb = 1;
 
 reg clk;
 
@@ -52,8 +52,8 @@ initial begin
 	M_AXIS_tready_tb <= 1'b0;
 	#0.2 M_AXIS_tready_tb <= 1'b1;
 	forever begin
-		//#2 M_AXIS_tready_tb <= 1'b1;
-		#2 M_AXIS_tready_tb <= {$random}%2;
+		#2 M_AXIS_tready_tb <= 1'b1;
+		//#2 M_AXIS_tready_tb <= {$random}%2;
 	end
 end
 
@@ -68,7 +68,13 @@ reg[23:0] cnt = 0;
 reg[23:0] outcnt = 0;
 reg[11:0] outline = 0;
 
+reg randominput;
 always @(posedge clk) begin
+	if (resetn_tb == 1'b0)
+		randominput <= 1'b0;
+	else
+		randominput <= 1'b1;//{$random}%2;
+
 	if (resetn_tb == 1'b0 || (cnt > ori_width_tb * ori_height_tb)) begin
 		cnt <= 0;
 		S_AXIS_tvalid_tb <= 1'b0;
@@ -77,7 +83,7 @@ always @(posedge clk) begin
 		S_AXIS_tuser_tb <= 1'b0;
 	end
 	else if (cnt == 0 && ~S_AXIS_tvalid_tb) begin
-		if ({$random}%2) begin
+		if (randominput) begin
 			S_AXIS_tvalid_tb <= 1'b1;
 			S_AXIS_tuser_tb <= 1'b1;
 			S_AXIS_tdata_tb <= 0;
@@ -93,7 +99,7 @@ always @(posedge clk) begin
 			S_AXIS_tlast_tb <= 1'b0;
 			S_AXIS_tuser_tb <= 1'b0;
 		end
-		else if ({$random}%2) begin
+		else if (randominput) begin
 			S_AXIS_tvalid_tb <= 1'b1;
 			S_AXIS_tdata_tb <= (cnt / ori_width_tb * 10 + cnt % ori_width_tb);
 			S_AXIS_tlast_tb <= ((cnt+1) % ori_width_tb == 0);
@@ -105,7 +111,7 @@ always @(posedge clk) begin
 		end
 	end
 	else if (~S_AXIS_tvalid_tb) begin
-		if ({$random}%2) begin
+		if (randominput) begin
 			S_AXIS_tvalid_tb <= 1'b1;
 			S_AXIS_tdata_tb <= (cnt / ori_width_tb * 10 + cnt % ori_width_tb);
 			S_AXIS_tlast_tb <= ((cnt+1) % ori_width_tb == 0);

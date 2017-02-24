@@ -101,23 +101,27 @@ module yscaler #
 
 	/// counter
 	reg [C_RESO_WIDTH-1:0] i_line;	/// [h,1][0]
-	reg [C_RESO_WIDTH-1:0] m_pix;
 	reg m_last;
 	reg o_last_pix;
 	/*
 	 * @note: m_pix->m_last is only for burr on fifo read enable.
 	 *        and `m_last' must keep to next read enable.
-	 * @todo: maybe f1_rd_data[C_PIXEL_WIDTH] need be used with f1_dout_valid
+	 * @todo: if not, f1_rd_data[C_PIXEL_WIDTH] should be used with f1_dout_valid
 	 */
 
 	/// mul for compare
 	wire update_imul;
 	assign update_imul = s_axis_tlast && s_axis_tready && s_axis_tvalid;
 
-	wire m_repeat_line;
+	/*
+	 * use current pixel info
+	 */
+/*	wire m_repeat_line;
 	wire [C_RESO_WIDTH-1 : 0] m_line;	/// [h,1]
 	wire [C_RESO_WIDTH-1 : 0] o_line;	/// [h,1][0]
 	wire m_valid;	/// for output
+	wire update_mul;
+	assign update_mul = int_f1_rd_en && m_last;
 
 	bilinear_scaler # (
 		.C_RESO_WIDTH(C_RESO_WIDTH)
@@ -126,12 +130,64 @@ module yscaler #
 		.resetn(int_resetn),
 		.ori_size(ori_height),
 		.scale_size(scale_height),
-		.update_mul(int_f1_rd_en && m_last),
+		.update_mul(update_mul),
 		.m_repeat_line(m_repeat_line),
 		.m_inv_cnt(m_line),
 		.o_inv_cnt(o_line),
 		.m_ovalid(m_valid)
 	);
+*/
+
+	/*
+	 * use next pixel info
+	 */
+	wire m_repeat_line_next;
+	wire [C_RESO_WIDTH-1 : 0] m_line_next;	/// [h,1]
+	wire [C_RESO_WIDTH-1 : 0] o_line_next;	/// [h,1][0]
+	wire m_valid_next;	/// for output
+	wire update_mul_next;
+	assign update_mul_next = int_f1_rd_en && m_last_next;
+
+	bilinear_scaler # (
+		.C_RESO_WIDTH(C_RESO_WIDTH)
+	) scaler_inst_next (
+		.clk(clk),
+		.resetn(int_resetn),
+		.ori_size(ori_height),
+		.scale_size(scale_height),
+		.update_mul(update_mul_next),
+		.m_repeat_line(m_repeat_line_next),
+		.m_inv_cnt(m_line_next),
+		.o_inv_cnt(o_line_next),
+		.m_ovalid(m_valid_next)
+	);
+	reg m_repeat_line;
+	reg [C_RESO_WIDTH-1 : 0] m_line;	/// [h,1]
+	reg [C_RESO_WIDTH-1 : 0] o_line;	/// [h,1][0]
+	reg m_valid;	/// for output
+	always @(posedge clk) begin
+		if (int_resetn == 1'b0) begin
+			/// @note: init m_repeat_line with 1'b1,
+			///        for case of repeating 1st line,
+			///        but fail with too quick input
+			m_repeat_line <= 1'b1;
+			m_line <= ori_height;
+			o_line <= scale_height;
+			m_valid <= 1'b0;
+		end
+		else if (int_f1_rd_en) begin
+			m_repeat_line <= m_repeat_line_next;
+			m_line <= m_line_next;
+			o_line <= o_line_next;
+			m_valid <= m_valid_next;
+		end
+		else begin
+			m_repeat_line <= m_repeat_line;
+			m_line <= m_line;
+			o_line <= o_line;
+			m_valid <= m_valid;
+		end
+	end
 
 	/// s_axis
 	wire snext;
@@ -281,27 +337,44 @@ module yscaler #
 		else
 			i_line <= i_line;
 	end
-
+///
+	reg[C_RESO_WIDTH-1:0] m_pix_next; /// [w,1]
 	always @(posedge clk) begin
 		if (int_resetn == 1'b0)
-			m_pix <= ori_width;
+			m_pix_next <= ori_width;
 		else if (int_f1_rd_en) begin
-			if (f1_rd_data[C_PIXEL_WIDTH])
-				m_pix <= ori_width - 1;
+			if (m_pix_next == 1)
+				m_pix_next <= ori_width;
 			else
-				m_pix <= m_pix - 1;
+				m_pix_next <= m_pix_next - 1;
 		end
 		else
-			m_pix <= m_pix;
+			m_pix_next <= m_pix_next;
 	end
+	reg m_last_next;
+	always @(posedge clk) begin
+		if (int_resetn == 1'b0) begin
+			if (ori_width == 1)
+				m_last_next <= 1'b1;
+			else
+				m_last_next <= 1'b0;
+		end
+		else if (int_f1_rd_en) begin
+			if (m_pix_next == 2 || ori_width == 1)
+				m_last_next <= 1'b1;
+			else
+				m_last_next <= 1'b0;
+		end
+		else
+			m_last_next <= m_last_next;
+	end
+
+///
 	always @(posedge clk) begin
 		if (int_resetn == 1'b0)
 			m_last <= 1'b0;
 		else if (int_f1_rd_en)
-			if (m_pix == 1 || ori_width == 1)
-				m_last <= 1'b1;
-			else
-				m_last <= 1'b0;
+			m_last <= m_last_next;
 		else
 			m_last <= m_last;
 	end
@@ -309,7 +382,7 @@ module yscaler #
 	always @(posedge clk) begin
 		if (int_resetn == 1'b0)
 			o_last_pix <= 1'b0;
-		else if (int_f1_rd_en && m_valid && m_pix == 1 && o_line == 1)
+		else if (int_f1_rd_en && m_valid_next && m_last_next && o_line_next == 1)
 			o_last_pix <= 1'b1;
 		else
 			o_last_pix <= o_last_pix;
@@ -384,12 +457,28 @@ module yscaler #
 	/// write fifo 1
 	reg r_f1_wr_en;
 	assign f1_wr_en = r_f1_wr_en && ~o_last_pix;
+	/*
+	 * pre-last-line need 2 clock to full stored in fifo0,
+	 * so we can make i_last_valid_line delay 1 clock.
+	 * 1. if extent: i_last_valid_line must be 1, no change
+	 * 2. if shrink: pre-last-line must not repeat, so need 2 clock
+	 */
+	reg [C_RESO_WIDTH-1 : 0] i_last_valid_line;
+	always @(posedge clk) begin
+		if (int_resetn == 1'b0)
+			i_last_valid_line <= 1;
+		else if (o_line_next == 1 && m_valid_next)
+			i_last_valid_line <= m_line_next;
+		else
+			i_last_valid_line <= i_last_valid_line;
+	end
+
 	always @(posedge clk) begin
 		if (int_resetn == 1'b0) begin
 			r_f1_wr_en <= 1'b0;
 			f1_wr_data <= 0;
 		end
-		else if (snext) begin
+		else if (snext && i_line >= i_last_valid_line) begin
 			r_f1_wr_en <= 1'b1;
 			f1_wr_data <= {s_axis_tuser, s_axis_tlast, s_axis_tdata};
 		end
@@ -424,14 +513,5 @@ module yscaler #
 			f0_wr_data <= f1_rd_data;
 		end
 	end
-
-	//always @(posedge clk) begin
-	//	if (int_resetn == 1'b0)
-	//		f0_dout_valid <= 1'b0;
-	//	else if (f0_rd_en)
-	//		f0_dout_valid <= 1'b1;
-	//	else
-	//		f0_dout_valid <= f0_dout_valid;
-	//end
 endmodule
 
