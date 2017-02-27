@@ -165,6 +165,7 @@ module yscaler #
 	reg [C_RESO_WIDTH-1 : 0] m_line;	/// [h,1]
 	reg [C_RESO_WIDTH-1 : 0] o_line;	/// [h,1][0]
 	reg m_valid;	/// for output
+	reg [C_RESO_WIDTH-1 : 0] i_stop_line;
 	always @(posedge clk) begin
 		if (int_resetn == 1'b0) begin
 			/// @note: init m_repeat_line with 1'b1,
@@ -174,18 +175,26 @@ module yscaler #
 			m_line <= ori_height;
 			o_line <= scale_height;
 			m_valid <= 1'b0;
+			i_stop_line <= ori_height - 1;
 		end
 		else if (int_f1_rd_en) begin
 			m_repeat_line <= m_repeat_line_next;
 			m_line <= m_line_next;
 			o_line <= o_line_next;
 			m_valid <= m_valid_next;
+			if (m_line == 1)
+				i_stop_line <= 0;
+			else if (m_repeat_line_next)
+				i_stop_line <= m_line_next - 1;
+			else
+				i_stop_line <= m_line_next - 2;
 		end
 		else begin
 			m_repeat_line <= m_repeat_line;
 			m_line <= m_line;
 			o_line <= o_line;
 			m_valid <= m_valid;
+			i_stop_line <= i_stop_line;
 		end
 	end
 
@@ -249,6 +258,16 @@ module yscaler #
 	wire p1m_valid;
 	wire p1rd_ready;
 
+	reg f0_dout_valid;
+	always @(posedge clk) begin
+		if (int_resetn == 1'b0)
+			f0_dout_valid <= 1'b0;
+		else if (int_f1_rd_en && m_line_next != m_line)
+			f0_dout_valid <= 1'b1;
+		else
+			f0_dout_valid <= f0_dout_valid;
+	end
+
 	///////////////////////////////////////////// m ////////////////////////////////////////
 
 	/// mvalid
@@ -268,9 +287,13 @@ module yscaler #
 			mdata[0] <= 0;
 		end
 		else if (p1m_valid && mready[0]) begin
-			/// @note: don't need f0_dout_valid, just use f0_ready, see p1m_valid
+			/*
+			 * @note: if ori_width > 2,
+			 *        we can use `f0_ready' directly,
+			 *        don't need f0_dout_valid
+			 */
 			$write("(");
-			if (f0_ready)
+			if (f0_dout_valid)
 				$write(f0_rd_data[C_PIXEL_WIDTH-1:0]);
 			else
 				$write("   ");
@@ -320,14 +343,6 @@ module yscaler #
 	end
 
 	assign p1m_valid = p1_valid && m_valid;
-	/// @note: if you ensure more than 3 pixels per line, you can remove `f1_rd_en_d2',
-	///        and move `f0_ready' one clock ahead of current implementation.
-	assign p1rd_ready = ((~p1_valid || mready[0] || ~m_valid)
-			&& (m_repeat_line	/// if need repeat
-				? (i_line < m_line)	/// wait for recieved full line
-				: (~m_last || (~f1_rd_en_d1 && ~f1_rd_en_d2))	/// wait the line full stored in fifo0
-			));
-
 
 	always @(posedge clk) begin
 		if (int_resetn == 1'b0)
@@ -388,24 +403,53 @@ module yscaler #
 			o_last_pix <= o_last_pix;
 	end
 
+	reg o_last_line;
+	always @(posedge clk) begin
+		if (int_resetn == 1'b0)
+			o_last_line <= 1'b0;
+		else if (int_f1_rd_en && m_valid_next && o_line_next == 1)
+			o_last_line <= 1'b1;
+		else
+			o_last_line <= o_last_line;
+	end
+
 	/// f0_ready
 	reg f0_ready;
 	always @(posedge clk) begin
 		if (int_resetn == 1'b0)
 			f0_ready <= 1'b0;
-		else if (f0_wr_en && f0_wr_data[C_PIXEL_WIDTH])
+		else if (int_f1_rd_en && m_last_next && ~m_repeat_line_next)
 			f0_ready <= 1'b1;
 		else
 			f0_ready <= f0_ready;
 	end
 
+	///@note: can use ~f0_empty to replace `f0_has_content'
+	reg f0_has_content;
+	always @(posedge clk) begin
+		if (int_resetn == 1'b0)
+			f0_has_content <= 1'b0;
+		else if (int_f1_rd_en && m_last_next && ~m_repeat_line_next && ori_width <= 2)
+			f0_has_content <= 1'b0;
+		else if (f0_wr_en)
+			f0_has_content <= 1'b1;
+		else
+			f0_has_content <= f0_has_content;
+	end
+
 	/// read fifo
+	assign p1rd_ready = ((~p1_valid || mready[0] || ~m_valid)
+			&& (
+				/// wait for recieved full line
+				~m_repeat_line || (i_line < m_line)
+			));
 	assign int_f1_rd_en	= int_resetn && ~f1_empty && p1rd_ready
-		&& ~o_last_pix;
+				///@note: wait fifo0 for small width
+				&& (~f0_ready || f0_has_content)
+				&& ~o_last_pix;
 	assign f1_rd_en = int_f1_rd_en;
 
 	reg f1_rd_en_d1;
-	reg f1_rd_en_d2;
 	reg f0_rd_en_d1;
 	assign f0_rd_en = f0_ready && int_f1_rd_en;
 
@@ -417,26 +461,24 @@ module yscaler #
 	end
 	always @(posedge clk) begin
 		if (int_resetn == 1'b0)
-			f1_rd_en_d2 <= 1'b0;
-		else
-			f1_rd_en_d2 <= f1_rd_en_d1;
-	end
-	always @(posedge clk) begin
-		if (int_resetn == 1'b0)
 			f0_rd_en_d1 <= 1'b0;
 		else
 			f0_rd_en_d1 <= f0_rd_en;
 	end
 
-	/// @note: i_line will not be bigger than m_line
-	wire ready_for_next_pixel;
-	assign ready_for_next_pixel = (m_repeat_line ? (i_line >= m_line) : (i_line >= m_line-1));
-	assign s_axis_tready = (int_resetn && i_line != 0 &&
-				((~f1_full && ready_for_next_pixel)
-				|| o_last_pix));	/// @note: remain input
+	/// @note: indeed, we don't need `o_last_line', but use `o_last_pix',
+	///        it exist here just for skip all input as quickly as possible.
+	assign s_axis_tready = int_resetn &&
+				/// @note: both below lines contain the logic of last valid line.
+				///        the fifo 1 will not be full when outputing last line.
+				/// @note: if the size of fifo is equal or bigger than tow lines
+				///        we can drop `~f1_full'.
+				((~f1_full && i_line != i_stop_line)
+				/// @note: remain input
+				|| (o_last_line && i_line != 0));
 
-	///@note: if we can delay f1_rd_en to last pixel of m_repeat_line, then we don't need dov4repeat,
-	///       just use f0_rd_en_d1
+	///@note: if we can delay f1_rd_en to last pixel of m_repeat_line,
+	///       then we don't need dov4repeat, just use f0_rd_en_d1
 	reg dov4repeat;
 	wire repeat_line_ready;
 	assign repeat_line_ready = m_repeat_line && i_line < m_line;
