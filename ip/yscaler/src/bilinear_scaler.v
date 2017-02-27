@@ -10,8 +10,8 @@ module bilinear_scaler # (
 	input wire update_mul,
 
 	output wire m_repeat_line,
-	output reg [C_RESO_WIDTH-1 : 0] m_inv_cnt,
-	output reg [C_RESO_WIDTH-1 : 0] o_inv_cnt,
+	output reg [C_RESO_WIDTH-1 : 0] m_inv_cnt, 	/// [h,1] @note: keep last 1
+	output reg [C_RESO_WIDTH-1 : 0] o_inv_cnt,	/// [h, 1][0]
 
 	output wire m_ovalid
 );
@@ -21,9 +21,6 @@ module bilinear_scaler # (
 	reg [C_CMP_WIDTH-1:0] o_mul;
 
 	reg [C_CMP_WIDTH-1:0] o_mul_next;
-
-	reg [C_RESO_WIDTH-1:0] m_inv_cnt;	/// [h,1] @note: keep last 1
-	reg [C_RESO_WIDTH-1:0] o_inv_cnt;	/// [h, 1][0]
 
 	assign m_repeat_line = m_mul >= o_mul_next;
 	assign m_ovalid = m_mul >= o_mul;

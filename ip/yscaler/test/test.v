@@ -18,12 +18,15 @@ reg S_AXIS_tuser_tb;
 reg S_AXIS_tvalid_tb;
 
 reg[11:0] ori_height_tb = 10;
-reg[11:0] ori_width_tb = 1;
+reg[11:0] ori_width_tb = 10;
 reg resetn_tb;
-reg[11:0] scale_height_tb = 2;
-reg[11:0] scale_width_tb = 1;
+reg[11:0] scale_height_tb = 30;
+reg[11:0] scale_width_tb = 10;
 
 reg clk;
+
+localparam RANDOMOUTPUT = 1;
+localparam RANDOMINPUT = 1;
 
 test_yscaler_wrapper uut(
 	.M_AXIS_tdata(M_AXIS_tdata_tb),
@@ -52,8 +55,7 @@ initial begin
 	M_AXIS_tready_tb <= 1'b0;
 	#0.2 M_AXIS_tready_tb <= 1'b1;
 	forever begin
-		#2 M_AXIS_tready_tb <= 1'b1;
-		//#2 M_AXIS_tready_tb <= {$random}%2;
+		#2 M_AXIS_tready_tb <= (RANDOMOUTPUT ? {$random}%2 : 1);
 	end
 end
 
@@ -73,7 +75,7 @@ always @(posedge clk) begin
 	if (resetn_tb == 1'b0)
 		randominput <= 1'b0;
 	else
-		randominput <= 1'b1;//{$random}%2;
+		randominput <= (RANDOMINPUT ? {$random}%2 : 1);
 
 	if (resetn_tb == 1'b0 || (cnt > ori_width_tb * ori_height_tb)) begin
 		cnt <= 0;
