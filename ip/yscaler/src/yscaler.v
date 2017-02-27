@@ -182,7 +182,7 @@ module yscaler #
 			m_line <= m_line_next;
 			o_line <= o_line_next;
 			m_valid <= m_valid_next;
-			if (m_line == 1)
+			if (m_line_next == 1)
 				i_stop_line <= 0;
 			else if (m_repeat_line_next)
 				i_stop_line <= m_line_next - 1;
