@@ -13,17 +13,25 @@ module bilinear_scaler # (
 	output reg [C_RESO_WIDTH-1 : 0] m_inv_cnt, 	/// [h,1] @note: keep last 1
 	output reg [C_RESO_WIDTH-1 : 0] o_inv_cnt,	/// [h, 1][0]
 
-	output wire m_ovalid
+	output wire m_ovalid,
+
+	output wire [2:0] ratio
 );
 	localparam C_CMP_WIDTH = C_RESO_WIDTH * 2 + 1 + 1;
 
 	reg [C_CMP_WIDTH-1:0] m_mul;
 	reg [C_CMP_WIDTH-1:0] o_mul;
 
+	reg [C_CMP_WIDTH-1:0] m_spliter[3:0];
+
 	reg [C_CMP_WIDTH-1:0] o_mul_next;
 
 	assign m_repeat_line = m_mul >= o_mul_next;
 	assign m_ovalid = m_mul >= o_mul;
+	assign ratio = (o_mul >= m_spliter[2]
+			? (o_mul >= m_spliter[3] ? 4 : 3)
+			: (o_mul >= m_spliter[1] ? 2 : (o_mul >= m_spliter[0] ? 1 : 0))
+		);
 
 	/// @note: update even repeat, (for last input line, iow, extenting)
 	wire update_mmul;
@@ -49,8 +57,39 @@ module bilinear_scaler # (
 	end
 
 	always @(posedge clk) begin
+		if (resetn == 1'b0) begin
+			m_spliter[0] <= scale_size;
+			m_spliter[1] <= scale_size;
+			m_spliter[2] <= scale_size;
+			m_spliter[3] <= scale_size;
+		end
+		else if (update_mmul) begin
+			case (m_inv_cnt)
+			1: begin
+				m_spliter[0] <= m_mul;
+				m_spliter[1] <= m_mul;
+				m_spliter[2] <= m_mul;
+				m_spliter[3] <= m_mul;
+			end
+			default: begin
+				m_spliter[0] <= m_mul + scale_size/4;
+				m_spliter[1] <= m_mul + scale_size - scale_size/4;
+				m_spliter[2] <= m_mul + scale_size + scale_size/4;
+				m_spliter[3] <= m_mul + scale_size;
+			end
+			endcase
+		end
+		else begin
+			m_spliter[0] <= m_spliter[0];
+			m_spliter[1] <= m_spliter[1];
+			m_spliter[2] <= m_spliter[2];
+			m_spliter[3] <= m_spliter[3];
+		end
+	end
+
+	always @(posedge clk) begin
 		if (resetn == 1'b0)
-			o_mul <= (scale_size == 1 ? ori_size * 2 : ori_size);
+			o_mul <= ori_size;
 		else if (update_omul)
 			o_mul <= o_mul_next;
 		else
@@ -59,13 +98,9 @@ module bilinear_scaler # (
 
 	always @(posedge clk) begin
 		if (resetn == 1'b0)
-			/// @note: don't need check scale_size
 			o_mul_next <= ori_size*3;
 		else if (update_omul) begin
-			case (o_inv_cnt)
-			2:	o_mul_next <= o_mul_next + ori_size * 2 + ori_size;
-			default:o_mul_next <= o_mul_next + ori_size * 2;
-			endcase
+			o_mul_next <= o_mul_next + ori_size * 2;
 		end
 		else
 			o_mul_next <= o_mul_next;

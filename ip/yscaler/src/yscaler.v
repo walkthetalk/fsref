@@ -146,6 +146,7 @@ module yscaler #
 	wire [C_RESO_WIDTH-1 : 0] o_line_next;	/// [h,1][0]
 	wire m_valid_next;	/// for output
 	wire update_mul_next;
+	wire[2:0] ratio_next;
 	assign update_mul_next = int_f1_rd_en && m_last_next;
 
 	bilinear_scaler # (
@@ -159,13 +160,15 @@ module yscaler #
 		.m_repeat_line(m_repeat_line_next),
 		.m_inv_cnt(m_line_next),
 		.o_inv_cnt(o_line_next),
-		.m_ovalid(m_valid_next)
+		.m_ovalid(m_valid_next),
+		.ratio(ratio_next)
 	);
 	reg m_repeat_line;
 	reg [C_RESO_WIDTH-1 : 0] m_line;	/// [h,1]
 	reg [C_RESO_WIDTH-1 : 0] o_line;	/// [h,1][0]
 	reg m_valid;	/// for output
 	reg [C_RESO_WIDTH-1 : 0] i_stop_line;
+	reg [2 : 0] ratio;
 	always @(posedge clk) begin
 		if (int_resetn == 1'b0) begin
 			/// @note: init m_repeat_line with 1'b1,
@@ -176,6 +179,7 @@ module yscaler #
 			o_line <= scale_height;
 			m_valid <= 1'b0;
 			i_stop_line <= ori_height - 1;
+			ratio <= 0;
 		end
 		else if (int_f1_rd_en) begin
 			m_repeat_line <= m_repeat_line_next;
@@ -188,6 +192,7 @@ module yscaler #
 				i_stop_line <= m_line_next - 1;
 			else
 				i_stop_line <= m_line_next - 2;
+			ratio <= ratio_next;
 		end
 		else begin
 			m_repeat_line <= m_repeat_line;
@@ -195,6 +200,7 @@ module yscaler #
 			o_line <= o_line;
 			m_valid <= m_valid;
 			i_stop_line <= i_stop_line;
+			ratio <= ratio_next;
 		end
 	end
 
@@ -208,7 +214,8 @@ module yscaler #
 	localparam ODELAY = 0;
 	reg mvalid[ODELAY:0];
 	reg msof[ODELAY:0];
-	reg [C_PIXEL_WIDTH:0] mdata[ODELAY:0];
+	reg [C_PIXEL_WIDTH-1:0] mdata[ODELAY:0];
+	reg meol[ODELAY:0];
 	wire mready[ODELAY+1:0];
 
 	///  m_axis delay
@@ -230,14 +237,17 @@ module yscaler #
 				if (int_resetn == 1'b0) begin
 					msof[i] <= 1'b0;
 					mdata[i] <= 0;
+					meol[i] <= 0;
 				end
 				else if (mvalid[i-1] && mready[i]) begin
 					msof[i] <= msof[i-1];
 					mdata[i] <= mdata[i-1];
+					meol[i] <= meol[i-1];
 				end
 				else begin
 					msof[i] <= msof[i];
 					mdata[i] <= mdata[i];
+					meol[i] <= meol[i];
 				end
 			end
 		end
@@ -249,8 +259,8 @@ module yscaler #
 	endgenerate
 
 	assign m_axis_tvalid = mvalid[ODELAY];
-	assign m_axis_tdata = mdata[ODELAY][C_PIXEL_WIDTH-1:0];
-	assign m_axis_tlast = mdata[ODELAY][C_PIXEL_WIDTH];
+	assign m_axis_tdata = mdata[ODELAY];
+	assign m_axis_tlast = meol[ODELAY];
 	assign m_axis_tuser = msof[ODELAY];
 
 	/// p1
@@ -282,9 +292,14 @@ module yscaler #
 			mvalid[0] = mvalid[0];
 	end
 	/// mdata
+	wire[C_PIXEL_WIDTH-1:0] f0_pd;
+	assign f0_pd = f0_rd_data[C_PIXEL_WIDTH-1:0];
+	wire[C_PIXEL_WIDTH-1:0] f1_pd;
+	assign f1_pd = f1_rd_data[C_PIXEL_WIDTH-1:0];
 	always @(posedge clk) begin
 		if (int_resetn == 1'b0) begin
 			mdata[0] <= 0;
+			meol[0] <= 0;
 		end
 		else if (p1m_valid && mready[0]) begin
 			/*
@@ -293,19 +308,30 @@ module yscaler #
 			 *        don't need f0_dout_valid
 			 */
 			$write("(");
-			if (f0_dout_valid)
+			if (f0_dout_valid) begin
 				$write(f0_rd_data[C_PIXEL_WIDTH-1:0]);
-			else
+				if (f0_rd_data[C_PIXEL_WIDTH-1:0] + 10
+				    != f1_rd_data[C_PIXEL_WIDTH-1:0])
+					$write("error for value!!!!");
+			end
+			else begin
 				$write("   ");
+			end
 			$write(" ", f1_rd_data[C_PIXEL_WIDTH-1:0], ")");
 
-			//if (f0_ready && m_mul_p < o_mul)
-			//	mdata[0] <= f0_rd_data + (f1_rd_data - f0_rd_data) * (m_mul - o_mul) / (scale_height*2);
-			//else
-				mdata[0] <= f1_rd_data[C_PIXEL_WIDTH:0];
+			case (ratio)
+			0: mdata[0] <= f0_pd;
+			1: mdata[0] <= (f0_pd + f1_pd + f0_pd/2)/4;
+			2: mdata[0] <= (f0_pd + f1_pd)/2;
+			3: mdata[0] <= (f0_pd + f1_pd + f1_pd/2)/4;
+			default: mdata[0] <= f1_pd;
+			endcase
+
+			meol[0] <= f1_rd_data[C_PIXEL_WIDTH];
 		end
 		else begin
 			mdata[0] <= mdata[0];
+			meol[0] <= meol[0];
 		end
 	end
 	/// msof
@@ -352,7 +378,7 @@ module yscaler #
 		else
 			i_line <= i_line;
 	end
-///
+
 	reg[C_RESO_WIDTH-1:0] m_pix_next; /// [w,1]
 	always @(posedge clk) begin
 		if (int_resetn == 1'b0)
@@ -384,7 +410,6 @@ module yscaler #
 			m_last_next <= m_last_next;
 	end
 
-///
 	always @(posedge clk) begin
 		if (int_resetn == 1'b0)
 			m_last <= 1'b0;
