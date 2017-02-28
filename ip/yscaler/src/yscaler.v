@@ -64,38 +64,23 @@ module yscaler #
 );
 	wire int_resetn;
 
-	reg [C_RESO_WIDTH-1:0] out_line;
-	always @(posedge clk) begin
-		if (int_resetn == 1'b0)
-			out_line <= scale_height;
-		else if (m_axis_tvalid && m_axis_tready && m_axis_tlast)
-			out_line <= out_line - 1;
-		else
-			out_line <= out_line;
-	end
-
+	reg out_done;
+	reg out_last_pix;
 
 	localparam C_FIFO_RST_KEEP = 5;
-	reg[C_FIFO_RST_KEEP-1:0] fifo_rst_keep;
+	localparam C_FIFO_RST_DELAY = 7;
+	localparam C_FIFO_RST_SEQ = C_FIFO_RST_KEEP + C_FIFO_RST_DELAY;
+	reg[C_FIFO_RST_SEQ-1:0] fifo_rst_seq;
 	always @(posedge clk) begin
 		if (resetn == 1'b0)
-			fifo_rst_keep <= {C_FIFO_RST_KEEP{1'b1}};
+			fifo_rst_seq <= {C_FIFO_RST_SEQ{1'b1}};
 		else
-			fifo_rst_keep <= {fifo_rst_keep[C_FIFO_RST_KEEP-2:0], (out_line == 0 && i_line == 0)};
+			fifo_rst_seq <= {fifo_rst_seq[C_FIFO_RST_SEQ-2:0], 1'b0};
 	end
-	assign fifo_rst = ((fifo_rst_keep != 0) || (out_line == 0 && i_line == 0));
+	assign fifo_rst = fifo_rst_seq[C_FIFO_RST_KEEP-1];
 
-	localparam C_RESET_DELAY_NUM = 7;
-	reg[C_RESET_DELAY_NUM-1:0] resetn_delay;
-	always @(posedge clk) begin
-		if (resetn == 1'b0)
-			resetn_delay <= 0;
-		else
-			resetn_delay <= {resetn_delay[C_RESET_DELAY_NUM-2:0], ~fifo_rst};
-	end
-	assign int_resetn = (resetn_delay == {C_RESET_DELAY_NUM{1'b1}}
-				&& ~fifo_rst
-				|| m_axis_tvalid);	/// ensure output last pixel
+	assign int_resetn = ((resetn && ~fifo_rst_seq[C_FIFO_RST_SEQ-1])
+			&& ~(out_done && i_line == 0));	/// ensure output last pixel
 
 	wire int_f1_rd_en;
 
@@ -173,7 +158,7 @@ module yscaler #
 			/// @note: init m_repeat_line with 1'b1,
 			///        for case of repeating 1st line,
 			///        but fail with too quick input
-			m_repeat_line <= 1'b1;
+			m_repeat_line <= 1'b1;	/// @todo: can be optimized
 			m_line <= ori_height;
 			m_valid <= 1'b0;
 			i_stop_line <= ori_height - 1;
@@ -279,13 +264,29 @@ module yscaler #
 	/// mvalid
 	always @(posedge clk) begin
 		if (int_resetn == 1'b0)
-			mvalid[0] = 1'b0;
+			mvalid[0] <= 1'b0;
 		else if (p1m_valid)
-			mvalid[0] = 1'b1;
+			mvalid[0] <= 1'b1;
 		else if (mready[1])
-			mvalid[0] = 1'b0;
+			mvalid[0] <= 1'b0;
 		else
-			mvalid[0] = mvalid[0];
+			mvalid[0] <= mvalid[0];
+	end
+	always @(posedge clk) begin
+		if (int_resetn == 1'b0)
+			out_last_pix <= 1'b0;
+		else if (p1m_valid && mready[0])
+			out_last_pix <= o_last_pix;
+		else
+			out_last_pix <= out_last_pix;
+	end
+	always @(posedge clk) begin
+		if (int_resetn == 1'b0)
+			out_done <= 1'b0;
+		else if (mvalid[0] && mready[1] && out_last_pix)
+			out_done <= 1'b1;
+		else
+			out_done <= out_done;
 	end
 	/// mdata
 	wire[C_PIXEL_WIDTH-1:0] f0_pd;
@@ -316,9 +317,9 @@ module yscaler #
 
 			case (ratio)
 			0: mdata[0] <= f0_pd;
-			1: mdata[0] <= (f0_pd + f1_pd + f0_pd/2)/4;
+			1: mdata[0] <= (f0_pd + f1_pd + f0_pd*2)/4;
 			2: mdata[0] <= (f0_pd + f1_pd)/2;
-			3: mdata[0] <= (f0_pd + f1_pd + f1_pd/2)/4;
+			3: mdata[0] <= (f0_pd + f1_pd + f1_pd*2)/4;
 			default: mdata[0] <= f1_pd;
 			endcase
 
@@ -566,13 +567,13 @@ module yscaler #
 			r_f0_wr_en <= f0_rd_en_d1;
 			f0_wr_data <= f0_rd_data;
 		end
-		//else if (o_last_line) begin	/// @note: can delete this branch
-		//	r_f0_wr_en <= 1'b0;
-		//	f0_wr_data <= 0;
-		//end
-		else begin
+		else if (~o_last_line) begin
 			r_f0_wr_en <= f1_rd_en_d1;
 			f0_wr_data <= f1_rd_data;
+		end
+		else begin
+			r_f0_wr_en <= 1'b0;
+			f0_wr_data <= 0;
 		end
 	end
 endmodule
