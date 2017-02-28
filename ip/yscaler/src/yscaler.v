@@ -165,7 +165,6 @@ module yscaler #
 	);
 	reg m_repeat_line;
 	reg [C_RESO_WIDTH-1 : 0] m_line;	/// [h,1]
-	reg [C_RESO_WIDTH-1 : 0] o_line;	/// [h,1][0]
 	reg m_valid;	/// for output
 	reg [C_RESO_WIDTH-1 : 0] i_stop_line;
 	reg [2 : 0] ratio;
@@ -176,7 +175,6 @@ module yscaler #
 			///        but fail with too quick input
 			m_repeat_line <= 1'b1;
 			m_line <= ori_height;
-			o_line <= scale_height;
 			m_valid <= 1'b0;
 			i_stop_line <= ori_height - 1;
 			ratio <= 0;
@@ -184,7 +182,6 @@ module yscaler #
 		else if (int_f1_rd_en) begin
 			m_repeat_line <= m_repeat_line_next;
 			m_line <= m_line_next;
-			o_line <= o_line_next;
 			m_valid <= m_valid_next;
 			if (m_line_next == 1)
 				i_stop_line <= 0;
@@ -197,7 +194,6 @@ module yscaler #
 		else begin
 			m_repeat_line <= m_repeat_line;
 			m_line <= m_line;
-			o_line <= o_line;
 			m_valid <= m_valid;
 			i_stop_line <= i_stop_line;
 			ratio <= ratio_next;
@@ -309,15 +305,14 @@ module yscaler #
 			 */
 			$write("(");
 			if (f0_dout_valid) begin
-				$write(f0_rd_data[C_PIXEL_WIDTH-1:0]);
-				if (f0_rd_data[C_PIXEL_WIDTH-1:0] + 10
-				    != f1_rd_data[C_PIXEL_WIDTH-1:0])
+				$write(f0_pd);
+				if (f0_pd + 10 != f1_pd)
 					$write("error for value!!!!");
 			end
 			else begin
 				$write("   ");
 			end
-			$write(" ", f1_rd_data[C_PIXEL_WIDTH-1:0], ")");
+			$write(" ", f1_pd, ")");
 
 			case (ratio)
 			0: mdata[0] <= f0_pd;
