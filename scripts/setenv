@@ -3,12 +3,11 @@ dirs=(
 	"/opt/Xilinx"
 )
 
-VIVADO_BIN="Vivado/2016.3/bin/vivado"
-HSI_BIN="SDK/2016.3/bin/hsi"
 for item in ${dirs[@]};do
 	if [ -d "$item" ]; then
-		VIVADO_BIN="${item}/${VIVADO_BIN}"
-		HSI_BIN="${item}/${HSI_BIN}"
+		XVERSION="`cd ${item}/Vivado/; find -mindepth 1 -maxdepth 1 -type d | cut -d '/' -f 2`"
+		VIVADO_BIN="${item}/Vivado/${XVERSION}/bin/vivado"
+		HSI_BIN="${item}/SDK/${XVERSION}/bin/hsi"
 		echo "the vivado binary is located in ${VIVADO_BIN}"
 		break
 	fi
