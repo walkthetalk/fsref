@@ -119,7 +119,7 @@ endgroup
 
 # 3. vdma
 startgroup
-create_bd_cell -type ip -vlnv xilinx.com:ip:axi_vdma:6.2 axi_vdma_0
+create_bd_cell -type ip -vlnv xilinx.com:ip:axi_vdma:6.3 axi_vdma_0
 endgroup
 startgroup
 set_property -dict [list \
@@ -227,7 +227,7 @@ endgroup
 copy_bd_objs /  [get_bd_cells {v_rgb2ycrcb_0}]
 
 startgroup
-create_bd_cell -type ip -vlnv xilinx.com:ip:axi_vdma:6.2 axi_vdma_cmos_sw_0
+create_bd_cell -type ip -vlnv xilinx.com:ip:axi_vdma:6.3 axi_vdma_cmos_sw_0
 set_property -dict [list \
     CONFIG.c_num_fstores {3} \
     CONFIG.c_include_s2mm {1} \
@@ -240,7 +240,7 @@ endgroup
 copy_bd_objs /  [get_bd_cells {axi_vdma_cmos_sw_0}]
 
 startgroup
-create_bd_cell -type ip -vlnv xilinx.com:ip:axi_vdma:6.2 axi_vdma_cmos_disp_0
+create_bd_cell -type ip -vlnv xilinx.com:ip:axi_vdma:6.3 axi_vdma_cmos_disp_0
 set_property -dict [list \
     CONFIG.c_num_fstores {3} \
     CONFIG.c_include_s2mm {0} \
