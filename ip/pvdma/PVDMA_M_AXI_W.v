@@ -52,7 +52,7 @@ module PVDMA_M_AXI_W #
 	output wire [1 : 0] M_AXI_AWBURST,
 	// Lock type. Provides additional information about the
 // atomic characteristics of the transfer.
-	output wire  M_AXI_AWLOCK,
+	output wire M_AXI_AWLOCK,
 	// Memory type. This signal indicates how transactions
 // are required to progress through a system.
 	output wire [3 : 0] M_AXI_AWCACHE,
@@ -64,7 +64,7 @@ module PVDMA_M_AXI_W #
 	output wire [3 : 0] M_AXI_AWQOS,
 	// Write address valid. This signal indicates that
 // the channel is signaling valid write address and control information.
-	output wire  M_AXI_AWVALID,
+	output wire M_AXI_AWVALID,
 	// Write address ready. This signal indicates that
 // the slave is ready to accept an address and associated control signals
 	input wire  M_AXI_AWREADY,
@@ -75,10 +75,10 @@ module PVDMA_M_AXI_W #
 // bit for each eight bits of the write data bus.
 	output wire [C_M_AXI_DATA_WIDTH/8-1 : 0] M_AXI_WSTRB,
 	// Write last. This signal indicates the last transfer in a write burst.
-	output wire  M_AXI_WLAST,
+	output wire M_AXI_WLAST,
 	// Write valid. This signal indicates that valid write
 // data and strobes are available
-	output wire  M_AXI_WVALID,
+	output wire M_AXI_WVALID,
 	// Write ready. This signal indicates that the slave
 // can accept the write data.
 	input wire  M_AXI_WREADY,
@@ -98,18 +98,20 @@ module PVDMA_M_AXI_W #
 	// function called clogb2 that returns an integer which has the
 	//value of the ceiling of the log base 2
 
-	  // function called clogb2 that returns an integer which has the
-	  // value of the ceiling of the log base 2.
-	  function integer clogb2 (input integer bit_depth);
-	  begin
-	    for(clogb2=0; bit_depth>0; clogb2=clogb2+1)
-	      bit_depth = bit_depth >> 1;
-	    end
-	  endfunction
+	// function called clogb2 that returns an integer which has the
+	// value of the ceiling of the log base 2.
+	function integer clogb2 (input integer bit_depth);
+	begin
+		for(clogb2=0; bit_depth>0; clogb2=clogb2+1)
+			bit_depth = bit_depth >> 1;
+		end
+	endfunction
 
 	// C_TRANSACTIONS_NUM is the width of the index counter for
 	// number of write or read transaction.
-	 localparam integer C_TRANSACTIONS_NUM = clogb2(C_M_AXI_BURST_LEN-1);
+	localparam integer C_TRANSACTIONS_NUM	= clogb2(C_M_AXI_BURST_LEN-1);
+	//Burst size in bytes
+	localparam integer C_BURST_SIZE_BYTES	= C_M_AXI_BURST_LEN * C_M_AXI_DATA_WIDTH/8;
 
 	// @note: do not cause bursts across 4K address boundaries.
 
@@ -125,8 +127,6 @@ module PVDMA_M_AXI_W #
 	reg  	axi_bready;
 	//write beat count in a burst
 	reg [C_TRANSACTIONS_NUM : 0] 	write_index;
-	//size of C_M_AXI_BURST_LEN length burst in bytes
-	wire [C_TRANSACTIONS_NUM+2 : 0] 	burst_size_bytes;
 	reg  	start_single_burst_write;
 	reg  	burst_write_active;
 	//Interface response error flags
@@ -185,8 +185,6 @@ module PVDMA_M_AXI_W #
 	assign M_AXI_WVALID	= axi_wvalid;
 	//Write Response (B)
 	assign M_AXI_BREADY	= axi_bready;
-	//Burst size in bytes
-	assign burst_size_bytes	= C_M_AXI_BURST_LEN * C_M_AXI_DATA_WIDTH/8;
 
 	//--------------------
 	//Write Address Channel
@@ -227,7 +225,7 @@ module PVDMA_M_AXI_W #
 				axi_awaddr <= axi_awaddr;
 		end
 		else if (M_AXI_AWREADY && axi_awvalid)
-			axi_awaddr <= axi_awaddr + burst_size_bytes;
+			axi_awaddr <= axi_awaddr + C_BURST_SIZE_BYTES;
 		else
 			axi_awaddr <= axi_awaddr;
 	end
