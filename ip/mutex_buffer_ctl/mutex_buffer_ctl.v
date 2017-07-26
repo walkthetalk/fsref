@@ -159,6 +159,10 @@ module mutex_buffer_ctl #
 			end
 			endcase
 		end
+		else begin
+			w_addr <= w_addr;
+			w_bmp <= w_bmp;
+		end
 	end
 
 endmodule
