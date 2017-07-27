@@ -7,7 +7,6 @@ module pvdma #
 	parameter integer C_PIXEL_WIDTH	= 8,
 	parameter integer C_IMG_WH_WIDTH = 12,
 	// User parameters ends
-	// Do not modify the parameters beyond this line
 
 	// Parameters of Axi Master Bus Interface M_AXI
 	parameter integer C_M_AXI_BURST_LEN	= 16,
@@ -163,6 +162,8 @@ module pvdma #
 	endgenerate
 
 	PVDMA_M_AXI_R # (
+		.C_PIXEL_WIDTH(C_PIXEL_WIDTH),
+
 		.C_M_AXI_BURST_LEN(C_M_AXI_BURST_LEN),
 		.C_M_AXI_ID_WIDTH(C_M_AXI_ID_WIDTH),
 		.C_M_AXI_ADDR_WIDTH(C_M_AXI_ADDR_WIDTH),
