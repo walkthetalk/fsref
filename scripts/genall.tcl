@@ -16,13 +16,11 @@ proc src {file args} {
 
 foreach i [list \
 	cmos \
-	fifo2stream \
 	lcd \
 	mutex_buffer \
 	mutex_buffer_ctl \
-	pcfa \
-	pvdma \
-	stream2fifo \
+	s2mm \
+	mm2s \
 	yscaler \
 ] {
 	src $origin_dir/ip/$i/generate.tcl $origin_dir

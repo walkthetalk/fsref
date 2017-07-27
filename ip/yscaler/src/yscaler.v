@@ -5,7 +5,7 @@
 //
 // Create Date: 11/18/2016 01:33:37 PM
 // Design Name:
-// Module Name: pcfa
+// Module Name: scaler
 // Project Name:
 // Target Devices:
 // Tool Versions:

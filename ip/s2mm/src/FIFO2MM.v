@@ -1,12 +1,4 @@
-
-`timescale 1 ns / 1 ps
-
-/**
- * @note:
- * 1. size of image must be integral multiple of C_M_AXI_DATA_WIDTH * C_M_AXI_BURST_LEN.
- * 2. the sof [start of frame] must be 1'b1 for first image data.
- */
-module PVDMA_M_AXI_W #
+module FIFO2MM #
 (
 	// Burst Length. Supports 1, 2, 4, 8, 16, 32, 64, 128, 256 burst lengths
 	parameter integer C_M_AXI_BURST_LEN	= 16,
@@ -18,6 +10,11 @@ module PVDMA_M_AXI_W #
 	parameter integer C_M_AXI_DATA_WIDTH	= 32
 )
 (
+/**
+ * @note:
+ * 1. size of image must be integral multiple of C_M_AXI_DATA_WIDTH * C_M_AXI_BURST_LEN.
+ * 2. the sof [start of frame] must be 1'b1 for first image data.
+ */
 	input wire sof,
 	input wire [C_M_AXI_DATA_WIDTH-1 : 0] din,
 	input wire empty,

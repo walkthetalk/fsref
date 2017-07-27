@@ -1,0 +1,159 @@
+`timescale 1 ns / 1 ps
+//////////////////////////////////////////////////////////////////////////////////
+// Company:
+// Engineer:
+//
+// Create Date: 11/18/2016 01:33:37 PM
+// Design Name:
+// Module Name: mm2s
+// Project Name:
+// Target Devices:
+// Tool Versions:
+// Description:
+//
+// Dependencies:
+//
+// Revision:
+// Revision 0.01 - File Created
+// Additional Comments:
+//
+//////////////////////////////////////////////////////////////////////////////////
+module mm2s #
+(
+	// Users to add parameters here
+	parameter integer C_PIXEL_WIDTH	= 8,
+	parameter integer C_IMG_WH_WIDTH = 12,
+	// User parameters ends
+
+	// Parameters of Axi Master Bus Interface M_AXI
+	parameter integer C_M_AXI_BURST_LEN	= 16,
+	parameter integer C_M_AXI_ID_WIDTH	= 1,
+	parameter integer C_M_AXI_ADDR_WIDTH	= 32,
+	parameter integer C_M_AXI_DATA_WIDTH	= 32
+)
+(
+	// Users to add ports here
+	input wire  clk,
+	input wire  resetn,
+
+	output wire r_sof,
+	input wire [C_M_AXI_ADDR_WIDTH-1:0] r_addr,
+
+	input wire [C_IMG_WH_WIDTH-1:0] img_width,
+	input wire [C_IMG_WH_WIDTH-1:0] img_height,
+
+	/// memory to stream
+	input wire	mm2s_empty,
+	input wire [C_PIXEL_WIDTH+1 : 0] mm2s_rd_data,
+	output wire	mm2s_rd_en,
+
+	input wire mm2s_full,
+	output wire [C_M_AXI_DATA_WIDTH/C_PIXEL_WIDTH*(C_PIXEL_WIDTH+2)-1 : 0] mm2mm2s_pixel_data,
+	output wire mm2s_wr_en,
+
+	output wire m_axis_tvalid,
+	output wire [C_PIXEL_WIDTH-1:0] m_axis_tdata,
+	output wire m_axis_tuser,
+	output wire m_axis_tlast,
+	input wire m_axis_tready
+
+	// Ports of Axi Master Bus Interface M_AXI
+	output wire [C_M_AXI_ID_WIDTH-1 : 0] m_axi_arid,
+	output wire [C_M_AXI_ADDR_WIDTH-1 : 0] m_axi_araddr,
+	output wire [7 : 0] m_axi_arlen,
+	output wire [2 : 0] m_axi_arsize,
+	output wire [1 : 0] m_axi_arburst,
+	output wire  m_axi_arlock,
+	output wire [3 : 0] m_axi_arcache,
+	output wire [2 : 0] m_axi_arprot,
+	output wire [3 : 0] m_axi_arqos,
+	output wire  m_axi_arvalid,
+	input wire  m_axi_arready,
+	input wire [C_M_AXI_ID_WIDTH-1 : 0] m_axi_rid,
+	input wire [C_M_AXI_DATA_WIDTH-1 : 0] m_axi_rdata,
+	input wire [1 : 0] m_axi_rresp,
+	input wire  m_axi_rlast,
+	input wire  m_axi_rvalid,
+	output wire  m_axi_rready
+);
+
+	localparam C_PM1 = C_PIXEL_WIDTH - 1;
+	localparam C_PP1 = C_PIXEL_WIDTH + 1;
+	localparam C_PP2 = C_PIXEL_WIDTH + 2;
+
+// FIFO to M_AXIS
+	reg mm2s_dvalid;
+	assign m_axis_tdata = mm2s_rd_data[C_PIXEL_WIDTH-1:0];
+	assign m_axis_tuser = mm2s_rd_data[C_PIXEL_WIDTH];
+	assign m_axis_tlast = mm2s_rd_data[C_PIXEL_WIDTH+1];
+	assign m_axis_tvalid = mm2s_dvalid;
+	assign mm2s_rd_en = (~m_axis_tvalid | m_axis_tready) & ~mm2s_empty;
+	always @(posedge clk) begin
+		if (resetn == 1'b0) begin
+			mm2s_dvalid <= 0;
+		end
+		else if (rd_en) begin
+			mm2s_dvalid <= 1;
+		end
+		else if (m_axis_tready) begin
+			mm2s_dvalid <= 0;
+		end
+		else begin
+			mm2s_dvalid <= mm2s_dvalid;
+		end
+	end
+
+// Instantiation of Axi Bus Interface M_AXI_R
+	wire [C_M_AXI_DATA_WIDTH-1 : 0] mm2s_pixel_data;
+
+	generate
+		for (i = 0; i < C_M_AXI_DATA_WIDTH/C_PIXEL_WIDTH; i = i+1) begin: wr_pixel
+			assign mm2s_wr_data[i*C_PP2+C_PM1 : i*C_PP2] = mm2s_pixel_data[i*C_PIXEL_WIDTH+C_PM1:i*C_PIXEL_WIDTH];
+		end
+		for (i = 1; i < C_M_AXI_DATA_WIDTH/C_PIXEL_WIDTH; i = i+1) begin: wr_sof
+			assign mm2s_wr_data[i*C_PP2+C_PIXEL_WIDTH] = 1'b0;
+		end
+		for (i = 0; i < (C_M_AXI_DATA_WIDTH/C_PIXEL_WIDTH-1); i = i+1) begin: wr_eol
+			assign mm2s_wr_data[i*C_PP2+C_PP1] = 1'b0;
+		end
+	endgenerate
+
+	MM2FIFO # (
+		.C_PIXEL_WIDTH(C_PIXEL_WIDTH),
+
+		.C_M_AXI_BURST_LEN(C_M_AXI_BURST_LEN),
+		.C_M_AXI_ID_WIDTH(C_M_AXI_ID_WIDTH),
+		.C_M_AXI_ADDR_WIDTH(C_M_AXI_ADDR_WIDTH),
+		.C_M_AXI_DATA_WIDTH(C_M_AXI_DATA_WIDTH)
+	) read4mm_inst (
+		.sof(mm2s_wr_data[C_PIXEL_WIDTH]),
+		.eol(mm2s_wr_data[C_M_AXI_DATA_WIDTH-1]),
+		.dout(mm2s_pixel_data),
+		.wr_en(mm2s_wr_en),
+		.full(mm2s_full),
+
+		.frame_pulse(r_sof),
+		.base_addr(r_addr),
+
+		.M_AXI_ACLK(clk),
+		.M_AXI_ARESETN(resetn),
+		.M_AXI_ARID(m_axi_arid),
+		.M_AXI_ARADDR(m_axi_araddr),
+		.M_AXI_ARLEN(m_axi_arlen),
+		.M_AXI_ARSIZE(m_axi_arsize),
+		.M_AXI_ARBURST(m_axi_arburst),
+		.M_AXI_ARLOCK(m_axi_arlock),
+		.M_AXI_ARCACHE(m_axi_arcache),
+		.M_AXI_ARPROT(m_axi_arprot),
+		.M_AXI_ARQOS(m_axi_arqos),
+		.M_AXI_ARVALID(m_axi_arvalid),
+		.M_AXI_ARREADY(m_axi_arready),
+		.M_AXI_RID(m_axi_rid),
+		.M_AXI_RDATA(m_axi_rdata),
+		.M_AXI_RRESP(m_axi_rresp),
+		.M_AXI_RLAST(m_axi_rlast),
+		.M_AXI_RVALID(m_axi_rvalid),
+		.M_AXI_RREADY(m_axi_rready)
+	);
+
+endmodule

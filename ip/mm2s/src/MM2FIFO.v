@@ -1,14 +1,4 @@
-
-`timescale 1 ns / 1 ps
-
-/**
- * @note:
- * 1. size of image must be integral multiple of C_M_AXI_DATA_WIDTH * C_M_AXI_BURST_LEN.
- * 2. the sof [start of frame] must be 1'b1 for first image data.
- * 3. width of image must be integral multiple of C_M_AXI_DATA_WIDTH.
- * 4. @TODO: if burst length bigger than 16, it may be modified by slave.
- */
-module PVDMA_M_AXI_R #
+module MM2FIFO #
 (
 	parameter integer C_IMG_WBITS	= 12,
 	parameter integer C_IMG_HBITS	= 12,
@@ -26,6 +16,13 @@ module PVDMA_M_AXI_R #
 	parameter integer C_M_AXI_DATA_WIDTH	= 32
 )
 (
+/**
+ * @note:
+ * 1. size of image must be integral multiple of C_M_AXI_DATA_WIDTH * C_M_AXI_BURST_LEN.
+ * 2. the sof [start of frame] must be 1'b1 for first image data.
+ * 3. width of image must be integral multiple of C_M_AXI_DATA_WIDTH.
+ * 4. @TODO: if burst length bigger than 16, it may be modified by slave.
+ */
 	// Users to add ports here
 	output wire sof,
 	output wire eol,
