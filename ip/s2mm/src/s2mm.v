@@ -55,7 +55,7 @@ module s2mm #
 	input wire [C_PIXEL_WIDTH-1:0] s_axis_tdata,
 	input wire s_axis_tuser,
 	input wire s_axis_tlast,
-	output wire s_axis_tready
+	output wire s_axis_tready,
 
 	// User ports ends
 	// Do not modify the ports beyond this line
@@ -80,7 +80,7 @@ module s2mm #
 	input wire [C_M_AXI_ID_WIDTH-1 : 0] m_axi_bid,
 	input wire [1 : 0] m_axi_bresp,
 	input wire  m_axi_bvalid,
-	output wire  m_axi_bready,
+	output wire  m_axi_bready
 );
 
 // S_AXIS to FIFO
@@ -95,8 +95,8 @@ module s2mm #
 // Instantiation of Axi Bus Interface M_AXI_W
 
 	wire [C_M_AXI_DATA_WIDTH-1 : 0] s2mm_pixel_data;
-	genvar i;
 	generate
+		genvar i;
 		for (i = 0; i < C_M_AXI_DATA_WIDTH/C_PIXEL_WIDTH; i = i+1) begin: single_pixel
 			assign s2mm_pixel_data[i*C_PIXEL_WIDTH + C_PM1 : i*C_PIXEL_WIDTH] = s2mm_rd_data[i*C_PP2 + C_PM1 : i*C_PP2];
 		end

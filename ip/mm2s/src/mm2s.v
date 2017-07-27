@@ -45,17 +45,17 @@ module mm2s #
 	/// memory to stream
 	input wire	mm2s_empty,
 	input wire [C_PIXEL_WIDTH+1 : 0] mm2s_rd_data,
-	output wire	mm2s_rd_en,
+	output wire	rd_en,
 
 	input wire mm2s_full,
-	output wire [C_M_AXI_DATA_WIDTH/C_PIXEL_WIDTH*(C_PIXEL_WIDTH+2)-1 : 0] mm2mm2s_pixel_data,
+	output wire [C_M_AXI_DATA_WIDTH/C_PIXEL_WIDTH*(C_PIXEL_WIDTH+2)-1 : 0] mm2s_wr_data,
 	output wire mm2s_wr_en,
 
 	output wire m_axis_tvalid,
 	output wire [C_PIXEL_WIDTH-1:0] m_axis_tdata,
 	output wire m_axis_tuser,
 	output wire m_axis_tlast,
-	input wire m_axis_tready
+	input wire m_axis_tready,
 
 	// Ports of Axi Master Bus Interface M_AXI
 	output wire [C_M_AXI_ID_WIDTH-1 : 0] m_axi_arid,
@@ -87,7 +87,7 @@ module mm2s #
 	assign m_axis_tuser = mm2s_rd_data[C_PIXEL_WIDTH];
 	assign m_axis_tlast = mm2s_rd_data[C_PIXEL_WIDTH+1];
 	assign m_axis_tvalid = mm2s_dvalid;
-	assign mm2s_rd_en = (~m_axis_tvalid | m_axis_tready) & ~mm2s_empty;
+	assign rd_en = (~m_axis_tvalid | m_axis_tready) & ~mm2s_empty;
 	always @(posedge clk) begin
 		if (resetn == 1'b0) begin
 			mm2s_dvalid <= 0;
@@ -107,6 +107,7 @@ module mm2s #
 	wire [C_M_AXI_DATA_WIDTH-1 : 0] mm2s_pixel_data;
 
 	generate
+		genvar i;
 		for (i = 0; i < C_M_AXI_DATA_WIDTH/C_PIXEL_WIDTH; i = i+1) begin: wr_pixel
 			assign mm2s_wr_data[i*C_PP2+C_PM1 : i*C_PP2] = mm2s_pixel_data[i*C_PIXEL_WIDTH+C_PM1:i*C_PIXEL_WIDTH];
 		end
