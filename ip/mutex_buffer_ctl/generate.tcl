@@ -8,34 +8,38 @@ ipx::infer_core -vendor $VENDOR -library $LIBRARY -taxonomy /UserIP $ip_dir
 ipx::edit_ip_in_project -upgrade true -name edit_ip_project -directory $tmp_dir $ip_dir/component.xml
 ipx::current_core $ip_dir/component.xml
 
-#set_property ip_repo_paths $origin_dir/ip [current_project]
-#update_ip_catalog
+pip_set_prop [ipx::current_core] {
+	display_name {Mutex Buffer Controller}
+	description {1W2R buffer controller}
+	vendor_display_name {OCFB}
+	company_url {https:://github.com/walkthetalk}
+}
 
 pip_clr_def_if_par [ipx::current_core]
 
-pip_add_bus_if [ipx::current_core] MBUF_W {
-	abstraction_type_vlnv {user.org:user:mutex_buffer_rtl:1.0}
-	bus_type_vlnv {user.org:user:mutex_buffer:1.0}
-	interface_mode {master}
-} {
+pip_add_bus_if [ipx::current_core] MBUF_W [subst {
+	abstraction_type_vlnv $VENDOR:$LIBRARY:mutex_buffer_rtl:1.0
+	bus_type_vlnv $VENDOR:$LIBRARY:mutex_buffer:1.0
+	interface_mode master
+}] {
 	SOF w_sof
 	ADDR w_addr
 }
 
-pip_add_bus_if [ipx::current_core] MBUF_R0 {
-	abstraction_type_vlnv {user.org:user:mutex_buffer_rtl:1.0}
-	bus_type_vlnv {user.org:user:mutex_buffer:1.0}
+pip_add_bus_if [ipx::current_core] MBUF_R0 [subst {
+	abstraction_type_vlnv $VENDOR:$LIBRARY:mutex_buffer_rtl:1.0
+	bus_type_vlnv $VENDOR:$LIBRARY:mutex_buffer:1.0
 	interface_mode {master}
-} {
+}] {
 	SOF r0_sof
 	ADDR r0_addr
 }
 
-pip_add_bus_if [ipx::current_core] MBUF_R1 {
-	abstraction_type_vlnv {user.org:user:mutex_buffer_rtl:1.0}
-	bus_type_vlnv {user.org:user:mutex_buffer:1.0}
-	interface_mode {master}
-} {
+pip_add_bus_if [ipx::current_core] MBUF_R1 [subst {
+	abstraction_type_vlnv $VENDOR:$LIBRARY:mutex_buffer_rtl:1.0
+	bus_type_vlnv $VENDOR:$LIBRARY:mutex_buffer:1.0
+	interface_mode master
+}] {
 	SOF r1_sof
 	ADDR r1_addr
 }

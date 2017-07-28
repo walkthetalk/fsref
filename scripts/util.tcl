@@ -1,7 +1,7 @@
 config_webtalk -user off
 
-set VENDOR user.org
-set LIBRARY user
+set VENDOR ocfb
+set LIBRARY pvip
 
 proc pip_clr_def_if_par {
 	core_inst

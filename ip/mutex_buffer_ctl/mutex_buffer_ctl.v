@@ -20,7 +20,7 @@
 //////////////////////////////////////////////////////////////////////////////////
 module mutex_buffer_ctl #
 (
-	C_ADDR_WIDTH = 32
+	parameter integer C_ADDR_WIDTH = 32
 ) (
 	input wire clk,
 	input wire resetn,
@@ -42,24 +42,6 @@ module mutex_buffer_ctl #
 
 	localparam integer C_READER_NUM = 2;
 
-	function integer com_msb (input integer com_idx);
-	begin
-		com_msb = C_IN_COMP_WIDTH * (com_idx + 1) - 1;
-	end
-	endfunction
-
-	function integer com_lsb_shrink (input integer com_idx);
-	begin
-		com_lsb_shrink = C_IN_COMP_WIDTH * (com_idx + 1) - C_OUT_COMP_WIDTH;
-	end
-	endfunction
-
-	function integer com_lsb_extent (input integer com_idx);
-	begin
-		com_lsb_extent = C_IN_COMP_WIDTH * com_idx;
-	end
-	endfunction
-
 	localparam integer C_BUFF_NUM = C_READER_NUM + 2;
 
 	reg [C_BUFF_NUM-1:0]	r0_bmp;
@@ -76,7 +58,7 @@ module mutex_buffer_ctl #
 			r0_addr <= 0;
 			r0_bmp <= 0;
 		end
-		else if (r_sof) begin
+		else if (r0_sof) begin
 			if (w_sof) begin
 				r0_addr <= w_addr;
 				r0_bmp <= w_bmp;
@@ -98,7 +80,7 @@ module mutex_buffer_ctl #
 			r1_addr <= 0;
 			r1_bmp <= 0;
 		end
-		else if (r_sof) begin
+		else if (r1_sof) begin
 			if (w_sof) begin
 				r1_addr <= w_addr;
 				r1_bmp <= w_bmp;
@@ -121,8 +103,8 @@ module mutex_buffer_ctl #
 			last_bmp <= 0;
 		end
 		else if (w_sof) begin
-			last_addr <= waddr;
-			last_bmp <= wbmp;
+			last_addr <= w_addr;
+			last_bmp <= w_bmp;
 		end
 		else begin
 			last_addr <= last_addr;
@@ -166,4 +148,3 @@ module mutex_buffer_ctl #
 	end
 
 endmodule
-

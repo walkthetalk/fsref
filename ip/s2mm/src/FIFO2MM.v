@@ -1,32 +1,36 @@
-module FIFO2MM #
-(
-	// Burst Length. Supports 1, 2, 4, 8, 16, 32, 64, 128, 256 burst lengths
-	parameter integer C_M_AXI_BURST_LEN	= 16,
-	// Thread ID Width
-	parameter integer C_M_AXI_ID_WIDTH	= 1,
-	// Width of Address Bus
-	parameter integer C_M_AXI_ADDR_WIDTH	= 32,
-	// Width of Data Bus
-	parameter integer C_M_AXI_DATA_WIDTH	= 32
-)
-(
 /**
  * @note:
  * 1. size of image must be integral multiple of C_M_AXI_DATA_WIDTH * C_M_AXI_BURST_LEN.
  * 2. the sof [start of frame] must be 1'b1 for first image data.
  */
+module FIFO2MM #
+(
+	// Burst Length. Supports 1, 2, 4, 8, 16, 32, 64, 128, 256 burst lengths
+	parameter integer C_M_AXI_BURST_LEN	= 16,
+	// Width of Address Bus
+	parameter integer C_M_AXI_ADDR_WIDTH	= 32,
+	// Width of Data Bus
+	parameter integer C_M_AXI_DATA_WIDTH	= 32,
+	// Image width/height pixel number bits
+	parameter integer C_IMG_WBITS = 12,
+	parameter integer C_IMG_HBITS = 12,
+	parameter integer C_PIXEL_WIDTH = 8
+)
+(
+	input wire [C_IMG_WBITS-1:0] img_width,
+	input wire [C_IMG_HBITS-1:0] img_height,
+
 	input wire sof,
 	input wire [C_M_AXI_DATA_WIDTH-1 : 0] din,
 	input wire empty,
 	output wire rd_en,
 
-	output reg frame_pulse,
+	output wire frame_pulse,
 	input wire [C_M_AXI_ADDR_WIDTH-1 : 0] base_addr,
 
 	input wire  M_AXI_ACLK,
 	input wire  M_AXI_ARESETN,
 
-	output wire [C_M_AXI_ID_WIDTH-1 : 0] M_AXI_AWID,
 	output wire [C_M_AXI_ADDR_WIDTH-1 : 0] M_AXI_AWADDR,
 	output wire [7 : 0] M_AXI_AWLEN,
 	output wire [2 : 0] M_AXI_AWSIZE,
@@ -44,7 +48,6 @@ module FIFO2MM #
 	output wire M_AXI_WVALID,
 	input wire  M_AXI_WREADY,
 
-	input wire [C_M_AXI_ID_WIDTH-1 : 0] M_AXI_BID,
 	input wire [1 : 0] M_AXI_BRESP,
 	input wire  M_AXI_BVALID,
 	output wire  M_AXI_BREADY
@@ -57,11 +60,24 @@ module FIFO2MM #
 	end
 	endfunction
 
+	function integer cupperbytes(input integer bit_depth);
+	begin
+		if (bit_depth <= 8)
+			cupperbytes = 1;
+		else if (bit_depth <= 16)
+			cupperbytes = 2;
+		else
+			cupperbytes = 4;
+	end
+	endfunction
+
 	// C_TRANSACTIONS_NUM is the width of the index counter for
 	// number of write or read transaction.
 	localparam integer C_TRANSACTIONS_NUM	= clogb2(C_M_AXI_BURST_LEN-1);
 	//Burst size in bytes
 	localparam integer C_BURST_SIZE_BYTES	= C_M_AXI_BURST_LEN * C_M_AXI_DATA_WIDTH/8;
+	localparam integer C_PIXEL_BYTES = cupperbytes(C_PIXEL_WIDTH);
+	localparam integer C_ADATA_PIXELS = C_M_AXI_DATA_WIDTH/8/C_PIXEL_BYTES;
 
 	// @note: do not cause bursts across 4K address boundaries.
 	reg [C_M_AXI_ADDR_WIDTH-1 : 0] 	axi_awaddr;
@@ -74,6 +90,8 @@ module FIFO2MM #
 	wire	wnext;
 	reg	need_data;
 	reg	r_dvalid;
+ 	reg [C_IMG_WBITS-1:0] r_img_col_idx;
+ 	reg [C_IMG_HBITS-1:0] r_img_row_idx;
 
 	assign wnext = M_AXI_WREADY & M_AXI_WVALID;
 
@@ -93,7 +111,6 @@ module FIFO2MM #
 			r_dvalid <= r_dvalid;
 	end
 
-	assign M_AXI_AWID	= 'b0;
 	assign M_AXI_AWADDR	= axi_awaddr;
 	assign M_AXI_AWLEN	= C_M_AXI_BURST_LEN - 1;
 	assign M_AXI_AWSIZE	= clogb2((C_M_AXI_DATA_WIDTH/8)-1);
@@ -132,7 +149,8 @@ module FIFO2MM #
 		if (M_AXI_ARESETN == 0)
 			axi_awaddr <= 'b0;
 		else if (start_burst_pulse) begin
-			if (sof)
+			/// avoid cross buffer boundary
+			if (sof || (r_img_col_idx == 0 && r_img_row_idx == 0))
 				axi_awaddr <= base_addr;
 			else
 				axi_awaddr <= axi_awaddr + C_BURST_SIZE_BYTES;
@@ -149,7 +167,6 @@ module FIFO2MM #
 	always @(posedge M_AXI_ACLK) begin
 		if (M_AXI_ARESETN == 0)
 			need_data <= 1'b0;
-		// If previously not valid, start next transaction
 		else if (~need_data && start_burst_pulse)
 			need_data <= 1'b1;
 		else if (wnext && axi_wlast)
@@ -202,5 +219,35 @@ module FIFO2MM #
 			burst_active <= 1'b1;
 		else if (M_AXI_BVALID)
 			burst_active <= 0;
+	end
+
+	always @(posedge M_AXI_ACLK) begin
+		if (M_AXI_ARESETN == 1'b0) begin
+			r_img_col_idx <= 0;
+			r_img_row_idx <= 0;
+		end
+		else if (start_burst_pulse
+			&& (sof || (r_img_col_idx == 0 && r_img_row_idx == 0))) begin
+			r_img_col_idx <= img_width - C_ADATA_PIXELS;
+			r_img_row_idx <= img_height - 1;
+		end
+		else if (wnext) begin
+			if (r_img_col_idx != 0) begin
+				r_img_col_idx <= r_img_col_idx - C_ADATA_PIXELS;
+				r_img_row_idx <= r_img_row_idx;
+			end
+			else if (r_img_row_idx != 0) begin
+				r_img_col_idx <= img_width - C_ADATA_PIXELS;
+				r_img_row_idx <= r_img_row_idx - 1;
+			end
+			else begin	/// @note: keep zero, reserve for start_burst_pulse
+				r_img_col_idx <= r_img_col_idx;
+				r_img_row_idx <= r_img_row_idx;
+			end
+		end
+		else begin
+			r_img_col_idx <= r_img_col_idx;
+			r_img_row_idx <= r_img_row_idx;
+		end
 	end
 endmodule

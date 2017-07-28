@@ -8,7 +8,24 @@ ipx::infer_core -vendor $VENDOR -library $LIBRARY -name mm2s -taxonomy /UserIP $
 ipx::edit_ip_in_project -upgrade true -name edit_ip_project -directory $tmp_dir $ip_dir/component.xml
 ipx::current_core $ip_dir/component.xml
 
+pip_set_prop [ipx::current_core] {
+	display_name {AXI MM to Stream}
+	description {MM to FIFO to Stream}
+	vendor_display_name {OCFB}
+	company_url {https:://github.com/walkthetalk}
+}
+
 pip_clr_def_if_par [ipx::current_core]
+
+# mm to fifo
+pip_add_bus_if [ipx::current_core] MBUF_R [subst {
+	abstraction_type_vlnv $VENDOR:$LIBRARY:mutex_buffer_rtl:1.0
+	bus_type_vlnv $VENDOR:$LIBRARY:mutex_buffer:1.0
+	interface_mode {slave}
+}] {
+	SOF r_sof
+	ADDR r_addr
+}
 
 pip_add_bus_if [ipx::current_core] M_AXI {
 	abstraction_type_vlnv {xilinx.com:interface:aximm_rtl:1.0}
@@ -34,7 +51,6 @@ pip_add_bus_if [ipx::current_core] M_AXI {
 	RREADY	m_axi_rready
 }
 
-# mm2s
 pip_add_bus_if [ipx::current_core] FIFO_WRITE {
 	abstraction_type_vlnv {xilinx.com:interface:fifo_write_rtl:1.0}
 	bus_type_vlnv {xilinx.com:interface:fifo_write:1.0}
@@ -45,6 +61,7 @@ pip_add_bus_if [ipx::current_core] FIFO_WRITE {
 	FULL mm2s_full
 }
 
+# fifo to stream
 pip_add_bus_if [ipx::current_core] FIFO_READ {
 	abstraction_type_vlnv {xilinx.com:interface:fifo_read_rtl:1.0}
 	bus_type_vlnv {xilinx.com:interface:fifo_read:1.0}
@@ -67,15 +84,7 @@ pip_add_bus_if [ipx::current_core] M_AXIS {
 	TREADY	m_axis_tready
 }
 
-pip_add_bus_if [ipx::current_core] MBUF_R {
-	abstraction_type_vlnv {user.org:user:mutex_buffer_rtl:1.0}
-	bus_type_vlnv {user.org:user:mutex_buffer:1.0}
-	interface_mode {slave}
-} {
-	SOF r_sof
-	ADDR r_addr
-}
-
+# clock & reset
 pip_add_bus_if [ipx::current_core] resetn {
 	abstraction_type_vlnv xilinx.com:signal:reset_rtl:1.0
 	bus_type_vlnv xilinx.com:signal:reset:1.0
@@ -86,14 +95,25 @@ pip_add_bus_if [ipx::current_core] resetn {
 	POLARITY {ACTIVE_LOW}
 }
 
-pip_add_bus_if [ipx::current_core] clk {
+pip_add_bus_if [ipx::current_core] m2f_aclk {
 	abstraction_type_vlnv xilinx.com:signal:clock_rtl:1.0
 	bus_type_vlnv xilinx.com:signal:clock:1.0
 	interface_mode slave
 } {
-	CLK clk
+	CLK m2f_aclk
 } {
-	ASSOCIATED_BUSIF {M_AXI:FIFO_WRITE:FIFO_READ:M_AXIS:MBUF_R}
+	ASSOCIATED_BUSIF {M_AXI:FIFO_WRITE:MBUF_R}
+	ASSOCIATED_RESET {resetn}
+}
+
+pip_add_bus_if [ipx::current_core] f2s_aclk {
+	abstraction_type_vlnv xilinx.com:signal:clock_rtl:1.0
+	bus_type_vlnv xilinx.com:signal:clock:1.0
+	interface_mode slave
+} {
+	CLK f2s_aclk
+} {
+	ASSOCIATED_BUSIF {FIFO_READ:M_AXIS}
 	ASSOCIATED_RESET {resetn}
 }
 
@@ -113,8 +133,23 @@ pip_add_usr_par [ipx::current_core] {C_PIXEL_WIDTH} {
 	value_format long
 }
 
-pip_add_usr_par [ipx::current_core] {C_IMG_WH_WIDTH} {
-	display_name {Image Width/Height Bit Width}
+pip_add_usr_par [ipx::current_core] {C_IMG_WBITS} {
+	display_name {Image Width (PIXEL) Bit Width}
+	tooltip {IMAGE WIDTH/HEIGHT BIT WIDTH}
+	widget {comboBox}
+} {
+	value_resolve_type user
+	value 12
+	value_format long
+	value_validation_type list
+	value_validation_list {5 6 7 8 9 10 11 12}
+} {
+	value 12
+	value_format long
+}
+
+pip_add_usr_par [ipx::current_core] {C_IMG_HBITS} {
+	display_name {Image Height (PIXEL) Bit Width}
 	tooltip {IMAGE WIDTH/HEIGHT BIT WIDTH}
 	widget {comboBox}
 } {

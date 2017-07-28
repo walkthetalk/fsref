@@ -1,0 +1,3 @@
+tcl notes:
+1. tcl will not expand variable in parenthesis, use 'subst'
+	https://stackoverflow.com/questions/30799457/using-variable-in-parenthesis-in-tcl-proc

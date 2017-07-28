@@ -1,21 +1,3 @@
-module MM2FIFO #
-(
-	parameter integer C_IMG_WBITS	= 12,
-	parameter integer C_IMG_HBITS	= 12,
-	parameter integer C_PIXEL_WIDTH = 8,
-	parameter integer C_IMG_WIDTH	= 1280,
-	parameter integer C_IMG_HEIGHT	= 800,
-
-	// Burst Length. Supports 1, 2, 4, 8, 16, 32, 64, 128, 256 burst lengths
-	parameter integer C_M_AXI_BURST_LEN	= 16,
-	// Thread ID Width
-	parameter integer C_M_AXI_ID_WIDTH	= 1,
-	// Width of Address Bus
-	parameter integer C_M_AXI_ADDR_WIDTH	= 32,
-	// Width of Data Bus
-	parameter integer C_M_AXI_DATA_WIDTH	= 32
-)
-(
 /**
  * @note:
  * 1. size of image must be integral multiple of C_M_AXI_DATA_WIDTH * C_M_AXI_BURST_LEN.
@@ -23,20 +5,35 @@ module MM2FIFO #
  * 3. width of image must be integral multiple of C_M_AXI_DATA_WIDTH.
  * 4. @TODO: if burst length bigger than 16, it may be modified by slave.
  */
-	// Users to add ports here
+module MM2FIFO #
+(
+	parameter integer C_IMG_WBITS	= 12,
+	parameter integer C_IMG_HBITS	= 12,
+	parameter integer C_PIXEL_WIDTH = 8,
+
+	// Burst Length. Supports 1, 2, 4, 8, 16, 32, 64, 128, 256 burst lengths
+	parameter integer C_M_AXI_BURST_LEN	= 16,
+	// Width of Address Bus
+	parameter integer C_M_AXI_ADDR_WIDTH	= 32,
+	// Width of Data Bus
+	parameter integer C_M_AXI_DATA_WIDTH	= 32
+)
+(
+	input wire [C_IMG_WBITS-1:0] img_width,
+	input wire [C_IMG_HBITS-1:0] img_height,
+
 	output wire sof,
 	output wire eol,
 	output wire [C_M_AXI_DATA_WIDTH-1 : 0] dout,
 	output wire wr_en,
 	input wire full,
 
-	output reg frame_pulse,
+	output wire frame_pulse,
 	input wire [C_M_AXI_ADDR_WIDTH-1 : 0] base_addr,
 
 	input wire  M_AXI_ACLK,
 	input wire  M_AXI_ARESETN,
 
-	output wire [C_M_AXI_ID_WIDTH-1 : 0] M_AXI_ARID,
 	output wire [C_M_AXI_ADDR_WIDTH-1 : 0] M_AXI_ARADDR,
 	output wire [7 : 0] M_AXI_ARLEN,
 	output wire [2 : 0] M_AXI_ARSIZE,
@@ -48,7 +45,6 @@ module MM2FIFO #
 	output wire  M_AXI_ARVALID,
 	input wire  M_AXI_ARREADY,
 
-	input wire [C_M_AXI_ID_WIDTH-1 : 0] M_AXI_RID,
 	input wire [C_M_AXI_DATA_WIDTH-1 : 0] M_AXI_RDATA,
 	input wire [1 : 0] M_AXI_RRESP,
 	input wire  M_AXI_RLAST,
@@ -105,7 +101,6 @@ module MM2FIFO #
 	assign wr_en		= rnext;
 
 	//Read Address (AR)
-	assign M_AXI_ARID	= 'b0;
 	assign M_AXI_ARADDR	= axi_araddr;
 	assign M_AXI_ARLEN	= C_M_AXI_BURST_LEN - 1;
 	assign M_AXI_ARSIZE	= clogb2((C_M_AXI_DATA_WIDTH/8)-1);
@@ -161,7 +156,7 @@ module MM2FIFO #
 	//Flag any read response errors
 	assign read_resp_error = M_AXI_RREADY & M_AXI_RVALID & M_AXI_RRESP[1];
 
-	assign frame_pulse = ~start_burst_pulse && ~burst_read_active && M_AXI_RREADY && r_img_col_idx == 0 && r_img_row_idx == 0;
+	assign frame_pulse = ~start_burst_pulse && ~burst_read_active && M_AXI_RREADY && (r_img_col_idx == 0 && r_img_row_idx == 0);
 
 	always @(posedge M_AXI_ACLK) begin
 		if (M_AXI_ARESETN == 1'b0)
@@ -192,17 +187,21 @@ module MM2FIFO #
 		else if (start_burst_pulse
 			&& r_img_col_idx == 0
 			&& r_img_col_idx == 0) begin
-			r_img_col_idx <= C_IMG_WIDTH - C_ADATA_PIXELS;
-			r_img_row_idx <= C_IMG_HEIGHT - 1;
+			r_img_col_idx <= img_width - C_ADATA_PIXELS;
+			r_img_row_idx <= img_height - 1;
 		end
 		else if (rnext) begin
 			if (r_img_col_idx != 0) begin
 				r_img_col_idx <= r_img_col_idx - C_ADATA_PIXELS;
 				r_img_row_idx <= r_img_row_idx;
 			end
-			else begin
-				r_img_col_idx <= C_IMG_WIDTH - C_ADATA_PIXELS;
+			else if (r_img_row_idx != 0) begin
+				r_img_col_idx <= img_width - C_ADATA_PIXELS;
 				r_img_row_idx <= r_img_row_idx - 1;
+			end
+			else begin
+				r_img_col_idx <= r_img_col_idx;
+				r_img_row_idx <= r_img_row_idx;
 			end
 		end
 		else begin
@@ -232,7 +231,7 @@ module MM2FIFO #
 		if (M_AXI_ARESETN == 0) begin
 			r_eol <= 1'b0;
 		end
-		else if (C_IMG_WIDTH == C_ADATA_PIXELS) begin
+		else if (img_width == C_ADATA_PIXELS) begin
 			r_eol <= 1'b1;
 		end
 		else if (rnext) begin
