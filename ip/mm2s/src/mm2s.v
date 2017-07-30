@@ -39,6 +39,8 @@ module mm2s #
 	input wire [C_IMG_WBITS-1:0] img_width,
 	input wire [C_IMG_HBITS-1:0] img_height,
 
+	input wire fsync,
+
 	output wire r_sof,
 	input wire [C_M_AXI_ADDR_WIDTH-1:0] r_addr,
 
@@ -107,6 +109,9 @@ module mm2s #
 	) read4mm_inst (
 		.img_width(img_width),
 		.img_height(img_height),
+
+		.fsync(fsync),
+
 		.sof(mm2s_wr_data[C_PIXEL_WIDTH]),
 		.eol(mm2s_wr_data[C_M_AXI_DATA_WIDTH-1]),
 		.dout(mm2s_pixel_data),

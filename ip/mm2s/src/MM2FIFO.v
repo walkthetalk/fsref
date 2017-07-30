@@ -22,6 +22,8 @@ module MM2FIFO #
 	input wire [C_IMG_WBITS-1:0] img_width,
 	input wire [C_IMG_HBITS-1:0] img_height,
 
+	input wire fsync;
+
 	output wire sof,
 	output wire eol,
 	output wire [C_M_AXI_DATA_WIDTH-1 : 0] dout,
@@ -139,7 +141,7 @@ module MM2FIFO #
 			axi_araddr <= 'b0;
 		end
 		else if (start_burst_pulse) begin
-			if (r_sof)
+			if (final_data)
 				axi_araddr <= base_addr;
 			else
 				axi_araddr <= axi_araddr + C_BURST_SIZE_BYTES;
@@ -152,16 +154,18 @@ module MM2FIFO #
 	//--------------------------------
 	//Read Data (and Response) Channel
 	//--------------------------------
+	wire final_data;
+	assign final_data = (r_img_col_idx == 0 && r_img_row_idx == 0);
 
 	//Flag any read response errors
 	assign read_resp_error = M_AXI_RREADY & M_AXI_RVALID & M_AXI_RRESP[1];
 
-	assign frame_pulse = ~start_burst_pulse && ~burst_read_active && M_AXI_RREADY && (r_img_col_idx == 0 && r_img_row_idx == 0);
+	assign frame_pulse = ~start_burst_pulse && ~burst_read_active && (final_data && fsync);
 
 	always @(posedge M_AXI_ACLK) begin
 		if (M_AXI_ARESETN == 1'b0)
 			start_burst_pulse <= 1'b0;
-		else if (~start_burst_pulse && ~burst_read_active && M_AXI_RREADY)
+		else if (~start_burst_pulse && ~burst_read_active && (~final_data || fsync))
 			start_burst_pulse <= 1'b1;
 		else
 			start_burst_pulse <= 1'b0;
@@ -184,9 +188,7 @@ module MM2FIFO #
 			r_img_col_idx <= 0;
 			r_img_row_idx <= 0;
 		end
-		else if (start_burst_pulse
-			&& r_img_col_idx == 0
-			&& r_img_col_idx == 0) begin
+		else if (start_burst_pulse && final_data) begin
 			r_img_col_idx <= img_width - C_ADATA_PIXELS;
 			r_img_row_idx <= img_height - 1;
 		end
@@ -214,9 +216,7 @@ module MM2FIFO #
 		if (M_AXI_ARESETN == 0) begin
 			r_sof <= 1'b0;
 		end
-		else if (start_burst_pulse
-			&& r_img_col_idx == 0
-			&& r_img_col_idx == 0) begin
+		else if (start_burst_pulse && final_data) begin
 			r_sof <= 1'b1;
 		end
 		else if (rnext) begin

@@ -95,6 +95,14 @@ pip_add_bus_if [ipx::current_core] resetn {
 	POLARITY {ACTIVE_LOW}
 }
 
+pip_add_bus_if [ipx::current_core] fsync {
+	abstraction_type_vlnv xilinx.com:signal:video_frame_sync_rtl:1.0
+	bus_type_vlnv xilinx.com:signal:video_frame_sync:1.0
+	interface_mode slave
+} {
+	FRAME_SYNC fsync
+}
+
 pip_add_bus_if [ipx::current_core] m2f_aclk {
 	abstraction_type_vlnv xilinx.com:signal:clock_rtl:1.0
 	bus_type_vlnv xilinx.com:signal:clock:1.0
@@ -102,7 +110,7 @@ pip_add_bus_if [ipx::current_core] m2f_aclk {
 } {
 	CLK m2f_aclk
 } {
-	ASSOCIATED_BUSIF {M_AXI:FIFO_WRITE:MBUF_R}
+	ASSOCIATED_BUSIF {M_AXI:FIFO_WRITE:MBUF_R:fsync}
 	ASSOCIATED_RESET {resetn}
 }
 
