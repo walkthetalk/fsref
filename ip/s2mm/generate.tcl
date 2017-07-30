@@ -17,6 +17,15 @@ pip_set_prop [ipx::current_core] {
 
 pip_clr_def_if_par [ipx::current_core]
 
+pip_add_bus_if [ipx::current_core] MBUF_W [subst {
+	abstraction_type_vlnv $VENDOR:$LIBRARY:mutex_buffer_rtl:1.0
+	bus_type_vlnv $VENDOR:$LIBRARY:mutex_buffer:1.0
+	interface_mode slave
+}] {
+	SOF s2mm_sof
+	ADDR s2mm_addr
+}
+
 # s2f
 pip_add_bus_if [ipx::current_core] S_AXIS {
 	abstraction_type_vlnv {xilinx.com:interface:axis_rtl:1.0}
@@ -49,15 +58,6 @@ pip_add_bus_if [ipx::current_core] FIFO_READ {
 	RD_DATA s2mm_rd_data
 	RD_EN s2mm_rd_en
 	EMPTY s2mm_empty
-}
-
-pip_add_bus_if [ipx::current_core] BUF_CTL [subst {
-	abstraction_type_vlnv $VENDOR:$LIBRARY:mutex_buffer_rtl:1.0
-	bus_type_vlnv $VENDOR:$LIBRARY:mutex_buffer:1.0
-	interface_mode slave
-}] {
-	SOF s2mm_sof
-	ADDR s2mm_addr
 }
 
 pip_add_bus_if [ipx::current_core] M_AXI {
