@@ -21,6 +21,7 @@ foreach i [list \
 	mutex_buffer_ctl \
 	s2mm \
 	mm2s \
+	axi_combiner \
 	yscaler \
 ] {
 	src $origin_dir/ip/$i/generate.tcl $origin_dir
