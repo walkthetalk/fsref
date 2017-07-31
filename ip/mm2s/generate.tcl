@@ -32,7 +32,6 @@ pip_add_bus_if [ipx::current_core] M_AXI {
 	bus_type_vlnv {xilinx.com:interface:aximm:1.0}
 	interface_mode {master}
 } {
-	ARID	m_axi_arid
 	ARADDR	m_axi_araddr
 	ARLEN	m_axi_arlen
 	ARSIZE	m_axi_arsize
@@ -43,7 +42,6 @@ pip_add_bus_if [ipx::current_core] M_AXI {
 	ARQOS	m_axi_arqos
 	ARVALID	m_axi_arvalid
 	ARREADY	m_axi_arready
-	RID	m_axi_rid
 	RDATA	m_axi_rdata
 	RRESP	m_axi_rresp
 	RLAST	m_axi_rlast

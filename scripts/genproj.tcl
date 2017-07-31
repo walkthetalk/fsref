@@ -106,7 +106,6 @@ set_property -dict [list \
     CONFIG.LAYER2_VERTICAL_START_POSITION {0} \
     CONFIG.LAYER2_WIDTH {320} \
     CONFIG.LAYER2_HEIGHT {240} \
-    CONFIG.LAYER3_GLOBAL_ALPHA_ENABLE {true} \
     ] [get_bd_cells v_osd_0]
 endgroup
 
