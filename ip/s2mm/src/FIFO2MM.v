@@ -17,6 +17,9 @@ module FIFO2MM #
 	parameter integer C_PIXEL_WIDTH = 8
 )
 (
+	input wire soft_reset,
+	output wire resetting,
+
 	input wire [C_IMG_WBITS-1:0] img_width,
 	input wire [C_IMG_HBITS-1:0] img_height,
 
@@ -79,6 +82,29 @@ module FIFO2MM #
 	localparam integer C_PIXEL_BYTES = cupperbytes(C_PIXEL_WIDTH);
 	localparam integer C_ADATA_PIXELS = C_M_AXI_DATA_WIDTH/8/C_PIXEL_BYTES;
 
+	///  resetting
+	reg soft_reset_d1;
+	always @ ( * ) begin
+		if (M_AXI_ARESETN == 1'b0) soft_reset_d1 <= 1'b0;
+		else soft_reset_d1 <= soft_reset;
+	end
+	wire soft_reset_posedge;
+	assign soft_reset_posedge = soft_reset == 1'b1 && soft_reset_d1 == 1'b0;
+
+	reg r_soft_restting;
+	assign resetting = ~M_AXI_ARESETN | r_soft_restting | soft_reset;
+	always @ ( M_AXI_ACLK ) begin
+		if (M_AXI_ARESETN == 1'b0)
+			r_soft_restting <= 1'b0;
+		else if (M_AXI_BVALID)
+			r_soft_restting <= 1'b0;
+		else if (soft_reset_posedge
+			&& (start_burst_pulse || burst_active || r_dvalid))
+			r_soft_restting <= 1'b1;
+		else
+			r_soft_restting <= r_soft_restting;
+	end
+
 	// @note: do not cause bursts across 4K address boundaries.
 	reg [C_M_AXI_ADDR_WIDTH-1 : 0] 	axi_awaddr;
 	reg	axi_awvalid;
@@ -99,7 +125,7 @@ module FIFO2MM #
 	/// @note: start_burst_pulse is late to frame_pulse by one cycle waiting for base_addr
 	assign frame_pulse = ~start_burst_pulse && ~burst_active && r_dvalid && sof;
 
-	assign rd_en		= ~empty && (~r_dvalid | wnext);
+	assign rd_en		= ~empty && (~r_dvalid | wnext) && ~r_soft_restting;
 	always @(posedge M_AXI_ACLK) begin
 		if (M_AXI_ARESETN == 0)
 			r_dvalid <= 1'b0;
@@ -127,7 +153,7 @@ module FIFO2MM #
 	//All bursts are complete and aligned
 	assign M_AXI_WSTRB	= {(C_M_AXI_DATA_WIDTH/8){1'b1}};
 	assign M_AXI_WLAST	= axi_wlast;
-	assign M_AXI_WVALID	= need_data & r_dvalid;
+	assign M_AXI_WVALID	= need_data & (r_dvalid | r_soft_restting);
 	//Write Response (B)
 	assign M_AXI_BREADY	= M_AXI_BVALID;
 
@@ -206,7 +232,8 @@ module FIFO2MM #
 	always @(posedge M_AXI_ACLK) begin
 		if (M_AXI_ARESETN == 1'b0)
 			start_burst_pulse <= 1'b0;
-		else if (~start_burst_pulse && ~burst_active && r_dvalid)
+		else if (~start_burst_pulse && ~burst_active && r_dvalid
+			&& !soft_reset)
 			start_burst_pulse <= 1'b1;
 		else
 			start_burst_pulse = 1'b0;

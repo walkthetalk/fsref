@@ -33,6 +33,9 @@ module mm2s #
 )
 (
 	input wire  resetn,
+
+	input wire soft_reset,
+	output wire resetting,
 /// mm to fifo
 	input wire m2f_aclk,
 
@@ -110,6 +113,8 @@ module mm2s #
 		.img_width(img_width),
 		.img_height(img_height),
 
+		.soft_reset(soft_reset),
+		.resetting(resetting),
 		.fsync(fsync),
 
 		.sof(mm2s_wr_data[C_PIXEL_WIDTH]),

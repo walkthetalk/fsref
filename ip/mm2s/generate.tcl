@@ -93,6 +93,26 @@ pip_add_bus_if [ipx::current_core] resetn {
 	POLARITY {ACTIVE_LOW}
 }
 
+pip_add_bus_if [ipx::current_core] soft_reset {
+	abstraction_type_vlnv xilinx.com:signal:reset_rtl:1.0
+	bus_type_vlnv xilinx.com:signal:reset:1.0
+	interface_mode slave
+} {
+	RST soft_reset
+} {
+	POLARITY {ACTIVE_HIGH}
+}
+
+pip_add_bus_if [ipx::current_core] resetting {
+	abstraction_type_vlnv xilinx.com:signal:reset_rtl:1.0
+	bus_type_vlnv xilinx.com:signal:reset:1.0
+	interface_mode master
+} {
+	RST resetting
+} {
+	POLARITY {ACTIVE_HIGH}
+}
+
 pip_add_bus_if [ipx::current_core] fsync {
 	abstraction_type_vlnv xilinx.com:signal:video_frame_sync_rtl:1.0
 	bus_type_vlnv xilinx.com:signal:video_frame_sync:1.0

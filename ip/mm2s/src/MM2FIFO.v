@@ -19,6 +19,9 @@ module MM2FIFO #
 	parameter integer C_M_AXI_DATA_WIDTH	= 32
 )
 (
+	input wire soft_reset,
+	output wire resetting,
+
 	input wire [C_IMG_WBITS-1:0] img_width,
 	input wire [C_IMG_HBITS-1:0] img_height,
 
@@ -80,6 +83,7 @@ module MM2FIFO #
 	localparam integer C_PIXEL_BYTES = cupperbytes(C_PIXEL_WIDTH);
 	localparam integer C_ADATA_PIXELS = C_M_AXI_DATA_WIDTH/8/C_PIXEL_BYTES;
 
+	/// registers
 	reg [C_M_AXI_ADDR_WIDTH-1 : 0] 	axi_araddr;
 	reg  	axi_arvalid;
 	/// @note: don't across 4K edge
@@ -94,13 +98,36 @@ module MM2FIFO #
 	reg [C_IMG_WBITS-1 : 0] r_img_col_idx;
 	reg [C_IMG_HBITS-1 : 0] r_img_row_idx;
 
+	///  resetting
+	reg soft_reset_d1;
+	always @ ( * ) begin
+		if (M_AXI_ARESETN == 1'b0) soft_reset_d1 <= 1'b0;
+		else soft_reset_d1 <= soft_reset;
+	end
+	wire soft_reset_posedge;
+	assign soft_reset_posedge = soft_reset == 1'b1 && soft_reset_d1 == 1'b0;
+
+	reg r_soft_restting;
+	assign resetting = ~M_AXI_ARESETN | r_soft_restting | soft_reset;
+	always @ ( M_AXI_ACLK ) begin
+		if (M_AXI_ARESETN == 1'b0)
+			r_soft_restting <= 1'b0;
+		else if (rnext && M_AXI_RLAST)	/// last active burst cycle
+			r_soft_restting <= 1'b0;
+		else if (soft_reset_posedge
+			&& (start_burst_pulse || burst_read_active
+			|| (~final_data || fsync)))
+			r_soft_restting <= 1'b1;
+		else
+			r_soft_restting <= r_soft_restting;
+	end
 
 	// I/O Connections assignments
 	assign sof		= r_sof;
 	assign eol		= r_eol;
 	assign dout		= M_AXI_RDATA;
 	assign rnext 		= M_AXI_RVALID && M_AXI_RREADY;
-	assign wr_en		= rnext;
+	assign wr_en		= rnext && ~r_soft_restting;
 
 	//Read Address (AR)
 	assign M_AXI_ARADDR	= axi_araddr;
@@ -113,7 +140,7 @@ module MM2FIFO #
 	assign M_AXI_ARQOS	= 4'h0;
 	assign M_AXI_ARVALID	= axi_arvalid;
 	//Read and Read Response (R)
-	assign M_AXI_RREADY	= ~full;
+	assign M_AXI_RREADY	= ~full | r_soft_restting;
 
 
 	//----------------------------
@@ -165,7 +192,9 @@ module MM2FIFO #
 	always @(posedge M_AXI_ACLK) begin
 		if (M_AXI_ARESETN == 1'b0)
 			start_burst_pulse <= 1'b0;
-		else if (~start_burst_pulse && ~burst_read_active && (~final_data || fsync))
+		else if (~start_burst_pulse && ~burst_read_active
+			&& (~final_data || fsync)
+			&& (~soft_reset && ~r_soft_restting))
 			start_burst_pulse <= 1'b1;
 		else
 			start_burst_pulse <= 1'b0;

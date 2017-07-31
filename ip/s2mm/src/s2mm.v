@@ -37,6 +37,9 @@ module s2mm #
 
 	input wire  resetn,
 
+	input wire soft_reset,
+	output wire resetting,
+
 	/// sream to fifo
 	input wire  s2f_aclk,
 
@@ -110,6 +113,9 @@ module s2mm #
 	) FIFO2MM_inst (
 		.img_width(img_width),
 		.img_height(img_height),
+
+		.soft_reset(soft_reset),
+		.resetting(resetting),
 
 		.sof(s2mm_rd_data[C_PIXEL_WIDTH]),
 		.din(s2mm_pixel_data),
