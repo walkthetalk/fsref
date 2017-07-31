@@ -22,7 +22,7 @@ module MM2FIFO #
 	input wire [C_IMG_WBITS-1:0] img_width,
 	input wire [C_IMG_HBITS-1:0] img_height,
 
-	input wire fsync;
+	input wire fsync,
 
 	output wire sof,
 	output wire eol,
