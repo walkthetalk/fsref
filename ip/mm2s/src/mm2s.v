@@ -28,13 +28,14 @@ module mm2s #
 
 	// Parameters of Axi Master Bus Interface M_AXI
 	parameter integer C_M_AXI_BURST_LEN	= 16,
+	parameter integer C_M_AXI_ID_WIDTH	= 1,
 	parameter integer C_M_AXI_ADDR_WIDTH	= 32,
 	parameter integer C_M_AXI_DATA_WIDTH	= 32
 )
 (
 	input wire  resetn,
 
-	input wire soft_reset,
+	input wire  soft_resetn,
 	output wire resetting,
 /// mm to fifo
 	input wire m2f_aclk,
@@ -48,6 +49,7 @@ module mm2s #
 	input wire [C_M_AXI_ADDR_WIDTH-1:0] r_addr,
 
 	// Ports of Axi Master Bus Interface M_AXI
+	output wire [C_M_AXI_ID_WIDTH-1 : 0] m_axi_arid,
 	output wire [C_M_AXI_ADDR_WIDTH-1 : 0] m_axi_araddr,
 	output wire [7 : 0] m_axi_arlen,
 	output wire [2 : 0] m_axi_arsize,
@@ -58,6 +60,7 @@ module mm2s #
 	output wire [3 : 0] m_axi_arqos,
 	output wire  m_axi_arvalid,
 	input wire  m_axi_arready,
+	input wire [C_M_AXI_ID_WIDTH-1 : 0] m_axi_rid,
 	input wire [C_M_AXI_DATA_WIDTH-1 : 0] m_axi_rdata,
 	input wire [1 : 0] m_axi_rresp,
 	input wire  m_axi_rlast,
@@ -107,18 +110,19 @@ module mm2s #
 		.C_PIXEL_WIDTH(C_PIXEL_WIDTH),
 
 		.C_M_AXI_BURST_LEN(C_M_AXI_BURST_LEN),
+		.C_M_AXI_ID_WIDTH(C_M_AXI_ID_WIDTH),
 		.C_M_AXI_ADDR_WIDTH(C_M_AXI_ADDR_WIDTH),
 		.C_M_AXI_DATA_WIDTH(C_M_AXI_DATA_WIDTH)
 	) read4mm_inst (
 		.img_width(img_width),
 		.img_height(img_height),
 
-		.soft_reset(soft_reset),
+		.soft_resetn(soft_resetn),
 		.resetting(resetting),
 		.fsync(fsync),
 
 		.sof(mm2s_wr_data[C_PIXEL_WIDTH]),
-		.eol(mm2s_wr_data[C_M_AXI_DATA_WIDTH-1]),
+		.eol(mm2s_wr_data[C_M_AXI_DATA_WIDTH/C_PIXEL_WIDTH*(C_PIXEL_WIDTH+2)-1]),
 		.dout(mm2s_pixel_data),
 		.wr_en(mm2s_wr_en),
 		.full(mm2s_full),
@@ -128,6 +132,7 @@ module mm2s #
 
 		.M_AXI_ACLK(m2f_aclk),
 		.M_AXI_ARESETN(resetn),
+		.M_AXI_ARID(m_axi_arid),
 		.M_AXI_ARADDR(m_axi_araddr),
 		.M_AXI_ARLEN(m_axi_arlen),
 		.M_AXI_ARSIZE(m_axi_arsize),
@@ -138,6 +143,7 @@ module mm2s #
 		.M_AXI_ARQOS(m_axi_arqos),
 		.M_AXI_ARVALID(m_axi_arvalid),
 		.M_AXI_ARREADY(m_axi_arready),
+		.M_AXI_RID(m_axi_rid),
 		.M_AXI_RDATA(m_axi_rdata),
 		.M_AXI_RRESP(m_axi_rresp),
 		.M_AXI_RLAST(m_axi_rlast),

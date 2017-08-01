@@ -39,7 +39,7 @@ pip_add_bus_if [ipx::current_core] M_AXI {
 	RLAST	m_axi_rlast
 	RVALID	m_axi_rvalid
 	RREADY	m_axi_rready
-	
+
 	AWID	m_axi_awid
 	AWADDR	m_axi_awaddr
 	AWLEN	m_axi_awlen
@@ -90,7 +90,7 @@ pip_add_bus_if [ipx::current_core] S_AXI_W {
 	abstraction_type_vlnv {xilinx.com:interface:aximm_rtl:1.0}
 	bus_type_vlnv {xilinx.com:interface:aximm:1.0}
 	interface_mode {slave}
-} {	
+} {
 	AWID	s_axi_awid
 	AWADDR	s_axi_awaddr
 	AWLEN	s_axi_awlen
@@ -111,6 +111,16 @@ pip_add_bus_if [ipx::current_core] S_AXI_W {
 	BRESP	s_axi_bresp
 	BVALID	s_axi_bvalid
 	BREADY	s_axi_bready
+}
+
+pip_add_bus_if [ipx::current_core] clk {
+	abstraction_type_vlnv xilinx.com:signal:clock_rtl:1.0
+	bus_type_vlnv xilinx.com:signal:clock:1.0
+	interface_mode slave
+} {
+	CLK clk
+} {
+	ASSOCIATED_BUSIF {M_AXI:S_AXI_W:S_AXI_R}
 }
 
 # parameters

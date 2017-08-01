@@ -1,4 +1,4 @@
- 
+
 `timescale 1 ns / 1 ps
 //////////////////////////////////////////////////////////////////////////////////
 // Company:
@@ -21,11 +21,15 @@
 //////////////////////////////////////////////////////////////////////////////////
 module axi_combiner #
 (
+	parameter integer C_M_AXI_ID_WIDTH	= 1,
 	parameter integer C_M_AXI_ADDR_WIDTH	= 32,
 	parameter integer C_M_AXI_DATA_WIDTH	= 32
 )
 (
+	input wire clk,
+
 	/// M_AXI_W
+	output wire [C_M_AXI_ID_WIDTH-1 : 0] m_axi_awid,
 	output wire [C_M_AXI_ADDR_WIDTH-1 : 0] m_axi_awaddr,
 	output wire [7 : 0] m_axi_awlen,
 	output wire [2 : 0] m_axi_awsize,
@@ -41,10 +45,12 @@ module axi_combiner #
 	output wire  m_axi_wlast,
 	output wire  m_axi_wvalid,
 	input wire  m_axi_wready,
+	input wire [C_M_AXI_ID_WIDTH-1 : 0] m_axi_bid,
 	input wire [1 : 0] m_axi_bresp,
 	input wire  m_axi_bvalid,
 	output wire  m_axi_bready,
 	// M_AXI_R
+	output wire [C_M_AXI_ID_WIDTH-1 : 0] m_axi_arid,
 	output wire [C_M_AXI_ADDR_WIDTH-1 : 0] m_axi_araddr,
 	output wire [7 : 0] m_axi_arlen,
 	output wire [2 : 0] m_axi_arsize,
@@ -56,12 +62,14 @@ module axi_combiner #
 	output wire  m_axi_arvalid,
 	input wire  m_axi_arready,
 	input wire [C_M_AXI_DATA_WIDTH-1 : 0] m_axi_rdata,
+	input wire [C_M_AXI_ID_WIDTH-1 : 0] m_axi_rid,
 	input wire [1 : 0] m_axi_rresp,
 	input wire  m_axi_rlast,
 	input wire  m_axi_rvalid,
 	output wire  m_axi_rready,
 
 	/// S_AXI_W
+	input wire [C_M_AXI_ID_WIDTH-1 : 0] s_axi_awid,
 	input wire [C_M_AXI_ADDR_WIDTH-1 : 0] s_axi_awaddr,
 	input wire [7 : 0] s_axi_awlen,
 	input wire [2 : 0] s_axi_awsize,
@@ -77,10 +85,12 @@ module axi_combiner #
 	input wire  s_axi_wlast,
 	input wire  s_axi_wvalid,
 	output wire  s_axi_wready,
+	output wire [C_M_AXI_ID_WIDTH-1 : 0] s_axi_bid,
 	output wire [1 : 0] s_axi_bresp,
 	output wire  s_axi_bvalid,
 	input wire  s_axi_bready,
 	// S_AXI_R
+	input wire [C_M_AXI_ID_WIDTH-1 : 0] s_axi_arid,
 	input wire [C_M_AXI_ADDR_WIDTH-1 : 0] s_axi_araddr,
 	input wire [7 : 0] s_axi_arlen,
 	input wire [2 : 0] s_axi_arsize,
@@ -92,11 +102,13 @@ module axi_combiner #
 	input wire  s_axi_arvalid,
 	output wire  s_axi_arready,
 	output wire [C_M_AXI_DATA_WIDTH-1 : 0] s_axi_rdata,
+	output wire [C_M_AXI_ID_WIDTH-1 : 0] s_axi_rid,
 	output wire [1 : 0] s_axi_rresp,
 	output wire  s_axi_rlast,
 	output wire  s_axi_rvalid,
 	input wire  s_axi_rready
 );
+	assign m_axi_awid = s_axi_awid;
 	assign m_axi_awaddr = s_axi_awaddr;
 	assign m_axi_awlen = s_axi_awlen;
 	assign m_axi_awsize = s_axi_awsize;
@@ -112,10 +124,12 @@ module axi_combiner #
 	assign m_axi_wlast = s_axi_wlast;
 	assign m_axi_wvalid = s_axi_wvalid;
 	assign s_axi_wready = m_axi_wready;
+	assign s_axi_bid = m_axi_bid;
 	assign s_axi_bresp = m_axi_bresp;
 	assign s_axi_bvalid = m_axi_bvalid;
 	assign m_axi_bready = s_axi_bready;
 	// M_AXI_R
+	assign m_axi_arid = s_axi_arid;
 	assign m_axi_araddr = s_axi_araddr;
 	assign m_axi_arlen = s_axi_arlen;
 	assign m_axi_arsize = s_axi_arsize;
@@ -127,6 +141,7 @@ module axi_combiner #
 	assign m_axi_arvalid = s_axi_arvalid;
 	assign s_axi_arready = m_axi_arready;
 	assign s_axi_rdata = m_axi_rdata;
+	assign s_axi_rid = m_axi_rid;
 	assign s_axi_rresp = m_axi_rresp;
 	assign s_axi_rlast = m_axi_rlast;
 	assign s_axi_rvalid = m_axi_rvalid;

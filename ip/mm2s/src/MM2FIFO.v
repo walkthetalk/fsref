@@ -13,13 +13,15 @@ module MM2FIFO #
 
 	// Burst Length. Supports 1, 2, 4, 8, 16, 32, 64, 128, 256 burst lengths
 	parameter integer C_M_AXI_BURST_LEN	= 16,
+	// Thread ID Width
+	parameter integer C_M_AXI_ID_WIDTH	= 1,
 	// Width of Address Bus
 	parameter integer C_M_AXI_ADDR_WIDTH	= 32,
 	// Width of Data Bus
 	parameter integer C_M_AXI_DATA_WIDTH	= 32
 )
 (
-	input wire soft_reset,
+	input wire soft_resetn,
 	output wire resetting,
 
 	input wire [C_IMG_WBITS-1:0] img_width,
@@ -39,6 +41,7 @@ module MM2FIFO #
 	input wire  M_AXI_ACLK,
 	input wire  M_AXI_ARESETN,
 
+	output wire [C_M_AXI_ID_WIDTH-1 : 0] M_AXI_ARID,
 	output wire [C_M_AXI_ADDR_WIDTH-1 : 0] M_AXI_ARADDR,
 	output wire [7 : 0] M_AXI_ARLEN,
 	output wire [2 : 0] M_AXI_ARSIZE,
@@ -50,6 +53,7 @@ module MM2FIFO #
 	output wire  M_AXI_ARVALID,
 	input wire  M_AXI_ARREADY,
 
+	input wire [C_M_AXI_ID_WIDTH-1 : 0] M_AXI_RID,
 	input wire [C_M_AXI_DATA_WIDTH-1 : 0] M_AXI_RDATA,
 	input wire [1 : 0] M_AXI_RRESP,
 	input wire  M_AXI_RLAST,
@@ -98,25 +102,40 @@ module MM2FIFO #
 	reg [C_IMG_WBITS-1 : 0] r_img_col_idx;
 	reg [C_IMG_HBITS-1 : 0] r_img_row_idx;
 
-	///  resetting
-	reg soft_reset_d1;
-	always @ ( * ) begin
-		if (M_AXI_ARESETN == 1'b0) soft_reset_d1 <= 1'b0;
-		else soft_reset_d1 <= soft_reset;
+	/// fsync
+	reg fsync_d1;
+	always @ (posedge M_AXI_ACLK) begin
+		if (M_AXI_ARESETN == 1'b0) fsync_d1 <= 1'b0;
+		else fsync_d1 <= fsync;
 	end
-	wire soft_reset_posedge;
-	assign soft_reset_posedge = soft_reset == 1'b1 && soft_reset_d1 == 1'b0;
+	reg fsync_neg_edge;
+	always @ (posedge M_AXI_ACLK) begin
+		if (M_AXI_ARESETN == 1'b0) fsync_neg_edge <= 1'b0;
+		else fsync_neg_edge <= (~fsync & fsync_d1);
+	end
+
+	///  resetting
+	reg run_d1;
+	always @ (posedge M_AXI_ACLK) begin
+		if (M_AXI_ARESETN == 1'b0) run_d1 <= 1'b0;
+		else run_d1 <= soft_resetn;
+	end
+	reg soft_reset_posedge;
+	always @ (posedge M_AXI_ACLK) begin
+		if (M_AXI_ARESETN == 1'b0) soft_reset_posedge <= 1'b0;
+		else soft_reset_posedge <= (~soft_resetn && run_d1);
+	end
 
 	reg r_soft_restting;
-	assign resetting = ~M_AXI_ARESETN | r_soft_restting | soft_reset;
-	always @ ( M_AXI_ACLK ) begin
+	assign resetting = ~M_AXI_ARESETN | r_soft_restting;
+	always @ (posedge M_AXI_ACLK) begin
 		if (M_AXI_ARESETN == 1'b0)
 			r_soft_restting <= 1'b0;
 		else if (rnext && M_AXI_RLAST)	/// last active burst cycle
 			r_soft_restting <= 1'b0;
 		else if (soft_reset_posedge
 			&& (start_burst_pulse || burst_read_active
-			|| (~final_data || fsync)))
+			|| (~final_data || fsync_neg_edge)))
 			r_soft_restting <= 1'b1;
 		else
 			r_soft_restting <= r_soft_restting;
@@ -130,6 +149,7 @@ module MM2FIFO #
 	assign wr_en		= rnext && ~r_soft_restting;
 
 	//Read Address (AR)
+	assign M_AXI_ARID	= 0;
 	assign M_AXI_ARADDR	= axi_araddr;
 	assign M_AXI_ARLEN	= C_M_AXI_BURST_LEN - 1;
 	assign M_AXI_ARSIZE	= clogb2((C_M_AXI_DATA_WIDTH/8)-1);
@@ -187,14 +207,14 @@ module MM2FIFO #
 	//Flag any read response errors
 	assign read_resp_error = M_AXI_RREADY & M_AXI_RVALID & M_AXI_RRESP[1];
 
-	assign frame_pulse = ~start_burst_pulse && ~burst_read_active && (final_data && fsync);
+	assign frame_pulse = ~start_burst_pulse && ~burst_read_active & (final_data && fsync_neg_edge) & soft_resetn;
 
 	always @(posedge M_AXI_ACLK) begin
 		if (M_AXI_ARESETN == 1'b0)
 			start_burst_pulse <= 1'b0;
 		else if (~start_burst_pulse && ~burst_read_active
-			&& (~final_data || fsync)
-			&& (~soft_reset && ~r_soft_restting))
+			&& (~final_data || fsync_neg_edge)
+			&& (soft_resetn && ~r_soft_restting))
 			start_burst_pulse <= 1'b1;
 		else
 			start_burst_pulse <= 1'b0;

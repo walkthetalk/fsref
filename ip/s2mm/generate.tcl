@@ -8,12 +8,13 @@ ipx::infer_core -vendor $VENDOR -library $LIBRARY -name s2mm -taxonomy /UserIP $
 ipx::edit_ip_in_project -upgrade true -name edit_ip_project -directory $tmp_dir $ip_dir/component.xml
 ipx::current_core $ip_dir/component.xml
 
-pip_set_prop [ipx::current_core] {
+pip_set_prop [ipx::current_core] [subst {
 	display_name {AXI Stream to MM}
 	description {Stream to FIFO to MM}
 	vendor_display_name {OCFB}
+	version $VERSION
 	company_url {https:://github.com/walkthetalk}
-}
+}]
 
 pip_clr_def_if_par [ipx::current_core]
 
@@ -65,6 +66,7 @@ pip_add_bus_if [ipx::current_core] M_AXI {
 	bus_type_vlnv {xilinx.com:interface:aximm:1.0}
 	interface_mode {master}
 } {
+	AWID	m_axi_awid
 	AWADDR	m_axi_awaddr
 	AWLEN	m_axi_awlen
 	AWSIZE	m_axi_awsize
@@ -80,6 +82,7 @@ pip_add_bus_if [ipx::current_core] M_AXI {
 	WLAST	m_axi_wlast
 	WVALID	m_axi_wvalid
 	WREADY	m_axi_wready
+	BID	m_axi_bid
 	BRESP	m_axi_bresp
 	BVALID	m_axi_bvalid
 	BREADY	m_axi_bready
@@ -96,14 +99,14 @@ pip_add_bus_if [ipx::current_core] resetn {
 	POLARITY {ACTIVE_LOW}
 }
 
-pip_add_bus_if [ipx::current_core] soft_reset {
+pip_add_bus_if [ipx::current_core] soft_resetn {
 	abstraction_type_vlnv xilinx.com:signal:reset_rtl:1.0
 	bus_type_vlnv xilinx.com:signal:reset:1.0
 	interface_mode slave
 } {
-	RST soft_reset
+	RST soft_resetn
 } {
-	POLARITY {ACTIVE_HIGH}
+	POLARITY {ACTIVE_LOW}
 }
 
 pip_add_bus_if [ipx::current_core] resetting {

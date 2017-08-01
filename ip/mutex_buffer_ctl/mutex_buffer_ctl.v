@@ -118,16 +118,16 @@ module mutex_buffer_ctl #
 			w_bmp <= 0;
 		end
 		else if (w_sof) begin
-			case (w_bmp | r0_bmp | r1_bmp)
-			4'bxxx0: begin
+			casez (w_bmp | r0_bmp | r1_bmp)
+			4'b???0: begin
 				w_addr	<= buf0_addr;
 				w_bmp	<= 4'b0001;
 			end
-			4'bxx01: begin
+			4'b??01: begin
 				w_addr	<= buf1_addr;
 				w_bmp	<= 4'b0010;
 			end
-			4'bx011: begin
+			4'b?011: begin
 				w_addr	<= buf2_addr;
 				w_bmp	<= 4'b0100;
 			end

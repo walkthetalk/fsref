@@ -8,12 +8,13 @@ ipx::infer_core -vendor $VENDOR -library $LIBRARY -taxonomy /UserIP $ip_dir
 ipx::edit_ip_in_project -upgrade true -name edit_ip_project -directory $tmp_dir $ip_dir/component.xml
 ipx::current_core $ip_dir/component.xml
 
-pip_set_prop [ipx::current_core] {
+pip_set_prop [ipx::current_core] [subst {
 	display_name {Mutex Buffer Controller}
 	description {1W2R buffer controller}
 	vendor_display_name {OCFB}
+	version $VERSION
 	company_url {https:://github.com/walkthetalk}
-}
+}]
 
 pip_clr_def_if_par [ipx::current_core]
 
