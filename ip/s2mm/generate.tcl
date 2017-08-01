@@ -13,7 +13,9 @@ pip_set_prop [ipx::current_core] [subst {
 	description {Stream to FIFO to MM}
 	vendor_display_name {OCFB}
 	version $VERSION
+	core_revision 1
 	company_url {https:://github.com/walkthetalk}
+	supported_families {zynq Production}
 }]
 
 pip_clr_def_if_par [ipx::current_core]
@@ -27,7 +29,6 @@ pip_add_bus_if [ipx::current_core] MBUF_W [subst {
 	ADDR s2mm_addr
 }
 
-# s2f
 pip_add_bus_if [ipx::current_core] S_AXIS {
 	abstraction_type_vlnv {xilinx.com:interface:axis_rtl:1.0}
 	bus_type_vlnv {xilinx.com:interface:axis:1.0}
@@ -38,27 +39,6 @@ pip_add_bus_if [ipx::current_core] S_AXIS {
 	TUSER	s_axis_tuser
 	TLAST	s_axis_tlast
 	TREADY	s_axis_tready
-}
-
-pip_add_bus_if [ipx::current_core] FIFO_WRITE {
-	abstraction_type_vlnv {xilinx.com:interface:fifo_write_rtl:1.0}
-	bus_type_vlnv {xilinx.com:interface:fifo_write:1.0}
-	interface_mode {master}
-} {
-	WR_DATA s2mm_wr_data
-	WR_EN s2mm_wr_en
-	FULL s2mm_full
-}
-
-#f2mm
-pip_add_bus_if [ipx::current_core] FIFO_READ {
-	abstraction_type_vlnv {xilinx.com:interface:fifo_read_rtl:1.0}
-	bus_type_vlnv {xilinx.com:interface:fifo_read:1.0}
-	interface_mode {master}
-} {
-	RD_DATA s2mm_rd_data
-	RD_EN s2mm_rd_en
-	EMPTY s2mm_empty
 }
 
 pip_add_bus_if [ipx::current_core] M_AXI {
@@ -88,6 +68,35 @@ pip_add_bus_if [ipx::current_core] M_AXI {
 	BREADY	m_axi_bready
 }
 
+pip_add_bus_if [ipx::current_core] FIFO_WRITE {
+	abstraction_type_vlnv {xilinx.com:interface:fifo_write_rtl:1.0}
+	bus_type_vlnv {xilinx.com:interface:fifo_write:1.0}
+	interface_mode {master}
+} {
+	WR_DATA s2mm_wr_data
+	WR_EN s2mm_wr_en
+	FULL s2mm_full
+}
+
+pip_add_bus_if [ipx::current_core] FIFO_READ {
+	abstraction_type_vlnv {xilinx.com:interface:fifo_read_rtl:1.0}
+	bus_type_vlnv {xilinx.com:interface:fifo_read:1.0}
+	interface_mode {master}
+} {
+	RD_DATA s2mm_rd_data
+	RD_EN s2mm_rd_en
+	EMPTY s2mm_empty
+}
+pip_add_bus_if [ipx::current_core] resetting {
+	abstraction_type_vlnv xilinx.com:signal:reset_rtl:1.0
+	bus_type_vlnv xilinx.com:signal:reset:1.0
+	interface_mode master
+} {
+	RST resetting
+} {
+	POLARITY {ACTIVE_HIGH}
+}
+
 # clock & reset
 pip_add_bus_if [ipx::current_core] resetn {
 	abstraction_type_vlnv xilinx.com:signal:reset_rtl:1.0
@@ -109,16 +118,6 @@ pip_add_bus_if [ipx::current_core] soft_resetn {
 	POLARITY {ACTIVE_LOW}
 }
 
-pip_add_bus_if [ipx::current_core] resetting {
-	abstraction_type_vlnv xilinx.com:signal:reset_rtl:1.0
-	bus_type_vlnv xilinx.com:signal:reset:1.0
-	interface_mode master
-} {
-	RST resetting
-} {
-	POLARITY {ACTIVE_HIGH}
-}
-
 pip_add_bus_if [ipx::current_core] s2f_aclk {
 	abstraction_type_vlnv xilinx.com:signal:clock_rtl:1.0
 	bus_type_vlnv xilinx.com:signal:clock:1.0
@@ -137,7 +136,7 @@ pip_add_bus_if [ipx::current_core] f2m_aclk {
 } {
 	CLK f2m_aclk
 } {
-	ASSOCIATED_BUSIF {FIFO_READ:BUF_CTL:M_AXI}
+	ASSOCIATED_BUSIF {FIFO_READ:MBUF_W:M_AXI}
 	ASSOCIATED_RESET {resetn}
 }
 
@@ -237,12 +236,6 @@ pip_add_address_space [ipx::current_core] M_AXI M_AXI_REG {
 	width 32
 	range 4294967296
 	range_dependency {pow(2,(spirit:decode(id('MODELPARAM_VALUE.C_M_AXI_ADDR_WIDTH')) - 1) + 1)}
-}
-
-# core prop
-pip_set_prop [ipx::current_core] {
-    core_revision 1
-    supported_families {zynq Production}
 }
 
 ipx::create_xgui_files [ipx::current_core]

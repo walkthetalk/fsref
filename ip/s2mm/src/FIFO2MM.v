@@ -126,8 +126,17 @@ module FIFO2MM #
 	assign wnext = M_AXI_WREADY & M_AXI_WVALID;
 
 	// I/O Connections assignments
-	/// @note: start_burst_pulse is late to frame_pulse by one cycle waiting for base_addr
-	assign frame_pulse = ~start_burst_pulse & ~burst_active & r_dvalid & sof & soft_resetn;
+	reg r_frame_pulse;
+	assign frame_pulse = r_frame_pulse;
+	always @ (posedge M_AXI_ACLK) begin
+		if (M_AXI_ARESETN == 0)
+			r_frame_pulse <= 1'b0;
+		else if (~r_frame_pulse && M_AXI_BVALID && M_AXI_BREADY
+			&& r_img_col_idx == 0 && r_img_row_idx == 0)
+			r_frame_pulse <= 1'b1;
+		else
+			r_frame_pulse <= 1'b0;
+	end
 
 	assign rd_en		= ~empty && (~r_dvalid | wnext) && ~r_soft_restting;
 	always @(posedge M_AXI_ACLK) begin
