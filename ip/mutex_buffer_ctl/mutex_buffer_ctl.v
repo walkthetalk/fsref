@@ -25,6 +25,8 @@ module mutex_buffer_ctl #
 	input wire clk,
 	input wire resetn,
 
+	output wire intr,
+
 	input wire [C_ADDR_WIDTH-1:0] buf0_addr,
 	input wire [C_ADDR_WIDTH-1:0] buf1_addr,
 	input wire [C_ADDR_WIDTH-1:0] buf2_addr,
@@ -41,8 +43,9 @@ module mutex_buffer_ctl #
 );
 
 	localparam integer C_READER_NUM = 2;
-
 	localparam integer C_BUFF_NUM = C_READER_NUM + 2;
+
+	assign intr = w_sof;
 
 	reg [C_BUFF_NUM-1:0]	r0_bmp;
 	reg [C_BUFF_NUM-1:0]	r1_bmp;

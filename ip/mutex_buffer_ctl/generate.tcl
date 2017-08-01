@@ -13,19 +13,12 @@ pip_set_prop [ipx::current_core] [subst {
 	description {1W2R buffer controller}
 	vendor_display_name {OCFB}
 	version $VERSION
+	core_revision 1
 	company_url {https:://github.com/walkthetalk}
+	supported_families {zynq Production}
 }]
 
 pip_clr_def_if_par [ipx::current_core]
-
-pip_add_bus_if [ipx::current_core] MBUF_W [subst {
-	abstraction_type_vlnv $VENDOR:$LIBRARY:mutex_buffer_rtl:1.0
-	bus_type_vlnv $VENDOR:$LIBRARY:mutex_buffer:1.0
-	interface_mode master
-}] {
-	SOF w_sof
-	ADDR w_addr
-}
 
 pip_add_bus_if [ipx::current_core] MBUF_R0 [subst {
 	abstraction_type_vlnv $VENDOR:$LIBRARY:mutex_buffer_rtl:1.0
@@ -43,6 +36,23 @@ pip_add_bus_if [ipx::current_core] MBUF_R1 [subst {
 }] {
 	SOF r1_sof
 	ADDR r1_addr
+}
+
+pip_add_bus_if [ipx::current_core] MBUF_W [subst {
+	abstraction_type_vlnv $VENDOR:$LIBRARY:mutex_buffer_rtl:1.0
+	bus_type_vlnv $VENDOR:$LIBRARY:mutex_buffer:1.0
+	interface_mode master
+}] {
+	SOF w_sof
+	ADDR w_addr
+}
+
+pip_add_bus_if [ipx::current_core] intr {
+	abstraction_type_vlnv xilinx.com:signal:interrupt_rtl:1.0
+	bus_type_vlnv xilinx.com:signal:interrupt:1.0
+	interface_mode master
+} {
+	INTERRUPT intr
 }
 
 pip_add_bus_if [ipx::current_core] resetn {
@@ -79,11 +89,6 @@ pip_add_usr_par [ipx::current_core] {C_ADDR_WIDTH} {
 } {
 	value 32
 	value_format long
-}
-
-pip_set_prop [ipx::current_core] {
-    core_revision 1
-    supported_families {zynq Production}
 }
 
 ipx::create_xgui_files [ipx::current_core]
