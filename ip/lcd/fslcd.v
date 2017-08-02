@@ -21,8 +21,8 @@
 module fslcd #
 (
 	/// single component data width
-	C_IN_COMP_WIDTH = 8,
-	C_OUT_COMP_WIDTH = 6
+	parameter integer C_IN_COMP_WIDTH = 8,
+	parameter integer C_OUT_COMP_WIDTH = 6
 ) (
 	input vid_io_in_clk,
 

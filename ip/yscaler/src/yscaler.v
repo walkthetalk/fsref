@@ -20,8 +20,8 @@
 //////////////////////////////////////////////////////////////////////////////////
 module yscaler #
 (
-	C_PIXEL_WIDTH = 8,
-	C_RESO_WIDTH  = 10
+	parameter integer C_PIXEL_WIDTH = 8,
+	parameter integer C_RESO_WIDTH  = 10
 ) (
 	input wire clk,
 	input wire resetn,
@@ -577,4 +577,3 @@ module yscaler #
 		end
 	end
 endmodule
-

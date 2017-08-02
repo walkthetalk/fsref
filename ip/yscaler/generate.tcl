@@ -4,9 +4,18 @@ set tmp_dir $ip_dir/tmp
 
 source $origin_dir/scripts/util.tcl
 
-ipx::infer_core -vendor $VENDOR -library $LIBRARY -taxonomy /UserIP $ip_dir
+ipx::infer_core -vendor $VENDOR -library $LIBRARY -taxonomy $TAXONOMY $ip_dir
 ipx::edit_ip_in_project -upgrade true -name edit_ip_project -directory $tmp_dir $ip_dir/component.xml
 ipx::current_core $ip_dir/component.xml
+
+pip_set_prop [ipx::current_core] {
+	display_name {Video Scaler}
+	description {Video Scaler}
+	vendor_display_name $VENDORDISPNAME
+	version $VERSION
+	company_url $COMPANYURL
+	supported_families {zynq Production}
+}
 
 pip_clr_def_if_par [ipx::current_core]
 
@@ -135,12 +144,6 @@ pip_add_usr_par [ipx::current_core] {C_RESO_WIDTH} {
 } {
 	value 12
 	value_format long
-}
-
-# core prop
-pip_set_prop [ipx::current_core] {
-    core_revision 1
-    supported_families {zynq Production}
 }
 
 ipx::create_xgui_files [ipx::current_core]

@@ -1,5 +1,5 @@
 module bilinear_scaler # (
-	C_RESO_WIDTH  = 10
+	parameter integer C_RESO_WIDTH  = 10
 ) (
 	input wire clk,
 	input wire resetn,

@@ -3,6 +3,9 @@ config_webtalk -user off
 set VENDOR ocfb
 set LIBRARY pvip
 set VERSION 1.0.7
+set TAXONOMY /UserIP
+set COMPANYURL https:://github.com/walkthetalk
+set VENDORDISPNAME OCFB
 
 proc pip_clr_def_if_par {
 	core_inst

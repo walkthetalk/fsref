@@ -4,17 +4,16 @@ set tmp_dir $ip_dir/tmp
 
 source $origin_dir/scripts/util.tcl
 
-ipx::infer_core -vendor $VENDOR -library $LIBRARY -name s2mm -taxonomy /UserIP $ip_dir
+ipx::infer_core -vendor $VENDOR -library $LIBRARY -name s2mm -taxonomy $TAXONOMY $ip_dir
 ipx::edit_ip_in_project -upgrade true -name edit_ip_project -directory $tmp_dir $ip_dir/component.xml
 ipx::current_core $ip_dir/component.xml
 
 pip_set_prop [ipx::current_core] [subst {
 	display_name {AXI Stream to MM}
 	description {Stream to FIFO to MM}
-	vendor_display_name {OCFB}
+	vendor_display_name $VENDORDISPNAME
 	version $VERSION
-	core_revision 1
-	company_url {https:://github.com/walkthetalk}
+	company_url $COMPANYURL
 	supported_families {zynq Production}
 }]
 

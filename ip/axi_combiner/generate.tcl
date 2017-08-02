@@ -4,15 +4,17 @@ set tmp_dir $ip_dir/tmp
 
 source $origin_dir/scripts/util.tcl
 
-ipx::infer_core -vendor $VENDOR -library $LIBRARY -name axi_combiner -taxonomy /UserIP $ip_dir
+ipx::infer_core -vendor $VENDOR -library $LIBRARY -name axi_combiner -taxonomy $TAXONOMY $ip_dir
 ipx::edit_ip_in_project -upgrade true -name edit_ip_project -directory $tmp_dir $ip_dir/component.xml
 ipx::current_core $ip_dir/component.xml
 
 pip_set_prop [ipx::current_core] {
 	display_name {AXI MM Combiner}
 	description {Combine read/ra and write/wa channel into one full AXI Bus}
-	vendor_display_name {OCFB}
-	company_url {https:://github.com/walkthetalk}
+	vendor_display_name $VENDORDISPNAME
+	version $VERSION
+	company_url $COMPANYURL
+	supported_families {zynq Production}
 }
 
 pip_clr_def_if_par [ipx::current_core]
@@ -159,12 +161,6 @@ pip_add_address_space [ipx::current_core] M_AXI M_AXI_REG {
 	width 32
 	range 4294967296
 	range_dependency {pow(2,(spirit:decode(id('MODELPARAM_VALUE.C_M_AXI_ADDR_WIDTH')) - 1) + 1)}
-}
-
-# core prop
-pip_set_prop [ipx::current_core] {
-    core_revision 1
-    supported_families {zynq Production}
 }
 
 ipx::create_xgui_files [ipx::current_core]
