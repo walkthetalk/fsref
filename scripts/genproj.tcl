@@ -159,7 +159,7 @@ set_property -dict [list \
 endgroup
 # 6. lcd
 startgroup
-create_bd_cell -type ip -vlnv $VENDOR:$LIBRARY:fslcd:1.0 fslcd_0
+create_bd_cell -type ip -vlnv $VENDOR:$LIBRARY:fslcd:$VERSION fslcd_0
 set_property -dict [list \
     CONFIG.C_IN_COMP_WIDTH {8} \
     CONFIG.C_OUT_COMP_WIDTH {6} \
@@ -168,7 +168,7 @@ endgroup
 
 # 7. cmos
 startgroup
-create_bd_cell -type ip -vlnv $VENDOR:$LIBRARY:fscmos:1.0 fscmos_0
+create_bd_cell -type ip -vlnv $VENDOR:$LIBRARY:fscmos:$VERSION fscmos_0
 endgroup
 copy_bd_objs /  [get_bd_cells {fscmos_0}]
 

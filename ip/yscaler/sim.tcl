@@ -1,7 +1,7 @@
 
 # main ip
 startgroup
-create_bd_cell -type ip -vlnv $VENDOR:$LIBRARY:yscaler:1.0 yscaler_0
+create_bd_cell -type ip -vlnv $VENDOR:$LIBRARY:yscaler:$VERSION yscaler_0
 endgroup
 
 # fifo
