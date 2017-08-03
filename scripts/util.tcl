@@ -1,10 +1,16 @@
 config_webtalk -user off
 
+global VENDOR
 set VENDOR ocfb
+global LIBRARY
 set LIBRARY pvip
-set VERSION 1.0.7
+global VERSION
+set VERSION 1.0.8
+global TAXONOMY
 set TAXONOMY /UserIP
-set COMPANYURL https:://github.com/walkthetalk
+global COMPANYURL
+set COMPANYURL https://github.com/walkthetalk
+global VENDORDISPNAME
 set VENDORDISPNAME OCFB
 
 proc pip_clr_def_if_par {
