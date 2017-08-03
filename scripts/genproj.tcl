@@ -1,6 +1,7 @@
 set origin_dir [lindex $argv 0]
 
 source $origin_dir/scripts/util.tcl
+source $origin_dir/ip/pvdma/create.tcl
 
 # create project
 create_project fsref $origin_dir -part xc7z020clg400-1
@@ -13,6 +14,7 @@ update_ip_catalog
 
 # create board design
 create_bd_design "bd1"
+
 # 1. cpu
 startgroup
 create_bd_cell -type ip -vlnv xilinx.com:ip:processing_system7:5.5 cpu
@@ -110,6 +112,8 @@ set_property -dict [list \
 endgroup
 
 # 3. vdma
+create_pvdma pvdma_0
+
 startgroup
 create_bd_cell -type ip -vlnv xilinx.com:ip:axi_vdma:6.3 axi_vdma_0
 endgroup
@@ -247,6 +251,7 @@ connect_bd_net [get_bd_pins rst_cpu_fclk0/peripheral_aresetn] [get_bd_pins v_osd
 
 connect_bd_net [get_bd_pins cpu/FCLK_CLK1] [get_bd_pins rst_cpu_fclk1/slowest_sync_clk]
 connect_bd_net [get_bd_pins cpu/FCLK_CLK1] [get_bd_pins {cpu/S_AXI_HP*_ACLK}]
+connect_bd_net [get_bd_pins cpu/FCLK_CLK1] [get_bd_pins {pvdma_*/clk}]
 connect_bd_net [get_bd_pins cpu/FCLK_CLK1] [get_bd_pins {axi_vdma_*/*_mm2s_aclk}]
 connect_bd_net [get_bd_pins cpu/FCLK_CLK1] [get_bd_pins {axi_vdma_*/*_s2mm_aclk}]
 connect_bd_net [get_bd_pins cpu/FCLK_CLK1] [get_bd_pins {axi_mem_intercon_*/*ACLK}]
