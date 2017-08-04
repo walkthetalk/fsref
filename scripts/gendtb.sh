@@ -15,6 +15,8 @@ if [ ! -d "${repo_dt}" ]; then
 	exit 1
 fi
 
+source ${dir_main}/scripts/setenv
+
 ${HSI_BIN} \
 	-nojournal -nolog \
 	-mode batch \
