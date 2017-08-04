@@ -187,7 +187,7 @@ copy_bd_objs /  [get_bd_cells {pvdma_1}]
 
 startgroup
 create_bd_cell -type ip -vlnv xilinx.com:ip:axi_interconnect:2.1 axi_mem_intercon
-set_property -dict [list CONFIG.NUM_SI {3} CONFIG.NUM_MI {1}] [get_bd_cells axi_mem_intercon]
+set_property -dict [list CONFIG.NUM_SI {3} CONFIG.NUM_MI {4}] [get_bd_cells axi_mem_intercon]
 endgroup
 
 # 7. constant 1
@@ -281,7 +281,10 @@ for {set i 1} {$i < 3} {incr i} {
 	connect_bd_net [get_bd_pins v_tc_0/fsync_out] [get_bd_pins pvdma_$i/fsync]
 }
 
-connect_bd_intf_net -boundary_type upper [get_bd_intf_pins axi_mem_intercon/M00_AXI] [get_bd_intf_pins cpu/S_AXI_HP2]
+connect_bd_intf_net -boundary_type upper [get_bd_intf_pins axi_mem_intercon/M00_AXI] [get_bd_intf_pins cpu/S_AXI_HP0]
+connect_bd_intf_net -boundary_type upper [get_bd_intf_pins axi_mem_intercon/M01_AXI] [get_bd_intf_pins cpu/S_AXI_HP1]
+connect_bd_intf_net -boundary_type upper [get_bd_intf_pins axi_mem_intercon/M02_AXI] [get_bd_intf_pins cpu/S_AXI_HP2]
+connect_bd_intf_net -boundary_type upper [get_bd_intf_pins axi_mem_intercon/M03_AXI] [get_bd_intf_pins cpu/S_AXI_HP3]
 
 # connect data: cmos1 -> osd & cpu
 connect_bd_intf_net -boundary_type upper [get_bd_intf_pins fscmos_1/vid_io_out] [get_bd_intf_pins v_vid_in_axi4s_2/vid_io_in]

@@ -22,7 +22,7 @@ if [ ! -d "${out_dir}" ]; then
 fi
 
 cd ${kernel_src}
-quilt import ${dir_main}/scripts/0001-first-running-version.patch
+quilt import ${dir_main}/scripts/kernelpatch/0001-first-running-version.patch
 quilt push
 make fsref_defconfig
 

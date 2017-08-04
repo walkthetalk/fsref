@@ -9,4 +9,4 @@ if [ ! -d "${out_dir}" ]; then
 	mkdir ${out_dir}
 fi
 
-${dir_main}/conv ${dir_main}/fsref.runs/impl_1/bd1_wrapper.bit ${out_dir}/system.bit.bin
+${dir_main}/scripts/aux/conv ${dir_main}/fsref.runs/impl_1/bd1_wrapper.bit ${out_dir}/system.bit.bin
