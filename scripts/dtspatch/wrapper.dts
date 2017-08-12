@@ -5,10 +5,39 @@
  */
 /include/ "system-top.dts"
 /include/ "system.dts"
+
+/ {
+	reserved-memory {
+		#address-cells = <1>;
+		#size-cells = <1>;
+		ranges;
+
+		display_reserved: buffer@3FF00000 {
+			no-map;
+			reg = <0x3FF00000 0x100000>;
+		};
+	};
+};
+
+&amba {
+	framebuffer0 {
+		compatible = "simple-framebuffer";
+		//reg = <0x3FF00000 (320 * 240 * 4)>;
+		memory-region = <&display_reserved>;
+		width = <320>;
+		height = <240>;
+		stride = <(320 * 4)>;
+		format = "a8r8g8b8";
+		clocks = <&clkc 15>, <&clkc 16>, <&clkc 17>, <&clkc 18>;
+		// lcd-supply = <&reg_dc1sw>;
+	};
+};
+
+/*
 &amba_pl {
 	xilinx_drm {
 		compatible = "xlnx,drm";
-		//status = "disabled";
+		status = "disabled";
 		xlnx,osd = <&v_osd>;
 		//xlnx,vtc = <&v_tc_0>;
 		clocks = <&clkc 17>;
@@ -22,3 +51,4 @@
 		};
 	};
 };
+*/
