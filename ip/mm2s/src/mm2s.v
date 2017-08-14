@@ -89,20 +89,33 @@ module mm2s #
 	localparam C_PP1 = C_PIXEL_WIDTH + 1;
 	localparam C_PP2 = C_PIXEL_WIDTH + 2;
 
+	localparam C_ADATA_PIXELS = C_M_AXI_DATA_WIDTH/C_PIXEL_WIDTH;
+
 // mm to fifo
 	/// use m2f_aclk
 	wire [C_M_AXI_DATA_WIDTH-1 : 0] mm2s_pixel_data;
+	wire mm2s_sof;
+	wire mm2s_eol;
 
 	generate
 		genvar i;
-		for (i = 0; i < C_M_AXI_DATA_WIDTH/C_PIXEL_WIDTH; i = i+1) begin: wr_pixel
-			assign mm2s_wr_data[i*C_PP2+C_PM1 : i*C_PP2] = mm2s_pixel_data[i*C_PIXEL_WIDTH+C_PM1:i*C_PIXEL_WIDTH];
+		for (i = 0; i < C_ADATA_PIXELS; i = i+1) begin: wr_pixel
+			localparam integer j = C_ADATA_PIXELS-1-i;
+			assign mm2s_wr_data[i*C_PP2+C_PM1 : i*C_PP2] = mm2s_pixel_data[j*C_PIXEL_WIDTH+C_PM1:j*C_PIXEL_WIDTH];
 		end
-		for (i = 1; i < C_M_AXI_DATA_WIDTH/C_PIXEL_WIDTH; i = i+1) begin: wr_sof
-			assign mm2s_wr_data[i*C_PP2+C_PIXEL_WIDTH] = 1'b0;
+		for (i = 0; i < C_ADATA_PIXELS; i = i+1) begin: wr_sof
+			localparam integer j = i*C_PP2+C_PIXEL_WIDTH;
+			if (i == C_ADATA_PIXELS-1)
+				assign mm2s_wr_data[j] = mm2s_sof;
+			else
+				assign mm2s_wr_data[j] = 1'b0;
 		end
-		for (i = 0; i < (C_M_AXI_DATA_WIDTH/C_PIXEL_WIDTH-1); i = i+1) begin: wr_eol
-			assign mm2s_wr_data[i*C_PP2+C_PP1] = 1'b0;
+		for (i = 0; i < C_ADATA_PIXELS; i = i+1) begin: wr_eol
+			localparam integer j = i*C_PP2+C_PP1;
+			if (i == 0)
+				assign mm2s_wr_data[j] = mm2s_eol;
+			else
+				assign mm2s_wr_data[j] = 1'b0;
 		end
 	endgenerate
 
@@ -118,11 +131,11 @@ module mm2s #
 		.img_height(img_height),
 
 		.soft_resetn(soft_resetn),
-		.resetting(resetting),
+		//.resetting(resetting),
 		.fsync(fsync),
 
-		.sof(mm2s_wr_data[C_PIXEL_WIDTH]),
-		.eol(mm2s_wr_data[C_M_AXI_DATA_WIDTH/C_PIXEL_WIDTH*(C_PIXEL_WIDTH+2)-1]),
+		.sof(mm2s_sof),
+		.eol(mm2s_eol),
 		.dout(mm2s_pixel_data),
 		.wr_en(mm2s_wr_en),
 		.full(mm2s_full),
@@ -152,6 +165,7 @@ module mm2s #
 	);
 
 // FIFO to stream
+/*
 	/// use f2s_aclk
 	reg mm2s_dvalid;
 	assign m_axis_tdata = mm2s_rd_data[C_PIXEL_WIDTH-1:0];
@@ -173,4 +187,130 @@ module mm2s #
 			mm2s_dvalid <= mm2s_dvalid;
 		end
 	end
+*/
+
+	reg mm2s_dvalid;
+
+	reg [C_IMG_WBITS-1:0] r_img_width;
+	reg [C_IMG_HBITS-1:0] r_img_height;
+	always @(posedge f2s_aclk) begin
+		if (resetn == 1'b0) begin
+			r_img_width <= img_width-1;
+			r_img_height <= img_height-1;
+		end
+		else if (m_axis_tvalid & m_axis_tready) begin
+			if (r_img_width == 0 && r_img_height == 0) begin
+				r_img_width <= img_width-1;
+				r_img_height <= img_height-1;
+			end
+			else if (r_img_width == 0) begin
+				r_img_width <= img_width-1;
+				r_img_height <= r_img_height - 1;
+			end
+			else begin
+				r_img_width <= r_img_width - 1;
+				r_img_height <= r_img_height;
+			end
+		end
+		else begin
+			r_img_width <= r_img_width;
+			r_img_height <= r_img_height;
+		end
+	end
+
+	wire sof_err; assign sof_err = (m_axis_tuser != mm2s_rd_data[C_PIXEL_WIDTH]);
+	wire eol_err; assign eol_err = (m_axis_tlast != mm2s_rd_data[C_PIXEL_WIDTH+1]);
+
+	//assign m_axis_tdata = sof_err ? {C_PIXEL_WIDTH{1'b0}} : {C_PIXEL_WIDTH{1'b1}};//mm2s_rd_data[C_PIXEL_WIDTH-1:0];
+	assign m_axis_tdata = eol_err ? greenpixel : mm2s_rd_data[C_PIXEL_WIDTH-1:0];
+	assign m_axis_tuser = (r_img_width == img_width-1 && r_img_height == img_height-1);
+	//assign m_axis_tuser = mm2s_rd_data[C_PIXEL_WIDTH];
+	assign m_axis_tlast = (r_img_width == 0);
+	//assign m_axis_tlast = mm2s_rd_data[C_PIXEL_WIDTH+1];
+	assign m_axis_tvalid = mm2s_dvalid;
+	assign mm2s_rd_en = (~m_axis_tvalid | m_axis_tready) && ~mm2s_empty & ~resetting;
+	always @(posedge f2s_aclk) begin
+		if (resetn == 1'b0) begin
+			mm2s_dvalid <= 0;
+		end
+		else if (mm2s_rd_en) begin
+			mm2s_dvalid <= 1;
+		end
+		else if (m_axis_tready) begin
+			mm2s_dvalid <= 0;
+		end
+		else begin
+			mm2s_dvalid <= mm2s_dvalid;
+		end
+	end
+
+	wire [C_PM1:0] blackpixel; assign blackpixel = {C_PIXEL_WIDTH{1'b0}};
+	wire [C_PM1:0] whitepixel; assign whitepixel = {C_PIXEL_WIDTH{1'b1}};
+	wire [C_PM1:0] greenpixel; assign greenpixel = 32'h0000FF00;
+	wire [C_PM1:0] bluepixel;  assign bluepixel  = 32'h000000FF;
+	wire [C_PM1:0] redpixel;   assign redpixel   = 32'h00FF0000;
+
+	/// write fifo
+	reg r_resetting; assign resetting = r_resetting;
+	always @(posedge f2s_aclk) begin
+		if (resetn == 1'b0)
+			r_resetting <= 1'b1;
+		else
+			r_resetting <= 1'b0;
+	end
+/*
+	//assign resetting = ~resetn;
+	wire wr_en; assign mm2s_wr_en = wr_en;
+	reg [C_IMG_WBITS-1:0] w_img_width;
+	reg [C_IMG_HBITS-1:0] w_img_height;
+
+	assign wr_en = ~mm2s_full & ~resetting;
+	assign wr_data[C_ADATA_PIXELS*C_PP2-1] = (wr_en && w_img_width == 0);
+	assign wr_data[C_PIXEL_WIDTH] = (wr_en && (w_img_width == img_width - C_ADATA_PIXELS) && (w_img_height == img_height - 1));
+	generate
+		genvar i;
+		for (i = 0; i < C_ADATA_PIXELS; i = i+1) begin: wr_pixel
+			//$display("data %d: [%d : %d]", i, (i*C_PP2+C_PM1), (i*C_PP2));
+			assign wr_data[i*C_PP2+C_PM1 : i*C_PP2] = whitepixel;//(i == 0) ? (w_img_height[0] == 0 ? redpixel : bluepixel) : greenpixel;
+		end
+		//$display("sof 0: [%d]", (C_PIXEL_WIDTH));
+		for (i = 1; i < C_ADATA_PIXELS; i = i+1) begin: wr_sof
+			//$display("sof %d: [%d]", i, (i*C_PP2+C_PIXEL_WIDTH));
+			assign wr_data[i*C_PP2+C_PIXEL_WIDTH] = 1'b0;
+		end
+		for (i = 0; i < (C_ADATA_PIXELS-1); i = i+1) begin: wr_eol
+			//$display("eol %d: [%d]", i, (i*C_PP2+C_PP1));
+			assign wr_data[i*C_PP2+C_PP1] = 1'b0;
+		end
+		//$display("eol %d: [%d]", (C_ADATA_PIXELS-1), (C_ADATA_PIXELS*C_PP2-1));
+		for (i = 0; i < C_ADATA_PIXELS; i = i+1) begin: endianmap
+			assign mm2s_wr_data[i*C_PP2+C_PP1 : i*C_PP2] = wr_data[(C_ADATA_PIXELS-1-i)*C_PP2+C_PP1 : (C_ADATA_PIXELS-1-i)*C_PP2];
+		end
+		//assign mm2s_wr_data = wr_data;
+	endgenerate
+	always @(posedge f2s_aclk) begin
+		if (resetn == 1'b0) begin
+			w_img_width <= img_width-C_ADATA_PIXELS;
+			w_img_height <= img_height-1;
+		end
+		else if (wr_en) begin
+			if (w_img_width == 0 && w_img_height == 0) begin
+				w_img_width <= img_width-C_ADATA_PIXELS;
+				w_img_height <= img_height-1;
+			end
+			else if (w_img_width == 0) begin
+				w_img_width <= img_width-C_ADATA_PIXELS;
+				w_img_height <= w_img_height - 1;
+			end
+			else begin
+				w_img_width <= w_img_width - C_ADATA_PIXELS;
+				w_img_height <= w_img_height;
+			end
+		end
+		else begin
+			w_img_width <= w_img_width;
+			w_img_height <= w_img_height;
+		end
+	end
+*/
 endmodule
