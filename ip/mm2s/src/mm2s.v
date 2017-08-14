@@ -97,28 +97,50 @@ module mm2s #
 	wire mm2s_sof;
 	wire mm2s_eol;
 
+
+	function integer reverseI(input integer i);
+	begin
+		reverseI = C_ADATA_PIXELS-1-i;
+	end
+	endfunction
+	function integer sofIdx(input integer i);
+	begin
+		sofIdx = i * C_PP2 + C_PIXEL_WIDTH;
+	end
+	endfunction
+	function integer eolIdx(input integer i);
+	begin
+		eolIdx = i * C_PP2 + C_PP1;
+	end
+	endfunction
+
 	generate
 		genvar i;
 		for (i = 0; i < C_ADATA_PIXELS; i = i+1) begin: wr_pixel
-			localparam integer j = C_ADATA_PIXELS-1-i;
-			assign mm2s_wr_data[i*C_PP2+C_PM1 : i*C_PP2] = mm2s_pixel_data[j*C_PIXEL_WIDTH+C_PM1:j*C_PIXEL_WIDTH];
+			assign mm2s_wr_data[i*C_PP2+C_PM1 : i*C_PP2]
+				= mm2s_pixel_data[reverseI(i) * C_PIXEL_WIDTH + C_PM1 : reverseI(i) * C_PIXEL_WIDTH];
 		end
 		for (i = 0; i < C_ADATA_PIXELS; i = i+1) begin: wr_sof
-			localparam integer j = i*C_PP2+C_PIXEL_WIDTH;
 			if (i == C_ADATA_PIXELS-1)
-				assign mm2s_wr_data[j] = mm2s_sof;
+				assign mm2s_wr_data[sofIdx(i)] = mm2s_sof;
 			else
-				assign mm2s_wr_data[j] = 1'b0;
+				assign mm2s_wr_data[sofIdx(i)] = 1'b0;
 		end
 		for (i = 0; i < C_ADATA_PIXELS; i = i+1) begin: wr_eol
-			localparam integer j = i*C_PP2+C_PP1;
 			if (i == 0)
-				assign mm2s_wr_data[j] = mm2s_eol;
+				assign mm2s_wr_data[eolIdx(i)] = mm2s_eol;
 			else
-				assign mm2s_wr_data[j] = 1'b0;
+				assign mm2s_wr_data[eolIdx(i)] = 1'b0;
 		end
 	endgenerate
 
+	reg r_resetting; assign resetting = r_resetting;
+	always @(posedge f2s_aclk) begin
+		if (resetn == 1'b0)
+			r_resetting <= 1'b1;
+		else
+			r_resetting <= 1'b0;
+	end
 	MM2FIFO # (
 		.C_PIXEL_WIDTH(C_PIXEL_WIDTH),
 
@@ -165,7 +187,6 @@ module mm2s #
 	);
 
 // FIFO to stream
-/*
 	/// use f2s_aclk
 	reg mm2s_dvalid;
 	assign m_axis_tdata = mm2s_rd_data[C_PIXEL_WIDTH-1:0];
@@ -187,8 +208,7 @@ module mm2s #
 			mm2s_dvalid <= mm2s_dvalid;
 		end
 	end
-*/
-
+/*
 	reg mm2s_dvalid;
 
 	reg [C_IMG_WBITS-1:0] r_img_width;
@@ -222,7 +242,7 @@ module mm2s #
 	wire eol_err; assign eol_err = (m_axis_tlast != mm2s_rd_data[C_PIXEL_WIDTH+1]);
 
 	//assign m_axis_tdata = sof_err ? {C_PIXEL_WIDTH{1'b0}} : {C_PIXEL_WIDTH{1'b1}};//mm2s_rd_data[C_PIXEL_WIDTH-1:0];
-	assign m_axis_tdata = eol_err ? greenpixel : mm2s_rd_data[C_PIXEL_WIDTH-1:0];
+	assign m_axis_tdata = eol_err ? redpixel : (sof_err ? greenpixel : mm2s_rd_data[C_PIXEL_WIDTH-1:0]);
 	assign m_axis_tuser = (r_img_width == img_width-1 && r_img_height == img_height-1);
 	//assign m_axis_tuser = mm2s_rd_data[C_PIXEL_WIDTH];
 	assign m_axis_tlast = (r_img_width == 0);
@@ -249,15 +269,8 @@ module mm2s #
 	wire [C_PM1:0] greenpixel; assign greenpixel = 32'h0000FF00;
 	wire [C_PM1:0] bluepixel;  assign bluepixel  = 32'h000000FF;
 	wire [C_PM1:0] redpixel;   assign redpixel   = 32'h00FF0000;
+*/
 
-	/// write fifo
-	reg r_resetting; assign resetting = r_resetting;
-	always @(posedge f2s_aclk) begin
-		if (resetn == 1'b0)
-			r_resetting <= 1'b1;
-		else
-			r_resetting <= 1'b0;
-	end
 /*
 	//assign resetting = ~resetn;
 	wire wr_en; assign mm2s_wr_en = wr_en;
