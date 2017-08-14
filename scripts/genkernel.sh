@@ -11,11 +11,6 @@ if [ ! -d "${kernel_src}" ]; then
 fi
 kernel_src="`readlink -fe "${kernel_src}"`"
 
-if [ "${ARCH}" != "arm" ]; then
-	echo "ERROR: please source env file first!"
-	exit 2
-fi
-
 out_dir="${dir_main}/output"
 if [ ! -d "${out_dir}" ]; then
 	mkdir ${out_dir}
@@ -24,6 +19,12 @@ fi
 cd ${kernel_src}
 quilt import ${dir_main}/scripts/kernelpatch/0001-first-running-version.patch
 quilt push
+
+if [ "${ARCH}" != "arm" ]; then
+	echo "ERROR: please source env file first!"
+	exit 2
+fi
+
 make fsref_defconfig
 
 cpu_num="`cat /proc/cpuinfo| grep "processor"| wc -l`"
