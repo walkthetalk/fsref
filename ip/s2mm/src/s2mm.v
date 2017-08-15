@@ -86,6 +86,23 @@ module s2mm #
 	localparam C_PM1 = C_PIXEL_WIDTH - 1;
 	localparam C_PP1 = C_PIXEL_WIDTH + 1;
 	localparam C_PP2 = C_PIXEL_WIDTH + 2;
+	localparam C_ADATA_PIXELS = C_M_AXI_DATA_WIDTH/C_PIXEL_WIDTH;
+
+	function integer reverseI(input integer i);
+	begin
+		reverseI = C_ADATA_PIXELS-1-i;
+	end
+	endfunction
+	function integer sofIdx(input integer i);
+	begin
+		sofIdx = i * C_PP2 + C_PIXEL_WIDTH;
+	end
+	endfunction
+	function integer eolIdx(input integer i);
+	begin
+		eolIdx = i * C_PP2 + C_PP1;
+	end
+	endfunction
 
 // stream to fifo
 	/// use s2f_aclk
@@ -101,7 +118,8 @@ module s2mm #
 	generate
 		genvar i;
 		for (i = 0; i < C_M_AXI_DATA_WIDTH/C_PIXEL_WIDTH; i = i+1) begin: single_pixel
-			assign s2mm_pixel_data[i*C_PIXEL_WIDTH + C_PM1 : i*C_PIXEL_WIDTH] = s2mm_rd_data[i*C_PP2 + C_PM1 : i*C_PP2];
+			assign s2mm_pixel_data[i*C_PIXEL_WIDTH + C_PM1 : i*C_PIXEL_WIDTH]
+				= s2mm_rd_data[reverseI(i)*C_PP2 + C_PM1 : reverseI(i)*C_PP2];
 		end
 	endgenerate
 
@@ -120,7 +138,7 @@ module s2mm #
 		.soft_resetn(soft_resetn),
 		.resetting(resetting),
 
-		.sof(s2mm_rd_data[C_PIXEL_WIDTH]),
+		.sof(s2mm_rd_data[sofIdx(reverseI(0))]),
 		.din(s2mm_pixel_data),
 		.empty(s2mm_empty),
 		.rd_en(s2mm_rd_en),
