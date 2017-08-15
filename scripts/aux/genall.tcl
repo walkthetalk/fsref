@@ -1,4 +1,20 @@
 set origin_dir [lindex $argv 0]
+set ip_list [list \
+	cmos \
+	lcd \
+	mutex_buffer \
+	mutex_buffer_ctl \
+	s2mm \
+	mm2s \
+	axi_combiner \
+	yscaler \
+]
+
+if { $argc eq 0 } {
+	set dst_list [lappend ip_list project]
+} else {
+	set dst_list [lrange $argv 1 end]
+}
 
 proc src {file args} {
   set argv $::argv
@@ -14,16 +30,14 @@ proc src {file args} {
   return -code $code $return
 }
 
-foreach i [list \
-	cmos \
-	lcd \
-	mutex_buffer \
-	mutex_buffer_ctl \
-	s2mm \
-	mm2s \
-	axi_combiner \
-	yscaler \
-] {
-	src $origin_dir/ip/$i/generate.tcl $origin_dir
+foreach i $ip_list {
+	if {[lsearch $dst_list $i] >= 0} {
+		puts "generating ip: $i"
+		src $origin_dir/ip/$i/generate.tcl $origin_dir
+	}
 }
-src $origin_dir/scripts/genproj.tcl $origin_dir
+
+if {[lsearch $dst_list project] >= 0} {
+	puts "generating project file"
+	src $origin_dir/scripts/genproj.tcl $origin_dir
+}

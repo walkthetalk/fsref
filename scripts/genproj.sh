@@ -10,4 +10,4 @@ ${VIVADO_BIN} \
 	-nojournal -nolog \
 	-mode batch \
 	-source ${dir_main}/scripts/aux/genall.tcl \
-	-tclargs "${dir_main}"
+	-tclargs "${dir_main}" ${1+$@}
