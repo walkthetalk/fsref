@@ -5,6 +5,7 @@
  */
 module FIFO2MM #
 (
+	parameter integer C_DATACOUNT_BITS = 12,
 	// Burst Length. Supports 1, 2, 4, 8, 16, 32, 64, 128, 256 burst lengths
 	parameter integer C_M_AXI_BURST_LEN	= 16,
 	// Thread ID Width
@@ -29,6 +30,7 @@ module FIFO2MM #
 	input wire [C_M_AXI_DATA_WIDTH-1 : 0] din,
 	input wire empty,
 	output wire rd_en,
+	input wire [C_DATACOUNT_BITS-1:0] rd_data_count,
 
 	output wire frame_pulse,
 	input wire [C_M_AXI_ADDR_WIDTH-1 : 0] base_addr,
@@ -116,6 +118,8 @@ module FIFO2MM #
 	//write beat count in a burst
 	reg [C_TRANSACTIONS_NUM : 0] 	write_index;
 	reg	start_burst_pulse;
+	reg     start_burst_pulse_d1;
+	reg     start_burst_pulse_d2;
 	reg	burst_active;
 	wire	wnext;
 	reg	need_data;
@@ -131,14 +135,13 @@ module FIFO2MM #
 	always @ (posedge M_AXI_ACLK) begin
 		if (M_AXI_ARESETN == 0)
 			r_frame_pulse <= 1'b0;
-		else if (~r_frame_pulse && M_AXI_BVALID && M_AXI_BREADY
-			&& r_img_col_idx == 0 && r_img_row_idx == 0)
+		else if (~r_frame_pulse && start_burst_pulse && final_data)
 			r_frame_pulse <= 1'b1;
 		else
 			r_frame_pulse <= 1'b0;
 	end
 
-	assign rd_en		= ~empty && (~r_dvalid | wnext) && ~r_soft_restting;
+	assign rd_en		= need_data && (~r_dvalid | wnext) && ~r_soft_restting;
 	always @(posedge M_AXI_ACLK) begin
 		if (M_AXI_ARESETN == 0)
 			r_dvalid <= 1'b0;
@@ -177,7 +180,7 @@ module FIFO2MM #
 	always @(posedge M_AXI_ACLK) begin
 		if (M_AXI_ARESETN == 0)
 			axi_awvalid <= 1'b0;
-		else if (~axi_awvalid && start_burst_pulse)
+		else if (~axi_awvalid && start_burst_pulse_d2)
 			axi_awvalid <= 1'b1;
 		else if (M_AXI_AWREADY && axi_awvalid)
 			axi_awvalid <= 1'b0;
@@ -188,9 +191,9 @@ module FIFO2MM #
 	always @(posedge M_AXI_ACLK) begin
 		if (M_AXI_ARESETN == 0)
 			axi_awaddr <= 'b0;
-		else if (start_burst_pulse) begin
+		else if (start_burst_pulse_d2) begin
 			/// avoid cross buffer boundary
-			if (sof || (r_img_col_idx == 0 && r_img_row_idx == 0))
+			if (final_data)
 				axi_awaddr <= base_addr;
 			else
 				axi_awaddr <= axi_awaddr + C_BURST_SIZE_BYTES;
@@ -247,10 +250,24 @@ module FIFO2MM #
 		if (M_AXI_ARESETN == 1'b0)
 			start_burst_pulse <= 1'b0;
 		else if (~start_burst_pulse && ~burst_active && r_dvalid
-			&& soft_resetn)
+			&& soft_resetn
+			&& (rd_data_count >= C_M_AXI_BURST_LEN))
 			start_burst_pulse <= 1'b1;
 		else
 			start_burst_pulse = 1'b0;
+	end
+
+	always @ ( * ) begin
+		if (M_AXI_ARESETN == 1'b0)
+			start_burst_pulse_d1 <= 1'b0;
+		else
+			start_burst_pulse_d1 <= start_burst_pulse;
+	end
+	always @ ( * ) begin
+		if (M_AXI_ARESETN == 1'b0)
+			start_burst_pulse_d2 <= 1'b0;
+		else
+			start_burst_pulse_d2 <= start_burst_pulse_d1;
 	end
 
 	always @(posedge M_AXI_ACLK) begin
@@ -262,13 +279,15 @@ module FIFO2MM #
 			burst_active <= 0;
 	end
 
+	wire final_data;
+	assign final_data = (r_img_col_idx == 0 && r_img_row_idx == 0);
+
 	always @(posedge M_AXI_ACLK) begin
 		if (M_AXI_ARESETN == 1'b0) begin
 			r_img_col_idx <= 0;
 			r_img_row_idx <= 0;
 		end
-		else if (start_burst_pulse
-			&& (sof || (r_img_col_idx == 0 && r_img_row_idx == 0))) begin
+		else if (start_burst_pulse_d2 && final_data) begin
 			r_img_col_idx <= img_width - C_ADATA_PIXELS;
 			r_img_row_idx <= img_height - 1;
 		end

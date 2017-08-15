@@ -24,6 +24,8 @@ module s2mm #
 	parameter integer C_PIXEL_WIDTH	= 8,
 	parameter integer C_IMG_WBITS = 12,
 	parameter integer C_IMG_HBITS = 12,
+	parameter integer C_DATACOUNT_BITS = 12,
+
 	// User parameters ends
 
 	// Parameters of Axi Master Bus Interface M_AXI
@@ -60,6 +62,7 @@ module s2mm #
 	input wire [C_M_AXI_DATA_WIDTH/C_PIXEL_WIDTH*(C_PIXEL_WIDTH+2)-1 : 0] s2mm_rd_data,
 	input wire s2mm_empty,
 	output wire s2mm_rd_en,
+	input wire [C_DATACOUNT_BITS-1:0] s2mm_rd_data_count,
 
 	// Ports of Axi Master Bus Interface M_AXI
 	output wire [C_M_AXI_ID_WIDTH-1 : 0] m_axi_awid,
@@ -124,6 +127,7 @@ module s2mm #
 	endgenerate
 
 	FIFO2MM # (
+		.C_DATACOUNT_BITS(C_DATACOUNT_BITS),
 		.C_M_AXI_BURST_LEN(C_M_AXI_BURST_LEN),
 		.C_M_AXI_ID_WIDTH(C_M_AXI_ID_WIDTH),
 		.C_M_AXI_ADDR_WIDTH(C_M_AXI_ADDR_WIDTH),
@@ -142,6 +146,7 @@ module s2mm #
 		.din(s2mm_pixel_data),
 		.empty(s2mm_empty),
 		.rd_en(s2mm_rd_en),
+		.rd_data_count(s2mm_rd_data_count),
 
 		.frame_pulse(s2mm_sof),
 		.base_addr(s2mm_addr),
