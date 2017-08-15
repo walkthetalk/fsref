@@ -33,13 +33,13 @@ module mm2s #
 	parameter integer C_M_AXI_DATA_WIDTH	= 32
 )
 (
+	input wire  clk,
 	input wire  resetn,
 
 	input wire  soft_resetn,
 	output wire resetting,
-/// mm to fifo
-	input wire m2f_aclk,
 
+/// mm to fifo
 	input wire [C_IMG_WBITS-1:0] img_width,
 	input wire [C_IMG_HBITS-1:0] img_height,
 
@@ -72,8 +72,6 @@ module mm2s #
 	output wire mm2s_wr_en,
 
 /// fifo to stream
-	input wire f2s_aclk,
-
 	input wire	mm2s_empty,
 	input wire [C_PIXEL_WIDTH+1 : 0] mm2s_rd_data,
 	output wire	mm2s_rd_en,
@@ -90,6 +88,9 @@ module mm2s #
 	localparam C_PP2 = C_PIXEL_WIDTH + 2;
 
 	localparam C_ADATA_PIXELS = C_M_AXI_DATA_WIDTH/C_PIXEL_WIDTH;
+
+	wire m2f_aclk; assign m2f_aclk = clk;
+	wire f2s_aclk; assign f2s_aclk = clk;
 
 // mm to fifo
 	/// use m2f_aclk
@@ -134,13 +135,6 @@ module mm2s #
 		end
 	endgenerate
 
-	reg r_resetting; assign resetting = r_resetting;
-	always @(posedge f2s_aclk) begin
-		if (resetn == 1'b0)
-			r_resetting <= 1'b1;
-		else
-			r_resetting <= 1'b0;
-	end
 	MM2FIFO # (
 		.C_PIXEL_WIDTH(C_PIXEL_WIDTH),
 
@@ -153,7 +147,7 @@ module mm2s #
 		.img_height(img_height),
 
 		.soft_resetn(soft_resetn),
-		//.resetting(resetting),
+		.resetting(resetting),
 		.fsync(fsync),
 
 		.sof(mm2s_sof),
