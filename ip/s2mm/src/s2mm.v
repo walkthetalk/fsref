@@ -36,14 +36,13 @@ module s2mm #
 	input wire [C_IMG_WBITS-1:0] img_width,
 	input wire [C_IMG_HBITS-1:0] img_height,
 
+	input wire  clk,
 	input wire  resetn,
 
 	input wire soft_resetn,
 	output wire resetting,
 
 	/// sream to fifo
-	input wire  s2f_aclk,
-
 	input wire s_axis_tvalid,
 	input wire [C_PIXEL_WIDTH-1:0] s_axis_tdata,
 	input wire s_axis_tuser,
@@ -55,8 +54,6 @@ module s2mm #
 	output wire	s2mm_wr_en,
 
 	/// fifo to memory
-	input wire  f2m_aclk,
-
 	output wire s2mm_sof,
 	input wire [C_M_AXI_ADDR_WIDTH-1:0] s2mm_addr,
 
@@ -96,6 +93,8 @@ module s2mm #
 	assign s2mm_wr_data = {s_axis_tlast, s_axis_tuser, s_axis_tdata};
 	assign s2mm_wr_en = s_axis_tvalid & s_axis_tready;
 
+	wire s2f_aclk; assign s2f_aclk = clk;
+	wire f2m_aclk; assign f2m_aclk = clk;
 // fifo to mm
 	/// use f2m_aclk
 	wire [C_M_AXI_DATA_WIDTH-1 : 0] s2mm_pixel_data;

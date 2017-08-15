@@ -117,25 +117,14 @@ pip_add_bus_if [ipx::current_core] soft_resetn {
 	POLARITY {ACTIVE_LOW}
 }
 
-pip_add_bus_if [ipx::current_core] s2f_aclk {
+pip_add_bus_if [ipx::current_core] clk {
 	abstraction_type_vlnv xilinx.com:signal:clock_rtl:1.0
 	bus_type_vlnv xilinx.com:signal:clock:1.0
 	interface_mode slave
 } {
-	CLK s2f_aclk
+	CLK clk
 } {
-	ASSOCIATED_BUSIF {S_AXIS:FIFO_WRITE}
-	ASSOCIATED_RESET {resetn}
-}
-
-pip_add_bus_if [ipx::current_core] f2m_aclk {
-	abstraction_type_vlnv xilinx.com:signal:clock_rtl:1.0
-	bus_type_vlnv xilinx.com:signal:clock:1.0
-	interface_mode slave
-} {
-	CLK f2m_aclk
-} {
-	ASSOCIATED_BUSIF {FIFO_READ:MBUF_W:M_AXI}
+	ASSOCIATED_BUSIF {S_AXIS:FIFO_WRITE:FIFO_READ:MBUF_W:M_AXI}
 	ASSOCIATED_RESET {resetn}
 }
 

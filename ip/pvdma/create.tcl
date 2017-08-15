@@ -128,10 +128,8 @@ proc create_pvdma {
 	# clock & reset
 	create_bd_pin -dir I -type clk $mname/clk
 	connect_bd_net [get_bd_pins $mname/clk] [get_bd_pins $mname/mutex_buffer_ctl/clk]
-	connect_bd_net [get_bd_pins $mname/clk] [get_bd_pins $mname/mm2s/m2f_aclk]
-	connect_bd_net [get_bd_pins $mname/clk] [get_bd_pins $mname/mm2s/f2s_aclk]
-	connect_bd_net [get_bd_pins $mname/clk] [get_bd_pins $mname/s2mm/s2f_aclk]
-	connect_bd_net [get_bd_pins $mname/clk] [get_bd_pins $mname/s2mm/f2m_aclk]
+	connect_bd_net [get_bd_pins $mname/clk] [get_bd_pins $mname/mm2s/clk]
+	connect_bd_net [get_bd_pins $mname/clk] [get_bd_pins $mname/s2mm/clk]
 	connect_bd_net [get_bd_pins $mname/clk] [get_bd_pins $mname/fifo_mm2s/clk]
 	connect_bd_net [get_bd_pins $mname/clk] [get_bd_pins $mname/fifo_s2mm/clk]
 	connect_bd_net [get_bd_pins $mname/clk] [get_bd_pins $mname/axi_combiner/clk]
