@@ -2,7 +2,7 @@ set origin_dir [lindex $argv 0]
 set ip_dir [file dirname $argv0]
 set tmp_dir $ip_dir/tmp
 
-source $origin_dir/scripts/util.tcl
+source $origin_dir/scripts/aux/util.tcl
 
 ipx::infer_core -vendor $VENDOR -library $LIBRARY -name mm2s -taxonomy $TAXONOMY $ip_dir
 ipx::edit_ip_in_project -upgrade true -name edit_ip_project -directory $tmp_dir $ip_dir/component.xml
@@ -123,24 +123,14 @@ pip_add_bus_if [ipx::current_core] fsync {
 	FRAME_SYNC fsync
 }
 
-pip_add_bus_if [ipx::current_core] m2f_aclk {
+pip_add_bus_if [ipx::current_core] clk {
 	abstraction_type_vlnv xilinx.com:signal:clock_rtl:1.0
 	bus_type_vlnv xilinx.com:signal:clock:1.0
 	interface_mode slave
 } {
-	CLK m2f_aclk
+	CLK clk
 } {
-	ASSOCIATED_BUSIF {M_AXI:FIFO_WRITE:MBUF_R:fsync}
-}
-
-pip_add_bus_if [ipx::current_core] f2s_aclk {
-	abstraction_type_vlnv xilinx.com:signal:clock_rtl:1.0
-	bus_type_vlnv xilinx.com:signal:clock:1.0
-	interface_mode slave
-} {
-	CLK f2s_aclk
-} {
-	ASSOCIATED_BUSIF {FIFO_READ:M_AXIS}
+	ASSOCIATED_BUSIF {M_AXI:FIFO_WRITE:MBUF_R:FIFO_READ:M_AXIS}
 }
 
 # parameters

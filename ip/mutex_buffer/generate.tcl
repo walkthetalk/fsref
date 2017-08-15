@@ -1,7 +1,7 @@
 set origin_dir [lindex $argv 0]
 set ip_dir [file dirname $argv0]
 
-source $origin_dir/scripts/util.tcl
+source $origin_dir/scripts/aux/util.tcl
 
 set bus_name mutex_buffer
 set abs_name mutex_buffer_rtl

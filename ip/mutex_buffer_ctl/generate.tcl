@@ -2,7 +2,7 @@ set origin_dir [lindex $argv 0]
 set ip_dir [file dirname $argv0]
 set tmp_dir $ip_dir/tmp
 
-source $origin_dir/scripts/util.tcl
+source $origin_dir/scripts/aux/util.tcl
 
 ipx::infer_core -vendor $VENDOR -library $LIBRARY -taxonomy $TAXONOMY $ip_dir
 ipx::edit_ip_in_project -upgrade true -name edit_ip_project -directory $tmp_dir $ip_dir/component.xml

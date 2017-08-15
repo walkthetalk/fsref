@@ -1,6 +1,6 @@
 set origin_dir [lindex $argv 0]
 
-source $origin_dir/scripts/util.tcl
+source $origin_dir/scripts/aux/util.tcl
 
 # create project
 create_project pvdma $origin_dir/pvdma -part xc7z020clg400-1
