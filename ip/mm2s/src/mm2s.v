@@ -24,6 +24,7 @@ module mm2s #
 	parameter integer C_PIXEL_WIDTH	= 8,
 	parameter integer C_IMG_WBITS	= 12,
 	parameter integer C_IMG_HBITS	= 12,
+	parameter integer C_DATACOUNT_BITS = 12,
 	// User parameters ends
 
 	// Parameters of Axi Master Bus Interface M_AXI
@@ -70,6 +71,7 @@ module mm2s #
 	input wire mm2s_full,
 	output wire [C_M_AXI_DATA_WIDTH/C_PIXEL_WIDTH*(C_PIXEL_WIDTH+2)-1 : 0] mm2s_wr_data,
 	output wire mm2s_wr_en,
+	input wire [C_DATACOUNT_BITS-1:0] mm2s_wr_data_count,
 
 /// fifo to stream
 	input wire	mm2s_empty,
@@ -97,7 +99,6 @@ module mm2s #
 	wire [C_M_AXI_DATA_WIDTH-1 : 0] mm2s_pixel_data;
 	wire mm2s_sof;
 	wire mm2s_eol;
-
 
 	function integer reverseI(input integer i);
 	begin
@@ -137,6 +138,7 @@ module mm2s #
 
 	MM2FIFO # (
 		.C_PIXEL_WIDTH(C_PIXEL_WIDTH),
+		.C_DATACOUNT_BITS(C_DATACOUNT_BITS),
 
 		.C_M_AXI_BURST_LEN(C_M_AXI_BURST_LEN),
 		.C_M_AXI_ID_WIDTH(C_M_AXI_ID_WIDTH),
@@ -155,6 +157,7 @@ module mm2s #
 		.dout(mm2s_pixel_data),
 		.wr_en(mm2s_wr_en),
 		.full(mm2s_full),
+		.wr_data_count(mm2s_wr_data_count),
 
 		.frame_pulse(r_sof),
 		.base_addr(r_addr),

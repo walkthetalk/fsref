@@ -10,6 +10,7 @@ module MM2FIFO #
 	parameter integer C_IMG_WBITS	= 12,
 	parameter integer C_IMG_HBITS	= 12,
 	parameter integer C_PIXEL_WIDTH = 8,
+	parameter integer C_DATACOUNT_BITS = 12,
 
 	// Burst Length. Supports 1, 2, 4, 8, 16, 32, 64, 128, 256 burst lengths
 	parameter integer C_M_AXI_BURST_LEN	= 16,
@@ -34,6 +35,7 @@ module MM2FIFO #
 	output wire [C_M_AXI_DATA_WIDTH-1 : 0] dout,
 	output wire wr_en,
 	input wire full,
+	input wire [C_DATACOUNT_BITS-1:0] wr_data_count,
 
 	output wire frame_pulse,
 	input wire [C_M_AXI_ADDR_WIDTH-1 : 0] base_addr,
@@ -214,7 +216,8 @@ module MM2FIFO #
 			start_burst_pulse <= 1'b0;
 		else if (~start_burst_pulse && ~burst_read_active
 			&& (~final_data || fsync_neg_edge)
-			&& (soft_resetn && ~r_soft_restting))
+			&& (soft_resetn && ~r_soft_restting)
+			&& (wr_data_count < C_M_AXI_BURST_LEN))
 			start_burst_pulse <= 1'b1;
 		else
 			start_burst_pulse <= 1'b0;
