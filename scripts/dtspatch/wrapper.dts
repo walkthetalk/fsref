@@ -12,9 +12,14 @@
 		#size-cells = <1>;
 		ranges;
 
-		display_reserved: buffer@3FF00000 {
+		fb0mem: buffer@3FF00000 {
 			no-map;
-			reg = <0x3FF00000 0x100000>;
+			reg = <0x3FF00000 0x80000>;
+		};
+
+		fb1mem: buffer@3FF80000 {
+			no-map;
+			reg = <0x3FF80000 0x80000>;
 		};
 	};
 };
@@ -23,7 +28,18 @@
 	framebuffer0 {
 		compatible = "simple-framebuffer";
 		//reg = <0x3FF00000 (320 * 240 * 4)>;
-		memory-region = <&display_reserved>;
+		memory-region = <&fb0mem>;
+		width = <320>;
+		height = <240>;
+		stride = <(320 * 4)>;
+		format = "a8r8g8b8";
+		clocks = <&clkc 15>, <&clkc 16>, <&clkc 17>, <&clkc 18>;
+		// lcd-supply = <&reg_dc1sw>;
+	};
+	framebuffer1 {
+		compatible = "simple-framebuffer";
+		//reg = <0x3FF80000 (320 * 240 * 4)>;
+		memory-region = <&fb1mem>;
 		width = <320>;
 		height = <240>;
 		stride = <(320 * 4)>;
