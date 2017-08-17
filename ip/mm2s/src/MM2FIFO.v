@@ -117,27 +117,22 @@ module MM2FIFO #
 	end
 
 	///  resetting
-	reg run_d1;
+	reg soft_resetn_d1;
 	always @ (posedge M_AXI_ACLK) begin
-		if (M_AXI_ARESETN == 1'b0) run_d1 <= 1'b0;
-		else run_d1 <= soft_resetn;
-	end
-	reg soft_reset_posedge;
-	always @ (posedge M_AXI_ACLK) begin
-		if (M_AXI_ARESETN == 1'b0) soft_reset_posedge <= 1'b0;
-		else soft_reset_posedge <= (~soft_resetn && run_d1);
+		if (M_AXI_ARESETN == 1'b0) soft_resetn_d1 <= 1'b0;
+		else soft_resetn_d1 <= soft_resetn;
 	end
 
 	reg r_soft_restting;
-	assign resetting = ~M_AXI_ARESETN | r_soft_restting;
+	assign resetting = r_soft_restting;
 	always @ (posedge M_AXI_ACLK) begin
 		if (M_AXI_ARESETN == 1'b0)
+			r_soft_restting <= 1'b1;
+		else if (~(start_burst_pulse | burst_read_active) && final_data)
 			r_soft_restting <= 1'b0;
-		else if (rnext && M_AXI_RLAST)	/// last active burst cycle
+		else if (rnext && M_AXI_RLAST && final_data)
 			r_soft_restting <= 1'b0;
-		else if (soft_reset_posedge
-			&& (start_burst_pulse || burst_read_active
-			|| (~final_data || fsync_neg_edge)))
+		else if (~soft_resetn && soft_resetn_d1)	/// soft_resetn negedge
 			r_soft_restting <= 1'b1;
 		else
 			r_soft_restting <= r_soft_restting;
@@ -209,14 +204,15 @@ module MM2FIFO #
 	//Flag any read response errors
 	assign read_resp_error = M_AXI_RREADY & M_AXI_RVALID & M_AXI_RRESP[1];
 
-	assign frame_pulse = ~start_burst_pulse && ~burst_read_active & (final_data && fsync_neg_edge) & soft_resetn;
+	assign frame_pulse = ~(start_burst_pulse || burst_read_active)
+			&& final_data
+			&& (fsync_neg_edge && soft_resetn);
 
 	always @(posedge M_AXI_ACLK) begin
 		if (M_AXI_ARESETN == 1'b0)
 			start_burst_pulse <= 1'b0;
-		else if (~start_burst_pulse && ~burst_read_active
-			&& (~final_data || fsync_neg_edge)
-			&& (soft_resetn && ~r_soft_restting)
+		else if (~(start_burst_pulse || burst_read_active)
+			&& (~final_data || (fsync_neg_edge && soft_resetn))
 			&& (wr_data_count < C_M_AXI_BURST_LEN))
 			start_burst_pulse <= 1'b1;
 		else
