@@ -111,7 +111,7 @@ module s2mm #
 	/// use s2f_aclk
 	assign s_axis_tready = ~s2mm_full;
 	assign s2mm_wr_data = {s_axis_tlast, s_axis_tuser, s_axis_tdata};
-	assign s2mm_wr_en = s_axis_tvalid & s_axis_tready;
+	assign s2mm_wr_en = s_axis_tvalid & s_axis_tready & ~resetting;
 
 	wire s2f_aclk; assign s2f_aclk = clk;
 	wire f2m_aclk; assign f2m_aclk = clk;

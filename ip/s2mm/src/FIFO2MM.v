@@ -88,38 +88,14 @@ module FIFO2MM #
 	localparam integer C_PIXEL_BYTES = cupperbytes(C_PIXEL_WIDTH);
 	localparam integer C_ADATA_PIXELS = C_M_AXI_DATA_WIDTH/8/C_PIXEL_BYTES;
 
-	///  resetting
-	reg soft_resetn_d1;
-	always @ (posedge M_AXI_ACLK) begin
-		if (M_AXI_ARESETN == 1'b0) soft_resetn_d1 <= 1'b0;
-		else soft_resetn_d1 <= soft_resetn;
-	end
-	wire soft_reset_posedge;
-	assign soft_reset_posedge = (~soft_resetn && soft_resetn_d1);
-
-	reg r_soft_restting;
-	assign resetting = ~M_AXI_ARESETN | r_soft_restting | ~soft_resetn;
-	always @ (posedge M_AXI_ACLK) begin
-		if (M_AXI_ARESETN == 1'b0)
-			r_soft_restting <= 1'b0;
-		else if (M_AXI_BVALID)
-			r_soft_restting <= 1'b0;
-		else if (soft_reset_posedge
-			&& (start_burst_pulse || burst_active))
-			r_soft_restting <= 1'b1;
-		else
-			r_soft_restting <= r_soft_restting;
-	end
-
 	// @note: do not cause bursts across 4K address boundaries.
 	reg [C_M_AXI_ADDR_WIDTH-1 : 0] 	axi_awaddr;
 	reg	axi_awvalid;
 	reg	axi_wlast;
+	reg     axi_bready;
 	//write beat count in a burst
 	reg [C_TRANSACTIONS_NUM : 0] 	write_index;
 	reg	start_burst_pulse;
-	reg     start_burst_pulse_d1;
-	reg     start_burst_pulse_d2;
 	reg	burst_active;
 	wire	wnext;
 	reg	need_data;
@@ -128,6 +104,28 @@ module FIFO2MM #
  	reg [C_IMG_HBITS-1:0] r_img_row_idx;
 
 	assign wnext = M_AXI_WREADY & M_AXI_WVALID;
+
+	///  resetting
+	reg soft_resetn_d1;
+	always @ (posedge M_AXI_ACLK) begin
+		if (M_AXI_ARESETN == 1'b0) soft_resetn_d1 <= 1'b0;
+		else soft_resetn_d1 <= soft_resetn;
+	end
+
+	reg r_soft_resetting;
+	assign resetting = r_soft_resetting;
+	always @ (posedge M_AXI_ACLK) begin
+		if (M_AXI_ARESETN == 1'b0)
+			r_soft_resetting <= 1'b1;
+		else if (~(start_burst_pulse | burst_active))
+			r_soft_resetting <= 1'b0;
+		else if (M_AXI_BVALID & M_AXI_BREADY)
+			r_soft_resetting <= 1'b0;
+		else if (~soft_resetn && soft_resetn_d1)	/// soft_resetn_negedge
+			r_soft_resetting <= 1'b1;
+		else
+			r_soft_resetting <= r_soft_resetting;
+	end
 
 	// I/O Connections assignments
 	reg r_frame_pulse;
@@ -141,11 +139,13 @@ module FIFO2MM #
 			r_frame_pulse <= 1'b0;
 	end
 
-	assign rd_en		= need_data && (~r_dvalid | M_AXI_WREADY) && ~r_soft_restting;
+	wire try_read_en;
+	assign try_read_en = need_data && (~r_dvalid | M_AXI_WREADY);
+	assign rd_en	   = try_read_en && ~resetting;
 	always @(posedge M_AXI_ACLK) begin
 		if (M_AXI_ARESETN == 0)
 			r_dvalid <= 1'b0;
-		else if (rd_en)
+		else if (try_read_en)
 			r_dvalid <= 1'b1;
 		else if (M_AXI_WREADY)
 			r_dvalid <= 1'b0;
@@ -170,9 +170,18 @@ module FIFO2MM #
 	//All bursts are complete and aligned
 	assign M_AXI_WSTRB	= {(C_M_AXI_DATA_WIDTH/8){1'b1}};
 	assign M_AXI_WLAST	= axi_wlast;
-	assign M_AXI_WVALID	= r_dvalid | r_soft_restting;
+	assign M_AXI_WVALID	= r_dvalid | r_soft_resetting;
 	//Write Response (B)
-	assign M_AXI_BREADY	= M_AXI_BVALID;
+	assign M_AXI_BREADY	= axi_bready;
+
+	always @ (posedge M_AXI_ACLK) begin
+		if (M_AXI_ARESETN == 1'b0)
+			axi_bready <= 1'b0;
+		else if (M_AXI_BVALID)
+			axi_bready <= 1'b1;
+		else
+			axi_bready <= 1'b0;
+	end
 
 	//--------------------
 	//Write Address Channel
@@ -180,7 +189,7 @@ module FIFO2MM #
 	always @(posedge M_AXI_ACLK) begin
 		if (M_AXI_ARESETN == 0)
 			axi_awvalid <= 1'b0;
-		else if (~axi_awvalid && start_burst_pulse_d2)
+		else if (~axi_awvalid && start_burst_pulse)
 			axi_awvalid <= 1'b1;
 		else if (M_AXI_AWREADY && axi_awvalid)
 			axi_awvalid <= 1'b0;
@@ -209,7 +218,7 @@ module FIFO2MM #
 	always @(posedge M_AXI_ACLK) begin
 		if (M_AXI_ARESETN == 0)
 			need_data <= 1'b0;
-		else if (~need_data && start_burst_pulse)
+		else if (~need_data && M_AXI_AWREADY && M_AXI_AWVALID)
 			need_data <= 1'b1;
 		else if (wnext && (write_index == 1))
 			need_data <= 1'b0;
@@ -229,7 +238,9 @@ module FIFO2MM #
 	end
 
 	always @(posedge M_AXI_ACLK) begin
-		if (M_AXI_ARESETN == 0 || start_burst_pulse == 1'b1)
+		if (M_AXI_ARESETN == 1'b0)
+			write_index <= 0;
+		else if (start_burst_pulse == 1'b1)
 			write_index <= C_M_AXI_BURST_LEN-1;
 		else if (wnext && (write_index != 0))
 			write_index <= write_index - 1;
@@ -245,23 +256,35 @@ module FIFO2MM #
 	wire  	write_resp_error;
 	assign write_resp_error = M_AXI_BVALID & M_AXI_BRESP[1];
 
+	/// @TODO: just for not overriding uboot code, delete it.
+	reg[31:0] idle_cnt;
+	always @ ( posedge M_AXI_ACLK ) begin
+		if (M_AXI_ARESETN == 1'b0)
+			idle_cnt <= 'hFFFFFFFF;
+		else if (idle_cnt > 0)
+			idle_cnt <= idle_cnt - 1;
+		else
+			idle_cnt <= idle_cnt;
+	end
+
 	always @(posedge M_AXI_ACLK) begin
 		if (M_AXI_ARESETN == 1'b0)
 			start_burst_pulse <= 1'b0;
 		else if (~start_burst_pulse && ~burst_active
 			&& soft_resetn
-			&& (rd_data_count >= C_M_AXI_BURST_LEN))
+			&& (rd_data_count >= C_M_AXI_BURST_LEN)
+			&& idle_cnt == 0)
 			start_burst_pulse <= 1'b1;
 		else
-			start_burst_pulse = 1'b0;
+			start_burst_pulse <= 1'b0;
 	end
 
 	always @(posedge M_AXI_ACLK) begin
-		if (M_AXI_ARESETN == 0)
+		if (M_AXI_ARESETN == 1'b0)
 			burst_active <= 1'b0;
 		else if (start_burst_pulse)
 			burst_active <= 1'b1;
-		else if (M_AXI_BVALID)
+		else if (M_AXI_BVALID && M_AXI_BREADY)
 			burst_active <= 0;
 		else
 			burst_active <= burst_active;
