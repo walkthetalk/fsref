@@ -112,7 +112,7 @@ module s2mm #
 
 // stream to fifo
 	/// use s2f_aclk
-	assign s_axis_tready = ~s2mm_full;
+	assign s_axis_tready = ~s2mm_full && ~resetting;
 	assign s2mm_wr_data = {s_axis_tlast, s_axis_tuser, s_axis_tdata};
 	assign s2mm_wr_en = s_axis_tvalid & s_axis_tready & ~resetting;
 

@@ -123,19 +123,19 @@ module MM2FIFO #
 		else soft_resetn_d1 <= soft_resetn;
 	end
 
-	reg r_soft_restting;
-	assign resetting = r_soft_restting;
+	reg r_soft_resetting;
+	assign resetting = r_soft_resetting;
 	always @ (posedge M_AXI_ACLK) begin
 		if (M_AXI_ARESETN == 1'b0)
-			r_soft_restting <= 1'b1;
-		else if (~(start_burst_pulse | burst_read_active) && final_data)
-			r_soft_restting <= 1'b0;
-		else if (rnext && M_AXI_RLAST && final_data)
-			r_soft_restting <= 1'b0;
+			r_soft_resetting <= 1'b1;
+		else if (~(start_burst_pulse | burst_read_active))
+			r_soft_resetting <= 1'b0;
+		else if (rnext && M_AXI_RLAST)
+			r_soft_resetting <= 1'b0;
 		else if (~soft_resetn && soft_resetn_d1)	/// soft_resetn negedge
-			r_soft_restting <= 1'b1;
+			r_soft_resetting <= 1'b1;
 		else
-			r_soft_restting <= r_soft_restting;
+			r_soft_resetting <= r_soft_resetting;
 	end
 
 	// I/O Connections assignments
@@ -143,7 +143,7 @@ module MM2FIFO #
 	assign eol		= r_eol;
 	assign dout		= M_AXI_RDATA;
 	assign rnext 		= M_AXI_RVALID && M_AXI_RREADY;
-	assign wr_en		= rnext && ~r_soft_restting;
+	assign wr_en		= rnext && ~resetting;
 
 	//Read Address (AR)
 	assign M_AXI_ARID	= 0;
@@ -157,7 +157,8 @@ module MM2FIFO #
 	assign M_AXI_ARQOS	= 4'h0;
 	assign M_AXI_ARVALID	= axi_arvalid;
 	//Read and Read Response (R)
-	assign M_AXI_RREADY	= ~full | r_soft_restting;
+	/// @NOTE: ensure fifo is not full (by checking count when start burst)
+	assign M_AXI_RREADY	= burst_read_active;
 
 
 	//----------------------------
@@ -206,13 +207,15 @@ module MM2FIFO #
 
 	assign frame_pulse = ~(start_burst_pulse || burst_read_active)
 			&& final_data
-			&& (fsync_neg_edge && soft_resetn);
+			&& fsync_neg_edge
+			&& soft_resetn;
 
 	always @(posedge M_AXI_ACLK) begin
 		if (M_AXI_ARESETN == 1'b0)
 			start_burst_pulse <= 1'b0;
 		else if (~(start_burst_pulse || burst_read_active)
-			&& (~final_data || (fsync_neg_edge && soft_resetn))
+			&& (~final_data || fsync_neg_edge)
+			&& soft_resetn
 			&& (wr_data_count < C_M_AXI_BURST_LEN))
 			start_burst_pulse <= 1'b1;
 		else
@@ -232,7 +235,7 @@ module MM2FIFO #
 
 	// User logic ends
 	always @(posedge M_AXI_ACLK) begin
-		if (M_AXI_ARESETN == 0) begin
+		if (M_AXI_ARESETN == 0 || r_soft_resetting) begin
 			r_img_col_idx <= 0;
 			r_img_row_idx <= 0;
 		end

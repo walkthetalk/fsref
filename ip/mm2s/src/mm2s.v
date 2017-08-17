@@ -37,8 +37,8 @@ module mm2s #
 	input wire  clk,
 	input wire  resetn,
 
-	/// @NOTE: resetting will keep until current frame done.
-	///        if under gap between frames when negedge of soft_resetn,
+	/// @NOTE: resetting will keep until current transaction done.
+	///        if under idle state when negedge of soft_resetn,
 	///        don't need resetting, i.e. resetting will keep zero.
 	input wire  soft_resetn,
 	output wire resetting,
@@ -193,9 +193,9 @@ module mm2s #
 	assign m_axis_tuser = mm2s_rd_data[C_PIXEL_WIDTH];
 	assign m_axis_tlast = mm2s_rd_data[C_PIXEL_WIDTH+1];
 	assign m_axis_tvalid = mm2s_dvalid;
-	assign mm2s_rd_en = (~m_axis_tvalid | m_axis_tready) & ~mm2s_empty;
+	assign mm2s_rd_en = (~m_axis_tvalid | m_axis_tready) && ~(mm2s_empty | resetting);
 	always @(posedge f2s_aclk) begin
-		if (resetn == 1'b0) begin
+		if (resetn == 1'b0 || resetting) begin
 			mm2s_dvalid <= 0;
 		end
 		else if (mm2s_rd_en) begin
