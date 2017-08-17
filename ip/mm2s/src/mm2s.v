@@ -37,6 +37,9 @@ module mm2s #
 	input wire  clk,
 	input wire  resetn,
 
+	/// @NOTE: resetting will keep until current frame done.
+	///        if under gap between frames when negedge of soft_resetn,
+	///        don't need resetting, i.e. resetting will keep zero.
 	input wire  soft_resetn,
 	output wire resetting,
 

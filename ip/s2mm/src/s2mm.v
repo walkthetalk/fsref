@@ -41,6 +41,9 @@ module s2mm #
 	input wire  clk,
 	input wire  resetn,
 
+	/// @NOTE: resetting will keep until current transaction done.
+	///        if under idle state when negedge of soft_resetn,
+	///        don't need resetting, i.e. resetting will keep zero.
 	input wire soft_resetn,
 	output wire resetting,
 
