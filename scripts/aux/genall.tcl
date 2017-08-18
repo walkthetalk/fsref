@@ -7,6 +7,7 @@ set ip_list [list \
 	s2mm \
 	mm2s \
 	axi_combiner \
+	fsctl \
 	yscaler \
 ]
 
