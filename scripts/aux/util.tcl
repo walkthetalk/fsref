@@ -5,7 +5,7 @@ set VENDOR ocfb
 global LIBRARY
 set LIBRARY pvip
 global VERSION
-set VERSION 1.0.8
+set VERSION 1.0.9
 global TAXONOMY
 set TAXONOMY /UserIP
 global COMPANYURL
@@ -13,12 +13,13 @@ set COMPANYURL https://github.com/walkthetalk
 global VENDORDISPNAME
 set VENDORDISPNAME OCFB
 
-proc pip_clr_def_if_par {
+proc pip_clr_def_if_par_memmap {
 	core_inst
 } {
 	ipx::remove_all_bus_interface $core_inst
 	ipx::remove_all_user_parameter $core_inst
 	ipx::remove_all_address_space $core_inst
+	ipx::remove_all_memory_map $core_inst
 	ipgui::remove_page -component [ipx::current_core] [ipgui::get_pagespec -name "Page 0" -component $core_inst]
 }
 
@@ -101,4 +102,19 @@ proc pip_add_bus_abstraction_port {
 } {
 	ipx::add_bus_abstraction_port $port_name $busabs_inst
 	pip_set_prop [ipx::get_bus_abstraction_ports $port_name -of_objects $busabs_inst] [uplevel subst -nobackslash [list $port_prop]]
+}
+
+proc pip_add_memory_map {
+	core_inst
+	mm_name
+	block_name
+	bus_name
+	{para_set {}}
+} {
+	ipx::add_memory_map $mm_name $core_inst
+	set_property slave_memory_map_ref $mm_name [ipx::get_bus_interfaces $bus_name -of_objects $core_inst]
+	ipx::add_address_block $block_name [ipx::get_memory_maps $mm_name -of_objects [ipx::current_core]]
+	foreach {i j} $para_set {
+		set_property $i $j [ipx::get_address_blocks $block_name -of_objects [ipx::get_memory_maps $mm_name -of_objects $core_inst]]
+	}
 }

@@ -17,7 +17,7 @@ pip_set_prop [ipx::current_core] {
 	supported_families {zynq Production}
 }
 
-pip_clr_def_if_par [ipx::current_core]
+pip_clr_def_if_par_memmap [ipx::current_core]
 
 pip_add_bus_if [ipx::current_core] vid_io_out { \
 	abstraction_type_vlnv {xilinx.com:interface:vid_io_rtl:1.0} \

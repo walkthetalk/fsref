@@ -17,7 +17,7 @@ pip_set_prop [ipx::current_core] [subst {
 	supported_families {zynq Production}
 }]
 
-pip_clr_def_if_par [ipx::current_core]
+pip_clr_def_if_par_memmap [ipx::current_core]
 
 pip_add_bus_if [ipx::current_core] MBUF_W [subst {
 	abstraction_type_vlnv $VENDOR:$LIBRARY:mutex_buffer_rtl:1.0
