@@ -36,7 +36,7 @@ proc pip_set_prop {
 	core_inst
 	prop_set
 } {
-	__pip_set_prop $core_inst [uplevel subst -nobackslash [list $prop_set]]
+	__pip_set_prop $core_inst $prop_set
 }
 
 proc pip_add_bus_if {
@@ -67,7 +67,7 @@ proc pip_add_usr_par {
 	par_name
 	gui_par
 	usr_par
-	hdl_par
+	{hdl_par {}}
 } {
 	ipx::add_user_parameter $par_name $core_inst
 	ipgui::add_param -name $par_name -component $core_inst
@@ -101,7 +101,7 @@ proc pip_add_bus_abstraction_port {
 	port_prop
 } {
 	ipx::add_bus_abstraction_port $port_name $busabs_inst
-	pip_set_prop [ipx::get_bus_abstraction_ports $port_name -of_objects $busabs_inst] [uplevel subst -nobackslash [list $port_prop]]
+	pip_set_prop [ipx::get_bus_abstraction_ports $port_name -of_objects $busabs_inst] $port_prop
 }
 
 proc pip_add_memory_map {
