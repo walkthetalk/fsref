@@ -182,6 +182,7 @@ set_property -dict [list \
 endgroup
 copy_bd_objs /  [get_bd_cells {v_vid_in_axi4s_1}]
 
+create_pvdma pvdma_0 mm2s
 create_pvdma pvdma_1
 copy_bd_objs /  [get_bd_cells {pvdma_1}]
 
@@ -271,6 +272,8 @@ connect_bd_intf_net -boundary_type upper [get_bd_intf_pins v_axi4s_vid_out_0/vid
 connect_bd_intf_net -boundary_type upper [get_bd_intf_pins fscmos_0/vid_io_out] [get_bd_intf_pins v_vid_in_axi4s_1/vid_io_in]
 connect_bd_net [get_bd_pins fscmos_0/vid_io_out_clk] [get_bd_pins v_vid_in_axi4s_1/vid_io_in_clk]
 
+connect_bd_net [get_bd_pins pvdma_0/clk] [get_bd_pins cpu/FCLK_CLK1]
+connect_bd_net [get_bd_pins pvdma_0/resetn] [get_bd_pins rst_cpu_fclk1/peripheral_aresetn]
 for {set i 1} {$i < 3} {incr i} {
 	connect_bd_net [get_bd_pins pvdma_$i/clk] [get_bd_pins cpu/FCLK_CLK1]
 	connect_bd_net [get_bd_pins pvdma_$i/resetn] [get_bd_pins rst_cpu_fclk1/peripheral_aresetn]
@@ -350,10 +353,10 @@ endgroup
 
 # 9. address
 # auto assign all addresses
-assign_bd_address
-set_property -dict [list offset {0x00000000} range {1G}] [get_bd_addr_segs {*/SEG_cpu_HP*_DDR_LOWOCM}]
-set_property -dict [list offset {0x43000000} range {64K}] [get_bd_addr_segs {cpu/Data/SEG_axi_vdma_0_Reg}]
-set_property -dict [list offset {0x43C00000} range {64K}] [get_bd_addr_segs {cpu/Data/SEG_v_osd_Reg}]
+#assign_bd_address
+#set_property -dict [list offset {0x00000000} range {1G}] [get_bd_addr_segs {*/SEG_cpu_HP*_DDR_LOWOCM}]
+#set_property -dict [list offset {0x43000000} range {64K}] [get_bd_addr_segs {cpu/Data/SEG_axi_vdma_0_Reg}]
+#set_property -dict [list offset {0x43C00000} range {64K}] [get_bd_addr_segs {cpu/Data/SEG_v_osd_Reg}]
 
 # save board design
 save_bd_design
