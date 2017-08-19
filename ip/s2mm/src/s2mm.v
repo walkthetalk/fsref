@@ -25,6 +25,8 @@ module s2mm #
 	parameter integer C_IMG_WBITS = 12,
 	parameter integer C_IMG_HBITS = 12,
 	parameter integer C_DATACOUNT_BITS = 12,
+	parameter integer C_PIXEL_STORE_WIDTH = 8,
+
 
 	// User parameters ends
 
@@ -62,7 +64,7 @@ module s2mm #
 	output wire s2mm_sof,
 	input wire [C_M_AXI_ADDR_WIDTH-1:0] s2mm_addr,
 
-	input wire [C_M_AXI_DATA_WIDTH/C_PIXEL_WIDTH*(C_PIXEL_WIDTH+2)-1 : 0] s2mm_rd_data,
+	input wire [C_M_AXI_DATA_WIDTH/C_PIXEL_STORE_WIDTH*(C_PIXEL_WIDTH+2)-1 : 0] s2mm_rd_data,
 	input wire s2mm_empty,
 	output wire s2mm_rd_en,
 	input wire [C_DATACOUNT_BITS-1:0] s2mm_rd_data_count,
@@ -92,7 +94,7 @@ module s2mm #
 	localparam C_PM1 = C_PIXEL_WIDTH - 1;
 	localparam C_PP1 = C_PIXEL_WIDTH + 1;
 	localparam C_PP2 = C_PIXEL_WIDTH + 2;
-	localparam C_ADATA_PIXELS = C_M_AXI_DATA_WIDTH/C_PIXEL_WIDTH;
+	localparam C_ADATA_PIXELS = C_M_AXI_DATA_WIDTH/C_PIXEL_STORE_WIDTH;
 
 	function integer reverseI(input integer i);
 	begin
@@ -124,7 +126,7 @@ module s2mm #
 	generate
 		genvar i;
 		for (i = 0; i < C_M_AXI_DATA_WIDTH/C_PIXEL_WIDTH; i = i+1) begin: single_pixel
-			assign s2mm_pixel_data[i*C_PIXEL_WIDTH + C_PM1 : i*C_PIXEL_WIDTH]
+			assign s2mm_pixel_data[i*C_PIXEL_STORE_WIDTH + C_PM1 : i*C_PIXEL_STORE_WIDTH]
 				= s2mm_rd_data[reverseI(i)*C_PP2 + C_PM1 : reverseI(i)*C_PP2];
 		end
 	endgenerate
@@ -137,7 +139,7 @@ module s2mm #
 		.C_M_AXI_DATA_WIDTH(C_M_AXI_DATA_WIDTH),
 		.C_IMG_WBITS(C_IMG_WBITS),
 		.C_IMG_HBITS(C_IMG_HBITS),
-		.C_PIXEL_WIDTH(C_PIXEL_WIDTH)
+		.C_ADATA_PIXELS(C_ADATA_PIXELS)
 	) FIFO2MM_inst (
 		.img_width(img_width),
 		.img_height(img_height),

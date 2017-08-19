@@ -17,7 +17,7 @@ module FIFO2MM #
 	// Image width/height pixel number bits
 	parameter integer C_IMG_WBITS = 12,
 	parameter integer C_IMG_HBITS = 12,
-	parameter integer C_PIXEL_WIDTH = 8
+	parameter integer C_ADATA_PIXELS = 4
 )
 (
 	input wire soft_resetn,
@@ -69,24 +69,11 @@ module FIFO2MM #
 	end
 	endfunction
 
-	function integer cupperbytes(input integer bit_depth);
-	begin
-		if (bit_depth <= 8)
-			cupperbytes = 1;
-		else if (bit_depth <= 16)
-			cupperbytes = 2;
-		else
-			cupperbytes = 4;
-	end
-	endfunction
-
 	// C_TRANSACTIONS_NUM is the width of the index counter for
 	// number of write or read transaction.
 	localparam integer C_TRANSACTIONS_NUM	= clogb2(C_M_AXI_BURST_LEN-1);
 	//Burst size in bytes
 	localparam integer C_BURST_SIZE_BYTES	= C_M_AXI_BURST_LEN * C_M_AXI_DATA_WIDTH/8;
-	localparam integer C_PIXEL_BYTES = cupperbytes(C_PIXEL_WIDTH);
-	localparam integer C_ADATA_PIXELS = C_M_AXI_DATA_WIDTH/8/C_PIXEL_BYTES;
 
 	// @note: do not cause bursts across 4K address boundaries.
 	reg [C_M_AXI_ADDR_WIDTH-1 : 0] 	axi_awaddr;
