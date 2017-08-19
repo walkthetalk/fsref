@@ -2,6 +2,7 @@
 *.log
 *.str
 *.xml
+*.gtcl
 *xgui*
 fsref.*
 dts/device-tree.mss
