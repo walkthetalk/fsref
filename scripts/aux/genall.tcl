@@ -11,8 +11,9 @@ set ip_list [list \
 	yscaler \
 ]
 
-if { $argc eq 0 } {
-	set dst_list [lappend ip_list project]
+if { $argc eq 1 } {
+	set dst_list $ip_list
+	lappend dst_list project
 } else {
 	set dst_list [lrange $argv 1 end]
 }
@@ -40,5 +41,5 @@ foreach i $ip_list {
 
 if {[lsearch $dst_list project] >= 0} {
 	puts "generating project file"
-	src $origin_dir/scripts/genproj.tcl $origin_dir
+	src $origin_dir/scripts/aux/genproj.tcl $origin_dir
 }

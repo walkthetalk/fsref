@@ -33,6 +33,7 @@ if [ $clr_proj == true ]; then
 	rm -rf dts/device-tree.mss
 	rm -rf output
 	rm -rf vivado*
+	rm -rf scripts/.Xil
 fi
 
 cd ip
