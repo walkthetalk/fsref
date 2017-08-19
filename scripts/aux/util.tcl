@@ -13,6 +13,20 @@ set COMPANYURL https://github.com/walkthetalk
 global VENDORDISPNAME
 set VENDORDISPNAME OCFB
 
+proc log2 {
+	val
+} {
+	set ret 0
+	set curv 1
+	while {$curv <= $val} {
+		puts "log2 $val $ret $curv"
+		set ret [expr {$ret+1}]
+		set curv [expr {$curv*2}]
+	}
+
+	return $ret
+}
+
 proc pip_clr_def_if_par_memmap {
 	core_inst
 } {
