@@ -1,43 +1,61 @@
 
-source $origin_dir/scripts/util.tcl
+source $origin_dir/scripts/aux/util.tcl
 
 proc create_pvdma {
 	mname
+	{pixel_width 8}
+	{img_w_width 12}
+	{img_h_width 12}
+	{addr_width 32}
+	{data_width 64}
+	{burst_length 16}
+	{fifo_aximm_depth 128}
 } {
 	global VENDOR
 	global LIBRARY
 	global VERSION
+
+	set datacount_width [log2 $fifo_aximm_depth]
 
 	create_bd_cell -type hier $mname
 
 	startgroup
 	create_bd_cell -type ip -vlnv $VENDOR:$LIBRARY:mutex_buffer_ctl:$VERSION $mname/mutex_buffer_ctl
 	endgroup
-	set_property -dict [list CONFIG.C_ADDR_WIDTH {32}] [get_bd_cells $mname/mutex_buffer_ctl]
+	set_property -dict [list CONFIG.C_ADDR_WIDTH $addr_width] [get_bd_cells $mname/mutex_buffer_ctl]
 
 	startgroup
 	create_bd_cell -type ip -vlnv $VENDOR:$LIBRARY:mm2s:$VERSION $mname/mm2s
 	endgroup
 	startgroup
 	set_property -dict [list \
-		CONFIG.C_PIXEL_WIDTH {8} \
-		CONFIG.C_IMG_WBITS {12} \
-		CONFIG.C_IMG_HBITS {12} \
-		CONFIG.C_M_AXI_BURST_LEN {8} \
-		CONFIG.C_M_AXI_DATA_WIDTH {64} \
+		CONFIG.C_PIXEL_WIDTH $pixel_width \
+		CONFIG.C_IMG_WBITS $img_w_width \
+		CONFIG.C_IMG_HBITS $img_h_width \
+		CONFIG.C_M_AXI_BURST_LEN $burst_length \
+		CONFIG.C_M_AXI_ADDR_WIDTH $addr_width \
+		CONFIG.C_M_AXI_DATA_WIDTH $data_width \
+		CONFIG.C_DATACOUNT_BITS $datacount_width \
 	] [get_bd_cells $mname/mm2s]
 	endgroup
+
+	set pixel_store_width [get_property CONFIG.C_PIXEL_STORE_WIDTH [get_bd_cells $mname/mm2s]]
+	set adata_pixels [expr {$data_width/$pixel_store_width}]
+	set fifo_axis_width [expr {$pixel_width+2}]
+	set fifo_aximm_width [expr {$fifo_axis_width*$adata_pixels}]
 
 	startgroup
 	create_bd_cell -type ip -vlnv $VENDOR:$LIBRARY:s2mm:$VERSION $mname/s2mm
 	endgroup
 	startgroup
 	set_property -dict [list \
-		CONFIG.C_PIXEL_WIDTH {8} \
-		CONFIG.C_IMG_WBITS {12} \
-		CONFIG.C_IMG_HBITS {12} \
-		CONFIG.C_M_AXI_BURST_LEN {8} \
-		CONFIG.C_M_AXI_DATA_WIDTH {64} \
+		CONFIG.C_PIXEL_WIDTH $pixel_width \
+		CONFIG.C_IMG_WBITS $img_w_width \
+		CONFIG.C_IMG_HBITS $img_h_width \
+		CONFIG.C_M_AXI_BURST_LEN $burst_length \
+		CONFIG.C_M_AXI_ADDR_WIDTH $addr_width \
+		CONFIG.C_M_AXI_DATA_WIDTH $data_width \
+		CONFIG.C_DATACOUNT_BITS $datacount_width \
 	] [get_bd_cells $mname/s2mm]
 	endgroup
 
@@ -46,8 +64,8 @@ proc create_pvdma {
 	endgroup
 	startgroup
 	set_property -dict [list \
-		CONFIG.C_M_AXI_ADDR_WIDTH {32} \
-		CONFIG.C_M_AXI_DATA_WIDTH {64} \
+		CONFIG.C_M_AXI_ADDR_WIDTH $addr_width \
+		CONFIG.C_M_AXI_DATA_WIDTH $data_width \
 	] [get_bd_cells $mname/axi_combiner]
 	endgroup
 
@@ -58,12 +76,11 @@ proc create_pvdma {
 	set_property -dict [list \
 		CONFIG.Fifo_Implementation {Common_Clock_Block_RAM} \
 		CONFIG.INTERFACE_TYPE {Native} \
-		CONFIG.Input_Data_Width {80} \
-		CONFIG.Input_Depth {128} \
-		CONFIG.Output_Data_Width {10} \
-		CONFIG.Output_Depth {1024} \
-		CONFIG.Reset_Type {Asynchronous_Reset} \
-		CONFIG.Full_Flags_Reset_Value {1} \
+		CONFIG.Input_Data_Width $fifo_aximm_width \
+		CONFIG.Input_Depth $fifo_aximm_depth \
+		CONFIG.Output_Data_Width $fifo_axis_width \
+		CONFIG.Write_Data_Count {true} \
+		CONFIG.Reset_Type {Synchronous_Reset} \
 	] [get_bd_cells $mname/fifo_mm2s]
 	endgroup
 
@@ -73,12 +90,11 @@ proc create_pvdma {
 	startgroup
 	set_property -dict [list \
 		CONFIG.Fifo_Implementation {Common_Clock_Block_RAM} \
-		CONFIG.Input_Data_Width {10} \
-		CONFIG.Input_Depth {1024} \
-		CONFIG.Output_Data_Width {80} \
-		CONFIG.Output_Depth {128} \
-		CONFIG.Reset_Type {Asynchronous_Reset} \
-		CONFIG.Full_Flags_Reset_Value {1} \
+		CONFIG.Input_Data_Width $fifo_axis_width \
+		CONFIG.Output_Data_Width $fifo_aximm_width \
+		CONFIG.Output_Depth $fifo_aximm_depth \
+		CONFIG.Read_Data_Count {true} \
+		CONFIG.Reset_Type {Synchronous_Reset} \
 	] [get_bd_cells $mname/fifo_s2mm]
 	endgroup
 
@@ -96,9 +112,11 @@ proc create_pvdma {
 
 	connect_bd_intf_net [get_bd_intf_pins $mname/mm2s/FIFO_WRITE] [get_bd_intf_pins $mname/fifo_mm2s/FIFO_WRITE]
 	connect_bd_intf_net [get_bd_intf_pins $mname/mm2s/FIFO_READ] [get_bd_intf_pins $mname/fifo_mm2s/FIFO_READ]
+	connect_bd_net [get_bd_pins $mname/fifo_s2mm/rd_data_count] [get_bd_pins $mname/s2mm/s2mm_rd_data_count]
 
 	connect_bd_intf_net [get_bd_intf_pins $mname/s2mm/FIFO_WRITE] [get_bd_intf_pins $mname/fifo_s2mm/FIFO_WRITE]
 	connect_bd_intf_net [get_bd_intf_pins $mname/s2mm/FIFO_READ] [get_bd_intf_pins $mname/fifo_s2mm/FIFO_READ]
+	connect_bd_net [get_bd_pins $mname/fifo_mm2s/wr_data_count] [get_bd_pins $mname/mm2s/mm2s_wr_data_count]
 
 	# cfg
 	for {set buf_idx 0} {$buf_idx < 4} {incr buf_idx} {
@@ -139,8 +157,8 @@ proc create_pvdma {
 	connect_bd_net [get_bd_pins $mname/resetn] [get_bd_pins $mname/mm2s/resetn]
 	connect_bd_net [get_bd_pins $mname/resetn] [get_bd_pins $mname/s2mm/resetn]
 
-	connect_bd_net [get_bd_pins $mname/s2mm/resetting] [get_bd_pins $mname/fifo_s2mm/rst]
-	connect_bd_net [get_bd_pins $mname/mm2s/resetting] [get_bd_pins $mname/fifo_mm2s/rst]
+	connect_bd_net [get_bd_pins $mname/s2mm/resetting] [get_bd_pins $mname/fifo_s2mm/srst]
+	connect_bd_net [get_bd_pins $mname/mm2s/resetting] [get_bd_pins $mname/fifo_mm2s/srst]
 
 	create_bd_pin -dir I -type rst $mname/soft_resetn
 	connect_bd_net [get_bd_pins $mname/soft_resetn] [get_bd_pins $mname/mm2s/soft_resetn]
