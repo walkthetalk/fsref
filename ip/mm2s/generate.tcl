@@ -239,6 +239,21 @@ pip_add_usr_par [ipx::current_core] {C_M_AXI_DATA_WIDTH} {
 	value_format long
 }
 
+pip_add_usr_par [ipx::current_core] {C_PIXEL_STORE_WIDTH} {
+	display_name {Pixel Store Width}
+	tooltip {PIXEL STORE WIDTH}
+	widget {textEdit}
+} {
+	enablement_value false
+	value_resolve_type user
+	value 8
+	value_format long
+	value_tcl_expr {expr ($C_PIXEL_WIDTH <= 8 ? 8 : ($C_PIXEL_WIDTH <= 16 ? 16 : ($C_PIXEL_WIDTH <= 32 ? 32 : 64)))}
+} {
+	value 8
+	value_format long
+}
+
 # address space
 pip_add_address_space [ipx::current_core] M_AXI M_AXI_REG {
 	width 32
