@@ -8,14 +8,14 @@ ipx::infer_core -vendor $VENDOR -library $LIBRARY -taxonomy $TAXONOMY $ip_dir
 ipx::edit_ip_in_project -upgrade true -name edit_ip_project -directory $tmp_dir $ip_dir/component.xml
 ipx::current_core $ip_dir/component.xml
 
-pip_set_prop [ipx::current_core] {
+pip_set_prop [ipx::current_core] [subst {
 	display_name {Fusion Splicer Cmos}
 	description {Cmos interface on Fusion splicer}
 	vendor_display_name $VENDORDISPNAME
 	version $VERSION
 	company_url $COMPANYURL
 	supported_families {zynq Production}
-}
+}]
 
 pip_clr_def_if_par_memmap [ipx::current_core]
 
