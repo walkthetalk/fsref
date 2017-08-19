@@ -22,6 +22,8 @@ module mm2s #
 (
 	// Users to add parameters here
 	parameter integer C_PIXEL_WIDTH	= 8,
+	parameter integer C_PIXEL_STORE_WIDTH = 8,
+
 	parameter integer C_IMG_WBITS	= 12,
 	parameter integer C_IMG_HBITS	= 12,
 	parameter integer C_DATACOUNT_BITS = 12,
@@ -72,7 +74,7 @@ module mm2s #
 	output wire  m_axi_rready,
 
 	input wire mm2s_full,
-	output wire [C_M_AXI_DATA_WIDTH/C_PIXEL_WIDTH*(C_PIXEL_WIDTH+2)-1 : 0] mm2s_wr_data,
+	output wire [C_M_AXI_DATA_WIDTH/C_PIXEL_STORE_WIDTH*(C_PIXEL_WIDTH+2)-1 : 0] mm2s_wr_data,
 	output wire mm2s_wr_en,
 	input wire [C_DATACOUNT_BITS-1:0] mm2s_wr_data_count,
 
@@ -92,7 +94,7 @@ module mm2s #
 	localparam C_PP1 = C_PIXEL_WIDTH + 1;
 	localparam C_PP2 = C_PIXEL_WIDTH + 2;
 
-	localparam C_ADATA_PIXELS = C_M_AXI_DATA_WIDTH/C_PIXEL_WIDTH;
+	localparam C_ADATA_PIXELS = C_M_AXI_DATA_WIDTH/C_PIXEL_STORE_WIDTH;
 
 	wire m2f_aclk; assign m2f_aclk = clk;
 	wire f2s_aclk; assign f2s_aclk = clk;
@@ -123,7 +125,7 @@ module mm2s #
 		genvar i;
 		for (i = 0; i < C_ADATA_PIXELS; i = i+1) begin: wr_pixel
 			assign mm2s_wr_data[i*C_PP2+C_PM1 : i*C_PP2]
-				= mm2s_pixel_data[reverseI(i) * C_PIXEL_WIDTH + C_PM1 : reverseI(i) * C_PIXEL_WIDTH];
+				= mm2s_pixel_data[reverseI(i) * C_PIXEL_STORE_WIDTH + C_PM1 : reverseI(i) * C_PIXEL_STORE_WIDTH];
 		end
 		for (i = 0; i < C_ADATA_PIXELS; i = i+1) begin: wr_sof
 			if (i == C_ADATA_PIXELS-1)
@@ -140,7 +142,7 @@ module mm2s #
 	endgenerate
 
 	MM2FIFO # (
-		.C_PIXEL_WIDTH(C_PIXEL_WIDTH),
+		.C_PIXEL_STORE_WIDTH(C_PIXEL_STORE_WIDTH),
 		.C_DATACOUNT_BITS(C_DATACOUNT_BITS),
 
 		.C_M_AXI_BURST_LEN(C_M_AXI_BURST_LEN),
