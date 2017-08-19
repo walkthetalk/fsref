@@ -19,17 +19,17 @@ pip_set_prop [ipx::current_core] [subst {
 
 pip_clr_def_if_par_memmap [ipx::current_core]
 
-pip_add_bus_if [ipx::current_core] vid_io_out { \
-	abstraction_type_vlnv {xilinx.com:interface:vid_io_rtl:1.0} \
-	bus_type_vlnv {xilinx.com:interface:vid_io:1.0} \
-	interface_mode {master} \
-} { \
-	ACTIVE_VIDEO vid_active_video \
-	DATA vid_data \
-	HBLANK vid_hblank \
-	HSYNC vid_hsync \
-	VBLANK vid_vblank \
-	VSYNC vid_vsync \
+pip_add_bus_if [ipx::current_core] vid_io_out {
+	abstraction_type_vlnv {xilinx.com:interface:vid_io_rtl:1.0}
+	bus_type_vlnv {xilinx.com:interface:vid_io:1.0}
+	interface_mode {master}
+} {
+	ACTIVE_VIDEO vid_active_video
+	DATA vid_data
+	HBLANK vid_hblank
+	HSYNC vid_hsync
+	VBLANK vid_vblank
+	VSYNC vid_vsync
 }
 
 pip_add_bus_if [ipx::current_core] vid_io_out_clk {
