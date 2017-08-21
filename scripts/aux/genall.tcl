@@ -3,6 +3,7 @@ set ip_list [list \
 	cmos \
 	lcd \
 	axis_window \
+	axis_blender \
 	mutex_buffer \
 	mutex_buffer_ctl \
 	s2mm \
