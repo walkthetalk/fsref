@@ -2,6 +2,7 @@ set origin_dir [lindex $argv 0]
 set ip_list [list \
 	cmos \
 	lcd \
+	axis_window \
 	mutex_buffer \
 	mutex_buffer_ctl \
 	s2mm \
@@ -33,7 +34,7 @@ proc src {file args} {
 }
 
 foreach i $ip_list {
-	if {[lsearch $dst_list $i] >= 0} {
+	if {[lsearch $dst_list $i] >= 0 || [lsearch $dst_list allip] >= 0} {
 		puts "generating ip: $i"
 		src $origin_dir/ip/$i/generate.tcl $origin_dir
 	}
