@@ -2,6 +2,8 @@ set origin_dir [lindex $argv 0]
 set ip_list [list \
 	cmos \
 	lcd \
+	window_ctl \
+	const_window \
 	axis_window \
 	axis_blender \
 	mutex_buffer \
