@@ -155,11 +155,28 @@ proc create_pvdma {
 		connect_bd_intf_net [get_bd_intf_pins $mname/MBUF_R] [get_bd_intf_pins $mname/mutex_buffer/MBUF_R0]
 		connect_bd_intf_net [get_bd_intf_pins $mname/mm2s/MBUF_R] [get_bd_intf_pins $mname/mutex_buffer/MBUF_R1]
 		connect_bd_intf_net [get_bd_intf_pins $mname/s2mm/MBUF_W] [get_bd_intf_pins $mname/mutex_buffer/MBUF_W]
+
 		#cfg
-		for {set buf_idx 0} {$buf_idx < 4} {incr buf_idx} {
-			create_bd_pin -dir I -from 31 -to 0 $mname/buf[set buf_idx]_addr
-			connect_bd_net [get_bd_pins $mname/buf[set buf_idx]_addr] [get_bd_pins $mname/mutex_buffer/buf[set buf_idx]_addr]
-		}
+		#     address
+		create_bd_intf_pin -mode Slave -vlnv $VENDOR:interface:addr_array_rtl:1.0 $mname/BUF_ADDR
+		connect_bd_intf_net [get_bd_intf_pins $mname/BUF_ADDR] [get_bd_intf_pins $mname/mutex_buffer/BUF_ADDR]
+		#     image size
+		create_bd_intf_pin -mode Slave -vlnv $VENDOR:interface:window_ctl_rtl:1.0 $mname/IMG_SIZE
+		startgroup
+		create_bd_cell -type ip -vlnv $VENDOR:$LIBRARY:window_broadcaster:1.0.9 $mname/window_broadcaster
+		endgroup
+		startgroup
+		set_property -dict [list \
+			CONFIG.C_WBITS $img_w_width \
+			CONFIG.C_HBITS $img_h_width \
+			CONFIG.C_MASTER_NUM {2} \
+			CONFIG.C_HAS_POSITION {false} \
+			] [get_bd_cells $mname/window_broadcaster]
+		endgroup
+		connect_bd_intf_net [get_bd_intf_pins $mname/IMG_SIZE] [get_bd_intf_pins $mname/window_broadcaster/S_WIN]
+		connect_bd_intf_net [get_bd_intf_pins $mname/s2mm/IMG_SIZE] [get_bd_intf_pins $mname/window_broadcaster/M0_WIN]
+		connect_bd_intf_net [get_bd_intf_pins $mname/mm2s/IMG_SIZE] [get_bd_intf_pins $mname/window_broadcaster/M1_WIN]
+
 
 		create_bd_intf_pin -mode Master -vlnv xilinx.com:interface:aximm_rtl:1.0 $mname/M_AXI
 		connect_bd_intf_net [get_bd_intf_pins $mname/M_AXI] [get_bd_intf_pins $mname/axi_combiner/M_AXI]
@@ -172,6 +189,9 @@ proc create_pvdma {
 
 		create_bd_intf_pin -mode Master -vlnv xilinx.com:interface:aximm_rtl:1.0 $mname/M_AXI
 		connect_bd_intf_net [get_bd_intf_pins $mname/M_AXI] [get_bd_intf_pins $mname/s2mm/M_AXI]
+		#     image size
+		create_bd_intf_pin -mode Slave -vlnv $VENDOR:interface:window_ctl_rtl:1.0 $mname/IMG_SIZE
+		connect_bd_intf_net [get_bd_intf_pins $mname/s2mm/IMG_SIZE] [get_bd_intf_pins $mname/IMG_SIZE]
 	} elseif {$dir_mm2s == 1} {
 		# signal
 		create_bd_intf_pin -mode Slave -vlnv $VENDOR:interface:mutex_buffer_ctl_rtl:1.0 $mname/MBUF_R
@@ -179,12 +199,9 @@ proc create_pvdma {
 
 		create_bd_intf_pin -mode Master -vlnv xilinx.com:interface:aximm_rtl:1.0 $mname/M_AXI
 		connect_bd_intf_net [get_bd_intf_pins $mname/M_AXI] [get_bd_intf_pins $mname/mm2s/M_AXI]
-	}
-
-	# cfg
-	foreach pinname [list img_height img_width] {
-		create_bd_pin -dir I -from 11 -to 0 $mname/$pinname
-		connect_bd_net [get_bd_pins $mname/$pinname] [get_bd_pins $mname/*/$pinname]
+		#     image size
+		create_bd_intf_pin -mode Slave -vlnv $VENDOR:interface:window_ctl_rtl:1.0 $mname/IMG_SIZE
+		connect_bd_intf_net [get_bd_intf_pins $mname/mm2s/IMG_SIZE] [get_bd_intf_pins $mname/IMG_SIZE]
 	}
 
 	# clock & reset
