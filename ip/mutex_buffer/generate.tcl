@@ -48,7 +48,7 @@ pip_add_bus_if [ipx::current_core] MBUF_W [subst {
 
 pip_add_bus_if [ipx::current_core] BUF_ADDR [subst {
 	abstraction_type_vlnv $VENDOR:interface:addr_array_rtl:1.0
-	bus_type_vlnv $VENDOR:interface:addr_array_ctl:1.0
+	bus_type_vlnv $VENDOR:interface:addr_array:1.0
 	interface_mode slave
 }] {
 	ADDR0 buf0_addr
