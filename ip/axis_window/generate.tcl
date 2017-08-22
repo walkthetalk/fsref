@@ -43,6 +43,17 @@ pip_add_bus_if [ipx::current_core] S_AXIS {
 	TREADY	s_axis_tready
 }
 
+pip_add_bus_if [ipx::current_core] S_WIN_CTL [subst {
+	abstraction_type_vlnv {$VENDOR:interface:window_ctl_rtl:1.0}
+	bus_type_vlnv {$VENDOR:interface:window_ctl:1.0}
+	interface_mode {slave}
+}] {
+	LEFT    win_left
+	TOP     win_top
+	WIDTH   win_width
+	HEIGHT  win_height
+}
+
 # clock & reset
 pip_add_bus_if [ipx::current_core] resetn {
 	abstraction_type_vlnv xilinx.com:signal:reset_rtl:1.0
@@ -61,7 +72,7 @@ pip_add_bus_if [ipx::current_core] clk {
 } {
 	CLK clk
 } {
-	ASSOCIATED_BUSIF {S_AXIS:M_AXIS}
+	ASSOCIATED_BUSIF {S_AXIS:S_WIN_CTL:M_AXIS}
 	ASSOCIATED_RESET {resetn}
 }
 

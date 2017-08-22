@@ -43,6 +43,17 @@ pip_add_bus_if [ipx::current_core] S0_AXIS {
 	TREADY	s0_axis_tready
 }
 
+pip_add_bus_if [ipx::current_core] S0_WIN_CTL [subst {
+	abstraction_type_vlnv {$VENDOR:interface:window_ctl_rtl:1.0}
+	bus_type_vlnv {$VENDOR:interface:window_ctl:1.0}
+	interface_mode {slave}
+}] {
+	LEFT    s0_win_left
+	TOP     s0_win_top
+	WIDTH   s0_win_width
+	HEIGHT  s0_win_height
+}
+
 pip_add_bus_if [ipx::current_core] S1_AXIS {
 	abstraction_type_vlnv {xilinx.com:interface:axis_rtl:1.0}
 	bus_type_vlnv {xilinx.com:interface:axis:1.0}
@@ -55,6 +66,17 @@ pip_add_bus_if [ipx::current_core] S1_AXIS {
 	TREADY	s1_axis_tready
 }
 
+pip_add_bus_if [ipx::current_core] S1_WIN_CTL [subst {
+	abstraction_type_vlnv {$VENDOR:interface:window_ctl_rtl:1.0}
+	bus_type_vlnv {$VENDOR:interface:window_ctl:1.0}
+	interface_mode {slave}
+}] {
+	LEFT    s1_win_left
+	TOP     s1_win_top
+	WIDTH   s1_win_width
+	HEIGHT  s1_win_height
+}
+
 pip_add_bus_if [ipx::current_core] S2_AXIS {
 	abstraction_type_vlnv {xilinx.com:interface:axis_rtl:1.0}
 	bus_type_vlnv {xilinx.com:interface:axis:1.0}
@@ -65,6 +87,17 @@ pip_add_bus_if [ipx::current_core] S2_AXIS {
 	TUSER	s2_axis_tuser
 	TLAST	s2_axis_tlast
 	TREADY	s2_axis_tready
+}
+
+pip_add_bus_if [ipx::current_core] S2_WIN_CTL [subst {
+	abstraction_type_vlnv {$VENDOR:interface:window_ctl_rtl:1.0}
+	bus_type_vlnv {$VENDOR:interface:window_ctl:1.0}
+	interface_mode {slave}
+}] {
+	LEFT    s2_win_left
+	TOP     s2_win_top
+	WIDTH   s2_win_width
+	HEIGHT  s2_win_height
 }
 
 # clock & reset
@@ -85,7 +118,7 @@ pip_add_bus_if [ipx::current_core] clk {
 } {
 	CLK clk
 } {
-	ASSOCIATED_BUSIF {S0_AXIS:S1_AXIS:S2_AXIS:M_AXIS}
+	ASSOCIATED_BUSIF {S0_AXIS:S0_WIN_CTL:S1_AXIS:S1_WIN_CTL:S2_AXIS:S2_WIN_CTL:M_AXIS}
 	ASSOCIATED_RESET {resetn}
 }
 

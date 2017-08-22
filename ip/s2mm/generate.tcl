@@ -28,6 +28,15 @@ pip_add_bus_if [ipx::current_core] MBUF_W [subst {
 	ADDR s2mm_addr
 }
 
+pip_add_bus_if [ipx::current_core] IMG_SIZE [subst {
+	abstraction_type_vlnv {$VENDOR:interface:window_ctl_rtl:1.0}
+	bus_type_vlnv {$VENDOR:interface:window_ctl:1.0}
+	interface_mode {slave}
+}] {
+	WIDTH   img_width
+	HEIGHT  img_height
+}
+
 pip_add_bus_if [ipx::current_core] S_AXIS {
 	abstraction_type_vlnv {xilinx.com:interface:axis_rtl:1.0}
 	bus_type_vlnv {xilinx.com:interface:axis:1.0}
@@ -124,7 +133,7 @@ pip_add_bus_if [ipx::current_core] clk {
 } {
 	CLK clk
 } {
-	ASSOCIATED_BUSIF {S_AXIS:FIFO_WRITE:FIFO_READ:MBUF_W:M_AXI}
+	ASSOCIATED_BUSIF {S_AXIS:IMG_SIZE:FIFO_WRITE:FIFO_READ:MBUF_W:M_AXI}
 	ASSOCIATED_RESET {resetn}
 }
 
