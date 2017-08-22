@@ -6,6 +6,7 @@ set ip_list [list \
 	window_ctl \
 	mutex_buffer_ctl \
 	reg_ctl \
+	scale_ctl \
 	axilite2regctl \
 	const_window \
 	window_broadcaster \
