@@ -19,7 +19,6 @@ proc log2 {
 	set ret 0
 	set curv 1
 	while {$curv <= $val} {
-		puts "log2 $val $ret $curv"
 		set ret [expr {$ret+1}]
 		set curv [expr {$curv*2}]
 	}
@@ -53,11 +52,21 @@ proc pip_set_prop {
 	__pip_set_prop $core_inst $prop_set
 }
 
+proc pip_set_prop_of_port {
+	core_inst
+	port_set
+	prop_set
+} {
+	foreach p $port_set {
+		pip_set_prop [ipx::get_ports $p -of_objects $core_inst] $prop_set
+	}
+}
+
 proc pip_add_bus_if {
 	core_inst
 	bus_name
 	bus_prop
-	port_map
+	{port_map {}}
 	{para_set {}}
 } {
 	ipx::add_bus_interface $bus_name $core_inst
