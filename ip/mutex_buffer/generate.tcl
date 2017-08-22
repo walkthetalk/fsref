@@ -46,6 +46,17 @@ pip_add_bus_if [ipx::current_core] MBUF_W [subst {
 	ADDR w_addr
 }
 
+pip_add_bus_if [ipx::current_core] BUF_ADDR [subst {
+	abstraction_type_vlnv $VENDOR:interface:addr_array_rtl:1.0
+	bus_type_vlnv $VENDOR:interface:addr_array_ctl:1.0
+	interface_mode slave
+}] {
+	ADDR0 buf0_addr
+	ADDR1 buf1_addr
+	ADDR2 buf2_addr
+	ADDR3 buf3_addr
+}
+
 pip_add_bus_if [ipx::current_core] intr {
 	abstraction_type_vlnv xilinx.com:signal:interrupt_rtl:1.0
 	bus_type_vlnv xilinx.com:signal:interrupt:1.0

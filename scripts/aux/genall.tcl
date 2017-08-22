@@ -4,12 +4,12 @@ set ip_list [list \
 	lcd \
 	addr_array \
 	window_ctl \
+	mutex_buffer_ctl \
 	const_window \
 	window_broadcaster \
 	axis_window \
 	axis_blender \
 	mutex_buffer \
-	mutex_buffer_ctl \
 	s2mm \
 	mm2s \
 	axi_combiner \
