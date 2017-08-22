@@ -32,8 +32,8 @@ pip_add_bus_if [ipx::current_core] M_AXIS {
 }
 
 pip_add_bus_if [ipx::current_core] MBUF_R [subst {
-	abstraction_type_vlnv $VENDOR:$LIBRARY:mutex_buffer_rtl:1.0
-	bus_type_vlnv $VENDOR:$LIBRARY:mutex_buffer:1.0
+	abstraction_type_vlnv $VENDOR:interface:mutex_buffer_ctl_rtl:1.0
+	bus_type_vlnv $VENDOR:interface:mutex_buffer_ctl:1.0
 	interface_mode {slave}
 }] {
 	SOF r_sof

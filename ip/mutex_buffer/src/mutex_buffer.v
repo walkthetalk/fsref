@@ -18,7 +18,7 @@
 // Additional Comments:
 //
 //////////////////////////////////////////////////////////////////////////////////
-module mutex_buffer_ctl #
+module mutex_buffer #
 (
 	parameter integer C_ADDR_WIDTH = 32
 ) (
