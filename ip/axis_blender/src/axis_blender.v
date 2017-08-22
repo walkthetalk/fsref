@@ -73,10 +73,10 @@ module axis_blender #
 	input wire [C_IMG_HBITS-1 : 0] s2_win_height,
 
 	/// M_AXIS
-	output wire m_axis_tvalid,
-	output wire [C_M_PIXEL_WIDTH-1:0] m_axis_tdata,
-	output wire m_axis_tuser,
-	output wire m_axis_tlast,
+	output reg m_axis_tvalid,
+	output reg [C_M_PIXEL_WIDTH-1:0] m_axis_tdata,
+	output reg m_axis_tuser,
+	output reg m_axis_tlast,
 	input  wire m_axis_tready
 );
 	wire out_tvalid;
@@ -265,9 +265,9 @@ module axis_blender #
 			m_axis_tdata <= 0;
 		else if (mnext)
 			if (s1_need || s2_need) begin
-				m_axis_tdata[23:16] <= `ALPHA(data12, s0_data[23:16]);
-				m_axis_tdata[15: 8] <= `ALPHA(data12, s0_data[15: 8]);
-				m_axis_tdata[ 7: 0] <= `ALPHA(data12, s0_data[ 7: 0]);
+				m_axis_tdata[23:16] <= `ALPHA(data_12, s0_data[23:16]);
+				m_axis_tdata[15: 8] <= `ALPHA(data_12, s0_data[15: 8]);
+				m_axis_tdata[ 7: 0] <= `ALPHA(data_12, s0_data[ 7: 0]);
 			end
 			else
 				m_axis_tdata <= s0_data;
