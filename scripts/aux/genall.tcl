@@ -5,6 +5,7 @@ set ip_list [list \
 	addr_array \
 	window_ctl \
 	const_window \
+	window_broadcaster \
 	axis_window \
 	axis_blender \
 	mutex_buffer \
