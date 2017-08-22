@@ -2,6 +2,7 @@ set origin_dir [lindex $argv 0]
 set ip_list [list \
 	cmos \
 	lcd \
+	addr_array \
 	window_ctl \
 	const_window \
 	axis_window \
