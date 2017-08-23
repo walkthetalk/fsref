@@ -141,3 +141,28 @@ proc pip_add_memory_map {
 		set_property $i $j [ipx::get_address_blocks $block_name -of_objects [ipx::get_memory_maps $mm_name -of_objects $core_inst]]
 	}
 }
+
+proc pip_connect_intf_net {
+	intf_pairs
+} {
+	foreach {i j} $intf_pairs {
+		connect_bd_intf_net [get_bd_intf_pins $i] [get_bd_intf_pins $j]
+	}
+}
+
+proc pip_connect_net {
+	pin_pairs
+} {
+	foreach {i j} $pin_pairs {
+		connect_bd_net [get_bd_pins $i] [get_bd_pins $j]
+	}
+}
+
+proc pip_connect_pin {
+	src_pin
+	dst_pins
+} {
+	foreach {i} $dst_pins {
+		connect_bd_net [get_bd_pins $src_pin] [get_bd_pins $i]
+	}
+}
