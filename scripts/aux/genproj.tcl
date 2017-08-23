@@ -286,10 +286,17 @@ endgroup
 
 # 9. address
 # auto assign all addresses
-#assign_bd_address
-#set_property -dict [list offset {0x00000000} range {1G}] [get_bd_addr_segs {*/SEG_cpu_HP*_DDR_LOWOCM}]
-#set_property -dict [list offset {0x43000000} range {64K}] [get_bd_addr_segs {cpu/Data/SEG_axi_vdma_0_Reg}]
-#set_property -dict [list offset {0x43C00000} range {64K}] [get_bd_addr_segs {cpu/Data/SEG_v_osd_Reg}]
+assign_bd_address
+set_property -dict [list offset {0x43C00000} range {64K}] [get_bd_addr_segs {fscore/axilite2regctl/S_AXI_LITE/S_AXI_LITE_reg}]
+set_property -dict [list offset {0x00000000} range {1G}] [get_bd_addr_segs {fscore/pvdma_0/mm2s/M_AXI_REG/SEG_cpu_HP0_DDR_LOWOCM}]
+
+set_property -dict [list offset {0x00000000} range {1G}] [get_bd_addr_segs {fscore/pvdma_1/mm2s/M_AXI_REG/SEG_axi_combiner_Reg}]
+set_property -dict [list offset {0x00000000} range {1G}] [get_bd_addr_segs {fscore/pvdma_1/s2mm/M_AXI_REG/SEG_axi_combiner_Reg}]
+set_property -dict [list offset {0x00000000} range {1G}] [get_bd_addr_segs {fscore/pvdma_1/axi_combiner/M_AXI_REG/SEG_cpu_HP1_DDR_LOWOCM}]
+
+set_property -dict [list offset {0x00000000} range {1G}] [get_bd_addr_segs {fscore/pvdma_2/mm2s/M_AXI_REG/SEG_axi_combiner_Reg}]
+set_property -dict [list offset {0x00000000} range {1G}] [get_bd_addr_segs {fscore/pvdma_2/s2mm/M_AXI_REG/SEG_axi_combiner_Reg}]
+set_property -dict [list offset {0x00000000} range {1G}] [get_bd_addr_segs {fscore/pvdma_2/axi_combiner/M_AXI_REG/SEG_cpu_HP2_DDR_LOWOCM}]
 
 # save board design
 save_bd_design
