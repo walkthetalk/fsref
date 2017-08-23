@@ -166,7 +166,7 @@ pip_connect_pin cpu/FCLK_CLK0 {
 }
 pip_connect_pin cpu/FCLK_RESET0_N rst_cpu_fclk0/ext_reset_in
 pip_connect_pin rst_cpu_fclk0/interconnect_aresetn {
-	ic_ctl/ARESETN
+	ic_ctl/*ARESETN
 	fscore/s_axi_resetn
 }
 
