@@ -17,6 +17,11 @@ pip_set_prop [ipx::current_busabs] [subst {
 	bus_type_vlnv $VENDOR:interface:$bus_name:1.0
 }]
 
+pip_add_bus_abstraction_port [ipx::current_busabs] RD_EN {
+	default_value 0
+	master_direction out
+	slave_direction in
+}
 pip_add_bus_abstraction_port [ipx::current_busabs] RD_ADDR {
 	default_value 0
 	master_direction out
