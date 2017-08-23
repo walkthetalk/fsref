@@ -98,6 +98,8 @@ set_property -dict [list \
     CONFIG.GEN_HSYNC_START {338} \
     CONFIG.GEN_VACTIVE_SIZE {240} \
     CONFIG.GEN_F0_VBLANK_HSTART {320} \
+    CONFIG.FSYNC_HSTART0 {320} \
+    CONFIG.FSYNC_VSTART0 {240} \
     CONFIG.enable_detection {false}] [get_bd_cells vtc]
 endgroup
 # 6. lcd
