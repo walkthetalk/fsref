@@ -31,6 +31,15 @@ pip_add_bus_if [ipx::current_core] M_AXIS {
 	TREADY	m_axis_tready
 }
 
+pip_add_bus_if [ipx::current_core] OUT_SIZE [subst {
+	abstraction_type_vlnv {$VENDOR:interface:window_ctl_rtl:1.0}
+	bus_type_vlnv {$VENDOR:interface:window_ctl:1.0}
+	interface_mode {slave}
+}] {
+	WIDTH   out_width
+	HEIGHT  out_height
+}
+
 pip_add_bus_if [ipx::current_core] S0_AXIS {
 	abstraction_type_vlnv {xilinx.com:interface:axis_rtl:1.0}
 	bus_type_vlnv {xilinx.com:interface:axis:1.0}
