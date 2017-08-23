@@ -45,11 +45,12 @@ pip_add_bus_if [ipx::current_core] S_AXI_LITE {
 	RREADY	s_axi_rready
 }
 
-pip_add_bus_if [ipx::current_core] REG_CTL [subst {
+pip_add_bus_if [ipx::current_core] M_REG_CTL [subst {
 	abstraction_type_vlnv {$VENDOR:interface:reg_ctl_rtl:1.0}
 	bus_type_vlnv {$VENDOR:interface:reg_ctl:1.0}
 	interface_mode {master}
 }] {
+	RD_EN   rd_en
 	RD_ADDR rd_addr
 	RD_DATA rd_data
 	WR_EN   wr_en
@@ -75,7 +76,7 @@ pip_add_bus_if [ipx::current_core] clk {
 } {
 	CLK clk
 } {
-	ASSOCIATED_BUSIF {S_AXI_LITE:REG_CTL}
+	ASSOCIATED_BUSIF {S_AXI_LITE:M_REG_CTL}
 	ASSOCIATED_RESET {resetn}
 }
 

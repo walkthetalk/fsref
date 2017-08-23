@@ -19,11 +19,12 @@ pip_set_prop [ipx::current_core] [subst {
 
 pip_clr_def_if_par_memmap [ipx::current_core]
 
-pip_add_bus_if [ipx::current_core] REG_CTL [subst {
+pip_add_bus_if [ipx::current_core] S_REG_CTL [subst {
 	abstraction_type_vlnv {$VENDOR:interface:reg_ctl_rtl:1.0}
 	bus_type_vlnv {$VENDOR:interface:reg_ctl:1.0}
 	interface_mode {slave}
 }] {
+	RD_EN   rd_en
 	RD_ADDR rd_addr
 	RD_DATA rd_data
 	WR_EN   wr_en
@@ -41,6 +42,15 @@ pip_add_bus_if [ipx::current_core] OUT_SIZE [subst {
 }]
 
 for {set i 0} {$i < 3} {incr i} {
+	pip_add_bus_if [ipx::current_core] S[set i]_SIZE [subst {
+		abstraction_type_vlnv {$VENDOR:interface:window_ctl_rtl:1.0}
+		bus_type_vlnv {$VENDOR:interface:window_ctl:1.0}
+		interface_mode {master}
+	}] [subst {
+		WIDTH  s[set i]_width
+		HEIGHT s[set i]_height
+	}]
+
 	pip_add_bus_if [ipx::current_core] S[set i]_WIN [subst {
 		abstraction_type_vlnv {$VENDOR:interface:window_ctl_rtl:1.0}
 		bus_type_vlnv {$VENDOR:interface:window_ctl:1.0}
@@ -93,7 +103,7 @@ pip_add_bus_if [ipx::current_core] clk {
 } {
 	CLK clk
 } {
-	ASSOCIATED_BUSIF {REG_CTL}
+	ASSOCIATED_BUSIF {S_REG_CTL}
 	ASSOCIATED_RESET {resetn}
 }
 

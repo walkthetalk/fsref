@@ -18,6 +18,7 @@ module axilite2regctl #
 	input wire  resetn,
 
 	/// reg ctl interface
+	output rd_en,
 	output [C_ADDR_WIDTH-1:0] rd_addr,
 	input [C_DATA_WIDTH-1:0] rd_data,
 
@@ -50,12 +51,8 @@ module axilite2regctl #
 	reg [C_ADDR_WIDTH-1 : 0] 	axi_awaddr;
 	reg  	axi_awready;
 	reg  	axi_wready;
-	reg [1 : 0] 	axi_bresp;
 	reg  	axi_bvalid;
-	reg [C_ADDR_WIDTH-1 : 0] 	axi_araddr;
 	reg  	axi_arready;
-	reg [C_DATA_WIDTH-1 : 0] 	axi_rdata;
-	reg [1 : 0] 	axi_rresp;
 	reg  	axi_rvalid;
 
 	wire	 slv_reg_rden;
@@ -66,7 +63,8 @@ module axilite2regctl #
 	/**
 	 * read/write interface
 	 */
-	assign rd_addr = axi_araddr;
+	assign rd_en = slv_reg_rden;
+	assign rd_addr = s_axi_araddr;
 	assign wr_addr = axi_awaddr;
 	assign wr_en = slv_reg_wren;
 	assign wr_data = s_axi_wdata;
@@ -75,11 +73,11 @@ module axilite2regctl #
 
 	assign s_axi_awready	= axi_awready;
 	assign s_axi_wready	= axi_wready;
-	assign s_axi_bresp	= axi_bresp;
+	assign s_axi_bresp	= 0;
 	assign s_axi_bvalid	= axi_bvalid;
 	assign s_axi_arready	= axi_arready;
-	assign s_axi_rdata	= axi_rdata;
-	assign s_axi_rresp	= axi_rresp;
+	assign s_axi_rdata	= rd_data;
+	assign s_axi_rresp	= 0;
 	assign s_axi_rvalid	= axi_rvalid;
 	// Implement axi_awready generation
 	// axi_awready is asserted for one clk clock cycle when both
@@ -88,31 +86,20 @@ module axilite2regctl #
 
 	always @( posedge clk )
 	begin
-		if ( resetn == 1'b0 )
-		begin
-		axi_awready <= 1'b0;
-		aw_en <= 1'b1;
+		if ( resetn == 1'b0 ) begin
+			axi_awready <= 1'b0;
+			aw_en <= 1'b1;
 		end
-		else
-		begin
-		if (~axi_awready && s_axi_awvalid && s_axi_wvalid && aw_en)
-		begin
-			// slave is ready to accept write address when
-			// there is a valid write address and write data
-			// on the write address and data bus. This design
-			// expects no outstanding transactions.
+		else if (~axi_awready && s_axi_awvalid && s_axi_wvalid && aw_en) begin
 			axi_awready <= 1'b1;
 			aw_en <= 1'b0;
 		end
-		else if (s_axi_bready && axi_bvalid)
-			begin
+		else if (s_axi_bready && axi_bvalid) begin
 			aw_en <= 1'b1;
 			axi_awready <= 1'b0;
-			end
-		else
-		begin
-			axi_awready <= 1'b0;
 		end
+		else begin
+			axi_awready <= 1'b0;
 		end
 	end
 
@@ -123,17 +110,11 @@ module axilite2regctl #
 	always @( posedge clk )
 	begin
 		if ( resetn == 1'b0 )
-		begin
-		axi_awaddr <= 0;
-		end
-		else
-		begin
-		if (~axi_awready && s_axi_awvalid && s_axi_wvalid && aw_en)
-		begin
-			// Write Address latching
+			axi_awaddr <= 0;
+		else if (~axi_awready && s_axi_awvalid && s_axi_wvalid && aw_en)
 			axi_awaddr <= s_axi_awaddr;
-		end
-		end
+		else
+			axi_awaddr <= axi_awaddr;
 	end
 
 	// Implement axi_wready generation
@@ -141,27 +122,13 @@ module axilite2regctl #
 	// s_axi_awvalid and s_axi_wvalid are asserted. axi_wready is
 	// de-asserted when reset is low.
 
-	always @( posedge clk )
-	begin
+	always @( posedge clk ) begin
 		if ( resetn == 1'b0 )
-		begin
-		axi_wready <= 1'b0;
-		end
-		else
-		begin
-		if (~axi_wready && s_axi_wvalid && s_axi_awvalid && aw_en )
-		begin
-			// slave is ready to accept write data when
-			// there is a valid write address and write data
-			// on the write address and data bus. This design
-			// expects no outstanding transactions.
-			axi_wready <= 1'b1;
-		end
-		else
-		begin
 			axi_wready <= 1'b0;
-		end
-		end
+		else if (~axi_wready && s_axi_wvalid && s_axi_awvalid && aw_en )
+			axi_wready <= 1'b1;
+		else
+			axi_wready <= 1'b0;
 	end
 
 	// Implement memory mapped register select and write logic generation
@@ -182,28 +149,11 @@ module axilite2regctl #
 	always @( posedge clk )
 	begin
 		if ( resetn == 1'b0 )
-		begin
-		axi_bvalid  <= 0;
-		axi_bresp   <= 2'b0;
-		end
-		else
-		begin
-		if (axi_awready && s_axi_awvalid && ~axi_bvalid && axi_wready && s_axi_wvalid)
-		begin
-			// indicates a valid write response is available
+			axi_bvalid  <= 0;
+		else if (axi_awready && s_axi_awvalid && ~axi_bvalid && axi_wready && s_axi_wvalid)
 			axi_bvalid <= 1'b1;
-			axi_bresp  <= 2'b0; // 'OKAY' response
-		end                   // work error responses in future
-		else
-		begin
-			if (s_axi_bready && axi_bvalid)
-			//check if bready is asserted while bvalid is high)
-			//(there is a possibility that bready is always asserted high)
-			begin
+		else if (s_axi_bready && axi_bvalid)
 			axi_bvalid <= 1'b0;
-			end
-		end
-		end
 	end
 
 	// Implement axi_arready generation
@@ -213,27 +163,14 @@ module axilite2regctl #
 	// The read address is also latched when s_axi_arvalid is
 	// asserted. axi_araddr is reset to zero on reset assertion.
 
-	always @( posedge clk )
-	begin
+	always @( posedge clk ) begin
 		if ( resetn == 1'b0 )
-		begin
-		axi_arready <= 1'b0;
-		axi_araddr  <= 32'b0;
-		end
-		else
-		begin
-		if (~axi_arready && s_axi_arvalid)
-		begin
+			axi_arready <= 1'b0;
+		else if (~axi_arready && s_axi_arvalid)
 			// indicates that the slave has acceped the valid read address
 			axi_arready <= 1'b1;
-			// Read address latching
-			axi_araddr  <= s_axi_araddr;
-		end
 		else
-		begin
 			axi_arready <= 1'b0;
-		end
-		end
 	end
 
 	// Implement axi_arvalid generation
@@ -244,55 +181,17 @@ module axilite2regctl #
 	// bus and axi_rresp indicates the status of read transaction.axi_rvalid
 	// is deasserted on reset (active low). axi_rresp and axi_rdata are
 	// cleared to zero on reset (active low).
-	always @( posedge clk )
-	begin
+	always @( posedge clk ) begin
 		if ( resetn == 1'b0 )
-		begin
-		axi_rvalid <= 0;
-		axi_rresp  <= 0;
-		end
-		else
-		begin
-		if (axi_arready && s_axi_arvalid && ~axi_rvalid)
-		begin
-			// Valid read data is available at the read data bus
+			axi_rvalid <= 0;
+		else if (axi_arready && s_axi_arvalid && ~axi_rvalid)
 			axi_rvalid <= 1'b1;
-			axi_rresp  <= 2'b0; // 'OKAY' response
-		end
 		else if (axi_rvalid && s_axi_rready)
-		begin
-			// Read data is accepted by the master
 			axi_rvalid <= 1'b0;
-		end
-		end
 	end
 
 	// Implement memory mapped register select and read logic generation
 	// Slave register read enable is asserted when valid address is available
 	// and the slave is ready to accept the read address.
 	assign slv_reg_rden = axi_arready & s_axi_arvalid & ~axi_rvalid;
-
-	// Output register or memory read data
-	always @( posedge clk )
-	begin
-		if ( resetn == 1'b0 )
-		begin
-		axi_rdata  <= 0;
-		end
-		else
-		begin
-		// When there is a valid read address (s_axi_arvalid) with
-		// acceptance of read address by the slave (axi_arready),
-		// output the read dada
-		if (slv_reg_rden)
-		begin
-			axi_rdata <= rd_data;     // register read data
-		end
-		end
-	end
-
-	// Add user logic here
-
-	// User logic ends
-
 endmodule
