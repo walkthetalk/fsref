@@ -48,6 +48,8 @@ proc create_fscore {
 		$mname/axis_window_1/M_AXIS     $mname/axis_blender/S1_AXIS
 		$mname/pvdma_2/M_AXIS           $mname/axis_window_2/S_AXIS
 		$mname/axis_window_2/M_AXIS     $mname/axis_blender/S2_AXIS
+		$mname/fsctl/CMOS0BUF_ADDR      $mname/pvdma_1/BUF_ADDR
+		$mname/fsctl/CMOS1BUF_ADDR      $mname/pvdma_2/BUF_ADDR
 		$mname/fsctl/OUT_SIZE           $mname/axis_blender/OUT_SIZE
 		$mname/fsctl/S0_DST             $mname/axis_blender/S0_WIN_CTL
 		$mname/fsctl/S1_DST             $mname/axis_blender/S1_WIN_CTL
@@ -55,6 +57,7 @@ proc create_fscore {
 		$mname/fsctl/S1_WIN             $mname/axis_window_1/S_WIN_CTL
 		$mname/fsctl/S2_WIN             $mname/axis_window_2/S_WIN_CTL
 	}]
+	pip_connect_pin $mname/fsctl/dispbuf0_addr $mname/pvdma_0/MBUF_R_addr
 
 	# external interface
 	create_bd_intf_pin -mode Slave -vlnv xilinx.com:interface:aximm_rtl:1.0 $mname/S_AXI_LITE
@@ -99,13 +102,15 @@ proc create_fscore {
 	}]
 
 	create_bd_pin -dir I $mname/fsync
-	pip_connect_pin $mname/fsync [subst {
+	pip_connect_pin $mname/fsync $mname/fsctl/fsync
+	pip_connect_pin $mname/fsctl/o_fsync [subst {
 		$mname/pvdma_0/fsync
 		$mname/pvdma_1/fsync
 		$mname/pvdma_2/fsync
 	}]
 	create_bd_pin -dir I $mname/clk
 	pip_connect_pin $mname/clk [subst {
+		$mname/fsctl/o_clk
 		$mname/pvdma_0/clk
 		$mname/pvdma_1/clk
 		$mname/pvdma_2/clk
@@ -115,6 +120,7 @@ proc create_fscore {
 	}]
 	create_bd_pin -dir I $mname/resetn
 	pip_connect_pin $mname/resetn [subst {
+		$mname/fsctl/o_resetn
 		$mname/pvdma_0/resetn
 		$mname/pvdma_1/resetn
 		$mname/pvdma_2/resetn
