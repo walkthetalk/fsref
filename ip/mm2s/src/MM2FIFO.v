@@ -102,18 +102,6 @@ module MM2FIFO #
 	reg [C_IMG_WBITS-1 : 0] r_img_col_idx;
 	reg [C_IMG_HBITS-1 : 0] r_img_row_idx;
 
-	/// fsync
-	reg fsync_d1;
-	always @ (posedge M_AXI_ACLK) begin
-		if (M_AXI_ARESETN == 1'b0) fsync_d1 <= 1'b0;
-		else fsync_d1 <= fsync;
-	end
-	reg fsync_neg_edge;
-	always @ (posedge M_AXI_ACLK) begin
-		if (M_AXI_ARESETN == 1'b0) fsync_neg_edge <= 1'b0;
-		else fsync_neg_edge <= (~fsync & fsync_d1);
-	end
-
 	///  resetting
 	reg soft_resetn_d1;
 	always @ (posedge M_AXI_ACLK) begin
@@ -205,14 +193,14 @@ module MM2FIFO #
 
 	assign frame_pulse = ~(start_burst_pulse || burst_read_active)
 			&& final_data
-			&& fsync_neg_edge
+			&& fsync
 			&& soft_resetn;
 
 	always @(posedge M_AXI_ACLK) begin
 		if (M_AXI_ARESETN == 1'b0)
 			start_burst_pulse <= 1'b0;
 		else if (~(start_burst_pulse || burst_read_active)
-			&& (~final_data || fsync_neg_edge)
+			&& (~final_data || fsync)
 			&& soft_resetn
 			&& (wr_data_count < C_M_AXI_BURST_LEN))
 			start_burst_pulse <= 1'b1;

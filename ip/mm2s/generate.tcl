@@ -139,7 +139,7 @@ pip_add_bus_if [ipx::current_core] clk {
 } {
 	CLK clk
 } {
-	ASSOCIATED_BUSIF {M_AXI:IMG_SIZE:FIFO_WRITE:MBUF_R:FIFO_READ:M_AXIS}
+	ASSOCIATED_BUSIF {fsync:M_AXI:IMG_SIZE:FIFO_WRITE:MBUF_R:FIFO_READ:M_AXIS}
 }
 
 # parameters
