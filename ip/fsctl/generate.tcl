@@ -32,6 +32,21 @@ pip_add_bus_if [ipx::current_core] S_REG_CTL [subst {
 	WR_DATA wr_data
 }
 
+pip_add_bus_if [ipx::current_core] fsync {
+	abstraction_type_vlnv xilinx.com:signal:video_frame_sync_rtl:1.0
+	bus_type_vlnv xilinx.com:signal:video_frame_sync:1.0
+	interface_mode slave
+} {
+	FRAME_SYNC fsync
+}
+
+pip_add_bus_if [ipx::current_core] o_fsync {
+	abstraction_type_vlnv xilinx.com:signal:video_frame_sync_rtl:1.0
+	bus_type_vlnv xilinx.com:signal:video_frame_sync:1.0
+	interface_mode master
+} {
+	FRAME_SYNC o_fsync
+}
 pip_add_bus_if [ipx::current_core] OUT_SIZE [subst {
 	abstraction_type_vlnv {$VENDOR:interface:window_ctl_rtl:1.0}
 	bus_type_vlnv {$VENDOR:interface:window_ctl:1.0}
@@ -105,6 +120,27 @@ pip_add_bus_if [ipx::current_core] clk {
 } {
 	ASSOCIATED_BUSIF {S_REG_CTL}
 	ASSOCIATED_RESET {resetn}
+}
+
+pip_add_bus_if [ipx::current_core] o_resetn {
+	abstraction_type_vlnv xilinx.com:signal:reset_rtl:1.0
+	bus_type_vlnv xilinx.com:signal:reset:1.0
+	interface_mode slave
+} {
+	RST o_resetn
+} {
+	POLARITY {ACTIVE_LOW}
+}
+
+pip_add_bus_if [ipx::current_core] o_clk {
+	abstraction_type_vlnv xilinx.com:signal:clock_rtl:1.0
+	bus_type_vlnv xilinx.com:signal:clock:1.0
+	interface_mode slave
+} {
+	CLK o_clk
+} {
+	ASSOCIATED_BUSIF {o_fsync:OUT_SIZE:S0_SIZE:S0_WIN:S0_SCALE:S0_DST:S1_SIZE:S1_WIN:S1_SCALE:S1_DST:S2_SIZE:S2_WIN:S2_SCALE:S2_DST}
+	ASSOCIATED_RESET {o_resetn}
 }
 
 # parameters

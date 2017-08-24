@@ -26,7 +26,12 @@ module fsctl #
 	input [C_DATA_WIDTH-1:0] wr_data,
 
 	//// controller
-	output wire soft_resetn,
+	input o_clk,
+	input o_resetn,
+
+	output reg soft_resetn,
+	input wire fsync,
+	output reg o_fsync,
 
 	output wire [C_IMG_WBITS-1:0] out_width,
 	output wire [C_IMG_HBITS-1:0] out_height,
@@ -49,41 +54,41 @@ module fsctl #
 	output wire [C_IMG_HBITS-1:0] s0_dst_top,
 	output wire [C_IMG_HBITS-1:0] s0_dst_height,
 /// stream 1
-	output wire [C_IMG_WBITS-1:0] s1_width,
-	output wire [C_IMG_HBITS-1:0] s1_height,
+	output reg [C_IMG_WBITS-1:0] s1_width,
+	output reg [C_IMG_HBITS-1:0] s1_height,
 
-	output wire [C_IMG_WBITS-1:0] s1_win_left,
-	output wire [C_IMG_WBITS-1:0] s1_win_width,
-	output wire [C_IMG_HBITS-1:0] s1_win_top,
-	output wire [C_IMG_HBITS-1:0] s1_win_height,
+	output reg [C_IMG_WBITS-1:0] s1_win_left,
+	output reg [C_IMG_WBITS-1:0] s1_win_width,
+	output reg [C_IMG_HBITS-1:0] s1_win_top,
+	output reg [C_IMG_HBITS-1:0] s1_win_height,
 
 	output wire [C_IMG_WBITS-1:0] s1_scale_src_width,
 	output wire [C_IMG_HBITS-1:0] s1_scale_src_height,
 	output wire [C_IMG_WBITS-1:0] s1_scale_dst_width,
 	output wire [C_IMG_HBITS-1:0] s1_scale_dst_height,
 
-	output wire [C_IMG_WBITS-1:0] s1_dst_left,
-	output wire [C_IMG_WBITS-1:0] s1_dst_width,
-	output wire [C_IMG_HBITS-1:0] s1_dst_top,
-	output wire [C_IMG_HBITS-1:0] s1_dst_height,
+	output reg [C_IMG_WBITS-1:0] s1_dst_left,
+	output reg [C_IMG_WBITS-1:0] s1_dst_width,
+	output reg [C_IMG_HBITS-1:0] s1_dst_top,
+	output reg [C_IMG_HBITS-1:0] s1_dst_height,
 /// stream 2
-	output wire [C_IMG_WBITS-1:0] s2_width,
-	output wire [C_IMG_HBITS-1:0] s2_height,
+	output reg [C_IMG_WBITS-1:0] s2_width,
+	output reg [C_IMG_HBITS-1:0] s2_height,
 
-	output wire [C_IMG_WBITS-1:0] s2_win_left,
-	output wire [C_IMG_WBITS-1:0] s2_win_width,
-	output wire [C_IMG_HBITS-1:0] s2_win_top,
-	output wire [C_IMG_HBITS-1:0] s2_win_height,
+	output reg [C_IMG_WBITS-1:0] s2_win_left,
+	output reg [C_IMG_WBITS-1:0] s2_win_width,
+	output reg [C_IMG_HBITS-1:0] s2_win_top,
+	output reg [C_IMG_HBITS-1:0] s2_win_height,
 
 	output wire [C_IMG_WBITS-1:0] s2_scale_src_width,
 	output wire [C_IMG_HBITS-1:0] s2_scale_src_height,
 	output wire [C_IMG_WBITS-1:0] s2_scale_dst_width,
 	output wire [C_IMG_HBITS-1:0] s2_scale_dst_height,
 
-	output wire [C_IMG_WBITS-1:0] s2_dst_left,
-	output wire [C_IMG_WBITS-1:0] s2_dst_width,
-	output wire [C_IMG_HBITS-1:0] s2_dst_top,
-	output wire [C_IMG_HBITS-1:0] s2_dst_height
+	output reg [C_IMG_WBITS-1:0] s2_dst_left,
+	output reg [C_IMG_WBITS-1:0] s2_dst_width,
+	output reg [C_IMG_HBITS-1:0] s2_dst_top,
+	output reg [C_IMG_HBITS-1:0] s2_dst_height
 );
 
 	// Example-specific design signals
@@ -104,21 +109,12 @@ module fsctl #
 	//-- Number of Slave Registers 64
 
 	localparam  REG_NUM = 64;
-
-	reg [C_DATA_WIDTH-1:0]	slv_reg[REG_NUM-1 : 0];
-
+	wire [C_DATA_WIDTH-1:0]	slv_reg[REG_NUM-1 : 0];
 	/// read logic
 	always @ (posedge clk) begin
 		if (rd_en)
 			rd_data <= slv_reg[rd_index];
 	end
-	/// write logic
-	always @ (posedge clk) begin
-		if (wr_en)
-			slv_reg[wr_index] <= wr_data;
-	end
-
-	assign soft_resetn = slv_reg[0][0];
 
 	assign out_width = C_IMG_WDEF;
 	assign out_height = C_IMG_HDEF;
@@ -140,41 +136,93 @@ module fsctl #
 	assign s0_dst_width = out_width;
 	assign s0_dst_top = 0;
 	assign s0_dst_height = out_height;
-/// stream 1
-	assign s1_width      = slv_reg[1][C_IMG_WBITS + 15 : 16];
-	assign s1_height     = slv_reg[1][C_IMG_HBITS - 1 : 0];
 
-	assign s1_win_left   = slv_reg[2][C_IMG_WBITS + 15 : 16];
-	assign s1_win_top    = slv_reg[2][C_IMG_HBITS - 1 : 0];
-	assign s1_win_width  = slv_reg[3][C_IMG_WBITS + 15 : 16];
-	assign s1_win_height = slv_reg[3][C_IMG_HBITS - 1 : 0];
+/// aux macro
+`define DEFREG(_ridx, _bstart, _bwidth, _name, _defv) \
+	reg [_bwidth-1 : 0] r_``_name; \
+	assign slv_reg[_ridx][_bstart + _bwidth - 1 : _bstart] = r_``_name; \
+	always @ (posedge clk) begin \
+		if (resetn == 1'b0) \
+			r_``_name <= _defv; \
+		else if (wr_en && wr_index == _ridx) \
+			r_``_name <= wr_data[_bstart + _bwidth - 1 : _bstart]; \
+		else \
+			r_``_name <= r_``_name; \
+	end
+
+`define DEFREG_EXTERNAL(_ridx, _bstart, _bwidth, _name, _defv) \
+	`DEFREG(_ridx, _bstart, _bwidth, _name, _defv) \
+	always @ (posedge o_clk) begin \
+		if (o_resetn == 1'b0) \
+			_name <= _defv; \
+		else \
+			_name <= r_``_name; \
+	end
+
+`define DEFREG_INTERNAL(_ridx, _bstart, _bwidth, _name, _defv) \
+	`DEFREG(_ridx, _bstart, _bwidth, _name, _defv) \
+	wire _name; \
+	assign _name = r_``_name;
+
+/// fsync
+	reg fsync_d1;
+	always @ (posedge o_clk) begin
+		if (o_resetn == 1'b0)
+			fsync_d1 <= 1'b0;
+		else
+			fsync_d1 <= fsync;
+	end
+	wire fsync_posedge;
+	assign fsync_posedge = (fsync && ~fsync_d1);
+	always @ (posedge o_clk) begin
+		if (o_resetn == 1'b0)
+			o_fsync <= 1'b0;
+		else
+			o_fsync <= fsync_posedge;
+	end
+
+/// imagesize aux macro
+`define DEFREG_IMGSIZE( _ridx, _name1, _defv1, _name0, _defv0) \
+	`DEFREG(_ridx, 16, C_IMG_WBITS, _name1, _defv1) \
+	`DEFREG(_ridx,  0, C_IMG_HBITS, _name0, _defv0) \
+	always @ (posedge o_clk) begin \
+		if (o_resetn == 1'b0) begin \
+			_name1 <= _defv1; \
+			_name0 <= _defv0; \
+		end \
+		else if (fsync_posedge && ~display_cfging) begin \
+			_name1 <= r_``_name1; \
+			_name0 <= r_``_name0; \
+		end \
+		else begin \
+			_name1 <= _name1; \
+			_name0 <= _name0; \
+		end \
+	end
+
+	`DEFREG_EXTERNAL(0, 0, 1, soft_resetn, 0)
+	`DEFREG_INTERNAL(0, 1, 1, display_cfging, 0)
+
+	`DEFREG_IMGSIZE( 1, s1_width,     C_IMG_WDEF,  s1_height,     C_IMG_HDEF)
+	`DEFREG_IMGSIZE( 2, s1_win_left,           0,  s1_win_top,             0)
+	`DEFREG_IMGSIZE( 3, s1_win_width,          0,  s1_win_height,          0)
+	`DEFREG_IMGSIZE( 4, s1_dst_left,           0,  s1_dst_top,             0)
+	`DEFREG_IMGSIZE( 5, s1_dst_width,          0,  s1_dst_height,          0)
+
+	`DEFREG_IMGSIZE( 6, s2_width,     C_IMG_WDEF,  s2_height,     C_IMG_HDEF)
+	`DEFREG_IMGSIZE( 7, s2_win_left,           0,  s2_win_top,             0)
+	`DEFREG_IMGSIZE( 8, s2_win_width,          0,  s2_win_height,          0)
+	`DEFREG_IMGSIZE( 9, s2_dst_left,           0,  s2_dst_top,             0)
+	`DEFREG_IMGSIZE(10, s2_dst_width,          0,  s2_dst_height,          0)
 
 	assign s1_scale_src_width  = s1_win_width;
 	assign s1_scale_src_height = s1_win_height;
 	assign s1_scale_dst_width  = s1_dst_width;
 	assign s1_scale_dst_height = s1_dst_height;
 
-	assign s1_dst_left   = slv_reg[4][C_IMG_WBITS + 15 : 16];
-	assign s1_dst_top    = slv_reg[4][C_IMG_HBITS - 1 : 0];
-	assign s1_dst_width  = slv_reg[5][C_IMG_WBITS + 15 : 16];
-	assign s1_dst_height = slv_reg[5][C_IMG_HBITS - 1 : 0];
-/// stream 2
-	assign s2_width      = slv_reg[6][C_IMG_WBITS + 15 : 16];
-	assign s2_height     = slv_reg[6][C_IMG_HBITS - 1 : 0];
-
-	assign s2_win_left   = slv_reg[7][C_IMG_WBITS + 15 : 16];
-	assign s2_win_top    = slv_reg[7][C_IMG_HBITS - 1 : 0];
-	assign s2_win_width  = slv_reg[8][C_IMG_WBITS + 15 : 16];
-	assign s2_win_height = slv_reg[8][C_IMG_HBITS - 1 : 0];
-
 	assign s2_scale_src_width  = s2_win_width;
 	assign s2_scale_src_height = s2_win_height;
 	assign s2_scale_dst_width  = s2_dst_width;
 	assign s2_scale_dst_height = s2_dst_height;
-
-	assign s2_dst_left   = slv_reg[9][C_IMG_WBITS + 15 : 16];
-	assign s2_dst_top    = slv_reg[9][C_IMG_HBITS - 1 : 0];
-	assign s2_dst_width  = slv_reg[10][C_IMG_WBITS + 15 : 16];
-	assign s2_dst_height = slv_reg[10][C_IMG_HBITS - 1 : 0];
 
 endmodule
