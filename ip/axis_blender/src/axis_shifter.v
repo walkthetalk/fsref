@@ -49,8 +49,8 @@ module axis_shifter #
 	output reg  [C_PIXEL_WIDTH-1:0] m_axis_tdata,
 	input  wire m_axis_next
 );
-	assign m_axis_need = (s_win_left <= col_idx && col_idx <= s_win_left + s_win_width)
-			&& (s_win_top <= row_idx && row_idx <= s_win_top + s_win_height);
+	assign m_axis_need = (s_win_left <= col_idx && col_idx < s_win_left + s_win_width)
+			&& (s_win_top <= row_idx && row_idx < s_win_top + s_win_height);
 	wire s_ds_ready;
 	assign s_ds_ready = (m_axis_need && m_axis_next);
 	wire s_next;
