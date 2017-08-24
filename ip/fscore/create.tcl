@@ -57,7 +57,10 @@ proc create_fscore {
 		$mname/fsctl/S1_WIN             $mname/axis_window_1/S_WIN_CTL
 		$mname/fsctl/S2_WIN             $mname/axis_window_2/S_WIN_CTL
 	}]
-	pip_connect_pin $mname/fsctl/dispbuf0_addr $mname/pvdma_0/MBUF_R_addr
+	pip_connect_net [subst {
+		$mname/fsctl/dispbuf0_addr      $mname/pvdma_0/MBUF_R_addr
+		$mname/fsctl/order_1over2       $mname/axis_blender/order_1over2
+	}]
 
 	# external interface
 	create_bd_intf_pin -mode Slave -vlnv xilinx.com:interface:aximm_rtl:1.0 $mname/S_AXI_LITE

@@ -41,6 +41,7 @@ module fsctl #
 	input o_resetn,
 
 	output reg soft_resetn,
+	output reg order_1over2,
 	input wire fsync,
 	output reg o_fsync,
 
@@ -210,28 +211,28 @@ module fsctl #
 		else
 			o_fsync <= fsync_posedge;
 	end
+	wire fsync_movecfg;
+	assign fsync_movecfg = fsync_posedge && ~display_cfging;
 
 /// imagesize aux macro
-`define DEFREG_IMGSIZE( _ridx, _name1, _defv1, _name0, _defv0) \
-	`DEFREG(_ridx, 16, C_IMG_WBITS, _name1, _defv1) \
-	`DEFREG(_ridx,  0, C_IMG_HBITS, _name0, _defv0) \
+`define DEFREG_DISP( _ridx, _bstart, _bwidth, _name, _defv) \
+	`DEFREG(_ridx, _bstart, _bwidth, _name, _defv) \
 	always @ (posedge o_clk) begin \
-		if (o_resetn == 1'b0) begin \
-			_name1 <= _defv1; \
-			_name0 <= _defv0; \
-		end \
-		else if (fsync_posedge && ~display_cfging) begin \
-			_name1 <= r_``_name1; \
-			_name0 <= r_``_name0; \
-		end \
-		else begin \
-			_name1 <= _name1; \
-			_name0 <= _name0; \
-		end \
+		if (o_resetn == 1'b0) \
+			_name <= _defv; \
+		else if (fsync_movecfg) \
+			_name <= r_``_name; \
+		else \
+			_name <= _name; \
 	end
+
+`define DEFREG_IMGSIZE( _ridx, _name1, _defv1, _name0, _defv0) \
+	`DEFREG_DISP(_ridx, 16, C_IMG_WBITS, _name1, _defv1) \
+	`DEFREG_DISP(_ridx,  0, C_IMG_HBITS, _name0, _defv0)
 
 	`DEFREG_EXTERNAL(0, 0, 1, soft_resetn, 0)
 	`DEFREG_INTERNAL(0, 1, 1, display_cfging, 0)
+	`DEFREG_DISP(0, 2, 1, order_1over2, 0)
 
 	`DEFREG_IMGSIZE( 1, s1_width,     C_IMG_WDEF,  s1_height,     C_IMG_HDEF)
 	`DEFREG_IMGSIZE( 2, s1_win_left,           0,  s1_win_top,             0)
