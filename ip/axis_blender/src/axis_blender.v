@@ -258,16 +258,16 @@ module axis_blender #
 	wire[7:0] alpha;
 	assign alpha = s0_data[31:24];
 
-`define ALPHA(A, B) (((B*256 - B) - (A+B) * alpha) >> 8)
+`define ALPHA(A, B) (A > B ? (B + (((A-B) * alpha) >> 8)) : (B - (((B-A) * alpha) >> 8)))
 
 	always @ (posedge clk) begin
 		if (resetn == 1'b0)
 			m_axis_tdata <= 0;
 		else if (mnext)
 			if (s1_need || s2_need) begin
-				m_axis_tdata[23:16] <= `ALPHA(data_12, s0_data[23:16]);
-				m_axis_tdata[15: 8] <= `ALPHA(data_12, s0_data[15: 8]);
-				m_axis_tdata[ 7: 0] <= `ALPHA(data_12, s0_data[ 7: 0]);
+				m_axis_tdata[23:16] <= `ALPHA(s0_data[23:16], data_12);
+				m_axis_tdata[15: 8] <= `ALPHA(s0_data[15: 8], data_12);
+				m_axis_tdata[ 7: 0] <= `ALPHA(s0_data[ 7: 0], data_12);
 			end
 			else
 				m_axis_tdata <= s0_data;
