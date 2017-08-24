@@ -10,7 +10,18 @@ module fsctl #
 	parameter integer C_IMG_HBITS = 12,
 
 	parameter integer C_IMG_WDEF = 320,
-	parameter integer C_IMG_HDEF = 240
+	parameter integer C_IMG_HDEF = 240,
+
+	parameter integer C_BUF_ADDR_WIDTH = 32,
+	parameter integer C_DISPBUF0_ADDR  = 'h3FF00000,
+	parameter integer C_CMOS0BUF0_ADDR = 'h3F000000,
+	parameter integer C_CMOS0BUF1_ADDR = 'h3F100000,
+	parameter integer C_CMOS0BUF2_ADDR = 'h3F200000,
+	parameter integer C_CMOS0BUF3_ADDR = 'h3F300000,
+	parameter integer C_CMOS1BUF0_ADDR = 'h3F400000,
+	parameter integer C_CMOS1BUF1_ADDR = 'h3F500000,
+	parameter integer C_CMOS1BUF2_ADDR = 'h3F600000,
+	parameter integer C_CMOS1BUF3_ADDR = 'h3F700000
 )
 (
 	input clk,
@@ -32,6 +43,16 @@ module fsctl #
 	output reg soft_resetn,
 	input wire fsync,
 	output reg o_fsync,
+
+	output wire [C_BUF_ADDR_WIDTH-1:0] dispbuf0_addr,
+	output wire [C_BUF_ADDR_WIDTH-1:0] cmos0buf0_addr,
+	output wire [C_BUF_ADDR_WIDTH-1:0] cmos0buf1_addr,
+	output wire [C_BUF_ADDR_WIDTH-1:0] cmos0buf2_addr,
+	output wire [C_BUF_ADDR_WIDTH-1:0] cmos0buf3_addr,
+	output wire [C_BUF_ADDR_WIDTH-1:0] cmos1buf0_addr,
+	output wire [C_BUF_ADDR_WIDTH-1:0] cmos1buf1_addr,
+	output wire [C_BUF_ADDR_WIDTH-1:0] cmos1buf2_addr,
+	output wire [C_BUF_ADDR_WIDTH-1:0] cmos1buf3_addr,
 
 	output wire [C_IMG_WBITS-1:0] out_width,
 	output wire [C_IMG_HBITS-1:0] out_height,
@@ -90,6 +111,15 @@ module fsctl #
 	output reg [C_IMG_HBITS-1:0] s2_dst_top,
 	output reg [C_IMG_HBITS-1:0] s2_dst_height
 );
+	assign dispbuf0_addr = C_DISPBUF0_ADDR;
+	assign cmos0buf0_addr = C_CMOS0BUF0_ADDR;
+	assign cmos0buf1_addr = C_CMOS0BUF1_ADDR;
+	assign cmos0buf2_addr = C_CMOS0BUF2_ADDR;
+	assign cmos0buf3_addr = C_CMOS0BUF3_ADDR;
+	assign cmos1buf0_addr = C_CMOS1BUF0_ADDR;
+	assign cmos1buf1_addr = C_CMOS1BUF1_ADDR;
+	assign cmos1buf2_addr = C_CMOS1BUF2_ADDR;
+	assign cmos1buf3_addr = C_CMOS1BUF3_ADDR;
 
 	// Example-specific design signals
 	// local parameter for addressing 32 bit / 64 bit C_S_AXI_DATA_WIDTH

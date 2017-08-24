@@ -47,6 +47,37 @@ pip_add_bus_if [ipx::current_core] o_fsync {
 } {
 	FRAME_SYNC o_fsync
 }
+
+pip_add_bus_if [ipx::current_core] DISPBUF_ADDR [subst {
+	abstraction_type_vlnv $VENDOR:interface:addr_array_rtl:1.0
+	bus_type_vlnv $VENDOR:interface:addr_array:1.0
+	interface_mode master
+}] {
+	ADDR0 dispbuf0_addr
+}
+
+pip_add_bus_if [ipx::current_core] CMOS0BUF_ADDR [subst {
+	abstraction_type_vlnv $VENDOR:interface:addr_array_rtl:1.0
+	bus_type_vlnv $VENDOR:interface:addr_array:1.0
+	interface_mode master
+}] {
+	ADDR0 cmos0buf0_addr
+	ADDR1 cmos0buf1_addr
+	ADDR2 cmos0buf2_addr
+	ADDR3 cmos0buf3_addr
+}
+
+pip_add_bus_if [ipx::current_core] CMOS1BUF_ADDR [subst {
+	abstraction_type_vlnv $VENDOR:interface:addr_array_rtl:1.0
+	bus_type_vlnv $VENDOR:interface:addr_array:1.0
+	interface_mode master
+}] {
+	ADDR0 cmos1buf0_addr
+	ADDR1 cmos1buf1_addr
+	ADDR2 cmos1buf2_addr
+	ADDR3 cmos1buf3_addr
+}
+
 pip_add_bus_if [ipx::current_core] OUT_SIZE [subst {
 	abstraction_type_vlnv {$VENDOR:interface:window_ctl_rtl:1.0}
 	bus_type_vlnv {$VENDOR:interface:window_ctl:1.0}
@@ -226,6 +257,46 @@ pip_add_usr_par [ipx::current_core] {C_IMG_HDEF} {
 } {
 	value 240
 	value_format long
+}
+
+pip_add_usr_par [ipx::current_core] {C_BUF_ADDR_WIDTH} {
+	display_name {Buffer Address Width}
+	tooltip {Buffer Address Width}
+	widget {comboBox}
+} {
+	value_resolve_type user
+	value 32
+	value_format long
+	value_validation_type list
+	value_validation_list {32 64}
+} {
+	value 32
+	value_format long
+}
+
+foreach {i j k} {
+	C_DISPBUF0_ADDR    {Display Buffer Address} {'h3FF00000}
+	C_CMOS0BUF0_ADDR   {CMOS0 BUffer0 Address}  {'h3F000000}
+	C_CMOS0BUF1_ADDR   {CMOS0 BUffer1 Address}  {'h3F100000}
+	C_CMOS0BUF2_ADDR   {CMOS0 BUffer2 Address}  {'h3F200000}
+	C_CMOS0BUF3_ADDR   {CMOS0 BUffer3 Address}  {'h3F300000}
+	C_CMOS1BUF0_ADDR   {CMOS1 BUffer0 Address}  {'h3F400000}
+	C_CMOS1BUF1_ADDR   {CMOS1 BUffer1 Address}  {'h3F500000}
+	C_CMOS1BUF2_ADDR   {CMOS1 BUffer2 Address}  {'h3F600000}
+	C_CMOS1BUF3_ADDR   {CMOS1 BUffer3 Address}  {'h3F700000}
+} {
+	pip_add_usr_par [ipx::current_core] $i [subst {
+		display_name {$j}
+		tooltip {$j}
+		widget {textEdit}
+	}] [subst {
+		value_resolve_type user
+		value $k
+		value_format long
+	}] [subst {
+		value $k
+		value_format long
+	}]
 }
 
 ipx::create_xgui_files [ipx::current_core]
