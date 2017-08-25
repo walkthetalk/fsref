@@ -21,6 +21,46 @@
 			no-map;
 			reg = <0x3FF80000 0x80000>;
 		};
+
+		cmos0mem0: buffer@3F000000 {
+			no-map;
+			reg = <0x3F000000 0x100000>;
+		};
+
+		cmos0mem1: buffer@3F100000 {
+			no-map;
+			reg = <0x3F100000 0x100000>;
+		};
+
+		cmos0mem2: buffer@3F200000 {
+			no-map;
+			reg = <0x3F200000 0x100000>;
+		};
+
+		cmos0mem3: buffer@3F300000 {
+			no-map;
+			reg = <0x3F300000 0x100000>;
+		};
+
+		cmos1mem0: buffer@3F400000 {
+			no-map;
+			reg = <0x3F400000 0x100000>;
+		};
+
+		cmos1mem1: buffer@3F500000 {
+			no-map;
+			reg = <0x3F500000 0x100000>;
+		};
+
+		cmos1mem2: buffer@3F600000 {
+			no-map;
+			reg = <0x3F600000 0x100000>;
+		};
+
+		cmos1mem3: buffer@3F700000 {
+			no-map;
+			reg = <0x3F700000 0x100000>;
+		};
 	};
 };
 
@@ -38,8 +78,7 @@
 	};
 	framebuffer1 {
 		compatible = "simple-framebuffer";
-		//reg = <0x3FF80000 (320 * 240 * 4)>;
-		memory-region = <&fb1mem>;
+		memory-region = <&cmos0mem0>;
 		width = <320>;
 		height = <240>;
 		stride = <(320 * 4)>;
