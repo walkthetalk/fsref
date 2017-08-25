@@ -102,8 +102,8 @@ module mutex_buffer #
 	/// last done (ready for read)
 	always @(posedge clk) begin
 		if (resetn == 0) begin
-			last_addr <= 0;
-			last_bmp <= 0;
+			last_addr <= buf0_addr;
+			last_bmp <= 4'b0001;
 		end
 		else if (w_sof) begin
 			last_addr <= w_addr;
@@ -117,8 +117,8 @@ module mutex_buffer #
 
 	always @(posedge clk) begin
 		if (resetn == 0) begin
-			w_addr <= 0;
-			w_bmp <= 0;
+			w_addr <= buf1_addr;
+			w_bmp <= 4'b0010;
 		end
 		else if (w_sof) begin
 			casez (w_bmp | r0_bmp | r1_bmp)
