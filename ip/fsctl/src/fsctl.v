@@ -215,36 +215,45 @@ module fsctl #
 	assign fsync_movecfg = fsync_posedge && ~display_cfging;
 
 /// imagesize aux macro
-`define DEFREG_DISP( _ridx, _bstart, _bwidth, _name, _defv) \
+`define DEFREG_DISP( _ridx, _bstart, _bwidth, _name, _defv, _depend) \
 	`DEFREG(_ridx, _bstart, _bwidth, _name, _defv) \
 	always @ (posedge o_clk) begin \
 		if (o_resetn == 1'b0) \
 			_name <= _defv; \
-		else if (fsync_movecfg) \
-			_name <= r_``_name; \
+		else if (fsync_posedge) begin \
+			if (~_depend) \
+				_name <= 0; \
+			else if (~display_cfging) \
+				_name <= r_``_name; \
+			else \
+				_name <= _name; \
+		end \
 		else \
 			_name <= _name; \
 	end
 
-`define DEFREG_IMGSIZE( _ridx, _name1, _defv1, _name0, _defv0) \
-	`DEFREG_DISP(_ridx, 16, C_IMG_WBITS, _name1, _defv1) \
-	`DEFREG_DISP(_ridx,  0, C_IMG_HBITS, _name0, _defv0)
+`define DEFREG_IMGSIZE( _ridx, _name1, _defv1, _name0, _defv0, _depend) \
+	`DEFREG_DISP(_ridx, 16, C_IMG_WBITS, _name1, _defv1, _depend) \
+	`DEFREG_DISP(_ridx,  0, C_IMG_HBITS, _name0, _defv0, _depend)
 
 	`DEFREG_EXTERNAL(0, 0, 1, soft_resetn, 0)
 	`DEFREG_INTERNAL(0, 1, 1, display_cfging, 0)
-	`DEFREG_DISP(0, 2, 1, order_1over2, 0)
+	`DEFREG_DISP(0, 2, 1, order_1over2, 0, 1)
+	`DEFREG_INTERNAL(0, 4, 1, s0_running, 1)
+	`DEFREG_INTERNAL(0, 5, 1, s1_running, 0)
+	`DEFREG_INTERNAL(0, 6, 1, s2_running, 0)
 
-	`DEFREG_IMGSIZE( 1, s1_width,     C_IMG_WDEF,  s1_height,     C_IMG_HDEF)
-	`DEFREG_IMGSIZE( 2, s1_win_left,           0,  s1_win_top,             0)
-	`DEFREG_IMGSIZE( 3, s1_win_width,          0,  s1_win_height,          0)
-	`DEFREG_IMGSIZE( 4, s1_dst_left,           0,  s1_dst_top,             0)
-	`DEFREG_IMGSIZE( 5, s1_dst_width,          0,  s1_dst_height,          0)
+	`DEFREG_IMGSIZE( 1, s1_width,              0,  s1_height,              0, s1_running)
+	`DEFREG_IMGSIZE( 2, s1_win_left,           0,  s1_win_top,             0, s1_running)
+	`DEFREG_IMGSIZE( 3, s1_win_width,          0,  s1_win_height,          0, s1_running)
+	`DEFREG_IMGSIZE( 4, s1_dst_left,           0,  s1_dst_top,             0, s1_running)
+	`DEFREG_IMGSIZE( 5, s1_dst_width,          0,  s1_dst_height,          0, s1_running)
 
-	`DEFREG_IMGSIZE( 6, s2_width,     C_IMG_WDEF,  s2_height,     C_IMG_HDEF)
-	`DEFREG_IMGSIZE( 7, s2_win_left,           0,  s2_win_top,             0)
-	`DEFREG_IMGSIZE( 8, s2_win_width,          0,  s2_win_height,          0)
-	`DEFREG_IMGSIZE( 9, s2_dst_left,           0,  s2_dst_top,             0)
-	`DEFREG_IMGSIZE(10, s2_dst_width,          0,  s2_dst_height,          0)
+	`DEFREG_IMGSIZE( 6, s2_width,              0,  s2_height,              0, s2_running)
+	`DEFREG_IMGSIZE( 7, s2_win_left,           0,  s2_win_top,             0, s2_running)
+	`DEFREG_IMGSIZE( 8, s2_win_width,          0,  s2_win_height,          0, s2_running)
+	`DEFREG_IMGSIZE( 9, s2_dst_left,           0,  s2_dst_top,             0, s2_running)
+	`DEFREG_IMGSIZE(10, s2_dst_width,          0,  s2_dst_height,          0, s2_running)
 
 	assign s1_scale_src_width  = s1_win_width;
 	assign s1_scale_src_height = s1_win_height;
