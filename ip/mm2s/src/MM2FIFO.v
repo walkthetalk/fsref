@@ -202,7 +202,8 @@ module MM2FIFO #
 		else if (~(start_burst_pulse || burst_read_active)
 			&& (~final_data || fsync)
 			&& soft_resetn
-			&& (wr_data_count < C_M_AXI_BURST_LEN))
+			&& (wr_data_count < C_M_AXI_BURST_LEN)
+			&& (img_width != 0 && img_height != 0))
 			start_burst_pulse <= 1'b1;
 		else
 			start_burst_pulse <= 1'b0;
