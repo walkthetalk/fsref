@@ -80,44 +80,117 @@ module axis_blender #
 	input  wire m_axis_tready
 );
 	wire out_tvalid;
-	wire out_tuser;
+	reg out_tuser;
 	wire out_tlast;
 	wire out_tready;
 
 	wire mnext;
-	assign mnext = out_tvalid && out_tready;
+	assign mnext = out_tvalid && m_axis_tready;
 
-	/// next pixel row/col index
+	reg [C_IMG_WBITS-1 : 0] col_idx_bak;
+	reg [C_IMG_HBITS-1 : 0] row_idx_bak;
 	reg [C_IMG_WBITS-1 : 0] col_idx;
 	reg [C_IMG_HBITS-1 : 0] row_idx;
+
+	reg last_pixel;
+	reg last_line;
+	reg gap0;
+	reg gap1;
+	reg streaming;
+	wire col_update;
+	assign col_update = (gap1 || mnext);
+	wire row_update;
+	assign row_update = gap1;
+	wire fsync;
+	assign fsync = (last_line && gap0);
+
 	always @(posedge clk) begin
-		if (resetn == 1'b0) begin
-			col_idx <= 0;
-			row_idx <= 0;
+		if (resetn == 1'b0)
+			last_pixel <= 0;
+		else if (col_update)
+			last_pixel <= (col_idx_bak == out_width);
+		else
+			last_pixel <= last_pixel;
+	end
+	always @(posedge clk) begin
+		if (resetn == 1'b0)
+			last_line <= 0;
+		else if (row_update)
+			last_line <= (row_idx_bak == out_height);
+		else
+			last_line <= last_line;
+	end
+
+	always @(posedge clk) begin
+		if (resetn == 1'b0)
+			gap0 <= 0;
+		else if (~gap0) begin
+			if (~gap1 && ~streaming)
+				gap0 <= 1;
+			else if (mnext && last_pixel)
+				gap0 <= 1;
+			else
+				gap0 <= 0;
 		end
-		else if (mnext) begin
-			if (col_idx != out_width - 1) begin
-				col_idx <= col_idx + 1;
-				row_idx <= row_idx;
-			end
-			else if (row_idx != out_height - 1) begin
-				col_idx <= 0;
-				row_idx <= row_idx + 1;
-			end
-			else begin
-				col_idx <= 0;
-				row_idx <= 0;
-			end
+		else
+			gap0 <= 0;
+	end
+
+	always @ (posedge clk) begin
+		if (resetn == 1'b0)
+			gap1 <= 0;
+		else
+			gap1 <= gap0;
+	end
+
+	always @(posedge clk) begin
+		if (resetn == 1'b0)
+			streaming <= 0;
+		else if (row_update)
+			streaming <= 1;
+		else if (mnext && last_pixel)
+			streaming <= 0;
+		else
+			streaming <= streaming;
+	end
+
+	always @ (posedge clk) begin
+		if (resetn == 1'b0 || gap0) begin
+			col_idx <= 0;
+			col_idx_bak <= 1;
+		end
+		else if (col_update) begin
+			col_idx <= col_idx_bak;
+			col_idx_bak <= col_idx_bak + 1;
 		end
 		else begin
 			col_idx <= col_idx;
-			row_idx <= row_idx;
+			col_idx_bak <= col_idx_bak;
 		end
 	end
 
+	always @ (posedge clk) begin
+		if (resetn == 1'b0 || (gap0 && last_line)) begin
+			row_idx <= 0;
+			row_idx_bak <= 1;
+		end
+		else if (row_update) begin
+			row_idx <= row_idx_bak;
+			row_idx_bak <= row_idx_bak + 1;
+		end
+		else begin
+			row_idx <= row_idx;
+			row_idx_bak <= row_idx_bak;
+		end
+	end
+
+/// stream 0
 	wire s0_valid;
+	assign s0_valid = s0_axis_tvalid;
 	wire s0_need;
 	wire[C_S0_PIXEL_WIDTH-1:0] s0_data;
+	assign s0_data = s0_axis_tdata;
+	assign s0_axis_tready = mnext && s0_need;
 
 	axis_shifter # (
 		.C_PIXEL_WIDTH(C_S0_PIXEL_WIDTH),
@@ -126,29 +199,28 @@ module axis_blender #
 	) axis_shifter_0 (
 		.clk(clk),
 		.resetn(resetn),
-		.col_idx(col_idx),
-		.row_idx(row_idx),
+		.fsync(fsync),
 
-		.s_axis_tvalid(s0_axis_tvalid),
-		.s_axis_tdata(s0_axis_tdata),
-		.s_axis_tuser(s0_axis_tuser),
-		.s_axis_tlast(s0_axis_tlast),
-		.s_axis_tready(s0_axis_tready),
+		.col_idx(col_idx),
+		.col_update(col_update),
+		.row_idx(row_idx),
+		.row_update(row_update),
 
 		.s_win_left(s0_win_left),
 		.s_win_top(s0_win_top),
 		.s_win_width(s0_win_width),
 		.s_win_height(s0_win_height),
 
-		.m_axis_need(s0_need),
-		.m_axis_valid(s0_valid),
-		.m_axis_tdata(s0_data),
-		.m_axis_next(mnext)
+		.s_need(s0_need)
 	);
 
+/// stream 1
 	wire s1_valid;
+	assign s1_valid = s1_axis_tvalid;
 	wire s1_need;
-	wire[C_S1_PIXEL_WIDTH-1:0] s1_data;
+	wire[7:0] s1_data;
+	assign s1_data = s1_axis_tdata[C_S1_PIXEL_WIDTH-1:C_S1_PIXEL_WIDTH-8];
+	assign s1_axis_tready = mnext && s1_need;
 
 	axis_shifter # (
 		.C_PIXEL_WIDTH(C_S1_PIXEL_WIDTH),
@@ -157,29 +229,28 @@ module axis_blender #
 	) axis_shifter_1 (
 		.clk(clk),
 		.resetn(resetn),
-		.col_idx(col_idx),
-		.row_idx(row_idx),
+		.fsync(fsync),
 
-		.s_axis_tvalid(s1_axis_tvalid),
-		.s_axis_tdata(s1_axis_tdata),
-		.s_axis_tuser(s1_axis_tuser),
-		.s_axis_tlast(s1_axis_tlast),
-		.s_axis_tready(s1_axis_tready),
+		.col_idx(col_idx),
+		.col_update(col_update),
+		.row_idx(row_idx),
+		.row_update(row_update),
 
 		.s_win_left(s1_win_left),
 		.s_win_top(s1_win_top),
 		.s_win_width(s1_win_width),
 		.s_win_height(s1_win_height),
 
-		.m_axis_need(s1_need),
-		.m_axis_valid(s1_valid),
-		.m_axis_tdata(s1_data),
-		.m_axis_next(mnext)
+		.s_need(s1_need)
 	);
 
+/// stream 2
 	wire s2_valid;
+	assign s2_valid = s2_axis_tvalid;
 	wire s2_need;
-	wire[C_S2_PIXEL_WIDTH-1:0] s2_data;
+	wire[7:0] s2_data;
+	assign s2_data = s2_axis_tdata[C_S2_PIXEL_WIDTH-1:C_S2_PIXEL_WIDTH-8];
+	assign s2_axis_tready = mnext && s2_need;
 
 	axis_shifter # (
 		.C_PIXEL_WIDTH(C_S2_PIXEL_WIDTH),
@@ -188,33 +259,36 @@ module axis_blender #
 	) axis_shifter_2 (
 		.clk(clk),
 		.resetn(resetn),
-		.col_idx(col_idx),
-		.row_idx(row_idx),
+		.fsync(fsync),
 
-		.s_axis_tvalid(s2_axis_tvalid),
-		.s_axis_tdata(s2_axis_tdata),
-		.s_axis_tuser(s2_axis_tuser),
-		.s_axis_tlast(s2_axis_tlast),
-		.s_axis_tready(s2_axis_tready),
+		.col_idx(col_idx),
+		.col_update(col_update),
+		.row_idx(row_idx),
+		.row_update(row_update),
 
 		.s_win_left(s2_win_left),
 		.s_win_top(s2_win_top),
 		.s_win_width(s2_win_width),
 		.s_win_height(s2_win_height),
 
-		.m_axis_need(s2_need),
-		.m_axis_valid(s2_valid),
-		.m_axis_tdata(s2_data),
-		.m_axis_next(mnext)
+		.s_need(s2_need)
 	);
 /// m
-	assign out_tuser = (col_idx == 0 && row_idx == 0);
-	assign out_tlast = (col_idx == out_width - 1);
+	always @ (posedge clk) begin
+		if (resetn == 1'b0)
+			out_tuser <= 0;
+		else if (col_update)
+			out_tuser <= (col_idx == 0 && row_idx == 0);
+		else
+			out_tuser <= out_tuser;
+	end
+	assign out_tlast = last_pixel;
 	assign out_tvalid = (~s0_need || s0_valid)
 	 		&& (~s1_need || s1_valid)
-			&& (~s2_need || s2_valid);
+			&& (~s2_need || s2_valid)
+			&& streaming;
 	//assign out_tdata = s0_data;
-	assign out_tready = (~out_tvalid || m_axis_tready);
+	assign out_tready = (~m_axis_tvalid || m_axis_tready);
 
 	always @ (posedge clk) begin
 		if (resetn == 1'b0)
@@ -245,29 +319,28 @@ module axis_blender #
 			m_axis_tvalid <= m_axis_tvalid;
 	end
 
-	wire [7:0] data1_shrink;
-	assign data1_shrink = s1_data[C_S1_PIXEL_WIDTH-1:C_S1_PIXEL_WIDTH-8];
-	wire [7:0] data2_shrink;
-	assign data2_shrink = s2_data[C_S2_PIXEL_WIDTH-1:C_S2_PIXEL_WIDTH-8];
-
 	wire [7:0] data_12;
 	assign data_12 = (order_1over2 ?
-		 	(s1_need ? data1_shrink : data2_shrink) :
-			(s2_need ? data2_shrink : data1_shrink));
+		 	(s1_need ? s1_data : s2_data) :
+			(s2_need ? s2_data : s1_data));
 
 	wire[7:0] alpha;
 	assign alpha = s0_data[31:24];
 
-`define ALPHA(A, B) (A > B ? (B + (((A-B) * alpha) >> 8)) : (B - (((B-A) * alpha) >> 8)))
+//`define ALPHA(A, B) (A > B ? (B + (((A-B) * alpha) >> 8)) : (B - (((B-A) * alpha) >> 8)))
+`define ALPHA(A,B) (A+B)/2
 
 	always @ (posedge clk) begin
 		if (resetn == 1'b0)
 			m_axis_tdata <= 0;
 		else if (mnext)
 			if (s1_need || s2_need) begin
-				m_axis_tdata[23:16] <= `ALPHA(s0_data[23:16], data_12);
-				m_axis_tdata[15: 8] <= `ALPHA(s0_data[15: 8], data_12);
-				m_axis_tdata[ 7: 0] <= `ALPHA(s0_data[ 7: 0], data_12);
+				m_axis_tdata[23:16] <= s0_data[23:16];
+				m_axis_tdata[15: 8] <= (s1_need ? s1_data : 0);
+				m_axis_tdata[ 7: 0] <= (s2_need ? s2_data : 0);
+				//m_axis_tdata[23:16] <= `ALPHA(s0_data[23:16], data_12);
+				//m_axis_tdata[15: 8] <= `ALPHA(s0_data[15: 8], data_12);
+				//m_axis_tdata[ 7: 0] <= `ALPHA(s0_data[ 7: 0], data_12);
 			end
 			else
 				m_axis_tdata <= s0_data;

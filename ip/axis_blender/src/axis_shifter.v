@@ -27,53 +27,52 @@ module axis_shifter #
 (
 	input wire clk,
 	input wire resetn,
+	input wire fsync,
 
 	input wire [C_IMG_WBITS-1 : 0] col_idx,
+	input wire col_update,
 	input wire [C_IMG_HBITS-1 : 0] row_idx,
+	input wire row_update,
 
 	input wire [C_IMG_WBITS-1 : 0] s_win_left,
 	input wire [C_IMG_HBITS-1 : 0] s_win_top,
 	input wire [C_IMG_WBITS-1 : 0] s_win_width,
 	input wire [C_IMG_HBITS-1 : 0] s_win_height,
 
-	/// S0_AXIS
-	input  wire s_axis_tvalid,
-	input  wire [C_PIXEL_WIDTH-1:0] s_axis_tdata,
-	input  wire s_axis_tuser,
-	input  wire s_axis_tlast,
-	output wire s_axis_tready,
-
-	/// M_AXIS
-	output wire m_axis_need,
-	output reg m_axis_valid,
-	output reg  [C_PIXEL_WIDTH-1:0] m_axis_tdata,
-	input  wire m_axis_next
+	output wire s_need
 );
-	assign m_axis_need = (s_win_left <= col_idx && col_idx < s_win_left + s_win_width)
-			&& (s_win_top <= row_idx && row_idx < s_win_top + s_win_height);
-	wire s_ds_ready;
-	assign s_ds_ready = (m_axis_need && m_axis_next);
-	wire s_next;
-	assign s_next = s_axis_tvalid && s_axis_tready;
-	assign s_axis_tready = (~m_axis_valid | s_ds_ready);
+/// only for m_axis_need, can be split out.
+	reg col_need;
+	reg row_need;
+	always @ (posedge clk) begin
+		if (resetn == 1'b0 || fsync)
+			col_need <= 0;
+		else if (col_update) begin
+			if (col_idx == s_win_left + s_win_width)
+				col_need <= 0;
+			else if (col_idx == s_win_left)
+				col_need <= 1;
+			else
+				col_need <= col_need;
+		end
+		else
+			col_need <= col_need;
+	end
+	always @ (posedge clk) begin
+		if (resetn == 1'b0 || fsync)
+			row_need <= 0;
+		else if (row_update) begin
+			if (row_idx == s_win_top + s_win_height)
+				row_need <= 0;
+			else if (row_idx == s_win_top)
+				row_need <= 1;
+			else
+				row_need <= row_need;
+		end
+		else
+			row_need <= row_need;
+	end
 
-	always @ (posedge clk) begin
-		if (resetn == 1'b0)
-			m_axis_valid <= 0;
-		else if (s_next)
-			m_axis_valid <= 1;
-		else if (s_ds_ready)
-			m_axis_valid <= 0;
-		else
-			m_axis_valid <= m_axis_valid;
-	end
-	always @ (posedge clk) begin
-		if (resetn == 1'b0)
-			m_axis_tdata <= 0;
-		else if (s_next)
-			m_axis_tdata <= s_axis_tdata;
-		else
-			m_axis_tdata <= m_axis_tdata;
-	end
+	assign s_need = (col_need && row_need);
 
 endmodule
