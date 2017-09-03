@@ -248,7 +248,7 @@ module axis_blender #
 	wire [7:0] data1_shrink;
 	assign data1_shrink = s1_data[C_S1_PIXEL_WIDTH-1:C_S1_PIXEL_WIDTH-8];
 	wire [7:0] data2_shrink;
-	assign data2_shrink = s1_data[C_S2_PIXEL_WIDTH-1:C_S2_PIXEL_WIDTH-8];
+	assign data2_shrink = s2_data[C_S2_PIXEL_WIDTH-1:C_S2_PIXEL_WIDTH-8];
 
 	wire [7:0] data_12;
 	assign data_12 = (order_1over2 ?
