@@ -1,6 +1,11 @@
 `timescale 1ns / 1ps
+`include "../src/axis_shifter_v2.v"
+`include "../src/axis_window.v"
 module testwindow(
     );
+
+    localparam RANDOMOUTPUT = 1;
+    localparam RANDOMINPUT = 1;
 
 	wire[7:0] mdata;
 	wire mlast;
@@ -17,29 +22,33 @@ module testwindow(
 	reg[11:0] ori_height = 10;
 	reg[11:0] ori_width = 10;
 
-	reg[11:0] w_left = 0;
-	reg[11:0] w_top = 0;
-	reg[11:0] w_width = 10;
-	reg[11:0] w_height = 10;
+	reg[11:0] w_left = 3;
+	reg[11:0] w_top = 3;
+	reg[11:0] w_width = 7;
+	reg[11:0] w_height = 7;
 
 	reg resetn;
 	reg clk;
 
-hehe23_wrapper uut(
-	.M_AXIS_tdata(mdata),
-	.M_AXIS_tlast(mlast),
-	.M_AXIS_tready(mready),
-	.M_AXIS_tuser(muser),
-	.M_AXIS_tvalid(mvalid),
-	.S_AXIS_tdata(sdata),
-	.S_AXIS_tlast(slast),
-	.S_AXIS_tready(sready),
-	.S_AXIS_tuser(suser),
-	.S_AXIS_tvalid(svalid),
-	.S_WIN_CTL_height(w_height),
-	.S_WIN_CTL_left(w_left),
-	.S_WIN_CTL_top(w_top),
-	.S_WIN_CTL_width(w_width),
+axis_window #(
+	.C_PIXEL_WIDTH(8),
+	.C_IMG_WBITS(12),
+	.C_IMG_HBITS(12)
+)uut(
+	.m_axis_tdata(mdata),
+	.m_axis_tlast(mlast),
+	.m_axis_tready(mready),
+	.m_axis_tuser(muser),
+	.m_axis_tvalid(mvalid),
+	.s_axis_tdata(sdata),
+	.s_axis_tlast(slast),
+	.s_axis_tready(sready),
+	.s_axis_tuser(suser),
+	.s_axis_tvalid(svalid),
+	.win_height(w_height),
+	.win_left(w_left),
+	.win_top(w_top),
+	.win_width(w_width),
 	.clk(clk),
 	.resetn(resetn));
 
@@ -53,13 +62,9 @@ initial begin
 	forever #2 resetn <= 1'b1;
 end
 
-
-localparam RANDOMOUTPUT = 0;
-localparam RANDOMINPUT = 0;
-
 reg[11:0] in_row;
 reg[11:0] in_col;
-assign sdata = (in_row * 10 + in_col);
+assign sdata = (in_row * 16 + in_col);
 
 reg[11:0] out_row;
 reg[11:0] out_col;
@@ -155,7 +160,7 @@ always @(posedge clk) begin
 		end
 		if (muser)
 			$write("start new frame: \n");
-		$write("%d ", mdata);
+		$write("%h ", mdata);
 		if (mlast)
 			$write("\n");
 	end

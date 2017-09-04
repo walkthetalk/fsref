@@ -43,82 +43,160 @@ module axis_window #
 
 	/// M_AXIS
 	output wire  m_axis_tvalid,
-	output reg  [C_PIXEL_WIDTH-1:0] m_axis_tdata,
+	output wire  [C_PIXEL_WIDTH-1:0] m_axis_tdata,
 	output wire  m_axis_tuser,
 	output wire  m_axis_tlast,
 	input  wire  m_axis_tready
 );
+	reg gap0;
+	reg gap1;
+	reg streaming;
 
-	reg [C_IMG_WBITS-1 : 0] col_idx;
-	reg [C_IMG_HBITS-1 : 0] row_idx;
-	reg dlast;
-	reg [C_PIXEL_WIDTH-1:0] data;
-	reg dvalid;
+	reg [C_PIXEL_WIDTH-1:0] idata;
+	reg iuser;
+	reg ilast;
+	reg ivalid;
+	wire iready;
+	wire inext;
+	assign inext = ivalid && iready;
+	assign s_axis_tready = (streaming && ~ilast) && (~ivalid || iready);
 
-	wire nextin;
-	assign nextin = s_axis_tvalid & s_axis_tready;
-	assign s_axis_tready = ~m_axis_tvalid | m_axis_tready;
+	wire mnext;
+	assign mnext = m_axis_tvalid && m_axis_tready;
+	wire snext;
+	assign snext = s_axis_tvalid && s_axis_tready;
 
-	always @ (posedge clk) begin
+	always @(posedge clk) begin
 		if (resetn == 1'b0)
-			dlast <= 0;
-		else if (nextin)
-			dlast <= s_axis_tlast;
+			gap0 <= 0;
+		else if (~streaming && ~gap0 && s_axis_tvalid)
+			gap0 <= 1;
 		else
-			dlast <= dlast;
-	end
-
-	always @ (posedge clk) begin
-		if (resetn == 1'b0) begin
-			col_idx <= 0;
-			row_idx <= 0;
-		end
-		else if (nextin) begin
-			if (s_axis_tuser) begin
-				col_idx <= 0;
-				row_idx <= 0;
-			end
-			else if (dlast) begin
-				col_idx <= 0;
-				row_idx <= row_idx + 1;
-			end
-			else begin
-				col_idx <= col_idx + 1;
-				row_idx <= row_idx;
-			end
-		end
-		else begin
-			col_idx <= col_idx;
-			row_idx <= row_idx;
-		end
+			gap0 <= 0;
 	end
 	always @(posedge clk) begin
 		if (resetn == 1'b0)
-			m_axis_tdata <= 0;
-		else if (nextin)
-			m_axis_tdata <= s_axis_tdata;
+			gap1 <= 0;
 		else
-			m_axis_tdata <= m_axis_tdata;
+			gap1 <= gap0;
+	end
+	always @(posedge clk) begin
+		if (resetn == 1'b0)
+			streaming <= 0;
+		else if (gap0)
+			streaming <= 1;
+		else if (inext && ilast)
+			streaming <= 0;
+		else
+			streaming <= streaming;
+	end
+	always @(posedge clk) begin
+		if (resetn == 1'b0 || gap0) begin
+			idata <= 0;
+			iuser <= 0;
+			ilast <= 0;
+		end
+		else if (snext) begin
+			idata <= s_axis_tdata;
+			iuser <= s_axis_tuser;
+			ilast <= s_axis_tlast;
+		end
+		else begin
+			idata <= idata;
+			iuser <= iuser;
+			ilast <= ilast;
+		end
+	end
+
+	/**
+	 * @NTOE: ensure the first 'col_update' of every line is at same clock
+	 *        as corresponding row_update, i.e. the first clock of 'streaming'
+	 */
+	reg [C_IMG_WBITS-1 : 0] col_idx;
+	reg [C_IMG_HBITS-1 : 0] row_idx;
+	reg [C_IMG_WBITS-1 : 0] col_idx_bak;
+	reg [C_IMG_HBITS-1 : 0] row_idx_bak;
+	wire col_update;
+	assign col_update = snext;
+	wire row_update;
+	assign row_update = gap1;
+	wire fsync;
+	assign fsync = gap0 && s_axis_tuser;
+	wire lsync;
+	assign lsync = gap0;
+
+	always @ (posedge clk) begin
+		if (resetn == 1'b0 || lsync) begin
+			col_idx <= 0;
+			col_idx_bak <= 1;
+		end
+		else if (col_update) begin
+			col_idx <= col_idx_bak;
+			col_idx_bak <= col_idx_bak + 1;
+		end
+		else begin
+			col_idx <= col_idx;
+			col_idx_bak <= col_idx_bak;
+		end
 	end
 
 	always @ (posedge clk) begin
-		if (resetn == 1'b0)
-			dvalid <= 0;
-		else if (nextin)
-			dvalid <= 1;
-		else if (m_axis_tready)
-			dvalid <= 0;
-		else
-			dvalid <= dvalid;
+		if (resetn == 1'b0 || fsync) begin
+			row_idx <= 0;
+			row_idx_bak <= 1;
+		end
+		else if (row_update) begin
+			row_idx <= row_idx_bak;
+			row_idx_bak <= row_idx_bak + 1;
+		end
+		else begin
+			row_idx <= row_idx;
+			row_idx_bak <= row_idx_bak;
+		end
 	end
 
-	wire col_valid;
-	assign col_valid = (win_left <= col_idx && col_idx < win_left + win_width);
-	wire row_valid;
-	assign row_valid = (win_top <= row_idx && row_idx < win_top + win_height);
-	assign m_axis_tvalid = col_valid & row_valid & dvalid;
+	wire s_need;
 
-	assign m_axis_tlast = (col_idx == win_left + win_width - 1);
-	assign m_axis_tuser = (col_idx == win_left && row_idx == win_top);
+	axis_shifter_v2 # (
+		.C_PIXEL_WIDTH(C_PIXEL_WIDTH),
+		.C_IMG_WBITS(C_IMG_WBITS),
+		.C_IMG_HBITS(C_IMG_HBITS)
+	) axis_shifter_0 (
+		.clk(clk),
+		.resetn(resetn),
+		.fsync(fsync),
+		.lsync(lsync),
+
+		.col_idx(col_idx),
+		.col_idx_next(col_idx_bak),
+		.col_update(col_update),
+		.row_idx(row_idx),
+		.row_idx_next(row_idx_bak),
+		.row_update(row_update),
+
+		.s_win_left(win_left),
+		.s_win_top(win_top),
+		.s_win_width(win_width),
+		.s_win_height(win_height),
+
+		.s_need(s_need),
+		.s_sof(m_axis_tuser),
+		.s_eol(m_axis_tlast)
+	);
+
+	always @ (posedge clk) begin
+		if (resetn == 1'b0)
+			ivalid <= 0;
+		else if (snext)
+			ivalid <= 1;
+		else if (mnext)
+			ivalid <= 0;
+		else
+			ivalid <= ivalid;
+	end
+
+	assign iready = ~s_need || m_axis_tready;
+	assign m_axis_tvalid = s_need && ivalid;
+	assign m_axis_tdata = idata;
 
 endmodule
