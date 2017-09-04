@@ -197,22 +197,27 @@ module fsctl #
 
 /// fsync
 	reg fsync_d1;
+	reg fsync_d2;
 	always @ (posedge o_clk) begin
-		if (o_resetn == 1'b0)
+		if (o_resetn == 1'b0) begin
 			fsync_d1 <= 1'b0;
-		else
+			fsync_d2 <= 1'b0;
+		end
+		else begin
 			fsync_d1 <= fsync;
+			fsync_d2 <= fsync_d1;
+		end
 	end
 	wire fsync_posedge;
-	assign fsync_posedge = (fsync && ~fsync_d1);
+	assign fsync_posedge = fsync_d1 && ~fsync_d2;
+	/// @NOTE: o_fsync is delay 1 clock comparing with fsync_posedge, i.e.
+	///        moving config is appeared same time as o_fsync
 	always @ (posedge o_clk) begin
 		if (o_resetn == 1'b0)
 			o_fsync <= 1'b0;
 		else
 			o_fsync <= fsync_posedge;
 	end
-	wire fsync_movecfg;
-	assign fsync_movecfg = fsync_posedge && ~display_cfging;
 
 /// imagesize aux macro
 `define DEFREG_DISP( _ridx, _bstart, _bwidth, _name, _defv, _depend) \
