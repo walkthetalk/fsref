@@ -56,3 +56,6 @@ set_property CLOCK_DEDICATED_ROUTE FALSE [get_nets cmos1_pclk_IBUF]
 
 create_clock -period 20.000 -name cmos0_pclk -waveform {0.000 10.000} [get_ports {cmos0_pclk}]
 create_clock -period 20.000 -name cmos1_pclk -waveform {0.000 10.000} [get_ports {cmos1_pclk}]
+
+set_clock_groups -asynchronous -group clk_fpga_0 -group clk_fpga_1
+set_clock_groups -asynchronous -group clk_fpga_2 -group clk_fpga_1
