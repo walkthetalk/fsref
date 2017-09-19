@@ -109,8 +109,8 @@ for {set i 0} {$i < 3} {incr i} {
 	}]
 
 	pip_add_bus_if [ipx::current_core] S[set i]_SCALE [subst {
-		abstraction_type_vlnv {$VENDOR:interface:window_ctl_rtl:1.0}
-		bus_type_vlnv {$VENDOR:interface:window_ctl:1.0}
+		abstraction_type_vlnv {$VENDOR:interface:scale_ctl_rtl:1.0}
+		bus_type_vlnv {$VENDOR:interface:scale_ctl:1.0}
 		interface_mode {master}
 	}] [subst {
 		SRC_WIDTH  s[set i]_scale_src_width

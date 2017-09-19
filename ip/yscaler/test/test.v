@@ -1,50 +1,64 @@
 `timescale 1ns / 1ps
 
-/// 2. first line output : if f0 valid
-/// 3. sof for reset
+`include "../src/linebuffer.v"
+`include "../src/yscaler.v"
 
 module test();
 
-wire[7:0] M_AXIS_tdata_tb;
-wire M_AXIS_tlast_tb;
-reg M_AXIS_tready_tb;
-wire M_AXIS_tuser_tb;
-wire M_AXIS_tvalid_tb;
+	localparam  integer C_PIXEL_WIDTH = 16;
+	localparam  integer C_RESO_WIDTH  = 12;
+	localparam integer C_CH0_WIDTH = 8;
+	localparam integer C_CH1_WIDTH = 8;
+	localparam integer C_CH2_WIDTH = 0;
 
-reg[7:0] S_AXIS_tdata_tb;
-reg S_AXIS_tlast_tb;
-wire S_AXIS_tready_tb;
-reg S_AXIS_tuser_tb;
-reg S_AXIS_tvalid_tb;
+wire[C_PIXEL_WIDTH-1:0] m_axis_tdata_tb;
+wire m_axis_tlast_tb;
+reg m_axis_tready_tb;
+wire m_axis_tuser_tb;
+wire m_axis_tvalid_tb;
 
-reg[11:0] ori_height_tb = 10;
-reg[11:0] ori_width_tb = 10;
+reg[C_PIXEL_WIDTH-1:0] s_axis_tdata_tb;
+reg s_axis_tlast_tb;
+wire s_axis_tready_tb;
+reg s_axis_tuser_tb;
+reg s_axis_tvalid_tb;
+
+reg[C_RESO_WIDTH-1:0] s_height_tb = 30;
+reg[C_RESO_WIDTH-1:0] s_width_tb = 10;
 reg resetn_tb;
-reg[11:0] scale_height_tb = 30;
-reg[11:0] scale_width_tb = 10;
+reg[C_RESO_WIDTH-1:0] m_height_tb = 10;
+reg[C_RESO_WIDTH-1:0] m_width_tb = 10;
 
 reg clk;
+reg fsync_tb = 0;
 
 localparam RANDOMOUTPUT = 1;
 localparam RANDOMINPUT = 1;
 
-test_yscaler_wrapper uut(
-	.M_AXIS_tdata(M_AXIS_tdata_tb),
-	.M_AXIS_tlast(M_AXIS_tlast_tb),
-	.M_AXIS_tready(M_AXIS_tready_tb),
-	.M_AXIS_tuser(M_AXIS_tuser_tb),
-	.M_AXIS_tvalid(M_AXIS_tvalid_tb),
-	.S_AXIS_tdata(S_AXIS_tdata_tb),
-	.S_AXIS_tlast(S_AXIS_tlast_tb),
-	.S_AXIS_tready(S_AXIS_tready_tb),
-	.S_AXIS_tuser(S_AXIS_tuser_tb),
-	.S_AXIS_tvalid(S_AXIS_tvalid_tb),
+yscaler # (
+	.C_PIXEL_WIDTH(C_PIXEL_WIDTH),
+	.C_RESO_WIDTH(C_RESO_WIDTH),
+	.C_CH0_WIDTH(C_CH0_WIDTH),
+	.C_CH1_WIDTH(C_CH1_WIDTH),
+	.C_CH2_WIDTH(C_CH2_WIDTH)
+) uut (
+	.m_axis_tdata(m_axis_tdata_tb),
+	.m_axis_tlast(m_axis_tlast_tb),
+	.m_axis_tready(m_axis_tready_tb),
+	.m_axis_tuser(m_axis_tuser_tb),
+	.m_axis_tvalid(m_axis_tvalid_tb),
+	.s_axis_tdata(s_axis_tdata_tb),
+	.s_axis_tlast(s_axis_tlast_tb),
+	.s_axis_tready(s_axis_tready_tb),
+	.s_axis_tuser(s_axis_tuser_tb),
+	.s_axis_tvalid(s_axis_tvalid_tb),
 	.clk(clk),
-	.ori_height(ori_height_tb),
-	.ori_width(ori_width_tb),
 	.resetn(resetn_tb),
-	.scale_height(scale_height_tb),
-	.scale_width(scale_width_tb));
+	.fsync(0),
+	.s_height(s_height_tb),
+	.s_width(s_width_tb),
+	.m_height(m_height_tb),
+	.m_width(m_width_tb));
 
 initial begin
     clk <= 1'b1;
@@ -52,10 +66,10 @@ initial begin
 end
 
 initial begin
-	M_AXIS_tready_tb <= 1'b0;
-	#0.2 M_AXIS_tready_tb <= 1'b1;
+	m_axis_tready_tb <= 1'b0;
+	#0.2 m_axis_tready_tb <= 1'b1;
 	forever begin
-		#2 M_AXIS_tready_tb <= (RANDOMOUTPUT ? {$random}%2 : 1);
+		#2 m_axis_tready_tb <= (RANDOMOUTPUT ? {$random}%2 : 1);
 	end
 end
 
@@ -77,66 +91,66 @@ always @(posedge clk) begin
 	else
 		randominput <= (RANDOMINPUT ? {$random}%2 : 1);
 
-	if (resetn_tb == 1'b0 || (cnt > ori_width_tb * ori_height_tb)) begin
+	if (resetn_tb == 1'b0 || (cnt > s_width_tb * s_height_tb)) begin
 		cnt <= 0;
-		S_AXIS_tvalid_tb <= 1'b0;
-		S_AXIS_tdata_tb <= 0;
-		S_AXIS_tlast_tb <= 1'b0;
-		S_AXIS_tuser_tb <= 1'b0;
+		s_axis_tvalid_tb <= 1'b0;
+		s_axis_tdata_tb <= 0;
+		s_axis_tlast_tb <= 1'b0;
+		s_axis_tuser_tb <= 1'b0;
 	end
-	else if (cnt == 0 && ~S_AXIS_tvalid_tb) begin
+	else if (cnt == 0 && ~s_axis_tvalid_tb) begin
 		if (randominput) begin
-			S_AXIS_tvalid_tb <= 1'b1;
-			S_AXIS_tuser_tb <= 1'b1;
-			S_AXIS_tdata_tb <= 0;
-			S_AXIS_tlast_tb <= (ori_width_tb == 1);
+			s_axis_tvalid_tb <= 1'b1;
+			s_axis_tuser_tb <= 1'b1;
+			s_axis_tdata_tb <= 0;
+			s_axis_tlast_tb <= (s_width_tb == 1);
 			cnt <= 1;
 		end
 	end
-	else if (S_AXIS_tvalid_tb && S_AXIS_tready_tb)  begin
-		if (cnt == ori_width_tb * ori_height_tb) begin
+	else if (s_axis_tvalid_tb && s_axis_tready_tb)  begin
+		if (cnt == s_width_tb * s_height_tb) begin
 			cnt <= 0;
-			S_AXIS_tvalid_tb <= 1'b0;
-			S_AXIS_tdata_tb <= 0;
-			S_AXIS_tlast_tb <= 1'b0;
-			S_AXIS_tuser_tb <= 1'b0;
+			s_axis_tvalid_tb <= 1'b0;
+			s_axis_tdata_tb <= 0;
+			s_axis_tlast_tb <= 1'b0;
+			s_axis_tuser_tb <= 1'b0;
 		end
 		else if (randominput) begin
-			S_AXIS_tvalid_tb <= 1'b1;
-			S_AXIS_tdata_tb <= (cnt / ori_width_tb * 10 + cnt % ori_width_tb);
-			S_AXIS_tlast_tb <= ((cnt+1) % ori_width_tb == 0);
-			S_AXIS_tuser_tb <= 1'b0;
+			s_axis_tvalid_tb <= 1'b1;
+			s_axis_tdata_tb <= (cnt / s_width_tb * 256 + cnt % s_width_tb);
+			s_axis_tlast_tb <= ((cnt+1) % s_width_tb == 0);
+			s_axis_tuser_tb <= 1'b0;
 			cnt <= cnt + 1;
 		end
 		else begin
-			S_AXIS_tvalid_tb <= 1'b0;
+			s_axis_tvalid_tb <= 1'b0;
 		end
 	end
-	else if (~S_AXIS_tvalid_tb) begin
+	else if (~s_axis_tvalid_tb) begin
 		if (randominput) begin
-			S_AXIS_tvalid_tb <= 1'b1;
-			S_AXIS_tdata_tb <= (cnt / ori_width_tb * 10 + cnt % ori_width_tb);
-			S_AXIS_tlast_tb <= ((cnt+1) % ori_width_tb == 0);
-			S_AXIS_tuser_tb <= 1'b0;
+			s_axis_tvalid_tb <= 1'b1;
+			s_axis_tdata_tb <= (cnt / s_width_tb * 256 + cnt % s_width_tb);
+			s_axis_tlast_tb <= ((cnt+1) % s_width_tb == 0);
+			s_axis_tuser_tb <= 1'b0;
 			cnt <= cnt + 1;
 		end
 	end
 
 
-	if (resetn_tb == 1'b0 || (outcnt >= scale_height_tb * scale_width_tb && M_AXIS_tready_tb)) begin
+	if (resetn_tb == 1'b0 || (outcnt >= m_height_tb * m_width_tb && m_axis_tready_tb)) begin
 		if (outcnt > 0) $display ("new output!");
 		outcnt <= 0;
 		outline <= 0;
 	end
-	else if (M_AXIS_tready_tb && M_AXIS_tvalid_tb) begin
-		if (M_AXIS_tuser_tb != (outcnt == 0)) begin
+	else if (m_axis_tready_tb && m_axis_tvalid_tb) begin
+		if (m_axis_tuser_tb != (outcnt == 0)) begin
 			$display("error sof");
 		end
-		if (M_AXIS_tlast_tb != ((outcnt+1) % ori_width_tb == 0)) begin
+		if (m_axis_tlast_tb != ((outcnt+1) % s_width_tb == 0)) begin
 			$display("error eol");
 		end
-		$write(M_AXIS_tdata_tb, "  ");
-		if (M_AXIS_tlast_tb) begin
+		$write("%h   ", m_axis_tdata_tb);
+		if (m_axis_tlast_tb) begin
 			$write(outline+1, "\n");
 			outline <= outline + 1;
 		end

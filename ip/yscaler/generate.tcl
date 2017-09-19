@@ -43,44 +43,15 @@ pip_add_bus_if [ipx::current_core] M_AXIS {
 	TREADY	m_axis_tready
 }
 
-pip_add_bus_if [ipx::current_core] FIFO0_WRITE {
-	abstraction_type_vlnv {xilinx.com:interface:fifo_write_rtl:1.0}
-	bus_type_vlnv {xilinx.com:interface:fifo_write:1.0}
-	interface_mode {master}
-} {
-	WR_DATA	f0_wr_data
-	WR_EN	f0_wr_en
-	FULL	f0_full
-}
-
-pip_add_bus_if [ipx::current_core] FIFO0_READ {
-	abstraction_type_vlnv {xilinx.com:interface:fifo_read_rtl:1.0}
-	bus_type_vlnv {xilinx.com:interface:fifo_read:1.0}
-	interface_mode {master}
-} {
-	RD_DATA	f0_rd_data
-	RD_EN	f0_rd_en
-	EMPTY	f0_empty
-}
-
-pip_add_bus_if [ipx::current_core] FIFO1_WRITE {
-	abstraction_type_vlnv {xilinx.com:interface:fifo_write_rtl:1.0}
-	bus_type_vlnv {xilinx.com:interface:fifo_write:1.0}
-	interface_mode {master}
-} {
-	WR_DATA	f1_wr_data
-	WR_EN	f1_wr_en
-	FULL	f1_full
-}
-
-pip_add_bus_if [ipx::current_core] FIFO1_READ {
-	abstraction_type_vlnv {xilinx.com:interface:fifo_read_rtl:1.0}
-	bus_type_vlnv {xilinx.com:interface:fifo_read:1.0}
-	interface_mode {master}
-} {
-	RD_DATA	f1_rd_data
-	RD_EN	f1_rd_en
-	EMPTY	f1_empty
+pip_add_bus_if [ipx::current_core] SCALE_CTL [subst {
+	abstraction_type_vlnv {$VENDOR:interface:scale_ctl_rtl:1.0}
+	bus_type_vlnv {$VENDOR:interface:scale_ctl:1.0}
+	interface_mode {slave}
+}] {
+	SRC_WIDTH   s_width
+	SRC_HEIGHT  s_height
+	DST_WIDTH   m_width
+	DST_HEIGHT  m_height
 }
 
 pip_add_bus_if [ipx::current_core] resetn {
@@ -93,17 +64,6 @@ pip_add_bus_if [ipx::current_core] resetn {
 	POLARITY {ACTIVE_LOW}
 }
 
-# the rst of FIFO is undef, so we do not need make the fifo_rst as interface
-#pip_add_bus_if [ipx::current_core] fifo_rst {
-#	abstraction_type_vlnv xilinx.com:signal:reset_rtl:1.0
-#	bus_type_vlnv xilinx.com:signal:reset:1.0
-#	interface_mode master
-#} {
-#	FIFO_RST fifo_rst
-#} {
-#	POLARITY {ACTIVE_HIGH}
-#}
-
 pip_add_bus_if [ipx::current_core] clk {
 	abstraction_type_vlnv xilinx.com:signal:clock_rtl:1.0
 	bus_type_vlnv xilinx.com:signal:clock:1.0
@@ -111,7 +71,7 @@ pip_add_bus_if [ipx::current_core] clk {
 } {
 	CLK clk
 } {
-	ASSOCIATED_BUSIF {S_AXIS:M_AXIS:FIFO0_WRITE:FIFO0_READ:FIFO1_WRITE:FIFO1_READ}
+	ASSOCIATED_BUSIF {S_AXIS:M_AXIS:SCALE_CTL}
 	ASSOCIATED_RESET {resetn}
 }
 
