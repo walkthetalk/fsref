@@ -50,6 +50,7 @@ module yscaler #
 );
 	wire int_reset;
 	assign int_reset = (resetn == 1'b0 || fsync);
+	wire line_reset;
 
 	localparam  C_FIFO_IDX_WIDTH = 2;
 	localparam  C_FIFO_NUM = 2**C_FIFO_IDX_WIDTH;
@@ -84,22 +85,6 @@ module yscaler #
 	wire ox_valid;
 	reg [1:0] ox_state;
 	wire ox_ready;
-	reg  [C_PIXEL_WIDTH-1:0] rd_data_00;
-	reg  [C_PIXEL_WIDTH-1:0] rd_data_10;
-	wire [C_PIXEL_WIDTH-1:0] rd_data_01;
-	wire [C_PIXEL_WIDTH-1:0] rd_data_11;
-	assign rd_data_01 = rd_data[rd_which_pre];
-	assign rd_data_11 = rd_data[rd_which];
-	always @ (posedge clk) begin
-		if (line_reset) begin
-			rd_data_00 <= 0;
-			rd_data_10 <= 0;
-		end
-		else if (rd_en) begin
-			rd_data_00 <= (oy_posedge ? 0 : rd_data_01);
-			rd_data_10 <= (oy_posedge ? 0 : rd_data_11);
-		end
-	end
 
 	localparam  OUT_NULL = 2'b00;
 	localparam  OUT_SKIP = 2'b01;
@@ -122,9 +107,30 @@ module yscaler #
 
 	reg  o_d1_tlast;
 	wire o_d1_tready;
-	assign o_d1_tready = (~m_axis_tvalid || m_axis_tready);
 	wire o_d1_next;
+
+	reg  o_d2_tvalid;
+	reg  [C_SPLITER_IDX_WIDTH:0] x_d2_ratio0;
+	reg  [C_SPLITER_IDX_WIDTH:0] x_d2_ratio1;
+	reg  [C_PIXEL_WIDTH-1:0] o_d2_tdata0;
+	reg  [C_PIXEL_WIDTH-1:0] o_d2_tdata1;
+
+	reg o_d2_tlast;
+	reg o_d2_tready;
+	wire o_d2_next;
+
+	assign o_d1_tready = (~o_d2_tvalid || o_d2_tready);
 	assign o_d1_next = o_d1_tvalid && o_d1_tready;
+	//assign o_d2_tready = (~m_axis_tvalid || m_axis_tready);
+	assign o_d2_next = o_d2_tvalid && o_d2_tready;
+	always @ (posedge clk) begin
+		if (int_reset)
+			o_d2_tready <= 0;
+		else if (~m_axis_tvalid || m_axis_tready)
+			o_d2_tready <= 1;
+		else
+			o_d2_tready <= 0;
+	end
 
 	/// mul
 	reg[C_RESO_WIDTH*2-1:0] iy_mul;
@@ -146,6 +152,48 @@ module yscaler #
 	wire                     rd_en;
 	reg  [C_RESO_WIDTH-1:0]  rd_idx;
 	wire [C_PIXEL_WIDTH-1:0] rd_data[C_FIFO_NUM-1:0];
+	reg  [C_PIXEL_WIDTH-1:0] rd_data_00;
+	reg  [C_PIXEL_WIDTH-1:0] rd_data_10;
+	wire [C_PIXEL_WIDTH-1:0] rd_data_01;
+	wire [C_PIXEL_WIDTH-1:0] rd_data_11;
+	assign rd_data_01 = rd_data[rd_which_pre];
+	assign rd_data_11 = rd_data[rd_which];
+
+	reg advance_out;
+	reg oy_done;
+	reg advance_out_d1;
+	reg oy_posedge;
+	reg [C_RESO_WIDTH:0] ymul_diff;
+
+	/// xscale
+	reg[C_RESO_WIDTH:0] op_mul;
+	reg[C_RESO_WIDTH:0] op_mul_n;
+	reg[C_RESO_WIDTH-1:0] op_idx;
+	reg                 op_last;
+	reg                 op_last_cur;
+	/// same clock as rd_en
+	wire[C_RESO_WIDTH:0] ip_mul;
+	reg[C_RESO_WIDTH:0] ip_mul_cur;
+	reg[C_RESO_WIDTH:0] ip_mul_next;
+	reg[C_RESO_WIDTH-1:0] ip_idx;
+	reg                 ip_last;
+	assign ip_mul = (rd_en ? ip_mul_next : ip_mul_cur);
+
+	reg rd_line_done;
+	reg[C_RESO_WIDTH:0] xmul_diff;
+	reg[C_SPLITER_IDX_WIDTH:0] x_d1_ratio;
+	wire out_next;
+
+	always @ (posedge clk) begin
+		if (line_reset) begin
+			rd_data_00 <= 0;
+			rd_data_10 <= 0;
+		end
+		else if (rd_en) begin
+			rd_data_00 <= (oy_posedge ? 0 : rd_data_01);
+			rd_data_10 <= (oy_posedge ? 0 : rd_data_11);
+		end
+	end
 
 	always @ (posedge clk) begin
 		if (int_reset)
@@ -221,8 +269,6 @@ module yscaler #
 			wr_act <= wr_act;
 	end
 
-	reg advance_out;
-	reg oy_done;
 	always @ (posedge clk) begin
 		if (int_reset) begin
 			advance_out <= 0;
@@ -249,9 +295,6 @@ module yscaler #
 			oy_done <= 0;
 	end
 
-	reg advance_out_d1;
-	reg oy_posedge;
-	reg [C_RESO_WIDTH:0] ymul_diff;
 	always @ (posedge clk) begin
 		if (int_reset) begin
 			advance_out_d1 <= 0;
@@ -377,20 +420,6 @@ module yscaler #
 		end
 	end
 
-	/// xscale
-	reg[C_RESO_WIDTH:0] op_mul;
-	reg[C_RESO_WIDTH:0] op_mul_n;
-	reg[C_RESO_WIDTH-1:0] op_idx;
-	reg                 op_last;
-	reg                 op_last_cur;
-	/// same clock as rd_en
-	wire[C_RESO_WIDTH:0] ip_mul;
-	reg[C_RESO_WIDTH:0] ip_mul_cur;
-	reg[C_RESO_WIDTH:0] ip_mul_next;
-	reg[C_RESO_WIDTH-1:0] ip_idx;
-	reg                 ip_last;
-	assign ip_mul = (rd_en ? ip_mul_next : ip_mul_cur);
-
 	always @ (posedge clk) begin
 		if (line_reset) begin
 			ip_mul_cur <= 0;
@@ -443,7 +472,6 @@ module yscaler #
 		end
 	end
 
-	reg rd_line_done;
 	always @ (posedge clk) begin
 		if (line_reset)
 			rd_line_done <= 0;
@@ -493,11 +521,7 @@ module yscaler #
 			end
 		end
 	endgenerate
-	reg[C_RESO_WIDTH:0] xmul_diff;
-	reg[C_SPLITER_IDX_WIDTH:0] x_d1_ratio0;
-	reg[C_SPLITER_IDX_WIDTH:0] x_d1_ratio1;
 
-	wire line_reset;
 	assign line_reset = int_reset || ~oy_valid;
 	always @ (posedge clk) begin
 		if (line_reset)
@@ -511,7 +535,7 @@ module yscaler #
 			&& ~rd_line_done;
 
 	assign ox_ready = ~o_d1_tvalid || o_d1_tready;
-	wire out_next;
+
 	assign out_next = ox_valid && ox_ready;
 	always @ (posedge clk) begin
 		if (int_reset) begin
@@ -542,44 +566,87 @@ module yscaler #
 
 	always @ (posedge clk) begin
 		if (int_reset) begin
-			x_d1_ratio0 <= 0;
-			x_d1_ratio1 <= 0;
+			x_d1_ratio <= 0;
 		end
 		else if (out_next) begin
 			if (xmul_diff <= x_spliter[2]) begin
 				if (xmul_diff <= x_spliter[0]) begin
-					x_d1_ratio0 <= 0;
-					x_d1_ratio1 <= C_SPLITER_NUM;
+					x_d1_ratio <= 0;
 				end
 				else if (xmul_diff <= x_spliter[1]) begin
-					x_d1_ratio0 <= 1;
-					x_d1_ratio1 <= C_SPLITER_NUM-1;
+					x_d1_ratio <= 1;
 				end
 				else begin
-					x_d1_ratio0 <= 2;
-					x_d1_ratio1 <= C_SPLITER_NUM-2;
+					x_d1_ratio <= 2;
 				end
 			end
 			else begin
 				if (xmul_diff <= x_spliter[3]) begin
-					x_d1_ratio0 <= 3;
-					x_d1_ratio1 <= C_SPLITER_NUM-3;
+					x_d1_ratio <= 3;
 				end
 				else begin
-					x_d1_ratio0 <= C_SPLITER_NUM;
-					x_d1_ratio1 <= 0;
+					x_d1_ratio <= C_SPLITER_NUM;
 				end
 			end
 		end
 	end
 
+
+`define BLEND_D1(_start, _stop) \
+	o_d2_tdata0[_stop:_start] <= ( \
+		o_d1_tdata00[_stop:_start] * y_d1_ratio0 + \
+		o_d1_tdata10[_stop:_start] * y_d1_ratio1 \
+	) / C_SPLITER_NUM; \
+	o_d2_tdata1[_stop:_start] <= ( \
+		o_d1_tdata01[_stop:_start] * y_d1_ratio0 + \
+		o_d1_tdata11[_stop:_start] * y_d1_ratio1 \
+	) / C_SPLITER_NUM;
+
+	generate
+		if (C_CH0_WIDTH > 0) begin
+			always @ (posedge clk) begin
+				if (o_d1_next) begin
+					`BLEND_D1(0, C_CH0_WIDTH-1)
+				end
+			end
+		end
+		if (C_CH1_WIDTH > 0) begin
+			always @ (posedge clk) begin
+				if (o_d1_next) begin
+					`BLEND_D1(C_CH0_WIDTH, C_CH0_WIDTH+C_CH1_WIDTH-1)
+				end
+			end
+		end
+		if (C_CH2_WIDTH > 0) begin
+			always @ (posedge clk) begin
+				if (o_d1_next) begin
+					`BLEND_D1(C_CH0_WIDTH+C_CH1_WIDTH, C_CH0_WIDTH+C_CH1_WIDTH+C_CH2_WIDTH-1)
+				end
+			end
+		end
+	endgenerate
+	always @ (posedge clk) begin
+		if (int_reset) begin
+			o_d2_tlast <= 0;
+			o_d2_tvalid <= 0;
+			x_d2_ratio0 <= 0;
+			x_d2_ratio1 <= 0;
+		end
+		else if (o_d1_next) begin
+			o_d2_tlast <= o_d1_tlast;
+			o_d2_tvalid <= 1;
+			x_d2_ratio0 <= x_d1_ratio;
+			x_d2_ratio1 <= C_SPLITER_NUM - x_d1_ratio;
+		end
+		else if (o_d2_tready)
+			o_d2_tvalid <= 0;
+	end
+
 `define BLEND(_start, _stop) \
 	m_axis_tdata[_stop:_start] <= ( \
-		o_d1_tdata00[_stop:_start] * (y_d1_ratio0 * x_d1_ratio0) + \
-		o_d1_tdata01[_stop:_start] * (y_d1_ratio0 * x_d1_ratio1) + \
-		o_d1_tdata10[_stop:_start] * (y_d1_ratio1 * x_d1_ratio0) + \
-		o_d1_tdata11[_stop:_start] * (y_d1_ratio1 * x_d1_ratio1) \
-	) / (C_SPLITER_NUM * C_SPLITER_NUM);
+		o_d2_tdata0[_stop:_start] * x_d2_ratio0 + \
+		o_d2_tdata1[_stop:_start] * x_d2_ratio1 \
+	) / C_SPLITER_NUM;
 
 //	m_axis_tdata[_stop:_start] <= (o_d1_tdata0[_stop:_start] * y_d1_ratio0 + o_d1_tdata1[_stop:_start] * y_d1_ratio1) / C_SPLITER_NUM
 
@@ -587,20 +654,20 @@ module yscaler #
 	generate
 		if (C_CH0_WIDTH > 0) begin
 			always @ (posedge clk) begin
-				if (o_d1_next)
-					`BLEND(0, C_CH0_WIDTH-1);
+				if (o_d2_next)
+					`BLEND(0, C_CH0_WIDTH-1)
 			end
 		end
 		if (C_CH1_WIDTH > 0) begin
 			always @ (posedge clk) begin
-				if (o_d1_next)
-					`BLEND(C_CH0_WIDTH, C_CH0_WIDTH+C_CH1_WIDTH-1);
+				if (o_d2_next)
+					`BLEND(C_CH0_WIDTH, C_CH0_WIDTH+C_CH1_WIDTH-1)
 			end
 		end
 		if (C_CH2_WIDTH > 0) begin
 			always @ (posedge clk) begin
-				if (o_d1_next)
-					`BLEND(C_CH0_WIDTH+C_CH1_WIDTH, C_CH0_WIDTH+C_CH1_WIDTH+C_CH2_WIDTH-1);
+				if (o_d2_next)
+					`BLEND(C_CH0_WIDTH+C_CH1_WIDTH, C_CH0_WIDTH+C_CH1_WIDTH+C_CH2_WIDTH-1)
 			end
 		end
 	endgenerate
@@ -610,9 +677,9 @@ module yscaler #
 			m_axis_tvalid <= 0;
 			m_axis_tlast <= 0;
 		end
-		else if (o_d1_next) begin
+		else if (o_d2_next) begin
 			m_axis_tvalid <= 1;
-			m_axis_tlast <= o_d1_tlast;
+			m_axis_tlast <= o_d2_tlast;
 		end
 		else if (m_axis_tready)
 			m_axis_tvalid <= 0;
