@@ -5,6 +5,9 @@
 
 module test();
 
+	localparam RANDOMOUTPUT = 1;
+	localparam RANDOMINPUT = 1;
+
 	localparam  integer C_PIXEL_WIDTH = 16;
 	localparam  integer C_RESO_WIDTH  = 12;
 	localparam integer C_CH0_WIDTH = 8;
@@ -31,9 +34,6 @@ reg[C_RESO_WIDTH-1:0] m_width_tb = 10;
 
 reg clk;
 reg fsync_tb = 0;
-
-localparam RANDOMOUTPUT = 1;
-localparam RANDOMINPUT = 1;
 
 yscaler # (
 	.C_PIXEL_WIDTH(C_PIXEL_WIDTH),
@@ -146,10 +146,10 @@ always @(posedge clk) begin
 		if (m_axis_tuser_tb != (outcnt == 0)) begin
 			$display("error sof");
 		end
-		if (m_axis_tlast_tb != ((outcnt+1) % s_width_tb == 0)) begin
+		if (m_axis_tlast_tb != ((outcnt+1) % m_width_tb == 0)) begin
 			$display("error eol");
 		end
-		$write("%h   ", m_axis_tdata_tb);
+		$write("%d/%d   ", m_axis_tdata_tb[15:8], m_axis_tdata_tb[7:0]);
 		if (m_axis_tlast_tb) begin
 			$write(outline+1, "\n");
 			outline <= outline + 1;

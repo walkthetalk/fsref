@@ -56,42 +56,70 @@ module yscaler #
 	localparam  C_SPLITER_IDX_WIDTH = 2;
 	localparam  C_SPLITER_NUM = 2**C_SPLITER_IDX_WIDTH;
 
-	reg[C_SPLITER_IDX_WIDTH:0] out_ratio;
+	reg[C_SPLITER_IDX_WIDTH:0] ratio_y;
 
 	reg[C_FIFO_NUM-1:0] wr_act;
 	reg[C_FIFO_IDX_WIDTH-1:0] rd_which;
 	reg[C_FIFO_IDX_WIDTH-1:0] rd_which_pre;
-	reg                       in_last_line;
-	reg                       in_last_line_pre;
 
 	wire snext;
 	assign snext = s_axis_tvalid && s_axis_tready;
 	wire slast;
 	assign slast = snext && s_axis_tlast;
 
-	reg [C_RESO_WIDTH-1:0] in_line_idx;
-	reg                    in_line_last;
+	reg [C_RESO_WIDTH-1:0] iy_line_idx;
+	reg                    iy_line_last;
 	always @ (posedge clk) begin
 		if (int_reset) begin
-			in_line_idx <= s_height;
-			in_line_last <= (s_height == 1);
+			iy_line_idx <= s_height;
+			iy_line_last <= (s_height == 1);
 		end
 		else if (slast) begin
-			in_line_idx <= in_line_idx - 1;
-			in_line_last <= (in_line_idx == 1);
+			iy_line_idx <= iy_line_idx - 1;
+			iy_line_last <= (iy_line_idx == 1);
 		end
 	end
 
-	reg out_line_valid;
-	reg out_pixel_valid;
-	wire out_pixel_ready;
-	reg out_pixel_last;
+	reg oy_valid;
+	wire ox_valid;
+	reg [1:0] ox_state;
+	wire ox_ready;
+	reg  [C_PIXEL_WIDTH-1:0] rd_data_00;
+	reg  [C_PIXEL_WIDTH-1:0] rd_data_10;
+	wire [C_PIXEL_WIDTH-1:0] rd_data_01;
+	wire [C_PIXEL_WIDTH-1:0] rd_data_11;
+	assign rd_data_01 = rd_data[rd_which_pre];
+	assign rd_data_11 = rd_data[rd_which];
+	always @ (posedge clk) begin
+		if (line_reset) begin
+			rd_data_00 <= 0;
+			rd_data_10 <= 0;
+		end
+		else if (rd_en) begin
+			rd_data_00 <= (oy_posedge ? 0 : rd_data_01);
+			rd_data_10 <= (oy_posedge ? 0 : rd_data_11);
+		end
+	end
+
+	localparam  OUT_NULL = 2'b00;
+	localparam  OUT_SKIP = 2'b01;
+	localparam  OUT_SING = 2'b10;
+	localparam  OUT_MULP = 2'b11;
+	wire out_state_null; assign out_state_null = (ox_state == OUT_NULL);
+	wire out_state_skip; assign out_state_skip = (ox_state == OUT_SKIP);
+	wire out_state_sing; assign out_state_sing = (ox_state == OUT_SING);
+	wire out_state_mulp; assign out_state_mulp = (ox_state == OUT_MULP);
+	/// @NOTE: null and skip are all not valid
+	assign ox_valid = ox_state[1];
 
 	reg  o_d1_tvalid;
-	reg  [C_SPLITER_IDX_WIDTH:0] o_d1_ratio0;
-	reg  [C_SPLITER_IDX_WIDTH:0] o_d1_ratio1;
-	reg  [C_PIXEL_WIDTH-1:0] o_d1_tdata0;
-	reg  [C_PIXEL_WIDTH-1:0] o_d1_tdata1;
+	reg  [C_SPLITER_IDX_WIDTH:0] y_d1_ratio0;
+	reg  [C_SPLITER_IDX_WIDTH:0] y_d1_ratio1;
+	reg  [C_PIXEL_WIDTH-1:0] o_d1_tdata00;
+	reg  [C_PIXEL_WIDTH-1:0] o_d1_tdata10;
+	reg  [C_PIXEL_WIDTH-1:0] o_d1_tdata01;
+	reg  [C_PIXEL_WIDTH-1:0] o_d1_tdata11;
+
 	reg  o_d1_tlast;
 	wire o_d1_tready;
 	assign o_d1_tready = (~m_axis_tvalid || m_axis_tready);
@@ -99,12 +127,13 @@ module yscaler #
 	assign o_d1_next = o_d1_tvalid && o_d1_tready;
 
 	/// mul
-	reg[C_RESO_WIDTH*2-1:0] in_mul;
-	reg[C_RESO_WIDTH-1:0]   in_line;
-	reg                     in_first_line;
-	reg[C_RESO_WIDTH*2-1:0] out_mul;
-	reg[C_RESO_WIDTH-1:0]   out_line;
-	reg                     out_pixel_last_line;
+	reg[C_RESO_WIDTH*2-1:0] iy_mul;
+	reg[C_RESO_WIDTH-1:0]   iy_line;
+	reg                     iy_first;
+	reg                     iy_last;
+	reg[C_RESO_WIDTH*2-1:0] oy_mul;
+	reg[C_RESO_WIDTH-1:0]   oy_line;
+	reg                     oy_last;
 
 	reg  [C_FIFO_NUM-1:0]    valid;
 
@@ -112,12 +141,11 @@ module yscaler #
 	reg  [C_RESO_WIDTH-1:0]  wr_idx;
 	reg  [C_PIXEL_WIDTH+1:0] wr_data;
 	reg                      wr_last;
-	reg  [C_FIFO_NUM-1:0]    wr_lastline;
 
 	reg                      advance_read;
 	wire                     rd_en;
 	reg  [C_RESO_WIDTH-1:0]  rd_idx;
-	wire [C_PIXEL_WIDTH:0] rd_data[C_FIFO_NUM-1:0];
+	wire [C_PIXEL_WIDTH-1:0] rd_data[C_FIFO_NUM-1:0];
 
 	always @ (posedge clk) begin
 		if (int_reset)
@@ -139,7 +167,7 @@ module yscaler #
 		genvar i;
 		for (i = 0; i < C_FIFO_NUM; i = i+1) begin: single_linebuffer
 			linebuffer #(
-				.C_DATA_WIDTH(C_PIXEL_WIDTH+1),
+				.C_DATA_WIDTH(C_PIXEL_WIDTH),
 				.C_ADDRESS_WIDTH(C_RESO_WIDTH)
 			) linebuffer_inst (
 				.clk(clk),
@@ -167,14 +195,8 @@ module yscaler #
 					valid[i] <= 1;
 				else if (advance_read
 					&& rd_which_pre == i
-					&& ~in_first_line)
+					&& ~iy_first)
 					valid[i] <= 0;
-			end
-			always @ (posedge clk) begin
-				if (int_reset)
-					wr_lastline[i] <= 0;
-				else if (slast && wr_act[i])
-					wr_lastline[i] <= in_line_last;
 			end
 		end
 	endgenerate
@@ -199,119 +221,130 @@ module yscaler #
 			wr_act <= wr_act;
 	end
 
-	wire line_need_for_out;
-	assign line_need_for_out = (in_mul >= out_mul || in_last_line);
 	reg advance_out;
-	reg out_line_done;
+	reg oy_done;
 	always @ (posedge clk) begin
 		if (int_reset) begin
 			advance_out <= 0;
 		end
 		else if (~advance_out
-			&& ~out_line_valid && ~out_pixel_last_line
-			&& line_need_for_out && valid[rd_which])
+			&& ~oy_valid && ~advance_out_d1
+			&& ~oy_last
+			/// need this line for output
+			&& (iy_mul >= oy_mul || iy_last)
+			&& valid[rd_which])
 				advance_out <= 1;
 		else
 			advance_out <= 0;
 	end
 	always @ (posedge clk) begin
 		if (int_reset) begin
-			out_line_done <= 0;
+			oy_done <= 0;
 		end
-		else if (~out_line_done
-			&& out_line_valid
-			&& out_pixel_last && ~out_pixel_valid)
-			out_line_done <= 1;
+		else if (~oy_done
+			&& oy_valid
+			&& op_last_cur && out_next)
+			oy_done <= 1;
 		else
-			out_line_done <= 0;
+			oy_done <= 0;
 	end
 
 	reg advance_out_d1;
-	reg [C_RESO_WIDTH:0] mul_diff;
-	reg single_valid_line;
+	reg oy_posedge;
+	reg [C_RESO_WIDTH:0] ymul_diff;
 	always @ (posedge clk) begin
 		if (int_reset) begin
 			advance_out_d1 <= 0;
-			mul_diff <= 0;
-			single_valid_line <= 0;
+			ymul_diff <= 0;
 		end
 		else begin
 			advance_out_d1 <= advance_out;
-			mul_diff <= (in_mul - out_mul);
-			single_valid_line <= (in_first_line || in_last_line_pre);
+			if (iy_mul >= oy_mul) begin
+				if (iy_first)
+					ymul_diff <= 0;
+				else
+					ymul_diff <= iy_mul - oy_mul;
+			end
+			else if (iy_last)
+				ymul_diff <= 0;
 		end
 	end
-	reg[C_RESO_WIDTH:0] spliter[C_SPLITER_NUM-1:0];
+	reg[C_RESO_WIDTH:0] y_spliter[C_SPLITER_NUM-1:0];
 	generate
 		for (i = 0; i < C_SPLITER_NUM; i = i + 1) begin: single_spliter
 			always @ (posedge clk) begin
 				if (int_reset)
-					spliter[i] <= (m_height * (i+1)) / 4;
+					y_spliter[i] <= (m_height * (i+1)) / C_SPLITER_NUM;
 			end
 		end
 	endgenerate
 
 	always @ (posedge clk) begin
 		if (int_reset) begin
-			out_ratio <= 0;
+			ratio_y <= 0;
 		end
 		else if (advance_out_d1) begin
-			if (single_valid_line)
-				out_ratio <= C_SPLITER_NUM;
-			else if (mul_diff <= spliter[1]) begin
-				if (mul_diff <= spliter[0])
-					out_ratio <= 0;
+			if (ymul_diff <= y_spliter[1]) begin
+				if (ymul_diff <= y_spliter[0])
+					ratio_y <= 0;
 				else
-					out_ratio <= 1;
+					ratio_y <= 1;
 			end
-			else if (mul_diff <= spliter[3]) begin
-				if (mul_diff <= spliter[2])
-					out_ratio <= 2;
+			else if (ymul_diff <= y_spliter[3]) begin
+				if (ymul_diff <= y_spliter[2])
+					ratio_y <= 2;
 				else
-					out_ratio <= 3;
+					ratio_y <= 3;
 			end
 			else
-				out_ratio <= C_SPLITER_NUM;
+				ratio_y <= C_SPLITER_NUM;
 		end
 	end
 
 	always @ (posedge clk) begin
 		if (int_reset)
-			out_line <= m_height;
-		else if (out_line_done)
-			out_line <= out_line - 1;
+			oy_line <= m_height;
+		else if (oy_done)
+			oy_line <= oy_line - 1;
 	end
 
 	always @ (posedge clk) begin
 		if (int_reset)
-			out_pixel_last_line <= 0;
+			oy_last <= 0;
 		else if (advance_out_d1)
-			out_pixel_last_line <= (out_line == 1);
+			oy_last <= (oy_line == 1);
 	end
 
 	always @ (posedge clk) begin
 		if (int_reset)
-			out_mul <= s_height;
-		else if (out_line_done)
-			out_mul <= out_mul + s_height * 2;
+			oy_mul <= s_height;
+		else if (oy_done)
+			oy_mul <= oy_mul + s_height * 2;
 	end
 
 	always @ (posedge clk) begin
 		if (int_reset) begin
-			out_line_valid <= 0;
+			oy_valid <= 0;
 		end
 		else if (advance_out_d1)
-			out_line_valid <= 1;
-		else if (out_line_done)
-			out_line_valid <= 0;
+			oy_valid <= 1;
+		else if (oy_done)
+			oy_valid <= 0;
+	end
+
+	always @ (posedge clk) begin
+		if (int_reset)
+			oy_posedge <= 0;
+		else
+			oy_posedge <= advance_out_d1;
 	end
 
 	always @ (posedge clk) begin
 		if (int_reset)
 			advance_read <= 0;
-		else if (~advance_read && ~out_line_valid
+		else if (~advance_read && ~oy_valid
 			&& valid[rd_which]
-			&& (in_mul < out_mul && ~in_last_line_pre))
+			&& (iy_mul < oy_mul && ~iy_last))
 			advance_read <= 1;
 		else
 			advance_read <= 0;
@@ -320,85 +353,236 @@ module yscaler #
 		if (int_reset) begin
 			rd_which_pre <= 0;
 			rd_which <= 0;
-			in_mul <= m_height;
-			in_line <= s_height;
-			in_last_line <= (s_height == 1);
-			in_last_line_pre <= (s_height == 1);
-			in_first_line <= 1;
+			iy_mul <= m_height;
+			iy_line <= s_height;
+			iy_last <= (s_height == 1);
+			iy_first <= 1;
 		end
 		else if (advance_read) begin
 			rd_which_pre <= rd_which;
-			in_last_line_pre <= in_last_line;
-			if (in_last_line) begin
+			if (iy_last) begin
 				rd_which <= rd_which;
-				in_mul <= in_mul;
-				in_line <= in_line;
-				in_last_line <= 1'b1;
-				in_first_line <= in_first_line;
+				iy_mul <= iy_mul;
+				iy_line <= iy_line;
+				iy_last <= 1'b1;
+				iy_first <= iy_first;
 			end
 			else begin
 				rd_which <= rd_which + 1;
-				in_mul <= in_mul + m_height * 2;
-				in_line <= in_line - 1;
-				in_last_line <= (in_line == 2);
-				in_first_line <= 0;
+				iy_mul <= iy_mul + m_height * 2;
+				iy_line <= iy_line - 1;
+				iy_last <= (iy_line == 2);
+				iy_first <= 0;
+			end
+		end
+	end
+
+	/// xscale
+	reg[C_RESO_WIDTH:0] op_mul;
+	reg[C_RESO_WIDTH:0] op_mul_n;
+	reg[C_RESO_WIDTH-1:0] op_idx;
+	reg                 op_last;
+	reg                 op_last_cur;
+	/// same clock as rd_en
+	wire[C_RESO_WIDTH:0] ip_mul;
+	reg[C_RESO_WIDTH:0] ip_mul_cur;
+	reg[C_RESO_WIDTH:0] ip_mul_next;
+	reg[C_RESO_WIDTH-1:0] ip_idx;
+	reg                 ip_last;
+	assign ip_mul = (rd_en ? ip_mul_next : ip_mul_cur);
+
+	always @ (posedge clk) begin
+		if (line_reset) begin
+			ip_mul_cur <= 0;
+			ip_mul_next <= m_width;
+			ip_idx <= s_width;
+			ip_last <= (s_width == 1);
+		end
+		else if (rd_en) begin
+			ip_mul_cur <= ip_mul_next;
+			ip_mul_next <= ip_mul_next + m_width * 2;
+			if (ip_last) begin
+				ip_idx <= ip_idx;
+				ip_last <= 1;
+			end
+			else begin
+				ip_idx <= ip_idx - 1;
+				ip_last <= (ip_idx == 2);
 			end
 		end
 	end
 
 	always @ (posedge clk) begin
-		if (int_reset)
-			out_pixel_valid <= 0;
-		else if (rd_en)
-			out_pixel_valid <= 1;
-		else if (out_pixel_ready)
-			out_pixel_valid <= 0;
+		if (line_reset) begin
+			op_mul <= s_width;
+			op_mul_n <= (m_width == 1 ? s_width : s_width * 3);
+			op_idx <= m_width;
+			op_last <= (m_width == 1);
+		end
+		else if (~op_last &&
+			(rd_en ? ((ip_mul >= op_mul) || ip_last) : out_next)
+			) begin
+			op_mul <= op_mul_n;
+			if (op_idx == 1) begin
+				op_mul_n <= op_mul_n;
+				op_idx <= op_idx;
+			end
+			else begin
+				op_mul_n <= op_mul_n + s_width * 2;
+				op_idx <= op_idx - 1;
+			end
+			op_last <= (op_idx == 2);
+		end
 	end
 	always @ (posedge clk) begin
-		if (int_reset)
-			rd_idx <= 0;
-		else if (~out_line_valid)
+		if (line_reset) begin
+			op_last_cur <= 0;
+		end
+		else if (out_next) begin
+			op_last_cur <= op_last;
+		end
+	end
+
+	reg rd_line_done;
+	always @ (posedge clk) begin
+		if (line_reset)
+			rd_line_done <= 0;
+		else if (rd_en) begin
+			if (ip_last)
+				rd_line_done <= 1;
+			else if (ip_mul >= op_mul && op_last)
+				rd_line_done <= 1;
+		end
+	end
+	always @ (posedge clk) begin
+		if (line_reset) begin
+			ox_state <= OUT_NULL;
+		end
+		else if (out_next
+			|| rd_en) begin
+			if (out_next && op_last_cur) begin
+				ox_state <= OUT_NULL;
+			end
+			else if (ip_mul >= op_mul) begin
+				if (ip_mul >= op_mul_n)
+					ox_state <= OUT_MULP;
+				else
+					ox_state <= OUT_SING;
+
+				if (oy_posedge)
+					xmul_diff <= 0;
+				else begin
+					xmul_diff <= ip_mul - op_mul;
+				end
+			end
+			else if (ip_last) begin
+				ox_state <= OUT_SING;
+				xmul_diff <= 0;
+			end
+			else begin
+				ox_state <= OUT_SKIP;
+			end
+		end
+	end
+	reg[C_RESO_WIDTH:0] x_spliter[C_SPLITER_NUM-1:0];
+	generate
+		for (i = 0; i < C_SPLITER_NUM; i = i + 1) begin: single_x_spliter
+			always @ (posedge clk) begin
+				if (int_reset)
+					x_spliter[i] <= m_width * (i*2+1) / C_SPLITER_NUM;
+			end
+		end
+	endgenerate
+	reg[C_RESO_WIDTH:0] xmul_diff;
+	reg[C_SPLITER_IDX_WIDTH:0] x_d1_ratio0;
+	reg[C_SPLITER_IDX_WIDTH:0] x_d1_ratio1;
+
+	wire line_reset;
+	assign line_reset = int_reset || ~oy_valid;
+	always @ (posedge clk) begin
+		if (line_reset)
 			rd_idx <= 0;
 		else if (rd_en)
 			rd_idx <= rd_idx + 1;
 	end
-	always @ (posedge clk) begin
-		if (int_reset)
-			out_pixel_last <= 0;
-		else if (~out_line_valid)
-			out_pixel_last <= 0;
-		else if (rd_en)
-			out_pixel_last <= (rd_idx == s_width - 1);
-	end
 
-	assign rd_en = out_line_valid && (~out_pixel_valid || out_pixel_ready) && ~out_pixel_last;
+	assign rd_en = oy_valid
+			&& (~ox_valid || (out_state_sing && ox_ready))
+			&& ~rd_line_done;
 
-	assign out_pixel_ready = ~o_d1_tvalid || o_d1_tready;
+	assign ox_ready = ~o_d1_tvalid || o_d1_tready;
 	wire out_next;
-	assign out_next = out_pixel_valid && out_pixel_ready;
+	assign out_next = ox_valid && ox_ready;
 	always @ (posedge clk) begin
 		if (int_reset) begin
 			o_d1_tvalid <= 0;
 			o_d1_tlast <= 0;
-			o_d1_ratio0 <= 0;
-			o_d1_ratio1 <= 0;
-			o_d1_tdata0 <= 0;
-			o_d1_tdata1 <= 0;
+
+			y_d1_ratio0 <= 0;
+			y_d1_ratio1 <= 0;
+
+			o_d1_tdata01 <= 0;
+			o_d1_tdata11 <= 0;
+			o_d1_tdata00 <= 0;
+			o_d1_tdata10 <= 0;
 		end
 		else if (out_next) begin
 			o_d1_tvalid <= 1;
-			o_d1_tlast <= out_pixel_last;
-			o_d1_ratio0 <= out_ratio;
-			o_d1_ratio1 <= C_SPLITER_NUM - out_ratio;
-			o_d1_tdata0 <= rd_data[rd_which_pre];
-			o_d1_tdata1 <= rd_data[rd_which];
+			o_d1_tlast <= op_last_cur;
+			y_d1_ratio0 <= ratio_y;
+			y_d1_ratio1 <= C_SPLITER_NUM - ratio_y;
+			o_d1_tdata01 <= rd_data_01;
+			o_d1_tdata11 <= rd_data_11;
+			o_d1_tdata00 <= rd_data_00;
+			o_d1_tdata10 <= rd_data_10;
 		end
 		else if (o_d1_tready)
 			o_d1_tvalid <= 0;
 	end
 
+	always @ (posedge clk) begin
+		if (int_reset) begin
+			x_d1_ratio0 <= 0;
+			x_d1_ratio1 <= 0;
+		end
+		else if (out_next) begin
+			if (xmul_diff <= x_spliter[2]) begin
+				if (xmul_diff <= x_spliter[0]) begin
+					x_d1_ratio0 <= 0;
+					x_d1_ratio1 <= C_SPLITER_NUM;
+				end
+				else if (xmul_diff <= x_spliter[1]) begin
+					x_d1_ratio0 <= 1;
+					x_d1_ratio1 <= C_SPLITER_NUM-1;
+				end
+				else begin
+					x_d1_ratio0 <= 2;
+					x_d1_ratio1 <= C_SPLITER_NUM-2;
+				end
+			end
+			else begin
+				if (xmul_diff <= x_spliter[3]) begin
+					x_d1_ratio0 <= 3;
+					x_d1_ratio1 <= C_SPLITER_NUM-3;
+				end
+				else begin
+					x_d1_ratio0 <= C_SPLITER_NUM;
+					x_d1_ratio1 <= 0;
+				end
+			end
+		end
+	end
+
 `define BLEND(_start, _stop) \
-	m_axis_tdata[_stop:_start] <= (o_d1_tdata0[_stop:_start] * o_d1_ratio0 + o_d1_tdata1[_stop:_start] * o_d1_ratio1) / C_SPLITER_NUM
+	m_axis_tdata[_stop:_start] <= ( \
+		o_d1_tdata00[_stop:_start] * (y_d1_ratio0 * x_d1_ratio0) + \
+		o_d1_tdata01[_stop:_start] * (y_d1_ratio0 * x_d1_ratio1) + \
+		o_d1_tdata10[_stop:_start] * (y_d1_ratio1 * x_d1_ratio0) + \
+		o_d1_tdata11[_stop:_start] * (y_d1_ratio1 * x_d1_ratio1) \
+	) / (C_SPLITER_NUM * C_SPLITER_NUM);
+
+//	m_axis_tdata[_stop:_start] <= (o_d1_tdata0[_stop:_start] * y_d1_ratio0 + o_d1_tdata1[_stop:_start] * y_d1_ratio1) / C_SPLITER_NUM
+
 
 	generate
 		if (C_CH0_WIDTH > 0) begin
