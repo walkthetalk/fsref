@@ -116,21 +116,13 @@ module yscaler #
 	reg  [C_PIXEL_WIDTH-1:0] o_d2_tdata1;
 
 	reg o_d2_tlast;
-	reg o_d2_tready;
+	wire o_d2_tready;
 	wire o_d2_next;
 
 	assign o_d1_tready = (~o_d2_tvalid || o_d2_tready);
 	assign o_d1_next = o_d1_tvalid && o_d1_tready;
-	//assign o_d2_tready = (~m_axis_tvalid || m_axis_tready);
+	assign o_d2_tready = (~m_axis_tvalid || m_axis_tready);
 	assign o_d2_next = o_d2_tvalid && o_d2_tready;
-	always @ (posedge clk) begin
-		if (int_reset)
-			o_d2_tready <= 0;
-		else if (~m_axis_tvalid || m_axis_tready)
-			o_d2_tready <= 1;
-		else
-			o_d2_tready <= 0;
-	end
 
 	/// mul
 	reg[C_RESO_WIDTH*2-1:0] iy_mul;
@@ -145,7 +137,7 @@ module yscaler #
 
 	reg  [C_FIFO_NUM-1:0]    wr_en;
 	reg  [C_RESO_WIDTH-1:0]  wr_idx;
-	reg  [C_PIXEL_WIDTH+1:0] wr_data;
+	reg  [C_PIXEL_WIDTH-1:0] wr_data;
 	reg                      wr_last;
 
 	reg                      advance_read;
@@ -166,15 +158,15 @@ module yscaler #
 	reg [C_RESO_WIDTH:0] ymul_diff;
 
 	/// xscale
-	reg[C_RESO_WIDTH:0] op_mul;
-	reg[C_RESO_WIDTH:0] op_mul_n;
+	reg[C_RESO_WIDTH*2-1:0] op_mul;
+	reg[C_RESO_WIDTH*2-1:0] op_mul_n;
 	reg[C_RESO_WIDTH-1:0] op_idx;
 	reg                 op_last;
 	reg                 op_last_cur;
 	/// same clock as rd_en
-	wire[C_RESO_WIDTH:0] ip_mul;
-	reg[C_RESO_WIDTH:0] ip_mul_cur;
-	reg[C_RESO_WIDTH:0] ip_mul_next;
+	wire[C_RESO_WIDTH*2-1:0] ip_mul;
+	reg[C_RESO_WIDTH*2-1:0] ip_mul_cur;
+	reg[C_RESO_WIDTH*2-1:0] ip_mul_next;
 	reg[C_RESO_WIDTH-1:0] ip_idx;
 	reg                 ip_last;
 	assign ip_mul = (rd_en ? ip_mul_next : ip_mul_cur);
