@@ -135,8 +135,8 @@ initial begin
 	s0left <= 0;
 	s1width <= 4;
 	s1height <= 7;
-	s1top <= 3;
-	s1left <= 5;
+	s1top <= 0;
+	s1left <= 0;
 	s2width <= 5;
 	s2height <= 4;
 	s2top <= 4;

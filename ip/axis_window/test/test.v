@@ -19,13 +19,13 @@ module testwindow(
 	wire suser;
 	reg svalid;
 
-	reg[11:0] ori_height = 10;
-	reg[11:0] ori_width = 10;
+	reg[11:0] ori_height = 320;
+	reg[11:0] ori_width = 240;
 
 	reg[11:0] w_left = 3;
 	reg[11:0] w_top = 3;
-	reg[11:0] w_width = 7;
-	reg[11:0] w_height = 7;
+	reg[11:0] w_width = 5;
+	reg[11:0] w_height = 6;
 
 	reg resetn;
 	reg clk;
@@ -68,14 +68,14 @@ assign sdata = (in_row * 16 + in_col);
 
 reg[11:0] out_row;
 reg[11:0] out_col;
-reg[7:0]  out_data;
-reg out_last;
 
 assign suser = (in_row == 0 && in_col == 0);
 assign slast = (in_col == ori_height - 1);
 
 reg randominput;
 reg randomoutput;
+reg input_done;
+reg output_done;
 always @(posedge clk) begin
 	if (resetn == 1'b0)
 		randominput <= 1'b0;
@@ -107,6 +107,13 @@ always @(posedge clk) begin
 	end
 
 	if (resetn == 1'b0)
+		input_done <= 0;
+	else if (svalid && sready && in_col == ori_width-1 && in_row == ori_height-1)
+		input_done <= 1;
+	else if (input_done && output_done)
+		input_done <= 0;
+
+	if (resetn == 1'b0)
 		svalid <= 1'b0;
 	else if (~svalid) begin
 		if (randominput) begin
@@ -132,31 +139,21 @@ always @(posedge clk) begin
 
 
 	if (resetn == 1'b0) begin
-		out_data <= 0;
-		out_last <= 0;
-	end
-	else if (mready && mvalid) begin
-		out_data <= mdata;
-		out_last <= mlast;
-	end
-
-
-	if (resetn == 1'b0) begin
 		out_col = 0;
 		out_row = 0;
 	end
 	else if (mready && mvalid) begin
 		if (muser) begin
-			out_col = 0;
-			out_row = 0;
+			out_col <= 0;
+			out_row <= 0;
 		end
-		else if (out_last) begin
-			out_col = 0;
-			out_row = out_row + 1;
+		else if (mlast) begin
+			out_col <= 0;
+			out_row <= out_row + 1;
 		end
 		else begin
-			out_col = out_col + 1;
-			out_row = out_row;
+			out_col <= out_col + 1;
+			out_row <= out_row;
 		end
 		if (muser)
 			$write("start new frame: \n");
@@ -164,6 +161,41 @@ always @(posedge clk) begin
 		if (mlast)
 			$write("\n");
 	end
+
+	if (resetn == 1'b0)
+		output_done <= 0;
+	else if (output_done && input_done)
+		output_done <= 0;
+	else if (~output_done
+		&& (mready && mvalid
+		&& out_col == w_width-1
+		&& out_row == w_height-1) || (w_width == 0 || w_height == 0))
+		output_done <= 1;
+/*
+	if (resetn == 1'b0) begin
+	end
+	else if (out_row == w_height) begin
+		w_left <= 0;
+		w_top <= 0;
+		w_height <= 0;
+		w_width <= 0;
+	end
+*/
+	if (input_done && output_done) begin
+		if (w_left != 0) begin
+			w_left <= 0;
+			w_top <= 0;
+			w_height <= 0;
+			w_width <= 0;
+		end
+		else begin
+			w_left <= 3;
+			w_top <= 3;
+			w_width <= 5;
+			w_height <= 6;
+		end
+	end
+
 end
 
 
