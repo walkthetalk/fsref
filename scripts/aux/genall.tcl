@@ -12,6 +12,7 @@ set ip_list [list \
 	window_broadcaster \
 	axis_window \
 	axis_blender \
+	axis_relay \
 	mutex_buffer \
 	s2mm \
 	mm2s \
