@@ -18,7 +18,7 @@
 // Additional Comments:
 //
 //////////////////////////////////////////////////////////////////////////////////
-module yscaler #
+module axis_scaler #
 (
 	parameter integer C_PIXEL_WIDTH = 8,
 	parameter integer C_RESO_WIDTH  = 10,

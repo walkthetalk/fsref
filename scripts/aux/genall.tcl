@@ -13,12 +13,12 @@ set ip_list [list \
 	axis_window \
 	axis_blender \
 	axis_relay \
+	axis_scaler \
 	mutex_buffer \
 	s2mm \
 	mm2s \
 	axi_combiner \
 	fsctl \
-	yscaler \
 ]
 
 if { $argc eq 1 } {
