@@ -126,9 +126,10 @@ module axis_blender #
 			gap0 <= 0;
 		else if (~gap0) begin
 			if (~gap1 && ~streaming)
-				gap0 <= 1;
-			else if (mnext && last_pixel)
-				gap0 <= 1;
+				gap0 <= (~last_line ? 1 : (s0_axis_tvalid && s0_axis_tuser));
+			/// @NOTE: just for saving resource (add one more empty clock cycle between lines)
+			//else if (mnext && last_pixel)
+			//	gap0 <= (~last_line ? 1 : (s0_axis_tvalid && s0_axis_tuser));
 			else
 				gap0 <= 0;
 		end
