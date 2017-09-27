@@ -225,14 +225,8 @@ module fsctl #
 	always @ (posedge o_clk) begin \
 		if (o_resetn == 1'b0) \
 			_name <= _defv; \
-		else if (fsync_posedge) begin \
-			if (~_depend) \
-				_name <= 0; \
-			else if (~display_cfging) \
-				_name <= r_``_name; \
-			else \
-				_name <= _name; \
-		end \
+		else if (fsync_posedge && ~display_cfging) \
+			_name <= (_depend ? r_``_name : 0); \
 		else \
 			_name <= _name; \
 	end
