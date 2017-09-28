@@ -3,8 +3,10 @@
 
 module fsctl #
 (
+	parameter integer C_CORE_VERSION = 32'hFF00FF00,
+
 	parameter integer C_DATA_WIDTH	= 32,
-	parameter integer C_ADDR_WIDTH	= 8,
+	parameter integer C_REG_IDX_WIDTH	= 8,
 
 	parameter integer C_IMG_WBITS = 12,
 	parameter integer C_IMG_HBITS = 12,
@@ -29,11 +31,11 @@ module fsctl #
 
 	/// read/write interface
 	input rd_en,
-	input [C_ADDR_WIDTH-1:0] rd_addr,
+	input [C_REG_IDX_WIDTH-1:0] rd_addr,
 	output reg [C_DATA_WIDTH-1:0] rd_data,
 
 	input wr_en,
-	input [C_ADDR_WIDTH-1:0] wr_addr,
+	input [C_REG_IDX_WIDTH-1:0] wr_addr,
 	input [C_DATA_WIDTH-1:0] wr_data,
 
 	//// controller
@@ -122,25 +124,16 @@ module fsctl #
 	assign cmos1buf2_addr = C_CMOS1BUF2_ADDR;
 	assign cmos1buf3_addr = C_CMOS1BUF3_ADDR;
 
-	// Example-specific design signals
-	// local parameter for addressing 32 bit / 64 bit C_S_AXI_DATA_WIDTH
-	// ADDR_LSB is used for addressing 32/64 bit registers/memories
-	// ADDR_LSB = 2 for 32 bits (n downto 2)
-	// ADDR_LSB = 3 for 64 bits (n downto 3)
-	localparam integer ADDR_LSB = (C_DATA_WIDTH/32) + 1;
-
-	wire [C_ADDR_WIDTH-1-ADDR_LSB:0] rd_index;
-	assign rd_index = rd_addr[C_ADDR_WIDTH-1:ADDR_LSB];
-	wire [C_ADDR_WIDTH-1-ADDR_LSB:0] wr_index;
-	assign wr_index = wr_addr[C_ADDR_WIDTH-1:ADDR_LSB];
+	wire [C_REG_IDX_WIDTH-1:0] rd_index;
+	assign rd_index = rd_addr;
+	wire [C_REG_IDX_WIDTH-1:0] wr_index;
+	assign wr_index = wr_addr;
 
 	//----------------------------------------------
 	//-- Signals for user logic register space example
 	//------------------------------------------------
-	//-- Number of Slave Registers 64
-
-	localparam  REG_NUM = 64;
-	wire [C_DATA_WIDTH-1:0]	slv_reg[REG_NUM-1 : 0];
+	localparam  C_REG_NUM = 2**C_REG_IDX_WIDTH;
+	wire [C_DATA_WIDTH-1:0]	slv_reg[C_REG_NUM-1 : 0];
 	/// read logic
 	always @ (posedge clk) begin
 		if (rd_en)
@@ -180,6 +173,11 @@ module fsctl #
 		else \
 			r_``_name <= r_``_name; \
 	end
+
+`define DEFREG_FIXED(_ridx, _bstart, _bwidth, _name, _defv) \
+	wire [_bwidth-1 : 0] r_``_name; \
+	assign slv_reg[_ridx][_bstart + _bwidth - 1 : _bstart] = r_``_name; \
+	assign r_``_name = _defv;
 
 `define DEFREG_EXTERNAL(_ridx, _bstart, _bwidth, _name, _defv) \
 	`DEFREG(_ridx, _bstart, _bwidth, _name, _defv) \
@@ -253,6 +251,8 @@ module fsctl #
 	`DEFREG_IMGSIZE( 8, s2_win_width,          0,  s2_win_height,          0, s2_running)
 	`DEFREG_IMGSIZE( 9, s2_dst_left,           0,  s2_dst_top,             0, s2_running)
 	`DEFREG_IMGSIZE(10, s2_dst_width,          0,  s2_dst_height,          0, s2_running)
+
+	`DEFREG_FIXED(C_REG_NUM-1, 0, 32, core_version, C_CORE_VERSION)
 
 	assign s1_scale_src_width  = s1_win_width;
 	assign s1_scale_src_height = s1_win_height;

@@ -133,8 +133,8 @@ pip_add_bus_if [ipx::current_core] clk {
 
 # parameters
 pip_add_usr_par [ipx::current_core] {C_S0_PIXEL_WIDTH} {
-	display_name {Pixel Width}
-	tooltip {PIXEL WIDTH}
+	display_name {S0 Pixel Width}
+	tooltip {Steam 0 PIXEL WIDTH}
 	widget {comboBox}
 } {
 	value_resolve_type user
@@ -148,8 +148,8 @@ pip_add_usr_par [ipx::current_core] {C_S0_PIXEL_WIDTH} {
 }
 
 pip_add_usr_par [ipx::current_core] {C_S1_PIXEL_WIDTH} {
-	display_name {Pixel Width}
-	tooltip {PIXEL WIDTH}
+	display_name {S1 Pixel Width}
+	tooltip {Stream 1 PIXEL WIDTH}
 	widget {comboBox}
 } {
 	value_resolve_type user
@@ -163,8 +163,8 @@ pip_add_usr_par [ipx::current_core] {C_S1_PIXEL_WIDTH} {
 }
 
 pip_add_usr_par [ipx::current_core] {C_S2_PIXEL_WIDTH} {
-	display_name {Pixel Width}
-	tooltip {PIXEL WIDTH}
+	display_name {S2 Pixel Width}
+	tooltip {Stream 2 PIXEL WIDTH}
 	widget {comboBox}
 } {
 	value_resolve_type user
@@ -178,8 +178,8 @@ pip_add_usr_par [ipx::current_core] {C_S2_PIXEL_WIDTH} {
 }
 
 pip_add_usr_par [ipx::current_core] {C_M_PIXEL_WIDTH} {
-	display_name {Pixel Width}
-	tooltip {PIXEL WIDTH}
+	display_name {Output Pixel Width}
+	tooltip {Output PIXEL WIDTH}
 	widget {comboBox}
 } {
 	value_resolve_type user

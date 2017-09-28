@@ -54,8 +54,8 @@ set_property -dict {IOSTANDARD LVCMOS33 PACKAGE_PIN D20} [get_ports {cmos1_data[
 set_property CLOCK_DEDICATED_ROUTE FALSE [get_nets cmos0_pclk_IBUF]
 set_property CLOCK_DEDICATED_ROUTE FALSE [get_nets cmos1_pclk_IBUF]
 
-create_clock -period 20.000 -name cmos0_pclk -waveform {0.000 10.000} [get_ports {cmos0_pclk}]
-create_clock -period 20.000 -name cmos1_pclk -waveform {0.000 10.000} [get_ports {cmos1_pclk}]
+create_clock -period 20.000 -name cmos0_pclk -waveform {0.000 10.000} [get_ports cmos0_pclk]
+create_clock -period 20.000 -name cmos1_pclk -waveform {0.000 10.000} [get_ports cmos1_pclk]
 
 set_clock_groups -asynchronous -group clk_fpga_0 -group clk_fpga_1
 set_clock_groups -asynchronous -group clk_fpga_2 -group clk_fpga_1

@@ -190,9 +190,9 @@ pip_add_usr_par [ipx::current_core] {C_DATA_WIDTH} {
 	value_format long
 }
 
-pip_add_usr_par [ipx::current_core] {C_ADDR_WIDTH} {
-	display_name {Address Width}
-	tooltip {ADDRESS WIDTH}
+pip_add_usr_par [ipx::current_core] {C_REG_IDX_WIDTH} {
+	display_name {Register Index Width}
+	tooltip {REG INDEX WIDTH}
 	widget {comboBox}
 } {
 	value_resolve_type user
@@ -275,6 +275,7 @@ pip_add_usr_par [ipx::current_core] {C_BUF_ADDR_WIDTH} {
 }
 
 foreach {i j k} {
+	C_CORE_VERSION     {Version Of IMPLEMENTATION} {'hFF00FF00}
 	C_DISPBUF0_ADDR    {Display Buffer Address} {'h3FF00000}
 	C_CMOS0BUF0_ADDR   {CMOS0 BUffer0 Address}  {'h3F000000}
 	C_CMOS0BUF1_ADDR   {CMOS0 BUffer1 Address}  {'h3F100000}

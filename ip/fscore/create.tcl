@@ -4,6 +4,7 @@ source $origin_dir/ip/pvdma/create.tcl
 
 proc create_fscore {
 	mname
+	{coreversion {}}
 	{pixel_width 8}
 	{img_w_width 12}
 	{img_h_width 12}
@@ -12,6 +13,8 @@ proc create_fscore {
 	{burst_length 16}
 	{fifo_aximm_depth 128}
 } {
+	if {$coreversion == {}} { set coreversion [clock seconds] }
+
 	global VENDOR
 	global LIBRARY
 	global VERSION
@@ -28,9 +31,48 @@ proc create_fscore {
 	startgroup
 	create_bd_cell -type ip -vlnv $VENDOR:$LIBRARY:axis_window:$VERSION $mname/axis_window_2
 	endgroup
+	startgroup
+	set_property -dict [list \
+		CONFIG.C_PIXEL_WIDTH $pixel_width \
+		CONFIG.C_IMG_WBITS $img_w_width \
+		CONFIG.C_IMG_HBITS $img_h_width \
+	] [get_bd_cells $mname/axis_window_*]
+	endgroup
+
+	startgroup
+	create_bd_cell -type ip -vlnv $VENDOR:$LIBRARY:axis_scaler:$VERSION $mname/axis_scaler_1
+	endgroup
+	startgroup
+	create_bd_cell -type ip -vlnv $VENDOR:$LIBRARY:axis_scaler:$VERSION $mname/axis_scaler_2
+	endgroup
+	set_property -dict [list \
+		CONFIG.C_PIXEL_WIDTH $pixel_width \
+		CONFIG.C_RESO_WIDTH $img_w_width \
+	] [get_bd_cells $mname/axis_scaler_*]
+	puts "\n\nNOTE: 'axis_scaler' don't support different width/height of image!!\n\n"
+
+	startgroup
+	create_bd_cell -type ip -vlnv $VENDOR:$LIBRARY:axis_relay:$VERSION $mname/axis_relay_1
+	endgroup
+	startgroup
+	create_bd_cell -type ip -vlnv $VENDOR:$LIBRARY:axis_relay:$VERSION $mname/axis_relay_2
+	endgroup
+	startgroup
+	set_property -dict [list \
+		CONFIG.C_PIXEL_WIDTH $pixel_width \
+	] [get_bd_cells $mname/axis_relay_*]
+	endgroup
 
 	startgroup
 	create_bd_cell -type ip -vlnv $VENDOR:$LIBRARY:axis_blender:$VERSION $mname/axis_blender
+	endgroup
+	startgroup
+	set_property -dict [list \
+		CONFIG.C_S1_PIXEL_WIDTH $pixel_width \
+		CONFIG.C_S2_PIXEL_WIDTH $pixel_width \
+		CONFIG.C_IMG_WBITS      $img_w_width \
+		CONFIG.C_IMG_HBITS      $img_h_width \
+	] [get_bd_cells $mname/axis_blender]
 	endgroup
 
 	startgroup
@@ -40,14 +82,23 @@ proc create_fscore {
 	startgroup
 	create_bd_cell -type ip -vlnv $VENDOR:$LIBRARY:fsctl:$VERSION $mname/fsctl
 	endgroup
+	startgroup
+	set_property -dict [list \
+		CONFIG.C_CORE_VERSION $coreversion \
+	] [get_bd_cells $mname/fsctl]
+	endgroup
 
 	pip_connect_intf_net [subst {
 		$mname/axilite2regctl/M_REG_CTL $mname/fsctl/S_REG_CTL
 		$mname/pvdma_0/M_AXIS           $mname/axis_blender/S0_AXIS
 		$mname/pvdma_1/M_AXIS           $mname/axis_window_1/S_AXIS
-		$mname/axis_window_1/M_AXIS     $mname/axis_blender/S1_AXIS
+		$mname/axis_window_1/M_AXIS     $mname/axis_scaler_1/S_AXIS
+		$mname/axis_scaler_1/M_AXIS	$mname/axis_relay_1/S_AXIS
+		$mname/axis_relay_1/M_AXIS	$mname/axis_blender/S1_AXIS
 		$mname/pvdma_2/M_AXIS           $mname/axis_window_2/S_AXIS
-		$mname/axis_window_2/M_AXIS     $mname/axis_blender/S2_AXIS
+		$mname/axis_window_2/M_AXIS     $mname/axis_scaler_2/S_AXIS
+		$mname/axis_scaler_2/M_AXIS	$mname/axis_relay_2/S_AXIS
+		$mname/axis_relay_2/M_AXIS	$mname/axis_blender/S2_AXIS
 		$mname/fsctl/CMOS0BUF_ADDR      $mname/pvdma_1/BUF_ADDR
 		$mname/fsctl/CMOS1BUF_ADDR      $mname/pvdma_2/BUF_ADDR
 		$mname/fsctl/OUT_SIZE           $mname/axis_blender/OUT_SIZE
@@ -56,6 +107,8 @@ proc create_fscore {
 		$mname/fsctl/S2_DST             $mname/axis_blender/S2_WIN_CTL
 		$mname/fsctl/S1_WIN             $mname/axis_window_1/S_WIN_CTL
 		$mname/fsctl/S2_WIN             $mname/axis_window_2/S_WIN_CTL
+		$mname/fsctl/S1_SCALE           $mname/axis_scaler_1/SCALE_CTL
+		$mname/fsctl/S2_SCALE           $mname/axis_scaler_2/SCALE_CTL
 	}]
 	pip_connect_net [subst {
 		$mname/fsctl/dispbuf0_addr      $mname/pvdma_0/MBUF_R_addr
@@ -110,6 +163,8 @@ proc create_fscore {
 		$mname/pvdma_0/fsync
 		$mname/pvdma_1/fsync
 		$mname/pvdma_2/fsync
+		$mname/axis_scaler_1/fsync
+		$mname/axis_scaler_2/fsync
 	}]
 	create_bd_pin -dir I $mname/clk
 	pip_connect_pin $mname/clk [subst {
@@ -119,6 +174,10 @@ proc create_fscore {
 		$mname/pvdma_2/clk
 		$mname/axis_window_1/clk
 		$mname/axis_window_2/clk
+		$mname/axis_scaler_1/clk
+		$mname/axis_scaler_2/clk
+		$mname/axis_relay_1/clk
+		$mname/axis_relay_2/clk
 		$mname/axis_blender/clk
 	}]
 	create_bd_pin -dir I $mname/resetn
@@ -129,6 +188,10 @@ proc create_fscore {
 		$mname/pvdma_2/resetn
 		$mname/axis_window_1/resetn
 		$mname/axis_window_2/resetn
+		$mname/axis_scaler_1/resetn
+		$mname/axis_scaler_2/resetn
+		$mname/axis_relay_1/resetn
+		$mname/axis_relay_2/resetn
 		$mname/axis_blender/resetn
 	}]
 }
