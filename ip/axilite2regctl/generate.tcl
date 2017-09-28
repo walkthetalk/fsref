@@ -102,10 +102,25 @@ pip_add_usr_par [ipx::current_core] {C_ADDR_WIDTH} {
 	widget {comboBox}
 } {
 	value_resolve_type user
+	value 10
+	value_format long
+	value_validation_type list
+	value_validation_list {10}
+} {
+	value 10
+	value_format long
+}
+
+pip_add_usr_par [ipx::current_core] {C_REG_IDX_WIDTH} {
+	display_name {Register Index Width}
+	tooltip {REG INDEX WIDTH}
+	widget {comboBox}
+} {
+	value_resolve_type user
 	value 8
 	value_format long
 	value_validation_type list
-	value_validation_list {8}
+	value_validation_list 8
 } {
 	value 8
 	value_format long

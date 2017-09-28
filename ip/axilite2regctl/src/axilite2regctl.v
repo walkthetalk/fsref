@@ -3,15 +3,13 @@
 
 module axilite2regctl #
 (
-	// Users to add parameters here
-
-	// User parameters ends
-	// Do not modify the parameters beyond this line
-
 	// Width of S_AXI data bus
 	parameter integer C_DATA_WIDTH	= 32,
 	// Width of S_AXI address bus
-	parameter integer C_ADDR_WIDTH	= 8
+	parameter integer C_ADDR_WIDTH	= 10,
+	// Width of REG address
+	parameter integer C_REG_IDX_WIDTH = 8
+
 )
 (
 	input wire  clk,
@@ -19,11 +17,11 @@ module axilite2regctl #
 
 	/// reg ctl interface
 	output rd_en,
-	output [C_ADDR_WIDTH-1:0] rd_addr,
+	output [C_REG_IDX_WIDTH-1:0] rd_addr,
 	input [C_DATA_WIDTH-1:0] rd_data,
 
 	output wr_en,
-	output [C_ADDR_WIDTH-1:0] wr_addr,
+	output [C_REG_IDX_WIDTH-1:0] wr_addr,
 	output [C_DATA_WIDTH-1:0] wr_data,
 
 	/// slave axi lite
@@ -64,8 +62,8 @@ module axilite2regctl #
 	 * read/write interface
 	 */
 	assign rd_en = slv_reg_rden;
-	assign rd_addr = s_axi_araddr;
-	assign wr_addr = axi_awaddr;
+	assign rd_addr = s_axi_araddr[C_ADDR_WIDTH-1:C_ADDR_WIDTH-C_REG_IDX_WIDTH];
+	assign wr_addr = axi_awaddr[C_ADDR_WIDTH-1:C_ADDR_WIDTH-C_REG_IDX_WIDTH];
 	assign wr_en = slv_reg_wren;
 	assign wr_data = s_axi_wdata;
 
