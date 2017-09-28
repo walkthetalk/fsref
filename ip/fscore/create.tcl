@@ -13,7 +13,7 @@ proc create_fscore {
 	{burst_length 16}
 	{fifo_aximm_depth 128}
 } {
-	if {$coreversion == {}} { set coreversion [clock seconds] }
+	if {$coreversion == {}} { set coreversion [format 0x%08x [clock seconds]] }
 
 	global VENDOR
 	global LIBRARY
