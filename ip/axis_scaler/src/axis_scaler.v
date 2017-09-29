@@ -433,6 +433,9 @@ module axis_scaler #
 		end
 	end
 
+	wire cmp_ip_gt_op;
+	assign cmp_ip_gt_op = (ip_mul >= op_mul);
+
 	always @ (posedge clk) begin
 		if (line_reset) begin
 			op_mul <= s_width;
@@ -441,7 +444,7 @@ module axis_scaler #
 			op_last <= (m_width == 1);
 		end
 		else if (~op_last &&
-			(rd_en ? ((ip_mul >= op_mul) || ip_last) : out_next)
+			(rd_en ? (cmp_ip_gt_op || ip_last) : out_next)
 			) begin
 			op_mul <= op_mul_n;
 			if (op_idx == 1) begin
@@ -470,7 +473,7 @@ module axis_scaler #
 		else if (rd_en) begin
 			if (ip_last)
 				rd_line_done <= 1;
-			else if (ip_mul >= op_mul && op_last)
+			else if (cmp_ip_gt_op && op_last)
 				rd_line_done <= 1;
 		end
 	end
@@ -478,12 +481,11 @@ module axis_scaler #
 		if (line_reset) begin
 			ox_state <= OUT_NULL;
 		end
-		else if (out_next
-			|| rd_en) begin
+		else if (out_next || rd_en) begin
 			if (out_next && op_last_cur) begin
 				ox_state <= OUT_NULL;
 			end
-			else if (ip_mul >= op_mul) begin
+			else if (cmp_ip_gt_op) begin
 				if (ip_mul >= op_mul_n)
 					ox_state <= OUT_MULP;
 				else
@@ -522,9 +524,8 @@ module axis_scaler #
 			rd_idx <= rd_idx + 1;
 	end
 
-	assign rd_en = oy_valid
-			&& (~ox_valid || (out_state_sing && ox_ready))
-			&& ~rd_line_done;
+	assign rd_en = (oy_valid && ~rd_line_done)
+			&& (~ox_valid || (out_state_sing && ox_ready));
 
 	assign ox_ready = ~o_d1_tvalid || o_d1_tready;
 
