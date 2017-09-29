@@ -13,6 +13,7 @@ set ip_list [list \
 	axis_window \
 	axis_blender \
 	axis_relay \
+	axis_bayer_extractor \
 	axis_scaler \
 	mutex_buffer \
 	s2mm \
