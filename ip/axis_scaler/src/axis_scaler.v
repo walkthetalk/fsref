@@ -417,19 +417,20 @@ module axis_scaler #
 			ip_mul_cur <= 0;
 			ip_mul_next <= m_width;
 			ip_idx <= s_width;
-			ip_last <= (s_width == 1);
 		end
 		else if (rd_en) begin
 			ip_mul_cur <= ip_mul_next;
 			ip_mul_next <= ip_mul_next + m_width * 2;
-			if (ip_last) begin
-				ip_idx <= ip_idx;
-				ip_last <= 1;
-			end
-			else begin
-				ip_idx <= ip_idx - 1;
-				ip_last <= (ip_idx == 2);
-			end
+			ip_idx <= ip_idx - 1;
+		end
+	end
+
+	always @ (posedge clk) begin
+		if (line_reset) begin
+			ip_last <= (s_width == 1);
+		end
+		else if (rd_en && ip_idx == 2) begin
+			ip_last <= 1;
 		end
 	end
 
@@ -443,19 +444,18 @@ module axis_scaler #
 			op_idx <= m_width;
 			op_last <= (m_width == 1);
 		end
-		else if (~op_last &&
-			(rd_en ? (cmp_ip_gt_op || ip_last) : out_next)
+		else if (
+			/// @NOTE: when op_last as '1', updating 'op_mul' doesn't have any effect.
+			//~op_last &&
+			/// @NOTE: when rd_en, the ip_mul is same as ip_mul_next
+			//(rd_en ? (cmp_ip_gt_op || ip_last) : out_next)
+			(rd_en ? (ip_mul_next >= op_mul || ip_last) : out_next)
 			) begin
 			op_mul <= op_mul_n;
-			if (op_idx == 1) begin
-				op_mul_n <= op_mul_n;
-				op_idx <= op_idx;
-			end
-			else begin
-				op_mul_n <= op_mul_n + s_width * 2;
-				op_idx <= op_idx - 1;
-			end
-			op_last <= (op_idx == 2);
+			op_mul_n <= op_mul_n + s_width * 2;
+			op_idx <= op_idx - 1;
+			if (op_idx == 2)
+				op_last <= 1;
 		end
 	end
 	always @ (posedge clk) begin
@@ -490,20 +490,24 @@ module axis_scaler #
 					ox_state <= OUT_MULP;
 				else
 					ox_state <= OUT_SING;
-
-				if (oy_posedge)
-					xmul_diff <= 0;
-				else begin
-					xmul_diff <= ip_mul - op_mul;
-				end
 			end
 			else if (ip_last) begin
 				ox_state <= OUT_SING;
-				xmul_diff <= 0;
 			end
 			else begin
 				ox_state <= OUT_SKIP;
 			end
+		end
+	end
+	always @ (posedge clk) begin
+		if (line_reset) begin
+			xmul_diff <= 0;
+		end
+		else if (out_next || rd_en) begin
+			if (cmp_ip_gt_op && ~oy_posedge)
+				xmul_diff <= ip_mul - op_mul;
+			else
+				xmul_diff <= 0;
 		end
 	end
 	reg[C_RESO_WIDTH:0] x_spliter[C_SPLITER_NUM-1:0];
