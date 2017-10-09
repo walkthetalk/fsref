@@ -76,8 +76,16 @@ proc create_pvdma {
 		] [get_bd_cells $mname/fifo_mm2s]
 		endgroup
 
+		startgroup
+		create_bd_cell -type ip -vlnv $VENDOR:$LIBRARY:axis_relay:$VERSION $mname/mm2s_relay
+		endgroup
+		startgroup
+		set_property -dict [list CONFIG.C_PIXEL_WIDTH $pixel_width] [get_bd_cells $mname/mm2s_relay]
+		endgroup
+
 		create_bd_intf_pin -mode Master -vlnv xilinx.com:interface:axis_rtl:1.0 $mname/M_AXIS
-		connect_bd_intf_net [get_bd_intf_pins $mname/mm2s/M_AXIS] [get_bd_intf_pins $mname/M_AXIS]
+		connect_bd_intf_net [get_bd_intf_pins $mname/mm2s/M_AXIS] [get_bd_intf_pins $mname/mm2s_relay/S_AXIS]
+		connect_bd_intf_net [get_bd_intf_pins $mname/mm2s_relay/M_AXIS] [get_bd_intf_pins $mname/M_AXIS]
 
 		connect_bd_intf_net [get_bd_intf_pins $mname/mm2s/FIFO_WRITE] [get_bd_intf_pins $mname/fifo_mm2s/FIFO_WRITE]
 		connect_bd_intf_net [get_bd_intf_pins $mname/mm2s/FIFO_READ] [get_bd_intf_pins $mname/fifo_mm2s/FIFO_READ]
@@ -123,8 +131,16 @@ proc create_pvdma {
 		] [get_bd_cells $mname/fifo_s2mm]
 		endgroup
 
+		startgroup
+		create_bd_cell -type ip -vlnv $VENDOR:$LIBRARY:axis_relay:$VERSION $mname/s2mm_relay
+		endgroup
+		startgroup
+		set_property -dict [list CONFIG.C_PIXEL_WIDTH $pixel_width] [get_bd_cells $mname/s2mm_relay]
+		endgroup
+
 		create_bd_intf_pin -mode Slave -vlnv xilinx.com:interface:axis_rtl:1.0 $mname/S_AXIS
-		connect_bd_intf_net [get_bd_intf_pins $mname/s2mm/S_AXIS] [get_bd_intf_pins $mname/S_AXIS]
+		connect_bd_intf_net [get_bd_intf_pins $mname/s2mm/S_AXIS] [get_bd_intf_pins $mname/s2mm_relay/M_AXIS]
+		connect_bd_intf_net [get_bd_intf_pins $mname/s2mm_relay/S_AXIS] [get_bd_intf_pins $mname/S_AXIS]
 
 		connect_bd_intf_net [get_bd_intf_pins $mname/s2mm/FIFO_WRITE] [get_bd_intf_pins $mname/fifo_s2mm/FIFO_WRITE]
 		connect_bd_intf_net [get_bd_intf_pins $mname/s2mm/FIFO_READ] [get_bd_intf_pins $mname/fifo_s2mm/FIFO_READ]
