@@ -25,7 +25,9 @@ module axis_blender #
 	parameter integer C_S2_PIXEL_WIDTH	= 8,
 	parameter integer C_M_PIXEL_WIDTH	= 24,
 	parameter integer C_IMG_WBITS = 12,
-	parameter integer C_IMG_HBITS = 12
+	parameter integer C_IMG_HBITS = 12,
+	parameter integer C_TEST = 0
+
 )
 (
 	input wire clk,
@@ -328,20 +330,24 @@ module axis_blender #
 	wire[7:0] alpha;
 	assign alpha = s0_data[31:24];
 
-//`define ALPHA(A, B) (A > B ? (B + (((A-B) * alpha) >> 8)) : (B - (((B-A) * alpha) >> 8)))
-`define ALPHA(A,B) (A+B)/2
+`define ALPHA(A, B) (A > B ? (B + (((A-B) * alpha) >> 8)) : (B - (((B-A) * alpha) >> 8)))
 
 	always @ (posedge clk) begin
 		if (resetn == 1'b0)
 			m_axis_tdata <= 0;
 		else if (mnext)
 			if (s1_need || s2_need) begin
-				m_axis_tdata[23:16] <= s0_data[23:16];
-				m_axis_tdata[15: 8] <= (s1_need ? s1_data : 0);
-				m_axis_tdata[ 7: 0] <= (s2_need ? s2_data : 0);
-				//m_axis_tdata[23:16] <= `ALPHA(s0_data[23:16], data_12);
-				//m_axis_tdata[15: 8] <= `ALPHA(s0_data[15: 8], data_12);
-				//m_axis_tdata[ 7: 0] <= `ALPHA(s0_data[ 7: 0], data_12);
+				if (C_TEST) begin
+					if (s1_need)
+						m_axis_tdata <= {s1_data, s1_data, s1_data};
+					else
+						m_axis_tdata <= s0_data;
+				end
+				else begin
+					m_axis_tdata[23:16] <= `ALPHA(s0_data[23:16], data_12);
+					m_axis_tdata[15: 8] <= `ALPHA(s0_data[15: 8], data_12);
+					m_axis_tdata[ 7: 0] <= `ALPHA(s0_data[ 7: 0], data_12);
+				end
 			end
 			else
 				m_axis_tdata <= s0_data;

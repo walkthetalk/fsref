@@ -66,7 +66,8 @@ axis_blender # (
 	.C_S2_PIXEL_WIDTH(C_S2_PIXEL_WIDTH),
 	.C_M_PIXEL_WIDTH(C_M_PIXEL_WIDTH),
 	.C_IMG_WBITS(C_IMG_WBITS),
-	.C_IMG_HBITS(C_IMG_HBITS)
+	.C_IMG_HBITS(C_IMG_HBITS),
+	.C_TEST(1)
 ) uut (
 	.clk(clk),
 	.resetn(resetn),
