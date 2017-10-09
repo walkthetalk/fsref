@@ -1,7 +1,7 @@
 `timescale 1ns / 1ps
 
 `include "../src/linebuffer.v"
-`include "../src/yscaler.v"
+`include "../src/axis_scaler.v"
 
 module test();
 
@@ -41,15 +41,15 @@ initial begin
     $fscanf(fileR, "P%d\n%d %d\n%d\n", picType, s_width_tb, s_height_tb, grayDepth);
     dataPosition=$ftell(fileR);
     $display("header: %dx%d, %d", s_width_tb, s_height_tb, grayDepth);
-    m_height_tb = s_height_tb*2;
-    m_width_tb = s_width_tb*2;
+    m_height_tb = s_height_tb*3/2;
+    m_width_tb = s_width_tb*3/2;
     $display("header: %dx%d, %d, %0dx%0d", s_width_tb, s_height_tb, grayDepth, m_width_tb, m_height_tb);
 end
 
 reg clk;
 reg fsync_tb = 0;
 
-yscaler # (
+axis_scaler # (
 	.C_PIXEL_WIDTH(C_PIXEL_WIDTH),
 	.C_RESO_WIDTH(C_RESO_WIDTH),
 	.C_CH0_WIDTH(C_CH0_WIDTH),

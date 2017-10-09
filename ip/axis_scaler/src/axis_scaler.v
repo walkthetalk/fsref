@@ -164,11 +164,11 @@ module axis_scaler #
 	reg                 op_last;
 	reg                 op_last_cur;
 	/// same clock as rd_en
-	wire[C_RESO_WIDTH*2-1:0] ip_mul;
 	reg[C_RESO_WIDTH*2-1:0] ip_mul_cur;
 	reg[C_RESO_WIDTH*2-1:0] ip_mul_next;
 	reg[C_RESO_WIDTH-1:0] ip_idx;
 	reg                 ip_last;
+	wire[C_RESO_WIDTH*2-1:0] ip_mul;
 	assign ip_mul = (rd_en ? ip_mul_next : ip_mul_cur);
 
 	reg rd_line_done;
@@ -520,7 +520,7 @@ module axis_scaler #
 		end
 	endgenerate
 
-	assign line_reset = int_reset || ~oy_valid;
+	assign line_reset = advance_out_d1;	/// int_reset || ~oy_valid;
 	always @ (posedge clk) begin
 		if (line_reset)
 			rd_idx <= 0;
