@@ -74,7 +74,7 @@ pip_add_usr_par [ipx::current_core] {C_PIXEL_WIDTH} {
 	value 8
 	value_format long
 	value_validation_type list
-	value_validation_list {8 10 12}
+	value_validation_list {8 10 12 16 24 30 32}
 } {
 	value 8
 	value_format long
