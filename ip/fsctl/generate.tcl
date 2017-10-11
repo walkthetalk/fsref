@@ -174,6 +174,35 @@ pip_add_bus_if [ipx::current_core] o_clk {
 	ASSOCIATED_RESET {o_resetn}
 }
 
+# stream resetn
+pip_add_bus_if [ipx::current_core] s0_soft_resetn {
+	abstraction_type_vlnv xilinx.com:signal:reset_rtl:1.0
+	bus_type_vlnv xilinx.com:signal:reset:1.0
+	interface_mode master
+} {
+	RST s0_soft_resetn
+} {
+	POLARITY {ACTIVE_LOW}
+}
+pip_add_bus_if [ipx::current_core] s1_soft_resetn {
+	abstraction_type_vlnv xilinx.com:signal:reset_rtl:1.0
+	bus_type_vlnv xilinx.com:signal:reset:1.0
+	interface_mode master
+} {
+	RST s1_soft_resetn
+} {
+	POLARITY {ACTIVE_LOW}
+}
+pip_add_bus_if [ipx::current_core] s2_soft_resetn {
+	abstraction_type_vlnv xilinx.com:signal:reset_rtl:1.0
+	bus_type_vlnv xilinx.com:signal:reset:1.0
+	interface_mode master
+} {
+	RST s2_soft_resetn
+} {
+	POLARITY {ACTIVE_LOW}
+}
+
 # parameters
 pip_add_usr_par [ipx::current_core] {C_DATA_WIDTH} {
 	display_name {Data Width}

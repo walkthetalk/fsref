@@ -261,8 +261,7 @@ module FIFO2MM #
 			&& soft_resetn
 			&& (rd_data_count >= C_M_AXI_BURST_LEN)
 			//&& idle_cnt == 0
-			&& img_width != 0
-			&& img_height != 0)
+			)
 			start_burst_pulse <= 1'b1;
 		else
 			start_burst_pulse <= 1'b0;

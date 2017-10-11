@@ -60,6 +60,7 @@ module fsctl #
 	output wire [C_IMG_WBITS-1:0] out_width,
 	output wire [C_IMG_HBITS-1:0] out_height,
 /// stream 0
+	output reg s0_soft_resetn,
 	output wire [C_IMG_WBITS-1:0] s0_width,
 	output wire [C_IMG_HBITS-1:0] s0_height,
 
@@ -78,6 +79,7 @@ module fsctl #
 	output wire [C_IMG_HBITS-1:0] s0_dst_top,
 	output wire [C_IMG_HBITS-1:0] s0_dst_height,
 /// stream 1
+	output reg s1_soft_resetn,
 	output reg [C_IMG_WBITS-1:0] s1_width,
 	output reg [C_IMG_HBITS-1:0] s1_height,
 
@@ -96,6 +98,7 @@ module fsctl #
 	output reg [C_IMG_HBITS-1:0] s1_dst_top,
 	output reg [C_IMG_HBITS-1:0] s1_dst_height,
 /// stream 2
+	output reg s2_soft_resetn,
 	output reg [C_IMG_WBITS-1:0] s2_width,
 	output reg [C_IMG_HBITS-1:0] s2_height,
 
@@ -263,5 +266,24 @@ module fsctl #
 	assign s2_scale_src_height = s2_win_height;
 	assign s2_scale_dst_width  = s2_dst_width;
 	assign s2_scale_dst_height = s2_dst_height;
+
+	always @ (posedge o_clk) begin
+		if (o_resetn == 1'b0)
+			s0_soft_resetn <= 0;
+		else if (fsync_posedge && ~display_cfging)
+			s0_soft_resetn <= (s0_running && s0_width != 0 && s0_height != 0);
+	end
+	always @ (posedge o_clk) begin
+		if (o_resetn == 1'b0)
+			s1_soft_resetn <= 0;
+		else if (fsync_posedge && ~display_cfging)
+			s1_soft_resetn <= (s1_running && s1_width != 0 && s1_height != 0);
+	end
+	always @ (posedge o_clk) begin
+		if (o_resetn == 1'b0)
+			s2_soft_resetn <= 0;
+		else if (fsync_posedge && ~display_cfging)
+			s2_soft_resetn <= (s2_running && s2_width != 0 && s2_height != 0);
+	end
 
 endmodule

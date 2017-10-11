@@ -139,10 +139,10 @@ proc create_fscore {
 		$mname/fsctl/S1_SIZE             $mname/pvdma_1/IMG_SIZE
 		$mname/fsctl/S2_SIZE             $mname/pvdma_2/IMG_SIZE
 	}]
-	pip_connect_pin $mname/fsctl/soft_resetn [subst {
-		$mname/pvdma_0/soft_resetn
-		$mname/pvdma_1/soft_resetn
-		$mname/pvdma_2/soft_resetn
+	pip_connect_net [subst {
+		$mname/fsctl/s0_soft_resetn $mname/pvdma_0/soft_resetn
+		$mname/fsctl/s1_soft_resetn $mname/pvdma_1/soft_resetn
+		$mname/fsctl/s2_soft_resetn $mname/pvdma_2/soft_resetn
 	}]
 
 	# external signal
