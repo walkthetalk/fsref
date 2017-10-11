@@ -163,17 +163,6 @@ pip_add_bus_if [ipx::current_core] o_resetn {
 	POLARITY {ACTIVE_LOW}
 }
 
-pip_add_bus_if [ipx::current_core] o_clk {
-	abstraction_type_vlnv xilinx.com:signal:clock_rtl:1.0
-	bus_type_vlnv xilinx.com:signal:clock:1.0
-	interface_mode slave
-} {
-	CLK o_clk
-} {
-	ASSOCIATED_BUSIF {o_fsync:OUT_SIZE:S0_SIZE:S0_WIN:S0_SCALE:S0_DST:S1_SIZE:S1_WIN:S1_SCALE:S1_DST:S2_SIZE:S2_WIN:S2_SCALE:S2_DST}
-	ASSOCIATED_RESET {o_resetn}
-}
-
 # stream resetn
 pip_add_bus_if [ipx::current_core] s0_soft_resetn {
 	abstraction_type_vlnv xilinx.com:signal:reset_rtl:1.0
@@ -201,6 +190,17 @@ pip_add_bus_if [ipx::current_core] s2_soft_resetn {
 	RST s2_soft_resetn
 } {
 	POLARITY {ACTIVE_LOW}
+}
+
+pip_add_bus_if [ipx::current_core] o_clk {
+	abstraction_type_vlnv xilinx.com:signal:clock_rtl:1.0
+	bus_type_vlnv xilinx.com:signal:clock:1.0
+	interface_mode slave
+} {
+	CLK o_clk
+} {
+	ASSOCIATED_BUSIF {o_fsync:OUT_SIZE:S0_SIZE:S0_WIN:S0_SCALE:S0_DST:S1_SIZE:S1_WIN:S1_SCALE:S1_DST:S2_SIZE:S2_WIN:S2_SCALE:S2_DST}
+	ASSOCIATED_RESET {o_resetn:s0_soft_resetn:s1_soft_resetn:s2_soft_resetn}
 }
 
 # parameters
