@@ -226,7 +226,7 @@ module fsctl #
 	always @ (posedge o_clk) begin \
 		if (o_resetn == 1'b0) \
 			_name <= _defv; \
-		else if (fsync_posedge && ~display_cfging) \
+		else if (update_display_cfg) \
 			_name <= (_depend ? r_``_name : 0); \
 		else \
 			_name <= _name; \
@@ -238,22 +238,26 @@ module fsctl #
 
 	`DEFREG_EXTERNAL(0, 0, 1, soft_resetn, 0)
 	`DEFREG_INTERNAL(0, 1, 1, display_cfging, 0)
-	`DEFREG_DISP(0, 2, 1, order_1over2, 0, 1)
-	`DEFREG_INTERNAL(0, 4, 1, s0_running, 1)
-	`DEFREG_INTERNAL(0, 5, 1, s1_running, 0)
-	`DEFREG_INTERNAL(0, 6, 1, s2_running, 0)
 
-	`DEFREG_IMGSIZE( 1, s1_width,              0,  s1_height,              0, s1_running)
-	`DEFREG_IMGSIZE( 2, s1_win_left,           0,  s1_win_top,             0, s1_running)
-	`DEFREG_IMGSIZE( 3, s1_win_width,          0,  s1_win_height,          0, s1_running)
-	`DEFREG_IMGSIZE( 4, s1_dst_left,           0,  s1_dst_top,             0, s1_running)
-	`DEFREG_IMGSIZE( 5, s1_dst_width,          0,  s1_dst_height,          0, s1_running)
+	wire update_display_cfg;
+	assign update_display_cfg = fsync_posedge && ~display_cfging;
 
-	`DEFREG_IMGSIZE( 6, s2_width,              0,  s2_height,              0, s2_running)
-	`DEFREG_IMGSIZE( 7, s2_win_left,           0,  s2_win_top,             0, s2_running)
-	`DEFREG_IMGSIZE( 8, s2_win_width,          0,  s2_win_height,          0, s2_running)
-	`DEFREG_IMGSIZE( 9, s2_dst_left,           0,  s2_dst_top,             0, s2_running)
-	`DEFREG_IMGSIZE(10, s2_dst_width,          0,  s2_dst_height,          0, s2_running)
+	`DEFREG_DISP(1, 0, 1, order_1over2, 0, 1)
+	`DEFREG_INTERNAL(1, 1, 1, s0_running, 1)
+	`DEFREG_INTERNAL(1, 2, 1, s1_running, 0)
+	`DEFREG_INTERNAL(1, 3, 1, s2_running, 0)
+
+	`DEFREG_IMGSIZE( 2, s1_width,              0,  s1_height,              0, s1_running)
+	`DEFREG_IMGSIZE( 3, s1_win_left,           0,  s1_win_top,             0, s1_running)
+	`DEFREG_IMGSIZE( 4, s1_win_width,          0,  s1_win_height,          0, s1_running)
+	`DEFREG_IMGSIZE( 5, s1_dst_left,           0,  s1_dst_top,             0, s1_running)
+	`DEFREG_IMGSIZE( 6, s1_dst_width,          0,  s1_dst_height,          0, s1_running)
+
+	`DEFREG_IMGSIZE( 7, s2_width,              0,  s2_height,              0, s2_running)
+	`DEFREG_IMGSIZE( 8, s2_win_left,           0,  s2_win_top,             0, s2_running)
+	`DEFREG_IMGSIZE( 9, s2_win_width,          0,  s2_win_height,          0, s2_running)
+	`DEFREG_IMGSIZE(10, s2_dst_left,           0,  s2_dst_top,             0, s2_running)
+	`DEFREG_IMGSIZE(11, s2_dst_width,          0,  s2_dst_height,          0, s2_running)
 
 	`DEFREG_FIXED(C_REG_NUM-1, 0, 32, core_version, C_CORE_VERSION)
 
@@ -270,20 +274,20 @@ module fsctl #
 	always @ (posedge o_clk) begin
 		if (o_resetn == 1'b0)
 			s0_soft_resetn <= 0;
-		else if (fsync_posedge && ~display_cfging)
-			s0_soft_resetn <= (s0_running && s0_width != 0 && s0_height != 0);
+		else if (update_display_cfg)
+			s0_soft_resetn <= (s0_running);
 	end
 	always @ (posedge o_clk) begin
 		if (o_resetn == 1'b0)
 			s1_soft_resetn <= 0;
-		else if (fsync_posedge && ~display_cfging)
-			s1_soft_resetn <= (s1_running && s1_width != 0 && s1_height != 0);
+		else if (update_display_cfg)
+			s1_soft_resetn <= (s1_running);
 	end
 	always @ (posedge o_clk) begin
 		if (o_resetn == 1'b0)
 			s2_soft_resetn <= 0;
-		else if (fsync_posedge && ~display_cfging)
-			s2_soft_resetn <= (s2_running && s2_width != 0 && s2_height != 0);
+		else if (update_display_cfg)
+			s2_soft_resetn <= (s2_running);
 	end
 
 endmodule
