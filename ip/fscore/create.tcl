@@ -145,6 +145,18 @@ proc create_fscore {
 		$mname/fsctl/s2_soft_resetn $mname/pvdma_2/soft_resetn
 	}]
 
+	pip_connect_pin $mname/fsctl/s1_soft_resetn [subst {
+		$mname/axis_window_1/resetn
+		$mname/axis_scaler_1/resetn
+		$mname/axis_relay_1/resetn
+	}]
+
+	pip_connect_pin $mname/fsctl/s2_soft_resetn [subst {
+		$mname/axis_window_2/resetn
+		$mname/axis_scaler_2/resetn
+		$mname/axis_relay_2/resetn
+	}]
+
 	# external signal
 	create_bd_pin -dir I $mname/s_axi_clk
 	pip_connect_pin $mname/s_axi_clk [subst {
@@ -186,12 +198,6 @@ proc create_fscore {
 		$mname/pvdma_0/resetn
 		$mname/pvdma_1/resetn
 		$mname/pvdma_2/resetn
-		$mname/axis_window_1/resetn
-		$mname/axis_window_2/resetn
-		$mname/axis_scaler_1/resetn
-		$mname/axis_scaler_2/resetn
-		$mname/axis_relay_1/resetn
-		$mname/axis_relay_2/resetn
 		$mname/axis_blender/resetn
 	}]
 }
