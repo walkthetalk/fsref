@@ -164,6 +164,14 @@ module fsctl #
 	assign s0_dst_top = 0;
 	assign s0_dst_height = out_height;
 
+	wire [C_REG_NUM-1:0] s_wr_en;
+	generate
+		genvar i;
+		for (i = 0; i < C_REG_NUM; i = i+1) begin: signgle_s_wr_en
+			assign s_wr_en[i] = (wr_en && wr_index == i);
+		end
+	endgenerate
+
 /// aux macro
 `define DEFREG(_ridx, _bstart, _bwidth, _name, _defv) \
 	reg [_bwidth-1 : 0] r_``_name; \
@@ -171,7 +179,7 @@ module fsctl #
 	always @ (posedge clk) begin \
 		if (resetn == 1'b0) \
 			r_``_name <= _defv; \
-		else if (wr_en && wr_index == _ridx) \
+		else if (s_wr_en[_ridx]) \
 			r_``_name <= wr_data[_bstart + _bwidth - 1 : _bstart]; \
 		else \
 			r_``_name <= r_``_name; \
@@ -221,20 +229,20 @@ module fsctl #
 	end
 
 /// imagesize aux macro
-`define DEFREG_DISP( _ridx, _bstart, _bwidth, _name, _defv, _depend) \
+`define DEFREG_DISP( _ridx, _bstart, _bwidth, _name, _defv) \
 	`DEFREG(_ridx, _bstart, _bwidth, _name, _defv) \
 	always @ (posedge o_clk) begin \
 		if (o_resetn == 1'b0) \
 			_name <= _defv; \
 		else if (update_display_cfg) \
-			_name <= (_depend ? r_``_name : 0); \
+			_name <= r_``_name; \
 		else \
 			_name <= _name; \
 	end
 
-`define DEFREG_IMGSIZE( _ridx, _name1, _defv1, _name0, _defv0, _depend) \
-	`DEFREG_DISP(_ridx, 16, C_IMG_WBITS, _name1, _defv1, _depend) \
-	`DEFREG_DISP(_ridx,  0, C_IMG_HBITS, _name0, _defv0, _depend)
+`define DEFREG_IMGSIZE( _ridx, _name1, _defv1, _name0, _defv0) \
+	`DEFREG_DISP(_ridx, 16, C_IMG_WBITS, _name1, _defv1) \
+	`DEFREG_DISP(_ridx,  0, C_IMG_HBITS, _name0, _defv0)
 
 	`DEFREG_EXTERNAL(0, 0, 1, soft_resetn, 0)
 	`DEFREG_INTERNAL(0, 1, 1, display_cfging, 0)
@@ -242,22 +250,22 @@ module fsctl #
 	wire update_display_cfg;
 	assign update_display_cfg = fsync_posedge && ~display_cfging;
 
-	`DEFREG_DISP(1, 0, 1, order_1over2, 0, 1)
+	`DEFREG_DISP(1, 0, 1, order_1over2, 0)
 	`DEFREG_INTERNAL(1, 1, 1, s0_running, 1)
 	`DEFREG_INTERNAL(1, 2, 1, s1_running, 0)
 	`DEFREG_INTERNAL(1, 3, 1, s2_running, 0)
 
-	`DEFREG_IMGSIZE( 2, s1_width,              0,  s1_height,              0, s1_running)
-	`DEFREG_IMGSIZE( 3, s1_win_left,           0,  s1_win_top,             0, s1_running)
-	`DEFREG_IMGSIZE( 4, s1_win_width,          0,  s1_win_height,          0, s1_running)
-	`DEFREG_IMGSIZE( 5, s1_dst_left,           0,  s1_dst_top,             0, s1_running)
-	`DEFREG_IMGSIZE( 6, s1_dst_width,          0,  s1_dst_height,          0, s1_running)
+	`DEFREG_IMGSIZE( 2, s1_width,              0,  s1_height,              0)
+	`DEFREG_IMGSIZE( 3, s1_win_left,           0,  s1_win_top,             0)
+	`DEFREG_IMGSIZE( 4, s1_win_width,          0,  s1_win_height,          0)
+	`DEFREG_IMGSIZE( 5, s1_dst_left,           0,  s1_dst_top,             0)
+	`DEFREG_IMGSIZE( 6, s1_dst_width,          0,  s1_dst_height,          0)
 
-	`DEFREG_IMGSIZE( 7, s2_width,              0,  s2_height,              0, s2_running)
-	`DEFREG_IMGSIZE( 8, s2_win_left,           0,  s2_win_top,             0, s2_running)
-	`DEFREG_IMGSIZE( 9, s2_win_width,          0,  s2_win_height,          0, s2_running)
-	`DEFREG_IMGSIZE(10, s2_dst_left,           0,  s2_dst_top,             0, s2_running)
-	`DEFREG_IMGSIZE(11, s2_dst_width,          0,  s2_dst_height,          0, s2_running)
+	`DEFREG_IMGSIZE( 7, s2_width,              0,  s2_height,              0)
+	`DEFREG_IMGSIZE( 8, s2_win_left,           0,  s2_win_top,             0)
+	`DEFREG_IMGSIZE( 9, s2_win_width,          0,  s2_win_height,          0)
+	`DEFREG_IMGSIZE(10, s2_dst_left,           0,  s2_dst_top,             0)
+	`DEFREG_IMGSIZE(11, s2_dst_width,          0,  s2_dst_height,          0)
 
 	`DEFREG_FIXED(C_REG_NUM-1, 0, 32, core_version, C_CORE_VERSION)
 
