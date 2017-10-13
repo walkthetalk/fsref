@@ -86,6 +86,16 @@
 		clocks = <&clkc 15>, <&clkc 16>, <&clkc 17>, <&clkc 18>;
 		// lcd-supply = <&reg_dc1sw>;
 	};
+	framebuffer2 {
+		compatible = "simple-framebuffer";
+		memory-region = <&cmos1mem0>;
+		width = <320>;
+		height = <240>;
+		stride = <(320 * 4)>;
+		format = "a8r8g8b8";
+		clocks = <&clkc 15>, <&clkc 16>, <&clkc 17>, <&clkc 18>;
+		// lcd-supply = <&reg_dc1sw>;
+	};
 };
 
 /*
