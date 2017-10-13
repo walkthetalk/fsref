@@ -84,6 +84,7 @@ module FIFO2MM #
 	reg [C_TRANSACTIONS_NUM : 0] 	write_index;
 	reg	start_burst_pulse;
 	reg	burst_active;
+	wire    burst_done;
 	wire	wnext;
 	reg	need_data;
 	reg	r_dvalid;
@@ -91,6 +92,7 @@ module FIFO2MM #
  	reg [C_IMG_HBITS-1:0] r_img_row_idx;
 
 	assign wnext = M_AXI_WREADY & M_AXI_WVALID;
+	assign burst_done = M_AXI_BVALID && M_AXI_BREADY;
 
 	///  resetting
 	reg soft_resetn_d1;
@@ -106,7 +108,7 @@ module FIFO2MM #
 			r_soft_resetting <= 1'b1;
 		else if (~(start_burst_pulse | burst_active))
 			r_soft_resetting <= 1'b0;
-		else if (M_AXI_BVALID & M_AXI_BREADY)
+		else if (burst_done)
 			r_soft_resetting <= 1'b0;
 		else if (~soft_resetn && soft_resetn_d1)	/// soft_resetn_negedge
 			r_soft_resetting <= 1'b1;
@@ -120,7 +122,7 @@ module FIFO2MM #
 	always @ (posedge M_AXI_ACLK) begin
 		if (M_AXI_ARESETN == 0)
 			r_frame_pulse <= 1'b0;
-		else if (M_AXI_BVALID && final_data)
+		else if (burst_done && final_data)
 			r_frame_pulse <= 1'b1;
 		else
 			r_frame_pulse <= 1'b0;
@@ -272,7 +274,7 @@ module FIFO2MM #
 			burst_active <= 1'b0;
 		else if (start_burst_pulse)
 			burst_active <= 1'b1;
-		else if (M_AXI_BVALID && M_AXI_BREADY)
+		else if (burst_done)
 			burst_active <= 0;
 		else
 			burst_active <= burst_active;

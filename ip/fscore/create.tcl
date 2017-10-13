@@ -64,6 +64,30 @@ proc create_fscore {
 	endgroup
 
 	startgroup
+	create_bd_cell -type ip -vlnv $VENDOR:$LIBRARY:axis_bayer_extractor:$VERSION $mname/axis_bayer_extractor_1
+	endgroup
+	startgroup
+	create_bd_cell -type ip -vlnv $VENDOR:$LIBRARY:axis_bayer_extractor:$VERSION $mname/axis_bayer_extractor_2
+	endgroup
+	startgroup
+	set_property -dict [list \
+		CONFIG.C_PIXEL_WIDTH $pixel_width \
+	] [get_bd_cells $mname/axis_bayer_extractor_*]
+	endgroup
+
+	startgroup
+	create_bd_cell -type ip -vlnv $VENDOR:$LIBRARY:axis_reshaper:$VERSION $mname/axis_reshaper_1
+	endgroup
+	startgroup
+	create_bd_cell -type ip -vlnv $VENDOR:$LIBRARY:axis_reshaper:$VERSION $mname/axis_reshaper_2
+	endgroup
+	startgroup
+	set_property -dict [list \
+		CONFIG.C_PIXEL_WIDTH $pixel_width \
+	] [get_bd_cells $mname/axis_reshaper_*]
+	endgroup
+
+	startgroup
 	create_bd_cell -type ip -vlnv $VENDOR:$LIBRARY:axis_blender:$VERSION $mname/axis_blender
 	endgroup
 	startgroup
@@ -132,8 +156,12 @@ proc create_fscore {
 		$mname/pvdma_0/M_AXI             $mname/M0_AXI
 		$mname/pvdma_1/M_AXI             $mname/M1_AXI
 		$mname/pvdma_2/M_AXI             $mname/M2_AXI
-		$mname/pvdma_1/S_AXIS            $mname/S0_AXIS
-		$mname/pvdma_2/S_AXIS            $mname/S1_AXIS
+		$mname/S0_AXIS                   $mname/axis_reshaper_1/S_AXIS
+		$mname/axis_reshaper_1/M_AXIS    $mname/axis_bayer_extractor_1/S_AXIS
+		$mname/axis_bayer_extractor_1/M_AXIS $mname/pvdma_1/S_AXIS
+		$mname/S1_AXIS                   $mname/axis_reshaper_2/S_AXIS
+		$mname/axis_reshaper_2/M_AXIS    $mname/axis_bayer_extractor_2/S_AXIS
+		$mname/axis_bayer_extractor_2/M_AXIS $mname/pvdma_2/S_AXIS
 		$mname/axis_blender/M_AXIS       $mname/M_AXIS
 		$mname/fsctl/S0_SIZE             $mname/pvdma_0/IMG_SIZE
 		$mname/fsctl/S1_SIZE             $mname/pvdma_1/IMG_SIZE
@@ -149,12 +177,16 @@ proc create_fscore {
 		$mname/axis_window_1/resetn
 		$mname/axis_scaler_1/resetn
 		$mname/axis_relay_1/resetn
+		$mname/axis_bayer_extractor_1/resetn
+		$mname/axis_reshaper_1/resetn
 	}]
 
 	pip_connect_pin $mname/fsctl/s2_soft_resetn [subst {
 		$mname/axis_window_2/resetn
 		$mname/axis_scaler_2/resetn
 		$mname/axis_relay_2/resetn
+		$mname/axis_bayer_extractor_2/resetn
+		$mname/axis_reshaper_2/resetn
 	}]
 
 	# external signal
@@ -190,6 +222,10 @@ proc create_fscore {
 		$mname/axis_scaler_2/clk
 		$mname/axis_relay_1/clk
 		$mname/axis_relay_2/clk
+		$mname/axis_bayer_extractor_1/clk
+		$mname/axis_bayer_extractor_2/clk
+		$mname/axis_reshaper_1/clk
+		$mname/axis_reshaper_2/clk
 		$mname/axis_blender/clk
 	}]
 	create_bd_pin -dir I $mname/resetn

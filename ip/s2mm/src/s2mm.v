@@ -113,10 +113,14 @@ module s2mm #
 	endfunction
 
 // stream to fifo
+	wire working;
+	assign working = (resetn && soft_resetn);
+	assign resetting = ~working;
+
 	/// use s2f_aclk
-	assign s_axis_tready = ~s2mm_full && ~resetting;
+	assign s_axis_tready = ~s2mm_full && working;
 	assign s2mm_wr_data = {s_axis_tlast, s_axis_tuser, s_axis_tdata};
-	assign s2mm_wr_en = s_axis_tvalid & s_axis_tready & ~resetting;
+	assign s2mm_wr_en = s_axis_tvalid && (~s2mm_full) && working;
 
 	wire s2f_aclk; assign s2f_aclk = clk;
 	wire f2m_aclk; assign f2m_aclk = clk;
@@ -145,7 +149,7 @@ module s2mm #
 		.img_height(img_height),
 
 		.soft_resetn(soft_resetn),
-		.resetting(resetting),
+		//.resetting(resetting),
 
 		.sof(s2mm_rd_data[sofIdx(reverseI(0))]),
 		.din(s2mm_pixel_data),

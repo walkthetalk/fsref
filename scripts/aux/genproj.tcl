@@ -137,17 +137,6 @@ set_property -dict [list \
 endgroup
 copy_bd_objs /  [get_bd_cells videoin_0]
 
-startgroup
-create_bd_cell -type ip -vlnv $VENDOR:$LIBRARY:axis_bayer_extractor:$VERSION axis_bayer_extractor_0
-endgroup
-startgroup
-set_property -dict [list \
-	CONFIG.C_PIXEL_WIDTH {8} \
-	CONFIG.C_COL_ODD {false} \
-	CONFIG.C_ROW_ODD {false}] [get_bd_cells axis_bayer_extractor_0]
-endgroup
-copy_bd_objs /  [get_bd_cells axis_bayer_extractor_0]
-
 # X. fusion splicer core
 create_fscore fscore
 
@@ -198,7 +187,6 @@ pip_connect_pin cpu/FCLK_CLK1 {
 	fscore/clk
 	videoout/aclk
 	videoin_*/aclk
-	axis_bayer_extractor_*/clk
 }
 pip_connect_pin cpu/FCLK_RESET1_N rst_cpu_fclk1/ext_reset_in
 pip_connect_pin rst_cpu_fclk1/interconnect_aresetn ic_data_*/ARESETN
@@ -207,7 +195,6 @@ pip_connect_pin rst_cpu_fclk1/peripheral_aresetn {
 	fscore/resetn
 	videoout/aresetn
 	videoin_*/aresetn
-	axis_bayer_extractor_*/resetn
 }
 
 #     fclk2
@@ -236,11 +223,9 @@ pip_connect_intf_net {
 	fscore/M_AXIS            videoout/video_in
 	videoout/vid_io_out      fslcd/vid_io_in
 	fscmos_0/vid_io_out      videoin_0/vid_io_in
-	videoin_0/video_out      axis_bayer_extractor_0/S_AXIS
-	axis_bayer_extractor_0/M_AXIS    fscore/S0_AXIS
+	videoin_0/video_out      fscore/S0_AXIS
 	fscmos_1/vid_io_out      videoin_1/vid_io_in
-	videoin_1/video_out      axis_bayer_extractor_1/S_AXIS
-	axis_bayer_extractor_1/M_AXIS    fscore/S1_AXIS
+	videoin_1/video_out      fscore/S1_AXIS
 	vtc/vtiming_out          videoout/vtiming_in
 }
 
