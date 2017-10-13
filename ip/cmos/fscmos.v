@@ -44,8 +44,8 @@ module fscmos #
 	assign vid_active_video= (cmos_href && ~cmos_vsync);
 	assign vid_data = cmos_data;
 	assign vid_hblank = ~cmos_href;
-	assign vid_hsync = cmos_href;
+	assign vid_hsync = vid_hblank;
 
-	assign vid_vsync = cmos_vsync;
+	assign vid_vsync = vid_vblank;
 	assign vid_vblank = ~cmos_vsync;
 endmodule
