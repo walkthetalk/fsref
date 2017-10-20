@@ -1,9 +1,10 @@
-module block_ram #(
-	parameter integer C_BRAM_ADDR_WIDTH = 9,
+`include "./block_ram.v"
+
+module step_motor #(
 	parameter integer C_STEP_NUMBER_WIDTH = 16,
 	parameter integer C_SPEED_DATA_WIDTH = 16,
 	parameter integer C_SPEED_ADDRESS_WIDTH = 9,
-	parameter integer C_CLK_DIV_NBR = 32,	/// >= 4
+	parameter integer C_CLK_DIV_NBR = 32,	/// >= 4 (block_ram read delay)
 	parameter integer C_MOTOR_NBR = 4
 
 )(
@@ -30,14 +31,27 @@ module block_ram #(
 	input wire i_rst,
 	input wire [1:0] i_ms
 );
-	function integer clogb2(input integer bit_depth); begin
-		for(clogb2=0; bit_depth>0; clogb2=clogb2+1)
+	function integer clogb2(input integer bit_depth);
+		for(clogb2=0; bit_depth>0; clogb2=clogb2+1) begin
 			bit_depth = bit_depth>>1;
 		end
 	endfunction
 
-	//localparam integer C_CLK_DIV_BITS = clogb2(C_CLK_DIV_NBR);
-	//localparam integer C_CLK_DIV_NBR = 2**C_CLK_DIV_BITS;
+	/// block ram for speed data
+	reg rd_en_final;
+	reg [C_SPEED_ADDRESS_WIDTH-1:0] rd_addr_final;
+	wire [C_SPEED_DATA_WIDTH-1:0] rd_data_final;
+	block_ram #(
+		.C_DATA_WIDTH(C_SPEED_DATA_WIDTH),
+		.C_ADDRESS_WIDTH(C_SPEED_ADDRESS_WIDTH)
+	) speed_data (
+		.clk(clk),
+		.rd_en(rd_en_final),
+		.rd_addr(rd_addr_final),
+		.rd_data(rd_data_final)
+	);
+
+	/// clock division
 	reg [C_CLK_DIV_NBR-1:0] clk_en;
 	always @ (posedge clk) begin
 		if (resetn == 1'b0) begin
@@ -48,48 +62,50 @@ module block_ram #(
 		end
 	end
 
-	reg [C_MOTOR_NBR-1:0] rd_en;
-	reg [C_MOTOR_NBR-1:0] rd_en_d1;
-	reg [C_MOTOR_NBR-1:0] rd_en_d2;
-	reg [C_BRAM_ADDR_WIDTH-1:0] rd_addr[C_MOTOR_NBR-1:0];
-	reg [C_SPEED_DATA_WIDTH-1:0] speed[C_MOTOR_NBR-1:0];
-	wire [C_MOTOR_NBR-1:0] rd_addr_conv[C_BRAM_ADDR_WIDTH-1:0];
+	/// read block ram
+	wire [C_MOTOR_NBR-1:0] rd_en_array;
+	wire [C_SPEED_ADDRESS_WIDTH-1:0] rd_addr_array[C_MOTOR_NBR-1:0];
+	wire [C_MOTOR_NBR-1:0] rd_addr_conv[C_SPEED_ADDRESS_WIDTH-1:0];
 	generate
 		genvar i, j;
 		for (j=0; j < C_MOTOR_NBR; j = j + 1) begin: single_motor_conv
-			for (i=0; i < C_BRAM_ADDR_WIDTH; i = i + 1) begin: single_addr_bit_conv
-				assign rd_addr_conv[i][j] = rd_addr[j][i];
-			end
-			always @ (posedge clk) begin
-				if (rd_en_d2[j])
-					speed[j] <= xxx;
+			for (i=0; i < C_SPEED_ADDRESS_WIDTH; i = i + 1) begin: single_addr_bit_conv
+				assign rd_addr_conv[i][j] = rd_addr_array[j][i];
 			end
 		end
 	endgenerate
-	reg rd_en_final;
-	reg [C_BRAM_ADDR_WIDTH-1:0] rd_addr_final;
 	generate
-		for (i = 0; i < C_BRAM_ADDR_WIDTH; i = i+1) begin: single_addr_bit
+		for (i = 0; i < C_SPEED_ADDRESS_WIDTH; i = i+1) begin: single_addr_bit
 			always @ (posedge clk) begin
-				rd_en_final <= rd_en;
-				rd_addr_final[i] <= (rd_en & rd_addr_conv[i]);
+				rd_en_final <= rd_en_array;
+				rd_addr_final[i] <= (rd_en_array & rd_addr_conv[i]);
 			end
 		end
 	endgenerate
-	always @ (posedge clk) begin
-		rd_en_d1 <= rd_en;
-		rd_en_d2 <= rd_en_d1;
-	end
 
+	/// state macro
 	localparam integer IDLE = 2'b00;
 	localparam integer ACCE = 2'b01;
 	localparam integer KEEP = 2'b11;
 	localparam integer DEAC = 2'b10;
 
+	/// motor logic
 	generate
 		for (i = 0; i < C_MOTOR_NBR; i = i+1) begin: single_motor_logic
 			wire clk_pulse;
+			reg [C_SPEED_DATA_WIDTH-1:0]	speed_max;
+			reg [C_SPEED_DATA_WIDTH-1:0]    speed;
+			reg [C_SPEED_DATA_WIDTH-1:0]    speed_cnt;
+			reg [C_STEP_NUMBER_WIDTH-1:0]   step_cnt;
+			reg [C_STEP_NUMBER_WIDTH-1:0]	remain_step;
+			reg[1:0] motor_state;
+			reg[1:0] next_state;
 			assign clk_pulse = clk_en[i];
+			reg rd_en;
+			reg [C_SPEED_ADDRESS_WIDTH-1:0] rd_addr;
+			assign rd_en_array[i] = rd_en;
+			assign rd_addr_array[i] = rd_addr;
+
 			/// start_pulse
 			reg start_d1;
 			reg start_pulse;
@@ -109,33 +125,61 @@ module block_ram #(
 			end
 			always @ (posedge clk) begin
 				if (resetn == 1'b0)
-					rd_en[i] <= 0;
-				else if (rd_en[i])
-				 	rd_en[i] <= 0;
-				else if ((motor_state == IDLE) && start_pulse && clk_pulse)
-					rd_en[i] <= 1;
+					rd_en <= 0;
+				else if (rd_en)
+					rd_en <= 0;
+				else if (clk_pulse) begin
+					case (motor_state)
+					IDLE:	rd_en <= start_pulse;
+					default: rd_en <= (speed_cnt == 0);
+					endcase
+				end
+			end
+			reg rd_en_d1;
+			reg rd_en_d2;
+			always @ (posedge clk) begin
+				rd_en_d1 <= rd_en;
+				rd_en_d2 <= rd_en_d1;
+			end
+			always @ (posedge clk) begin
+				if (resetn == 1'b0)
+					rd_addr <= 0;
+				else begin
+					case (motor_state)
+					IDLE:	rd_addr <= 0;
+					ACCE:   if (rd_en) rd_addr <= rd_addr + 1;
+					KEEP:   if (rd_en) rd_addr <= rd_addr;
+					DEAC:	if (rd_en) rd_addr <= rd_addr - 1;
+					endcase
+				end
+			end
+			always @ (posedge clk) begin
+				if (rd_en_d2) begin
+					speed <= (rd_data_final > speed_max ? rd_data_final : speed_max);
+				end
 			end
 
-			reg [C_SPEED_DATA_WIDTH-1:0]	pulse_width;	/// represent speed
-			reg [C_STEP_NUMBER_WIDTH-1:0]	remain_step;
-			reg[1:0] motor_state;
-			reg[1:0] next_state;
 			always @ (posedge clk) begin
 				if (resetn == 1'b0)
 					motor_state <= IDLE;
-				else begin
+				else if (clk_pulse) begin
 					case (motor_state)
 					IDLE: begin
 						if (start_pulse) begin
-							pulse_width <= i_velocity;
+							speed_max <= i_velocity;
 							remain_step <= i_step_nbr;
-							next_state <= ACCE;
+							motor_state <= ACCE;
+							speed_cnt <= 0;
+							step_cnt <= 0;
 						end
+					end
+					ACCE: begin
+						rd_addr[i] <= rd_addr[i] + 1;
 					end
 					endcase
 				end
 			end
-		end
+		end	/// for
 	endgenerate
 
 endmodule
