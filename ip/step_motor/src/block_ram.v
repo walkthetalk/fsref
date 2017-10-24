@@ -3,25 +3,35 @@ module block_ram #(
 	parameter C_ADDRESS_WIDTH = 8
 )(
 	input clk,
-	input  wire                       rd_en,
-	input  wire [C_ADDRESS_WIDTH-1:0] rd_addr,
-	output reg  [C_DATA_WIDTH-1   :0] rd_data,
-	input  wire                       wr_en,
-	input  wire [C_ADDRESS_WIDTH-1:0] wr_addr,
-	input  wire [C_DATA_WIDTH-1   :0] wr_data
+
+	input wire weA,
+	input wire [(C_ADDRESS_WIDTH-1):0] addrA,
+	input wire [(C_DATA_WIDTH-1):0] dataA,
+	output reg [(C_DATA_WIDTH-1):0] qA,
+
+	input wire weB,
+	input wire [(C_ADDRESS_WIDTH-1):0] addrB,
+	input wire [(C_DATA_WIDTH-1):0] dataB,
+	output reg [(C_DATA_WIDTH-1):0] qB,
 );
 	reg [C_DATA_WIDTH-1:0] ram[2**C_ADDRESS_WIDTH-1:0];
 
 	always @ (posedge clk) begin
-		if (wr_en)
-			ram[wr_addr] <= wr_data;
+		if (weA) begin
+			ram[addrA] <= dataA;
+			qA <= dataA;
+		end
+		else
+			qA <= ram[addrA];
 	end
 
 	always @ (posedge clk) begin
-		if (rd_en)
-			rd_data <= ram[rd_addr];
+		if (weB) begin
+			ram[addrB] <= dataB;
+			qB <= dataB;
+		end
 		else
-			rd_data <= rd_data;
+			qB <= ram[addrB];
 	end
 
 endmodule
