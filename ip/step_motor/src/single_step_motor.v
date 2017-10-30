@@ -2,19 +2,13 @@ module single_step_motor #(
 	parameter integer C_STEP_NUMBER_WIDTH = 16,
 	parameter integer C_SPEED_DATA_WIDTH = 16,
 	parameter integer C_SPEED_ADDRESS_WIDTH = 9,
+	parameter integer C_MICROSTEP_WIDTH = 3,
 	parameter integer C_ZPD = 0
 )(
 	input  wire clk,
 	input  wire resetn,
 
-	input  wire i_clk_en,
-
-	output wire o_interrupt,
-
-	/// valid when C_ZPD == 1
-	input  wire zpd,	/// zero position detection
-	output wire tpd,	/// terminal position detection
-	input  wire [C_STEP_NUMBER_WIDTH-1:0]   stroke,
+	input  wire clk_en,
 
 	input  wire [C_SPEED_ADDRESS_WIDTH-1:0] acce_addr_max,
 	input  wire [C_SPEED_ADDRESS_WIDTH-1:0] deac_addr_max,
@@ -26,18 +20,25 @@ module single_step_motor #(
 	output wire [C_SPEED_ADDRESS_WIDTH-1:0] deac_addr,
 	input  wire [C_SPEED_DATA_WIDTH-1:0]    deac_data,
 
+	/// valid when C_ZPD == 1
+	input  wire zpd,	/// zero position detection
 	output reg  o_drive,
 	output reg  o_dir,
-	output reg  [1:0] o_ms,
+	output reg  [C_MICROSTEP_WIDTH-1:0] o_ms,
 	output wire o_xen,
 	output wire o_xrst,
 
+	/// valid when C_ZPD == 1
+	output wire zpsign,
+	output wire tpsign,	/// terminal position detection
+	input  wire [C_STEP_NUMBER_WIDTH-1:0]   stroke,
 	input  wire [C_SPEED_DATA_WIDTH-1:0]	i_speed,
 	input  wire [C_STEP_NUMBER_WIDTH-1:0]	i_step,
 	input  wire i_start,
 	input  wire i_stop,
 	input  wire i_dir,
-	input  wire [1:0] i_ms,
+	input  wire [C_MICROSTEP_WIDTH-1:0] i_ms,
+	output wire o_state,
 	input  wire i_xen,
 	input  wire i_xrst
 );
@@ -53,6 +54,7 @@ module single_step_motor #(
 	reg [C_STEP_NUMBER_WIDTH-1:0]	step_remain;
 	reg step_done;	/// keep one between final half step
 	reg motor_state;
+	assign o_state = motor_state;
 	reg rd_en;
 	/// reg [C_SPEED_ADDRESS_WIDTH-1:0] rd_addr;
 	assign acce_en = rd_en;
@@ -61,17 +63,18 @@ module single_step_motor #(
 	assign deac_addr = (step_remain > deac_addr_max ? deac_addr_max : step_remain);
 
 	/// for zpd
-	wire needAutoStop;
+	wire shouldStop;
 	generate
 	if (C_ZPD) begin
-		reg r_tpd;
-		assign tpd = r_tpd;
-		assign needAutoStop = ((step_done && (speed_cnt == 0))
-			|| (r_tpd && o_dir)
+		assign zpsign = zpd;
+		reg r_tpsign;
+		assign tpsign = r_tpsign;
+		assign shouldStop = ((step_done && (speed_cnt == 0))
+			|| (r_tpsign && o_dir)
 			|| (zpd && ~o_dir));
 	end
 	else begin
-		assign needAutoStop = (step_done && (speed_cnt == 0));
+		assign shouldStop = (step_done && (speed_cnt == 0));
 	end
 	endgenerate
 
@@ -88,7 +91,7 @@ module single_step_motor #(
 		if (resetn == 1'b0)
 			start_pulse <= 0;
 		else if (start_pulse) begin
-			if (i_clk_en)
+			if (clk_en)
 				start_pulse <= 0;
 		end
 		else begin
@@ -110,7 +113,7 @@ module single_step_motor #(
 		if (resetn == 1'b0)
 			stop_pulse <= 0;
 		else if (stop_pulse) begin
-			if (i_clk_en)
+			if (clk_en)
 				stop_pulse <= 0;
 		end
 		else begin
@@ -125,7 +128,7 @@ module single_step_motor #(
 			rd_en <= 0;
 		else if (rd_en)
 			rd_en <= 0;
-		else if (i_clk_en) begin
+		else if (clk_en) begin
 			case (motor_state)
 			IDLE:	rd_en <= start_pulse;
 			RUNNING: rd_en <= ((speed_cnt == 0) && o_drive);
@@ -163,7 +166,7 @@ module single_step_motor #(
 	always @ (posedge clk) begin
 		if (resetn == 1'b0)
 			motor_state <= IDLE;
-		else if (i_clk_en) begin
+		else if (clk_en) begin
 			case (motor_state)
 			IDLE: begin
 				if (start_pulse) begin
@@ -174,7 +177,7 @@ module single_step_motor #(
 				end
 			end
 			RUNNING: begin
-				if (needAutoStop)
+				if (shouldStop)
 					motor_state <= IDLE;
 			end
 			endcase
@@ -187,7 +190,7 @@ module single_step_motor #(
 	always @ (posedge clk) begin
 		if (resetn == 1'b0)
 			step_done <= 0;
-		else if (i_clk_en) begin
+		else if (clk_en) begin
 			case (motor_state)
 			IDLE: begin
 				step_done <= 0;
@@ -206,7 +209,7 @@ module single_step_motor #(
 			step_cnt <= 0;
 			step_remain <= 0;
 		end
-		else if (i_clk_en) begin
+		else if (clk_en) begin
 			case (motor_state)
 			IDLE: begin
 				if (start_pulse) begin
@@ -228,7 +231,7 @@ module single_step_motor #(
 	always @ (posedge clk) begin
 		if (resetn == 1'b0)
 			speed_cnt <= 0;
-		else if (i_clk_en) begin
+		else if (clk_en) begin
 			case (motor_state)
 			IDLE: begin
 				speed_cnt <= 0;
@@ -245,7 +248,7 @@ module single_step_motor #(
 	always @ (posedge clk) begin
 		if (resetn == 1'b0)
 			o_drive <= 0;
-		else if (i_clk_en) begin
+		else if (clk_en) begin
 			case (motor_state)
 			IDLE:	o_drive <= 0;
 			RUNNING: begin
@@ -279,14 +282,14 @@ module single_step_motor #(
 		end
 		always @ (posedge clk) begin
 			if (resetn == 1'b0 || zpd)
-				r_tpd <= 0;
+				r_tpsign <= 0;
 			else if (posedge_drive) begin
 				if (o_dir) begin
 					if (cur_position == stroke)
-						r_tpd <= 1;
+						r_tpsign <= 1;
 				end
 				else
-					r_tpd <= 0;
+					r_tpsign <= 0;
 			end
 		end
 	end

@@ -5,14 +5,14 @@ module block_ram #(
 	input clk,
 
 	input wire weA,
-	input wire [(C_ADDRESS_WIDTH-1):0] addrA,
 	input wire [(C_DATA_WIDTH-1):0] dataA,
+	input wire [(C_ADDRESS_WIDTH-1):0] addrA,
 	output reg [(C_DATA_WIDTH-1):0] qA,
 
 	input wire weB,
 	input wire [(C_ADDRESS_WIDTH-1):0] addrB,
 	input wire [(C_DATA_WIDTH-1):0] dataB,
-	output reg [(C_DATA_WIDTH-1):0] qB,
+	output reg [(C_DATA_WIDTH-1):0] qB
 );
 	reg [C_DATA_WIDTH-1:0] ram[2**C_ADDRESS_WIDTH-1:0];
 
