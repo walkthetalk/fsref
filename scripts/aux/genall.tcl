@@ -7,6 +7,7 @@ set ip_list [list \
 	mutex_buffer_ctl \
 	step_motor_ctl \
 	motor_ic_ctl \
+	blockram_init_ctl \
 	reg_ctl \
 	scale_ctl \
 	axilite2regctl \
