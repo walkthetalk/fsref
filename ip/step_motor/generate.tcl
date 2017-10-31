@@ -184,7 +184,7 @@ pip_add_usr_par [ipx::current_core] {C_MICROSTEP_WIDTH} {
 	value 3
 	value_format long
 	value_validation_type list
-	value_validation_list {1 2 3 4 5}
+	value_validation_list {1 2 3 4}
 } {
 	value 3
 	value_format long
