@@ -30,7 +30,7 @@ pip_add_bus_if [ipx::current_core] BR_INIT [subst {
 }
 
 for {set i 0} {$i < 8} {incr i} {
-	pip_add_bus_if [ipx::current_core] M[set i]_MOTOR_IC_CTL [subst {
+	pip_add_bus_if [ipx::current_core] M[set i] [subst {
 		abstraction_type_vlnv $VENDOR:interface:motor_ic_ctl_rtl:1.0
 		bus_type_vlnv $VENDOR:interface:motor_ic_ctl:1.0
 		interface_mode master
@@ -44,24 +44,24 @@ for {set i 0} {$i < 8} {incr i} {
 		XRST      m[set i]_xrst
 	}]
 
-	pip_add_bus_if [ipx::current_core] S[set i]_STEP_MOTOR_CTL [subst {
+	pip_add_bus_if [ipx::current_core] S[set i] [subst {
 		abstraction_type_vlnv $VENDOR:interface:step_motor_ctl_rtl:1.0
 		bus_type_vlnv $VENDOR:interface:step_motor_ctl:1.0
 		interface_mode slave
 		enablement_dependency {spirit:decode(id('MODELPARAM_VALUE.C_MOTOR_NBR')) > $i}
 	}] [subst {
-		ZPSIGN    s[set i]_zpsign
-		TPSIGN    s[set i]_tpsign
-		STROKE    s[set i]_stroke
-		SPEED     s[set i]_speed
-		STEP      s[set i]_step
-		START     s[set i]_start
-		STOP      s[set i]_stop
-		DIRECTION s[set i]_dir
-		MICROSTEP s[set i]_ms
-		STATE     s[set i]_state
 		XEN       s[set i]_xen
 		XRST      s[set i]_xrst
+		ZPSIGN    s[set i]_zpsign
+		TPSIGN    s[set i]_tpsign
+		STATE     s[set i]_state
+		STROKE    s[set i]_stroke
+		START     s[set i]_start
+		STOP      s[set i]_stop
+		MICROSTEP s[set i]_ms
+		SPEED     s[set i]_speed
+		STEP      s[set i]_step
+		DIRECTION s[set i]_dir
 	}]
 }
 
@@ -119,7 +119,7 @@ pip_add_usr_par [ipx::current_core] {C_MOTOR_NBR} {
 	value_format long
 }
 pip_add_usr_par [ipx::current_core] {C_ZPD_SEQ} {
-	display_name {zero position detection}
+	display_name {Zero Position Detection}
 	tooltip {when specific bit is 1, then enable zero position detection for corresponding motor.}
 	widget {hexEdit}
 } {
@@ -176,7 +176,7 @@ pip_add_usr_par [ipx::current_core] {C_SPEED_ADDRESS_WIDTH} {
 	value_format long
 }
 pip_add_usr_par [ipx::current_core] {C_MICROSTEP_WIDTH} {
-	display_name {microstep Width}
+	display_name {Microstep Width}
 	tooltip {microstep WIDTH}
 	widget {comboBox}
 } {

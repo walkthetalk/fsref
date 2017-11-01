@@ -208,7 +208,59 @@ module fsctl #
 	output wire [C_MICROSTEP_WIDTH-1:0]   motor3_ms,
 	output wire [C_SPEED_DATA_WIDTH-1:0]  motor3_speed,
 	output wire [C_STEP_NUMBER_WIDTH-1:0] motor3_step,
-	output wire                           motor3_dir
+	output wire                           motor3_dir,
+/// step motor 4
+	output wire                           motor4_xen,
+	output wire                           motor4_xrst,
+	input  wire                           motor4_zpsign,
+	input  wire                           motor4_tpsign,	/// terminal position detection
+	input  wire                           motor4_state,
+	output wire [C_STEP_NUMBER_WIDTH-1:0] motor4_stroke,
+	output wire                           motor4_start,
+	output wire                           motor4_stop,
+	output wire [C_MICROSTEP_WIDTH-1:0]   motor4_ms,
+	output wire [C_SPEED_DATA_WIDTH-1:0]  motor4_speed,
+	output wire [C_STEP_NUMBER_WIDTH-1:0] motor4_step,
+	output wire                           motor4_dir,
+/// step motor 5
+	output wire                           motor5_xen,
+	output wire                           motor5_xrst,
+	input  wire                           motor5_zpsign,
+	input  wire                           motor5_tpsign,	/// terminal position detection
+	input  wire                           motor5_state,
+	output wire [C_STEP_NUMBER_WIDTH-1:0] motor5_stroke,
+	output wire                           motor5_start,
+	output wire                           motor5_stop,
+	output wire [C_MICROSTEP_WIDTH-1:0]   motor5_ms,
+	output wire [C_SPEED_DATA_WIDTH-1:0]  motor5_speed,
+	output wire [C_STEP_NUMBER_WIDTH-1:0] motor5_step,
+	output wire                           motor5_dir,
+/// step motor 6
+	output wire                           motor6_xen,
+	output wire                           motor6_xrst,
+	input  wire                           motor6_zpsign,
+	input  wire                           motor6_tpsign,	/// terminal position detection
+	input  wire                           motor6_state,
+	output wire [C_STEP_NUMBER_WIDTH-1:0] motor6_stroke,
+	output wire                           motor6_start,
+	output wire                           motor6_stop,
+	output wire [C_MICROSTEP_WIDTH-1:0]   motor6_ms,
+	output wire [C_SPEED_DATA_WIDTH-1:0]  motor6_speed,
+	output wire [C_STEP_NUMBER_WIDTH-1:0] motor6_step,
+	output wire                           motor6_dir,
+/// step motor 7
+	output wire                           motor7_xen,
+	output wire                           motor7_xrst,
+	input  wire                           motor7_zpsign,
+	input  wire                           motor7_tpsign,	/// terminal position detection
+	input  wire                           motor7_state,
+	output wire [C_STEP_NUMBER_WIDTH-1:0] motor7_stroke,
+	output wire                           motor7_start,
+	output wire                           motor7_stop,
+	output wire [C_MICROSTEP_WIDTH-1:0]   motor7_ms,
+	output wire [C_SPEED_DATA_WIDTH-1:0]  motor7_speed,
+	output wire [C_STEP_NUMBER_WIDTH-1:0] motor7_step,
+	output wire                           motor7_dir
 );
 	assign dispbuf0_addr = C_DISPBUF0_ADDR;
 	assign cmos0buf0_addr = C_CMOS0BUF0_ADDR;
