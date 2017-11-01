@@ -100,6 +100,36 @@ proc create_fscore {
 	endgroup
 
 	startgroup
+	create_bd_cell -type ip -vlnv $VENDOR:$LIBRARY:step_motor:$VERSION $mname/push_motor
+	endgroup
+	startgroup
+	set_property -dict [list \
+		CONFIG.C_CLK_DIV_NBR 32 \
+		CONFIG.C_MOTOR_NBR 2 \
+		CONFIG.C_ZPD_SEQ "11" \
+		CONFIG.C_STEP_NUMBER_WIDTH 16 \
+		CONFIG.C_SPEED_DATA_WIDTH 16 \
+		CONFIG.C_SPEED_ADDRESS_WIDTH 9 \
+		CONFIG.C_MICROSTEP_WIDTH 3 \
+	] [get_bd_cells $mname/push_motor]
+	endgroup
+
+	startgroup
+	create_bd_cell -type ip -vlnv $VENDOR:$LIBRARY:step_motor:$VERSION $mname/align_motor
+	endgroup
+	startgroup
+	set_property -dict [list \
+		CONFIG.C_CLK_DIV_NBR 32 \
+		CONFIG.C_MOTOR_NBR 2 \
+		CONFIG.C_ZPD_SEQ "00" \
+		CONFIG.C_STEP_NUMBER_WIDTH 16 \
+		CONFIG.C_SPEED_DATA_WIDTH 16 \
+		CONFIG.C_SPEED_ADDRESS_WIDTH 9 \
+		CONFIG.C_MICROSTEP_WIDTH 3 \
+	] [get_bd_cells $mname/align_motor]
+	endgroup
+
+	startgroup
 	create_bd_cell -type ip -vlnv $VENDOR:$LIBRARY:axilite2regctl:$VERSION $mname/axilite2regctl
 	endgroup
 
@@ -109,6 +139,12 @@ proc create_fscore {
 	startgroup
 	set_property -dict [list \
 		CONFIG.C_CORE_VERSION $coreversion \
+		CONFIG.C_BR_INITOR_NBR 2 \
+		CONFIG.C_MOTOR_NBR 4 \
+		CONFIG.C_ZPD_SEQ "0011" \
+		CONFIG.C_STEP_NUMBER_WIDTH 16 \
+		CONFIG.C_SPEED_DATA_WIDTH 16 \
+		CONFIG.C_MICROSTEP_WIDTH 3 \
 	] [get_bd_cells $mname/fsctl]
 	endgroup
 
@@ -151,6 +187,11 @@ proc create_fscore {
 
 	create_bd_intf_pin -mode Master -vlnv xilinx.com:interface:axis_rtl:1.0 $mname/M_AXIS
 
+	create_bd_intf_pin -mode Master -vlnv $VENDOR:interface:motor_ic_ctl_rtl:1.0 $mname/PUSH_MOTOR0_IC_CTL
+	create_bd_intf_pin -mode Master -vlnv $VENDOR:interface:motor_ic_ctl_rtl:1.0 $mname/PUSH_MOTOR1_IC_CTL
+	create_bd_intf_pin -mode Master -vlnv $VENDOR:interface:motor_ic_ctl_rtl:1.0 $mname/ALIGN_MOTOR0_IC_CTL
+	create_bd_intf_pin -mode Master -vlnv $VENDOR:interface:motor_ic_ctl_rtl:1.0 $mname/ALIGN_MOTOR1_IC_CTL
+
 	pip_connect_intf_net [subst {
 		$mname/axilite2regctl/S_AXI_LITE $mname/S_AXI_LITE
 		$mname/pvdma_0/M_AXI             $mname/M0_AXI
@@ -166,6 +207,16 @@ proc create_fscore {
 		$mname/fsctl/S0_SIZE             $mname/pvdma_0/IMG_SIZE
 		$mname/fsctl/S1_SIZE             $mname/pvdma_1/IMG_SIZE
 		$mname/fsctl/S2_SIZE             $mname/pvdma_2/IMG_SIZE
+		$mname/fsctl/BR0_INIT_CTL        $mname/push_motor/BR_INIT
+		$mname/fsctl/MOTOR0_CTL          $mname/push_motor/S0
+		$mname/fsctl/MOTOR1_CTL          $mname/push_motor/S1
+		$mname/push_motor/M0             $mname/PUSH_MOTOR0_IC_CTL
+		$mname/push_motor/M1             $mname/PUSH_MOTOR1_IC_CTL
+		$mname/fsctl/BR1_INIT_CTL        $mname/align_motor/BR_INIT
+		$mname/fsctl/MOTOR2_CTL          $mname/align_motor/S0
+		$mname/fsctl/MOTOR3_CTL          $mname/align_motor/S1
+		$mname/align_motor/M0            $mname/ALIGN_MOTOR0_IC_CTL
+		$mname/align_motor/M1            $mname/ALIGN_MOTOR1_IC_CTL
 	}]
 	pip_connect_net [subst {
 		$mname/fsctl/s0_soft_resetn $mname/pvdma_0/soft_resetn
@@ -227,6 +278,8 @@ proc create_fscore {
 		$mname/axis_reshaper_1/clk
 		$mname/axis_reshaper_2/clk
 		$mname/axis_blender/clk
+		$mname/push_motor/clk
+		$mname/align_motor/clk
 	}]
 	create_bd_pin -dir I $mname/resetn
 	pip_connect_pin $mname/resetn [subst {
@@ -235,5 +288,7 @@ proc create_fscore {
 		$mname/pvdma_1/resetn
 		$mname/pvdma_2/resetn
 		$mname/axis_blender/resetn
+		$mname/push_motor/resetn
+		$mname/align_motor/resetn
 	}]
 }

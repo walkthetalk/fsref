@@ -137,6 +137,11 @@ set_property -dict [list \
 endgroup
 copy_bd_objs /  [get_bd_cells videoin_0]
 
+# 8. fsmotor
+startgroup
+create_bd_cell -type ip -vlnv $VENDOR:$LIBRARY:fsmotor:$VERSION fsmotor
+endgroup
+
 # X. fusion splicer core
 create_fscore fscore
 
@@ -210,7 +215,7 @@ pip_connect_pin rst_cpu_fclk2/peripheral_aresetn vtc/resetn
 
 # connect data
 
-# connect data: cpu -> lcd
+# connect interface
 pip_connect_intf_net {
 	ic_data_0/M00_AXI        cpu/S_AXI_HP0
 	ic_data_1/M00_AXI        cpu/S_AXI_HP1
@@ -227,9 +232,13 @@ pip_connect_intf_net {
 	fscmos_1/vid_io_out      videoin_1/vid_io_in
 	videoin_1/video_out      fscore/S1_AXIS
 	vtc/vtiming_out          videoout/vtiming_in
+        fscore/PUSH_MOTOR0_IC_CTL   fsmotor/S0
+        fscore/PUSH_MOTOR1_IC_CTL   fsmotor/S1
+        fscore/ALIGN_MOTOR0_IC_CTL  fsmotor/S2
+        fscore/ALIGN_MOTOR1_IC_CTL  fsmotor/S3
 }
 
-# connect data: cmos -> osd & cpu
+# connect signal
 pip_connect_net [subst {
 	fscmos_0/vid_io_out_clk   videoin_0/vid_io_in_clk
 	fscmos_1/vid_io_out_clk   videoin_1/vid_io_in_clk
@@ -290,6 +299,26 @@ connect_bd_net [get_bd_pins /fslcd/vsync_out] [get_bd_ports lcd_vsync]
 create_bd_port -dir O -from 3 -to 0 lcd_ctrl
 connect_bd_net [get_bd_pins /fslcd/ctrl_out] [get_bd_ports lcd_ctrl]
 endgroup
+
+# connect from/to external motor ic
+create_bd_port -dir O -from 2 -to 0 pm_ms
+create_bd_port -dir O pm_xen
+create_bd_port -dir I pm0_zpd
+create_bd_port -dir O pm0_drive
+create_bd_port -dir O pm0_dir
+create_bd_port -dir I pm1_zpd
+create_bd_port -dir O pm1_drive
+create_bd_port -dir O pm1_dir
+create_bd_port -dir O -from 2 -to 0 am_ms
+create_bd_port -dir O am_xen
+create_bd_port -dir O am0_drive
+create_bd_port -dir O am0_dir
+create_bd_port -dir O am1_drive
+create_bd_port -dir O am1_dir
+foreach i {pm_ms pm_xen pm0_zpd pm0_drive pm0_dir pm1_zpd pm1_drive pm1_dir
+        am_ms am_xen am0_drive am0_dir am1_drive am1_dir} {
+        connect_bd_net [get_bd_pins /fsmotor/$i] [get_bd_ports $i]
+}
 
 # 9. address
 # auto assign all addresses
