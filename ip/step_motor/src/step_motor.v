@@ -289,8 +289,8 @@ module step_motor #(
 	wire                           s_state[MAX_MOTOR_NBR-1:0];
 	wire                           s_xen[MAX_MOTOR_NBR-1:0];
 	wire                           s_xrst[MAX_MOTOR_NBR-1:0];
-`define ASSIGN_M(i, port) assign m_``port[i] = m``i``_``port
-`define ASSIGN_S(i, port) assign s_``port[i] = s``i``_``port
+`define ASSIGN_M(i, port) assign m``i``_``port = m_``port[i]
+`define ASSIGN_S(i, port) assign s``i``_``port = s_``port[i]
 `define ASSIGN_SINGLE_MOTOR(i) \
 	`ASSIGN_M(i, zpd); \
 	`ASSIGN_M(i, drive); \

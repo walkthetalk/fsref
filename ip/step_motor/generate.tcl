@@ -125,12 +125,12 @@ pip_add_usr_par [ipx::current_core] {C_ZPD_SEQ} {
 } {
 	value_bit_string_length 8
 	value_resolve_type user
-	value 0
+	value "00000000"
 	value_format bitString
 	value_validation_type none
 } {
 	value_bit_string_length 8
-	value 0
+	value "00000000"
 	value_format bitString
 }
 pip_add_usr_par [ipx::current_core] {C_STEP_NUMBER_WIDTH} {
