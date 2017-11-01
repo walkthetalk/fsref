@@ -1,7 +1,5 @@
 set origin_dir [lindex $argv 0]
 set ip_list [list \
-	cmos \
-	lcd \
 	addr_array \
 	window_ctl \
 	mutex_buffer_ctl \
@@ -10,6 +8,9 @@ set ip_list [list \
 	blockram_init_ctl \
 	reg_ctl \
 	scale_ctl \
+	cmos \
+	lcd \
+	fsmotor \
 	axilite2regctl \
 	const_window \
 	window_broadcaster \
