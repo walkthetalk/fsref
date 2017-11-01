@@ -64,19 +64,6 @@ module single_step_motor #(
 
 	/// for zpd
 	wire shouldStop;
-	generate
-	if (C_ZPD) begin
-		assign zpsign = zpd;
-		reg r_tpsign;
-		assign tpsign = r_tpsign;
-		assign shouldStop = ((step_done && (speed_cnt == 0))
-			|| (r_tpsign && o_dir)
-			|| (zpd && ~o_dir));
-	end
-	else begin
-		assign shouldStop = (step_done && (speed_cnt == 0));
-	end
-	endgenerate
 
 	/// start_pulse
 	reg start_d1;
@@ -262,6 +249,14 @@ module single_step_motor #(
 	/// zero position process
 	generate
 	if (C_ZPD) begin
+		/// for shouldStop
+		assign zpsign = zpd;
+		reg r_tpsign;
+		assign tpsign = r_tpsign;
+		assign shouldStop = ((step_done && (speed_cnt == 0))
+			|| (r_tpsign && o_dir)
+			|| (zpd && ~o_dir));
+
 		localparam integer C_INIT_POSITION = 1;
 		reg [C_STEP_NUMBER_WIDTH-1:0] cur_position;//stroke,
 		reg o_drive_d1;
@@ -292,6 +287,9 @@ module single_step_motor #(
 					r_tpsign <= 0;
 			end
 		end
+	end
+	else begin
+		assign shouldStop = (step_done && (speed_cnt == 0));
 	end
 	endgenerate
 
