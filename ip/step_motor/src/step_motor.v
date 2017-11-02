@@ -292,28 +292,29 @@ module step_motor #(
 	wire                           s_state[MAX_MOTOR_NBR-1:0];
 	wire                           s_xen[MAX_MOTOR_NBR-1:0];
 	wire                           s_xrst[MAX_MOTOR_NBR-1:0];
-`define ASSIGN_M(i, port) assign m``i``_``port = m_``port[i]
-`define ASSIGN_S(i, port) assign s``i``_``port = s_``port[i]
-`define ASSIGN_SINGLE_MOTOR(i) \
-	`ASSIGN_M(i, zpd); \
-	`ASSIGN_M(i, drive); \
-	`ASSIGN_M(i, dir); \
-	`ASSIGN_M(i, ms); \
-	`ASSIGN_M(i, xen); \
-	`ASSIGN_M(i, xrst); \
- \
-	`ASSIGN_S(i, zpsign); \
-	`ASSIGN_S(i, tpsign); \
-	`ASSIGN_S(i, stroke); \
-	`ASSIGN_S(i, speed); \
-	`ASSIGN_S(i, step); \
-	`ASSIGN_S(i, start); \
-	`ASSIGN_S(i, stop); \
-	`ASSIGN_S(i, dir); \
-	`ASSIGN_S(i, ms); \
-	`ASSIGN_S(i, state); \
-	`ASSIGN_S(i, xen); \
-	`ASSIGN_S(i, xrst)
+`define ASSIGN_M_OUT(_i, _port) assign m``_i``_``_port = m_``_port[_i]
+`define ASSIGN_M_IN(_i, _port) assign m_``_port[_i] = m``_i``_``_port
+`define ASSIGN_S_OUT(_i, _port) assign s``_i``_``_port = s_``_port[_i]
+`define ASSIGN_S_IN(_i, _port) assign s_``_port[_i] = s``_i``_``_port
+`define ASSIGN_SINGLE_MOTOR(_i) \
+	`ASSIGN_M_IN(_i, zpd); \
+	`ASSIGN_M_OUT(_i, drive); \
+	`ASSIGN_M_OUT(_i, dir); \
+	`ASSIGN_M_OUT(_i, ms); \
+	`ASSIGN_M_OUT(_i, xen); \
+	`ASSIGN_M_OUT(_i, xrst); \
+	`ASSIGN_S_IN(_i, stroke); \
+	`ASSIGN_S_IN(_i, speed); \
+	`ASSIGN_S_IN(_i, step); \
+	`ASSIGN_S_IN(_i, start); \
+	`ASSIGN_S_IN(_i, stop); \
+	`ASSIGN_S_IN(_i, dir); \
+	`ASSIGN_S_IN(_i, ms); \
+	`ASSIGN_S_IN(_i, xen); \
+	`ASSIGN_S_IN(_i, xrst); \
+	`ASSIGN_S_OUT(_i, zpsign); \
+	`ASSIGN_S_OUT(_i, tpsign); \
+	`ASSIGN_S_OUT(_i, state)
 
 	`ASSIGN_SINGLE_MOTOR(0);
 	`ASSIGN_SINGLE_MOTOR(1);
