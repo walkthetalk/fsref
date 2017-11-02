@@ -259,12 +259,14 @@ module step_motor #(
 		for (j=0; j < C_MOTOR_NBR; j = j + 1) begin: single_motor_conv
 			for (i=0; i < C_SPEED_ADDRESS_WIDTH; i = i + 1) begin: single_addr_bit_conv
 				assign acce_addr_conv[i][j] = acce_addr_array[j][i];
+				assign deac_addr_conv[i][j] = deac_addr_array[j][i];
 			end
 		end
 
 		for (i = 0; i < C_SPEED_ADDRESS_WIDTH; i = i+1) begin: single_addr_bit
 			always @ (posedge clk) begin
 				acce_addr_final[i] <= (acce_en_array & acce_addr_conv[i]);
+				deac_addr_final[i] <= (deac_en_array & deac_addr_conv[i]);
 			end
 		end
 	endgenerate
