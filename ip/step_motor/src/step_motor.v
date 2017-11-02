@@ -224,14 +224,15 @@ module step_motor #(
 		br_init_d1 <= br_init;
 	end
 	always @ (posedge clk) begin
-		if (br_init) begin
-			if (~br_init_d1) begin
-				acce_we_addr <= 0;
-			end
-			else if (br_wr_en) begin
-				acce_we_addr <= acce_we_addr + 1;
-				acce_addr_max <= acce_we_addr;
-			end
+		if (resetn == 1'b0) begin
+			acce_we_addr <= 0;
+			acce_addr_max <= 0;
+		end
+		else if (~br_init)
+			acce_we_addr <= 0;
+		else if (br_wr_en) begin
+			acce_we_addr <= acce_we_addr + 1;
+			acce_addr_max <= acce_we_addr;
 		end
 	end
 
