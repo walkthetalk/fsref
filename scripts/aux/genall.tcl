@@ -11,6 +11,7 @@ set ip_list [list \
 	scale_ctl \
 	cmos \
 	lcd \
+	pwm \
 	fsmotor \
 	axilite2regctl \
 	const_window \
