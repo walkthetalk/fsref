@@ -166,6 +166,20 @@ for {set i 0} {$i < 8} {incr i} {
 	}]
 }
 
+for {set i 0} {$i < 8} {incr i} {
+	pip_add_bus_if [ipx::current_core] PWM[set i]_CTL [subst {
+		abstraction_type_vlnv $VENDOR:interface:pwm_ctl_rtl:1.0
+		bus_type_vlnv $VENDOR:interface:pwm_ctl:1.0
+		interface_mode master
+		enablement_dependency {spirit:decode(id('MODELPARAM_VALUE.C_PWM_NBR')) > $i}
+	}] [subst {
+		DEF_VAL      pwm[set i]_def
+		EN           pwm[set i]_en
+		NUMERATOR    pwm[set i]_numerator
+		DENOMINATOR  pwm[set i]_denominator
+	}]
+}
+
 # clock & reset
 pip_add_bus_if [ipx::current_core] resetn {
 	abstraction_type_vlnv xilinx.com:signal:reset_rtl:1.0
@@ -401,6 +415,34 @@ pip_add_usr_par [ipx::current_core] {C_MOTOR_NBR} {
 	value_validation_list {0 1 2 3 4 5 6 7 8}
 } {
 	value 4
+	value_format long
+}
+pip_add_usr_par [ipx::current_core] {C_PWM_NBR} {
+	display_name {PWM Number}
+	tooltip {PWM Number}
+	widget {comboBox}
+} {
+	value_resolve_type user
+	value 4
+	value_format long
+	value_validation_type list
+	value_validation_list {0 1 2 3 4 5 6 7 8}
+} {
+	value 4
+	value_format long
+}
+pip_add_usr_par [ipx::current_core] {C_PWM_CNT_WIDTH} {
+	display_name {PWM Counter Width}
+	tooltip {PWM Counter Width}
+	widget {comboBox}
+} {
+	value_resolve_type user
+	value 16
+	value_format long
+	value_validation_type list
+	value_validation_list {1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16}
+} {
+	value 16
 	value_format long
 }
 pip_add_usr_par [ipx::current_core] {C_ZPD_SEQ} {

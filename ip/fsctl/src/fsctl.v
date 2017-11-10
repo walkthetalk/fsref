@@ -31,7 +31,10 @@ module fsctl #
 	parameter integer C_ZPD_SEQ = 8'b00000011,
 	parameter integer C_SPEED_DATA_WIDTH = 16,
 	parameter integer C_STEP_NUMBER_WIDTH = 16,
-	parameter integer C_MICROSTEP_WIDTH = 3
+	parameter integer C_MICROSTEP_WIDTH = 3,
+
+	parameter integer C_PWM_NBR = 8,
+	parameter integer C_PWM_CNT_WIDTH = 16
 )
 (
 	input clk,
@@ -260,7 +263,48 @@ module fsctl #
 	output wire [C_MICROSTEP_WIDTH-1:0]   motor7_ms,
 	output wire [C_SPEED_DATA_WIDTH-1:0]  motor7_speed,
 	output wire [C_STEP_NUMBER_WIDTH-1:0] motor7_step,
-	output wire                           motor7_dir
+	output wire                           motor7_dir,
+
+/// pwm 0
+	input  wire                       pwm0_def,
+	output wire                       pwm0_en,
+	output wire [C_PWM_CNT_WIDTH-1:0] pwm0_numerator,
+	output wire [C_PWM_CNT_WIDTH-1:0] pwm0_denominator,
+/// pwm 1
+	input  wire                       pwm1_def,
+	output wire                       pwm1_en,
+	output wire [C_PWM_CNT_WIDTH-1:0] pwm1_numerator,
+	output wire [C_PWM_CNT_WIDTH-1:0] pwm1_denominator,
+/// pwm 2
+	input  wire                       pwm2_def,
+	output wire                       pwm2_en,
+	output wire [C_PWM_CNT_WIDTH-1:0] pwm2_numerator,
+	output wire [C_PWM_CNT_WIDTH-1:0] pwm2_denominator,
+/// pwm 3
+	input  wire                       pwm3_def,
+	output wire                       pwm3_en,
+	output wire [C_PWM_CNT_WIDTH-1:0] pwm3_numerator,
+	output wire [C_PWM_CNT_WIDTH-1:0] pwm3_denominator,
+/// pwm 4
+	input  wire                       pwm4_def,
+	output wire                       pwm4_en,
+	output wire [C_PWM_CNT_WIDTH-1:0] pwm4_numerator,
+	output wire [C_PWM_CNT_WIDTH-1:0] pwm4_denominator,
+/// pwm 5
+	input  wire                       pwm5_def,
+	output wire                       pwm5_en,
+	output wire [C_PWM_CNT_WIDTH-1:0] pwm5_numerator,
+	output wire [C_PWM_CNT_WIDTH-1:0] pwm5_denominator,
+/// pwm 6
+	input  wire                       pwm6_def,
+	output wire                       pwm6_en,
+	output wire [C_PWM_CNT_WIDTH-1:0] pwm6_numerator,
+	output wire [C_PWM_CNT_WIDTH-1:0] pwm6_denominator,
+/// pwm 7
+	input  wire                       pwm7_def,
+	output wire                       pwm7_en,
+	output wire [C_PWM_CNT_WIDTH-1:0] pwm7_numerator,
+	output wire [C_PWM_CNT_WIDTH-1:0] pwm7_denominator
 );
 	assign dispbuf0_addr = C_DISPBUF0_ADDR;
 	assign cmos0buf0_addr = C_CMOS0BUF0_ADDR;
@@ -385,18 +429,18 @@ module fsctl #
 	assign br6_data = br_data;
 	assign br7_data = br_data;
 
-	`COND((C_BR_INITOR_NBR >= 1), `DEFREG_EXTERNAL(16, 0, 1, br0_init, 0))
-	`COND((C_BR_INITOR_NBR >= 2), `DEFREG_EXTERNAL(16, 1, 1, br1_init, 0))
-	`COND((C_BR_INITOR_NBR >= 3), `DEFREG_EXTERNAL(16, 2, 1, br2_init, 0))
-	`COND((C_BR_INITOR_NBR >= 4), `DEFREG_EXTERNAL(16, 3, 1, br3_init, 0))
-	`COND((C_BR_INITOR_NBR >= 5), `DEFREG_EXTERNAL(16, 4, 1, br4_init, 0))
-	`COND((C_BR_INITOR_NBR >= 6), `DEFREG_EXTERNAL(16, 5, 1, br5_init, 0))
-	`COND((C_BR_INITOR_NBR >= 7), `DEFREG_EXTERNAL(16, 6, 1, br6_init, 0))
-	`COND((C_BR_INITOR_NBR >= 8), `DEFREG_EXTERNAL(16, 7, 1, br7_init, 0))
+	`COND((C_BR_INITOR_NBR >= 1), `DEFREG_EXTERNAL(32, 0, 1, br0_init, 0))
+	`COND((C_BR_INITOR_NBR >= 2), `DEFREG_EXTERNAL(32, 1, 1, br1_init, 0))
+	`COND((C_BR_INITOR_NBR >= 3), `DEFREG_EXTERNAL(32, 2, 1, br2_init, 0))
+	`COND((C_BR_INITOR_NBR >= 4), `DEFREG_EXTERNAL(32, 3, 1, br3_init, 0))
+	`COND((C_BR_INITOR_NBR >= 5), `DEFREG_EXTERNAL(32, 4, 1, br4_init, 0))
+	`COND((C_BR_INITOR_NBR >= 6), `DEFREG_EXTERNAL(32, 5, 1, br5_init, 0))
+	`COND((C_BR_INITOR_NBR >= 7), `DEFREG_EXTERNAL(32, 6, 1, br6_init, 0))
+	`COND((C_BR_INITOR_NBR >= 8), `DEFREG_EXTERNAL(32, 7, 1, br7_init, 0))
 
-	`WR_EN_POSEDGE(17, wr_en_pos_17)
+	`WR_EN_POSEDGE(33, wr_en_pos_33)
 	always @ (posedge o_clk) begin
-		br_wr_en <= wr_en_pos_17;
+		br_wr_en <= wr_en_pos_33;
 		br_data  <= wr_data[C_SPEED_DATA_WIDTH-1:0];
 	end
 /// step motor
@@ -417,116 +461,167 @@ module fsctl #
 	localparam EN_ZP6 = ((C_ZPD_SEQ >> 6) & 1) & EN_MT6;
 	localparam EN_ZP7 = ((C_ZPD_SEQ >> 7) & 1) & EN_MT7;
 	/// MOTOR EN_RST
-	`COND(EN_MT0, `DEFREG_DIRECT_OUT(18,  ( 0+0), 1, motor0_xen, 0, 0))
-	`COND(EN_MT0, `DEFREG_DIRECT_OUT(18,  ( 0+1), 1, motor0_xrst, 0, 0))
-	`COND(EN_MT1, `DEFREG_DIRECT_OUT(18,  ( 4+0), 1, motor1_xen, 0, 0))
-	`COND(EN_MT1, `DEFREG_DIRECT_OUT(18,  ( 4+1), 1, motor1_xrst, 0, 0))
-	`COND(EN_MT2, `DEFREG_DIRECT_OUT(18,  ( 8+0), 1, motor2_xen, 0, 0))
-	`COND(EN_MT2, `DEFREG_DIRECT_OUT(18,  ( 8+1), 1, motor2_xrst, 0, 0))
-	`COND(EN_MT3, `DEFREG_DIRECT_OUT(18,  (12+0), 1, motor3_xen, 0, 0))
-	`COND(EN_MT3, `DEFREG_DIRECT_OUT(18,  (12+1), 1, motor3_xrst, 0, 0))
-	`COND(EN_MT4, `DEFREG_DIRECT_OUT(18,  (16+0), 1, motor4_xen, 0, 0))
-	`COND(EN_MT4, `DEFREG_DIRECT_OUT(18,  (16+1), 1, motor4_xrst, 0, 0))
-	`COND(EN_MT5, `DEFREG_DIRECT_OUT(18,  (20+0), 1, motor5_xen, 0, 0))
-	`COND(EN_MT5, `DEFREG_DIRECT_OUT(18,  (20+1), 1, motor5_xrst, 0, 0))
-	`COND(EN_MT6, `DEFREG_DIRECT_OUT(18,  (24+0), 1, motor6_xen, 0, 0))
-	`COND(EN_MT6, `DEFREG_DIRECT_OUT(18,  (24+1), 1, motor6_xrst, 0, 0))
-	`COND(EN_MT7, `DEFREG_DIRECT_OUT(18,  (28+0), 1, motor7_xen, 0, 0))
-	`COND(EN_MT7, `DEFREG_DIRECT_OUT(18,  (28+1), 1, motor7_xrst, 0, 0))
+	`COND(EN_MT0, `DEFREG_DIRECT_OUT(34,  ( 0+0), 1, motor0_xen, 0, 0))
+	`COND(EN_MT0, `DEFREG_DIRECT_OUT(34,  ( 0+1), 1, motor0_xrst, 0, 0))
+	`COND(EN_MT1, `DEFREG_DIRECT_OUT(34,  ( 4+0), 1, motor1_xen, 0, 0))
+	`COND(EN_MT1, `DEFREG_DIRECT_OUT(34,  ( 4+1), 1, motor1_xrst, 0, 0))
+	`COND(EN_MT2, `DEFREG_DIRECT_OUT(34,  ( 8+0), 1, motor2_xen, 0, 0))
+	`COND(EN_MT2, `DEFREG_DIRECT_OUT(34,  ( 8+1), 1, motor2_xrst, 0, 0))
+	`COND(EN_MT3, `DEFREG_DIRECT_OUT(34,  (12+0), 1, motor3_xen, 0, 0))
+	`COND(EN_MT3, `DEFREG_DIRECT_OUT(34,  (12+1), 1, motor3_xrst, 0, 0))
+	`COND(EN_MT4, `DEFREG_DIRECT_OUT(34,  (16+0), 1, motor4_xen, 0, 0))
+	`COND(EN_MT4, `DEFREG_DIRECT_OUT(34,  (16+1), 1, motor4_xrst, 0, 0))
+	`COND(EN_MT5, `DEFREG_DIRECT_OUT(34,  (20+0), 1, motor5_xen, 0, 0))
+	`COND(EN_MT5, `DEFREG_DIRECT_OUT(34,  (20+1), 1, motor5_xrst, 0, 0))
+	`COND(EN_MT6, `DEFREG_DIRECT_OUT(34,  (24+0), 1, motor6_xen, 0, 0))
+	`COND(EN_MT6, `DEFREG_DIRECT_OUT(34,  (24+1), 1, motor6_xrst, 0, 0))
+	`COND(EN_MT7, `DEFREG_DIRECT_OUT(34,  (28+0), 1, motor7_xen, 0, 0))
+	`COND(EN_MT7, `DEFREG_DIRECT_OUT(34,  (28+1), 1, motor7_xrst, 0, 0))
 
 	/// MOTOR STATE
-	`COND(EN_ZP0, `DEFREG_DIRECT_IN(19,  ( 0+0), 1, motor0_zpsign))
-	`COND(EN_ZP0, `DEFREG_DIRECT_IN(19,  ( 0+1), 1, motor0_tpsign))
-	`COND(EN_MT0, `DEFREG_DIRECT_IN(19,  ( 0+2), 1, motor0_state))
-	`COND(EN_ZP1, `DEFREG_DIRECT_IN(19,  ( 4+0), 1, motor1_zpsign))
-	`COND(EN_ZP1, `DEFREG_DIRECT_IN(19,  ( 4+1), 1, motor1_tpsign))
-	`COND(EN_MT1, `DEFREG_DIRECT_IN(19,  ( 4+2), 1, motor1_state))
-	`COND(EN_ZP2, `DEFREG_DIRECT_IN(19,  ( 8+0), 1, motor2_zpsign))
-	`COND(EN_ZP2, `DEFREG_DIRECT_IN(19,  ( 8+1), 1, motor2_tpsign))
-	`COND(EN_MT2, `DEFREG_DIRECT_IN(19,  ( 8+2), 1, motor2_state))
-	`COND(EN_ZP3, `DEFREG_DIRECT_IN(19,  (12+0), 1, motor3_zpsign))
-	`COND(EN_ZP3, `DEFREG_DIRECT_IN(19,  (12+1), 1, motor3_tpsign))
-	`COND(EN_MT3, `DEFREG_DIRECT_IN(19,  (12+2), 1, motor3_state))
-	`COND(EN_ZP4, `DEFREG_DIRECT_IN(19,  (16+0), 1, motor4_zpsign))
-	`COND(EN_ZP4, `DEFREG_DIRECT_IN(19,  (16+1), 1, motor4_tpsign))
-	`COND(EN_MT4, `DEFREG_DIRECT_IN(19,  (16+2), 1, motor4_state))
-	`COND(EN_ZP5, `DEFREG_DIRECT_IN(19,  (20+0), 1, motor5_zpsign))
-	`COND(EN_ZP5, `DEFREG_DIRECT_IN(19,  (20+1), 1, motor5_tpsign))
-	`COND(EN_MT5, `DEFREG_DIRECT_IN(19,  (20+2), 1, motor5_state))
-	`COND(EN_ZP6, `DEFREG_DIRECT_IN(19,  (24+0), 1, motor6_zpsign))
-	`COND(EN_ZP6, `DEFREG_DIRECT_IN(19,  (24+1), 1, motor6_tpsign))
-	`COND(EN_MT6, `DEFREG_DIRECT_IN(19,  (24+2), 1, motor6_state))
-	`COND(EN_ZP7, `DEFREG_DIRECT_IN(19,  (28+0), 1, motor7_zpsign))
-	`COND(EN_ZP7, `DEFREG_DIRECT_IN(19,  (28+1), 1, motor7_tpsign))
-	`COND(EN_MT7, `DEFREG_DIRECT_IN(19,  (28+2), 1, motor7_state))
+	`COND(EN_ZP0, `DEFREG_DIRECT_IN(35,  ( 0+0), 1, motor0_zpsign))
+	`COND(EN_ZP0, `DEFREG_DIRECT_IN(35,  ( 0+1), 1, motor0_tpsign))
+	`COND(EN_MT0, `DEFREG_DIRECT_IN(35,  ( 0+2), 1, motor0_state))
+	`COND(EN_ZP1, `DEFREG_DIRECT_IN(35,  ( 4+0), 1, motor1_zpsign))
+	`COND(EN_ZP1, `DEFREG_DIRECT_IN(35,  ( 4+1), 1, motor1_tpsign))
+	`COND(EN_MT1, `DEFREG_DIRECT_IN(35,  ( 4+2), 1, motor1_state))
+	`COND(EN_ZP2, `DEFREG_DIRECT_IN(35,  ( 8+0), 1, motor2_zpsign))
+	`COND(EN_ZP2, `DEFREG_DIRECT_IN(35,  ( 8+1), 1, motor2_tpsign))
+	`COND(EN_MT2, `DEFREG_DIRECT_IN(35,  ( 8+2), 1, motor2_state))
+	`COND(EN_ZP3, `DEFREG_DIRECT_IN(35,  (12+0), 1, motor3_zpsign))
+	`COND(EN_ZP3, `DEFREG_DIRECT_IN(35,  (12+1), 1, motor3_tpsign))
+	`COND(EN_MT3, `DEFREG_DIRECT_IN(35,  (12+2), 1, motor3_state))
+	`COND(EN_ZP4, `DEFREG_DIRECT_IN(35,  (16+0), 1, motor4_zpsign))
+	`COND(EN_ZP4, `DEFREG_DIRECT_IN(35,  (16+1), 1, motor4_tpsign))
+	`COND(EN_MT4, `DEFREG_DIRECT_IN(35,  (16+2), 1, motor4_state))
+	`COND(EN_ZP5, `DEFREG_DIRECT_IN(35,  (20+0), 1, motor5_zpsign))
+	`COND(EN_ZP5, `DEFREG_DIRECT_IN(35,  (20+1), 1, motor5_tpsign))
+	`COND(EN_MT5, `DEFREG_DIRECT_IN(35,  (20+2), 1, motor5_state))
+	`COND(EN_ZP6, `DEFREG_DIRECT_IN(35,  (24+0), 1, motor6_zpsign))
+	`COND(EN_ZP6, `DEFREG_DIRECT_IN(35,  (24+1), 1, motor6_tpsign))
+	`COND(EN_MT6, `DEFREG_DIRECT_IN(35,  (24+2), 1, motor6_state))
+	`COND(EN_ZP7, `DEFREG_DIRECT_IN(35,  (28+0), 1, motor7_zpsign))
+	`COND(EN_ZP7, `DEFREG_DIRECT_IN(35,  (28+1), 1, motor7_tpsign))
+	`COND(EN_MT7, `DEFREG_DIRECT_IN(35,  (28+2), 1, motor7_state))
 
 	/// MOTOR START_STOP
-	`COND(EN_MT0, `DEFREG_DIRECT_OUT(20,  ( 0+0), 1, motor0_start, 0, 1))
-	`COND(EN_MT0, `DEFREG_DIRECT_OUT(20,  ( 0+1), 1, motor0_stop,  0, 1))
-	`COND(EN_MT1, `DEFREG_DIRECT_OUT(20,  ( 4+0), 1, motor1_start, 0, 1))
-	`COND(EN_MT1, `DEFREG_DIRECT_OUT(20,  ( 4+1), 1, motor1_stop,  0, 1))
-	`COND(EN_MT2, `DEFREG_DIRECT_OUT(20,  ( 8+0), 1, motor2_start, 0, 1))
-	`COND(EN_MT2, `DEFREG_DIRECT_OUT(20,  ( 8+1), 1, motor2_stop,  0, 1))
-	`COND(EN_MT3, `DEFREG_DIRECT_OUT(20,  (12+0), 1, motor3_start, 0, 1))
-	`COND(EN_MT3, `DEFREG_DIRECT_OUT(20,  (12+1), 1, motor3_stop,  0, 1))
-	`COND(EN_MT4, `DEFREG_DIRECT_OUT(20,  (16+0), 1, motor4_start, 0, 1))
-	`COND(EN_MT4, `DEFREG_DIRECT_OUT(20,  (16+1), 1, motor4_stop,  0, 1))
-	`COND(EN_MT5, `DEFREG_DIRECT_OUT(20,  (20+0), 1, motor5_start, 0, 1))
-	`COND(EN_MT5, `DEFREG_DIRECT_OUT(20,  (20+1), 1, motor5_stop,  0, 1))
-	`COND(EN_MT6, `DEFREG_DIRECT_OUT(20,  (24+0), 1, motor6_start, 0, 1))
-	`COND(EN_MT6, `DEFREG_DIRECT_OUT(20,  (24+1), 1, motor6_stop,  0, 1))
-	`COND(EN_MT7, `DEFREG_DIRECT_OUT(20,  (28+0), 1, motor7_start, 0, 1))
-	`COND(EN_MT7, `DEFREG_DIRECT_OUT(20,  (28+1), 1, motor7_stop,  0, 1))
+	`COND(EN_MT0, `DEFREG_DIRECT_OUT(36,  ( 0+0), 1, motor0_start, 0, 1))
+	`COND(EN_MT0, `DEFREG_DIRECT_OUT(36,  ( 0+1), 1, motor0_stop,  0, 1))
+	`COND(EN_MT1, `DEFREG_DIRECT_OUT(36,  ( 4+0), 1, motor1_start, 0, 1))
+	`COND(EN_MT1, `DEFREG_DIRECT_OUT(36,  ( 4+1), 1, motor1_stop,  0, 1))
+	`COND(EN_MT2, `DEFREG_DIRECT_OUT(36,  ( 8+0), 1, motor2_start, 0, 1))
+	`COND(EN_MT2, `DEFREG_DIRECT_OUT(36,  ( 8+1), 1, motor2_stop,  0, 1))
+	`COND(EN_MT3, `DEFREG_DIRECT_OUT(36,  (12+0), 1, motor3_start, 0, 1))
+	`COND(EN_MT3, `DEFREG_DIRECT_OUT(36,  (12+1), 1, motor3_stop,  0, 1))
+	`COND(EN_MT4, `DEFREG_DIRECT_OUT(36,  (16+0), 1, motor4_start, 0, 1))
+	`COND(EN_MT4, `DEFREG_DIRECT_OUT(36,  (16+1), 1, motor4_stop,  0, 1))
+	`COND(EN_MT5, `DEFREG_DIRECT_OUT(36,  (20+0), 1, motor5_start, 0, 1))
+	`COND(EN_MT5, `DEFREG_DIRECT_OUT(36,  (20+1), 1, motor5_stop,  0, 1))
+	`COND(EN_MT6, `DEFREG_DIRECT_OUT(36,  (24+0), 1, motor6_start, 0, 1))
+	`COND(EN_MT6, `DEFREG_DIRECT_OUT(36,  (24+1), 1, motor6_stop,  0, 1))
+	`COND(EN_MT7, `DEFREG_DIRECT_OUT(36,  (28+0), 1, motor7_start, 0, 1))
+	`COND(EN_MT7, `DEFREG_DIRECT_OUT(36,  (28+1), 1, motor7_stop,  0, 1))
 
 	/// MOTOR MICROSTEP
-	`COND(EN_MT0, `DEFREG_DIRECT_OUT(21, ( 0+0), C_MICROSTEP_WIDTH, motor0_ms, 0, 0))
-	`COND(EN_MT1, `DEFREG_DIRECT_OUT(21, ( 4+0), C_MICROSTEP_WIDTH, motor1_ms, 0, 0))
-	`COND(EN_MT2, `DEFREG_DIRECT_OUT(21, ( 8+0), C_MICROSTEP_WIDTH, motor2_ms, 0, 0))
-	`COND(EN_MT3, `DEFREG_DIRECT_OUT(21, (12+0), C_MICROSTEP_WIDTH, motor3_ms, 0, 0))
-	`COND(EN_MT4, `DEFREG_DIRECT_OUT(21, (16+0), C_MICROSTEP_WIDTH, motor4_ms, 0, 0))
-	`COND(EN_MT5, `DEFREG_DIRECT_OUT(21, (20+0), C_MICROSTEP_WIDTH, motor5_ms, 0, 0))
-	`COND(EN_MT6, `DEFREG_DIRECT_OUT(21, (24+0), C_MICROSTEP_WIDTH, motor6_ms, 0, 0))
-	`COND(EN_MT7, `DEFREG_DIRECT_OUT(21, (28+0), C_MICROSTEP_WIDTH, motor7_ms, 0, 0))
+	`COND(EN_MT0, `DEFREG_DIRECT_OUT(37, ( 0+0), C_MICROSTEP_WIDTH, motor0_ms, 0, 0))
+	`COND(EN_MT1, `DEFREG_DIRECT_OUT(37, ( 4+0), C_MICROSTEP_WIDTH, motor1_ms, 0, 0))
+	`COND(EN_MT2, `DEFREG_DIRECT_OUT(37, ( 8+0), C_MICROSTEP_WIDTH, motor2_ms, 0, 0))
+	`COND(EN_MT3, `DEFREG_DIRECT_OUT(37, (12+0), C_MICROSTEP_WIDTH, motor3_ms, 0, 0))
+	`COND(EN_MT4, `DEFREG_DIRECT_OUT(37, (16+0), C_MICROSTEP_WIDTH, motor4_ms, 0, 0))
+	`COND(EN_MT5, `DEFREG_DIRECT_OUT(37, (20+0), C_MICROSTEP_WIDTH, motor5_ms, 0, 0))
+	`COND(EN_MT6, `DEFREG_DIRECT_OUT(37, (24+0), C_MICROSTEP_WIDTH, motor6_ms, 0, 0))
+	`COND(EN_MT7, `DEFREG_DIRECT_OUT(37, (28+0), C_MICROSTEP_WIDTH, motor7_ms, 0, 0))
 
 	/// MOTOR DIR
-	`COND(EN_MT0, `DEFREG_DIRECT_OUT(22, ( 0+0), 1, motor0_dir, 0, 0))
-	`COND(EN_MT1, `DEFREG_DIRECT_OUT(22, ( 4+0), 1, motor1_dir, 0, 0))
-	`COND(EN_MT2, `DEFREG_DIRECT_OUT(22, ( 8+0), 1, motor2_dir, 0, 0))
-	`COND(EN_MT3, `DEFREG_DIRECT_OUT(22, (12+0), 1, motor3_dir, 0, 0))
-	`COND(EN_MT4, `DEFREG_DIRECT_OUT(22, (16+0), 1, motor4_dir, 0, 0))
-	`COND(EN_MT5, `DEFREG_DIRECT_OUT(22, (20+0), 1, motor5_dir, 0, 0))
-	`COND(EN_MT6, `DEFREG_DIRECT_OUT(22, (24+0), 1, motor6_dir, 0, 0))
-	`COND(EN_MT7, `DEFREG_DIRECT_OUT(22, (28+0), 1, motor7_dir, 0, 0))
+	`COND(EN_MT0, `DEFREG_DIRECT_OUT(38, ( 0+0), 1, motor0_dir, 0, 0))
+	`COND(EN_MT1, `DEFREG_DIRECT_OUT(38, ( 4+0), 1, motor1_dir, 0, 0))
+	`COND(EN_MT2, `DEFREG_DIRECT_OUT(38, ( 8+0), 1, motor2_dir, 0, 0))
+	`COND(EN_MT3, `DEFREG_DIRECT_OUT(38, (12+0), 1, motor3_dir, 0, 0))
+	`COND(EN_MT4, `DEFREG_DIRECT_OUT(38, (16+0), 1, motor4_dir, 0, 0))
+	`COND(EN_MT5, `DEFREG_DIRECT_OUT(38, (20+0), 1, motor5_dir, 0, 0))
+	`COND(EN_MT6, `DEFREG_DIRECT_OUT(38, (24+0), 1, motor6_dir, 0, 0))
+	`COND(EN_MT7, `DEFREG_DIRECT_OUT(38, (28+0), 1, motor7_dir, 0, 0))
 
 	/// MOTOR STROKE
-	`COND(EN_ZP0, `DEFREG_DIRECT_OUT(23, 0, C_STEP_NUMBER_WIDTH, motor0_stroke, 0, 0))
-	`COND(EN_ZP1, `DEFREG_DIRECT_OUT(24, 0, C_STEP_NUMBER_WIDTH, motor1_stroke, 0, 0))
-	`COND(EN_ZP2, `DEFREG_DIRECT_OUT(25, 0, C_STEP_NUMBER_WIDTH, motor2_stroke, 0, 0))
-	`COND(EN_ZP3, `DEFREG_DIRECT_OUT(26, 0, C_STEP_NUMBER_WIDTH, motor3_stroke, 0, 0))
-	`COND(EN_ZP4, `DEFREG_DIRECT_OUT(27, 0, C_STEP_NUMBER_WIDTH, motor4_stroke, 0, 0))
-	`COND(EN_ZP5, `DEFREG_DIRECT_OUT(28, 0, C_STEP_NUMBER_WIDTH, motor5_stroke, 0, 0))
-	`COND(EN_ZP6, `DEFREG_DIRECT_OUT(29, 0, C_STEP_NUMBER_WIDTH, motor6_stroke, 0, 0))
-	`COND(EN_ZP7, `DEFREG_DIRECT_OUT(30, 0, C_STEP_NUMBER_WIDTH, motor7_stroke, 0, 0))
+	`COND(EN_ZP0, `DEFREG_DIRECT_OUT(39, 0, C_STEP_NUMBER_WIDTH, motor0_stroke, 0, 0))
+	`COND(EN_ZP1, `DEFREG_DIRECT_OUT(40, 0, C_STEP_NUMBER_WIDTH, motor1_stroke, 0, 0))
+	`COND(EN_ZP2, `DEFREG_DIRECT_OUT(41, 0, C_STEP_NUMBER_WIDTH, motor2_stroke, 0, 0))
+	`COND(EN_ZP3, `DEFREG_DIRECT_OUT(42, 0, C_STEP_NUMBER_WIDTH, motor3_stroke, 0, 0))
+	`COND(EN_ZP4, `DEFREG_DIRECT_OUT(43, 0, C_STEP_NUMBER_WIDTH, motor4_stroke, 0, 0))
+	`COND(EN_ZP5, `DEFREG_DIRECT_OUT(44, 0, C_STEP_NUMBER_WIDTH, motor5_stroke, 0, 0))
+	`COND(EN_ZP6, `DEFREG_DIRECT_OUT(45, 0, C_STEP_NUMBER_WIDTH, motor6_stroke, 0, 0))
+	`COND(EN_ZP7, `DEFREG_DIRECT_OUT(46, 0, C_STEP_NUMBER_WIDTH, motor7_stroke, 0, 0))
 
 	/// MOTOR STEP
-	`COND(EN_MT0, `DEFREG_DIRECT_OUT(31, 0, C_STEP_NUMBER_WIDTH, motor0_step, 0, 0))
-	`COND(EN_MT1, `DEFREG_DIRECT_OUT(32, 0, C_STEP_NUMBER_WIDTH, motor1_step, 0, 0))
-	`COND(EN_MT2, `DEFREG_DIRECT_OUT(33, 0, C_STEP_NUMBER_WIDTH, motor2_step, 0, 0))
-	`COND(EN_MT3, `DEFREG_DIRECT_OUT(34, 0, C_STEP_NUMBER_WIDTH, motor3_step, 0, 0))
-	`COND(EN_MT4, `DEFREG_DIRECT_OUT(35, 0, C_STEP_NUMBER_WIDTH, motor4_step, 0, 0))
-	`COND(EN_MT5, `DEFREG_DIRECT_OUT(36, 0, C_STEP_NUMBER_WIDTH, motor5_step, 0, 0))
-	`COND(EN_MT6, `DEFREG_DIRECT_OUT(37, 0, C_STEP_NUMBER_WIDTH, motor6_step, 0, 0))
-	`COND(EN_MT7, `DEFREG_DIRECT_OUT(38, 0, C_STEP_NUMBER_WIDTH, motor7_step, 0, 0))
+	`COND(EN_MT0, `DEFREG_DIRECT_OUT(47, 0, C_STEP_NUMBER_WIDTH, motor0_step, 0, 0))
+	`COND(EN_MT1, `DEFREG_DIRECT_OUT(48, 0, C_STEP_NUMBER_WIDTH, motor1_step, 0, 0))
+	`COND(EN_MT2, `DEFREG_DIRECT_OUT(49, 0, C_STEP_NUMBER_WIDTH, motor2_step, 0, 0))
+	`COND(EN_MT3, `DEFREG_DIRECT_OUT(50, 0, C_STEP_NUMBER_WIDTH, motor3_step, 0, 0))
+	`COND(EN_MT4, `DEFREG_DIRECT_OUT(51, 0, C_STEP_NUMBER_WIDTH, motor4_step, 0, 0))
+	`COND(EN_MT5, `DEFREG_DIRECT_OUT(52, 0, C_STEP_NUMBER_WIDTH, motor5_step, 0, 0))
+	`COND(EN_MT6, `DEFREG_DIRECT_OUT(53, 0, C_STEP_NUMBER_WIDTH, motor6_step, 0, 0))
+	`COND(EN_MT7, `DEFREG_DIRECT_OUT(54, 0, C_STEP_NUMBER_WIDTH, motor7_step, 0, 0))
 
 	/// MOTOR SPEED
-	`COND(EN_MT0, `DEFREG_DIRECT_OUT(39, 0, C_SPEED_DATA_WIDTH, motor0_speed, 0, 0))
-	`COND(EN_MT1, `DEFREG_DIRECT_OUT(40, 0, C_SPEED_DATA_WIDTH, motor1_speed, 0, 0))
-	`COND(EN_MT2, `DEFREG_DIRECT_OUT(41, 0, C_SPEED_DATA_WIDTH, motor2_speed, 0, 0))
-	`COND(EN_MT3, `DEFREG_DIRECT_OUT(42, 0, C_SPEED_DATA_WIDTH, motor3_speed, 0, 0))
-	`COND(EN_MT4, `DEFREG_DIRECT_OUT(43, 0, C_SPEED_DATA_WIDTH, motor4_speed, 0, 0))
-	`COND(EN_MT5, `DEFREG_DIRECT_OUT(44, 0, C_SPEED_DATA_WIDTH, motor5_speed, 0, 0))
-	`COND(EN_MT6, `DEFREG_DIRECT_OUT(45, 0, C_SPEED_DATA_WIDTH, motor6_speed, 0, 0))
-	`COND(EN_MT7, `DEFREG_DIRECT_OUT(46, 0, C_SPEED_DATA_WIDTH, motor7_speed, 0, 0))
+	`COND(EN_MT0, `DEFREG_DIRECT_OUT(55, 0, C_SPEED_DATA_WIDTH, motor0_speed, 0, 0))
+	`COND(EN_MT1, `DEFREG_DIRECT_OUT(56, 0, C_SPEED_DATA_WIDTH, motor1_speed, 0, 0))
+	`COND(EN_MT2, `DEFREG_DIRECT_OUT(57, 0, C_SPEED_DATA_WIDTH, motor2_speed, 0, 0))
+	`COND(EN_MT3, `DEFREG_DIRECT_OUT(58, 0, C_SPEED_DATA_WIDTH, motor3_speed, 0, 0))
+	`COND(EN_MT4, `DEFREG_DIRECT_OUT(59, 0, C_SPEED_DATA_WIDTH, motor4_speed, 0, 0))
+	`COND(EN_MT5, `DEFREG_DIRECT_OUT(60, 0, C_SPEED_DATA_WIDTH, motor5_speed, 0, 0))
+	`COND(EN_MT6, `DEFREG_DIRECT_OUT(61, 0, C_SPEED_DATA_WIDTH, motor6_speed, 0, 0))
+	`COND(EN_MT7, `DEFREG_DIRECT_OUT(62, 0, C_SPEED_DATA_WIDTH, motor7_speed, 0, 0))
+
+/// PWM
+	localparam EN_PWM0 = (C_PWM_NBR > 0);
+	localparam EN_PWM1 = (C_PWM_NBR > 1);
+	localparam EN_PWM2 = (C_PWM_NBR > 2);
+	localparam EN_PWM3 = (C_PWM_NBR > 3);
+	localparam EN_PWM4 = (C_PWM_NBR > 4);
+	localparam EN_PWM5 = (C_PWM_NBR > 5);
+	localparam EN_PWM6 = (C_PWM_NBR > 6);
+	localparam EN_PWM7 = (C_PWM_NBR > 7);
+	`COND(EN_PWM0, `DEFREG_DIRECT_IN(64, 0, 1, pwm0_def))
+	`COND(EN_PWM1, `DEFREG_DIRECT_IN(64, 1, 1, pwm1_def))
+	`COND(EN_PWM2, `DEFREG_DIRECT_IN(64, 2, 1, pwm2_def))
+	`COND(EN_PWM3, `DEFREG_DIRECT_IN(64, 3, 1, pwm3_def))
+	`COND(EN_PWM4, `DEFREG_DIRECT_IN(64, 4, 1, pwm4_def))
+	`COND(EN_PWM5, `DEFREG_DIRECT_IN(64, 5, 1, pwm5_def))
+	`COND(EN_PWM6, `DEFREG_DIRECT_IN(64, 6, 1, pwm6_def))
+	`COND(EN_PWM7, `DEFREG_DIRECT_IN(64, 7, 1, pwm7_def))
+	`COND(EN_PWM0, `DEFREG_DIRECT_OUT(65, 0, 1, pwm0_en, 0, 0))
+	`COND(EN_PWM1, `DEFREG_DIRECT_OUT(65, 1, 1, pwm1_en, 0, 0))
+	`COND(EN_PWM2, `DEFREG_DIRECT_OUT(65, 2, 1, pwm2_en, 0, 0))
+	`COND(EN_PWM3, `DEFREG_DIRECT_OUT(65, 3, 1, pwm3_en, 0, 0))
+	`COND(EN_PWM4, `DEFREG_DIRECT_OUT(65, 4, 1, pwm4_en, 0, 0))
+	`COND(EN_PWM5, `DEFREG_DIRECT_OUT(65, 5, 1, pwm5_en, 0, 0))
+	`COND(EN_PWM6, `DEFREG_DIRECT_OUT(65, 6, 1, pwm6_en, 0, 0))
+	`COND(EN_PWM7, `DEFREG_DIRECT_OUT(65, 7, 1, pwm7_en, 0, 0))
+
+	`COND(EN_PWM0, `DEFREG_DIRECT_OUT(66,  0, C_PWM_CNT_WIDTH, pwm0_denominator, 0, 0))
+	`COND(EN_PWM0, `DEFREG_DIRECT_OUT(67,  0, C_PWM_CNT_WIDTH, pwm0_numerator,   0, 0))
+
+	`COND(EN_PWM1, `DEFREG_DIRECT_OUT(68,  0, C_PWM_CNT_WIDTH, pwm1_denominator, 0, 0))
+	`COND(EN_PWM1, `DEFREG_DIRECT_OUT(69,  0, C_PWM_CNT_WIDTH, pwm1_numerator,   0, 0))
+
+	`COND(EN_PWM2, `DEFREG_DIRECT_OUT(70,  0, C_PWM_CNT_WIDTH, pwm2_denominator, 0, 0))
+	`COND(EN_PWM2, `DEFREG_DIRECT_OUT(71,  0, C_PWM_CNT_WIDTH, pwm2_numerator,   0, 0))
+
+	`COND(EN_PWM3, `DEFREG_DIRECT_OUT(72,  0, C_PWM_CNT_WIDTH, pwm3_denominator, 0, 0))
+	`COND(EN_PWM3, `DEFREG_DIRECT_OUT(73,  0, C_PWM_CNT_WIDTH, pwm3_numerator,   0, 0))
+
+	`COND(EN_PWM4, `DEFREG_DIRECT_OUT(74,  0, C_PWM_CNT_WIDTH, pwm4_denominator, 0, 0))
+	`COND(EN_PWM4, `DEFREG_DIRECT_OUT(75,  0, C_PWM_CNT_WIDTH, pwm4_numerator,   0, 0))
+
+	`COND(EN_PWM5, `DEFREG_DIRECT_OUT(76,  0, C_PWM_CNT_WIDTH, pwm5_denominator, 0, 0))
+	`COND(EN_PWM5, `DEFREG_DIRECT_OUT(77,  0, C_PWM_CNT_WIDTH, pwm5_numerator,   0, 0))
+
+	`COND(EN_PWM6, `DEFREG_DIRECT_OUT(78,  0, C_PWM_CNT_WIDTH, pwm6_denominator, 0, 0))
+	`COND(EN_PWM6, `DEFREG_DIRECT_OUT(79,  0, C_PWM_CNT_WIDTH, pwm6_numerator,   0, 0))
+
+	`COND(EN_PWM7, `DEFREG_DIRECT_OUT(80,  0, C_PWM_CNT_WIDTH, pwm7_denominator, 0, 0))
+	`COND(EN_PWM7, `DEFREG_DIRECT_OUT(81,  0, C_PWM_CNT_WIDTH, pwm7_numerator,   0, 0))
+
 
 /// VERSION
 	`DEFREG_FIXED(C_REG_NUM-1, 0, 32, core_version, C_CORE_VERSION)
