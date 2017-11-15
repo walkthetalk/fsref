@@ -8,7 +8,7 @@ parameter integer C_SPEED_ADDRESS_WIDTH = 9;
 parameter integer C_MICROSTEP_WIDTH = 3;
 parameter integer C_CLK_DIV_NBR = 5;
 parameter integer C_MOTOR_NBR = 2;
-parameter integer C_ZPD_SEQ = 8'b00;
+parameter integer C_ZPD_SEQ = 8'b01;
 
 reg	clk;
 reg	resetn;
@@ -17,7 +17,7 @@ reg                          br_init;
 reg                          br_wr_en;
 reg [C_SPEED_DATA_WIDTH-1:0] br_data;
 
-reg                            m0_zpd;
+reg                            m0_zpd = 0;
 wire                           m0_drive;
 wire                           m0_dir;
 wire [C_MICROSTEP_WIDTH-1:0]   m0_ms;
@@ -27,7 +27,7 @@ wire                           m0_xrst;
 wire                           s0_zpsign;
 wire                           s0_tpsign;
 wire                           s0_state;
-reg  [C_STEP_NUMBER_WIDTH-1:0] s0_stroke = 1000;
+reg  [C_STEP_NUMBER_WIDTH-1:0] s0_stroke = 25;
 reg  [C_SPEED_DATA_WIDTH-1:0]  s0_speed;
 reg  [C_STEP_NUMBER_WIDTH-1:0] s0_step;
 reg                            s0_start;
@@ -117,7 +117,7 @@ always @ (posedge ctl_clk) begin
         end
         else if (s0_state == 1'b0 && ~s0_start && ({$random}%2) && ~br_init) begin
                 s0_speed <= 10;
-                s0_step  <= 300;
+                s0_step  <= 30;
                 s0_dir   <= 0;
                 s0_start <= 1;
         end

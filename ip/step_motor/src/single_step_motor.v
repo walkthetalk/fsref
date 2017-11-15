@@ -3,7 +3,8 @@ module single_step_motor #(
 	parameter integer C_SPEED_DATA_WIDTH = 16,
 	parameter integer C_SPEED_ADDRESS_WIDTH = 9,
 	parameter integer C_MICROSTEP_WIDTH = 3,
-	parameter integer C_ZPD = 0
+	parameter integer C_ZPD = 0,
+	parameter integer C_REVERSE_DELAY = 4	/// >= 2
 )(
 	input  wire clk,
 	input  wire resetn,
@@ -43,8 +44,9 @@ module single_step_motor #(
 	input  wire i_xrst
 );
 	/// state macro
-	localparam integer IDLE = 1'b0;
-	localparam integer RUNNING = 1'b1;
+	localparam integer IDLE = 2'b00;
+	localparam integer PREPARE = 2'b10;
+	localparam integer RUNNING = 2'b11;
 
 	/// motor logic
 	reg [C_SPEED_DATA_WIDTH-1:0]	speed_max;
@@ -53,8 +55,10 @@ module single_step_motor #(
 	reg [C_STEP_NUMBER_WIDTH-1:0]   step_cnt;	/// begin with '1'
 	reg [C_STEP_NUMBER_WIDTH-1:0]	step_remain;
 	reg step_done;	/// keep one between final half step
-	reg motor_state;
-	assign o_state = motor_state;
+	reg[1:0] motor_state;
+	assign o_state = motor_state[1];
+	wire is_idle; assign is_idle = (o_state == 0);
+	wire is_running; assign is_running = (o_state);
 	reg rd_en;
 	/// reg [C_SPEED_ADDRESS_WIDTH-1:0] rd_addr;
 	assign acce_en = rd_en;
@@ -82,7 +86,7 @@ module single_step_motor #(
 				start_pulse <= 0;
 		end
 		else begin
-			if (i_start && ~start_d1 && (motor_state == IDLE))
+			if (i_start && ~start_d1 && is_idle)
 				start_pulse <= 1;
 		end
 	end
@@ -104,7 +108,7 @@ module single_step_motor #(
 				stop_pulse <= 0;
 		end
 		else begin
-			if (i_stop && ~stop_d1 && (motor_state == RUNNING))
+			if (i_stop && ~stop_d1 && is_running)
 				stop_pulse <= 1;
 		end
 	end
@@ -118,6 +122,7 @@ module single_step_motor #(
 		else if (clk_en) begin
 			case (motor_state)
 			IDLE:	rd_en <= start_pulse;
+			PREPARE: rd_en <= 0;
 			RUNNING: rd_en <= ((speed_cnt == 0) && o_drive);
 			endcase
 		end
@@ -149,6 +154,27 @@ module single_step_motor #(
 		end
 	end
 
+	reg [31:0] reverse_delay_cnt;
+	always @ (posedge clk) begin
+		if (resetn == 1'b0)
+			reverse_delay_cnt <= 0;
+		else if (clk_en) begin
+			case (motor_state)
+			IDLE: reverse_delay_cnt <= 0;
+			PREPARE: reverse_delay_cnt <= reverse_delay_cnt + 1;
+			endcase
+		end
+	end
+
+	/// store instruction
+	always @ (posedge clk) begin
+		if (clk_en && start_pulse && is_idle) begin
+			speed_max <= i_speed;
+			o_ms <= i_ms;
+			o_dir <= i_dir;
+		end
+	end
+
 	/// motor_state
 	always @ (posedge clk) begin
 		if (resetn == 1'b0)
@@ -157,14 +183,22 @@ module single_step_motor #(
 			case (motor_state)
 			IDLE: begin
 				if (start_pulse) begin
-					speed_max <= i_speed;
-					o_ms <= i_ms;
-					o_dir <= i_dir;
-					motor_state <= RUNNING;
+					if (o_dir == i_dir)
+						motor_state <= RUNNING;
+					else
+						motor_state <= PREPARE;
 				end
 			end
+			PREPARE: begin
+				if (stop_pulse)
+					motor_state <= IDLE;
+				else if (reverse_delay_cnt == C_REVERSE_DELAY - 2)
+					motor_state <= RUNNING;
+			end
 			RUNNING: begin
-				if (shouldStop)
+				if (stop_pulse)
+					motor_state <= IDLE;
+				else if (shouldStop)
 					motor_state <= IDLE;
 			end
 			endcase
@@ -179,7 +213,7 @@ module single_step_motor #(
 			step_done <= 0;
 		else if (clk_en) begin
 			case (motor_state)
-			IDLE: begin
+			IDLE, PREPARE: begin
 				step_done <= 0;
 			end
 			RUNNING: begin
@@ -237,7 +271,7 @@ module single_step_motor #(
 			o_drive <= 0;
 		else if (clk_en) begin
 			case (motor_state)
-			IDLE:	o_drive <= 0;
+			IDLE, PREPARE:	o_drive <= 0;
 			RUNNING: begin
 				if (speed_cnt == 0 && ~step_done)
 					o_drive <= ~o_drive;
@@ -249,43 +283,55 @@ module single_step_motor #(
 	/// zero position process
 	generate
 	if (C_ZPD) begin
+		wire reach_zero_position;
+		assign reach_zero_position = (zpd == 1'b1);
+		wire forwarding;
+		assign forwarding = (o_dir == 1'b0);
+		wire backwarding;
+		assign backwarding = o_dir;
 		/// for shouldStop
 		assign zpsign = zpd;
 		reg r_tpsign;
 		assign tpsign = r_tpsign;
 		assign shouldStop = ((step_done && (speed_cnt == 0))
-			|| (r_tpsign && o_dir)
-			|| (zpd && ~o_dir));
+			|| (r_tpsign && forwarding)
+			|| (reach_zero_position && backwarding));
 
 		localparam integer C_INIT_POSITION = 1;
 		reg [C_STEP_NUMBER_WIDTH-1:0] cur_position;//stroke,
+		wire reached_terminal_position;
+		assign reached_terminal_position = (cur_position == stroke);
+
+		/// posedge of out drive
 		reg o_drive_d1;
 		always @ (posedge clk) begin
 			o_drive_d1 <= o_drive;
 		end
 		wire posedge_drive;
 		assign posedge_drive = o_drive_d1 && ~o_drive;
+
+		/// current position
 		always @ (posedge clk) begin
-			if (resetn == 1'b0 || zpd)
+			if (resetn == 1'b0 || reach_zero_position)
 				cur_position <= C_INIT_POSITION;
 			else if (posedge_drive) begin
-				if (o_dir)
-					cur_position <= cur_position + 1;
-				else
-					cur_position <= cur_position - 1;
+				if (forwarding) begin
+					if (~reached_terminal_position)
+						cur_position <= cur_position + 1;
+				end
+				else begin
+					if (cur_position > C_INIT_POSITION)
+						cur_position <= cur_position - 1;
+				end
 			end
 		end
+
+		/// terminal sign
 		always @ (posedge clk) begin
-			if (resetn == 1'b0 || zpd)
+			if (resetn == 1'b0)
 				r_tpsign <= 0;
-			else if (posedge_drive) begin
-				if (o_dir) begin
-					if (cur_position == stroke)
-						r_tpsign <= 1;
-				end
-				else
-					r_tpsign <= 0;
-			end
+			else if (posedge_drive)
+				r_tpsign <= reached_terminal_position;
 		end
 	end
 	else begin
