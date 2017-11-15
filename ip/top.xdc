@@ -57,6 +57,9 @@ set_property CLOCK_DEDICATED_ROUTE FALSE [get_nets cmos1_pclk_IBUF]
 create_clock -period 20.000 -name cmos0_pclk -waveform {0.000 10.000} [get_ports cmos0_pclk]
 create_clock -period 20.000 -name cmos1_pclk -waveform {0.000 10.000} [get_ports cmos1_pclk]
 
+set_property -dict {IOSTANDARD LVCMOS33 PACKAGE_PIN K16} [get_ports {cmos0_light}]
+set_property -dict {IOSTANDARD LVCMOS33 PACKAGE_PIN J16} [get_ports {cmos1_light}]
+
 set_property -dict {IOSTANDARD LVCMOS33 PACKAGE_PIN P20} [get_ports {pm_ms[2]}]
 set_property -dict {IOSTANDARD LVCMOS33 PACKAGE_PIN N20} [get_ports {pm_ms[1]}]
 set_property -dict {IOSTANDARD LVCMOS33 PACKAGE_PIN U19} [get_ports {pm_ms[0]}]
@@ -65,18 +68,17 @@ set_property -dict {IOSTANDARD LVCMOS33 PACKAGE_PIN T11} [get_ports {pm0_zpd}]
 set_property -dict {IOSTANDARD LVCMOS33 PACKAGE_PIN U18} [get_ports {pm0_drive}]
 set_property -dict {IOSTANDARD LVCMOS33 PACKAGE_PIN V15} [get_ports {pm0_dir}]
 set_property -dict {IOSTANDARD LVCMOS33 PACKAGE_PIN T10} [get_ports {pm1_zpd}]
-set_property -dict {IOSTANDARD LVCMOS33 PACKAGE_PIN W20} [get_ports {pm1_drive}]
-set_property -dict {IOSTANDARD LVCMOS33 PACKAGE_PIN V20} [get_ports {pm1_dir}]
+set_property -dict {IOSTANDARD LVCMOS33 PACKAGE_PIN P15} [get_ports {pm1_drive}]
+set_property -dict {IOSTANDARD LVCMOS33 PACKAGE_PIN P16} [get_ports {pm1_dir}]
 
 set_property -dict {IOSTANDARD LVCMOS33 PACKAGE_PIN W19} [get_ports {am_ms[2]}]
 set_property -dict {IOSTANDARD LVCMOS33 PACKAGE_PIN W18} [get_ports {am_ms[1]}]
 set_property -dict {IOSTANDARD LVCMOS33 PACKAGE_PIN R18} [get_ports {am_ms[0]}]
 set_property -dict {IOSTANDARD LVCMOS33 PACKAGE_PIN W16} [get_ports {am_xen}]
-set_property -dict {IOSTANDARD LVCMOS33 PACKAGE_PIN T17} [get_ports {am0_drive}]
-set_property -dict {IOSTANDARD LVCMOS33 PACKAGE_PIN V16} [get_ports {am0_dir}]
-set_property -dict {IOSTANDARD LVCMOS33 PACKAGE_PIN P15} [get_ports {am1_drive}]
-set_property -dict {IOSTANDARD LVCMOS33 PACKAGE_PIN P16} [get_ports {am1_dir}]
-
+set_property -dict {IOSTANDARD LVCMOS33 PACKAGE_PIN W20} [get_ports {am0_drive}]
+set_property -dict {IOSTANDARD LVCMOS33 PACKAGE_PIN V20} [get_ports {am0_dir}]
+set_property -dict {IOSTANDARD LVCMOS33 PACKAGE_PIN T17} [get_ports {am1_drive}]
+set_property -dict {IOSTANDARD LVCMOS33 PACKAGE_PIN V16} [get_ports {am1_dir}]
 
 set_clock_groups -asynchronous -group clk_fpga_0 -group clk_fpga_1
 set_clock_groups -asynchronous -group clk_fpga_2 -group clk_fpga_1
