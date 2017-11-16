@@ -4,6 +4,7 @@ module single_step_motor #(
 	parameter integer C_SPEED_ADDRESS_WIDTH = 9,
 	parameter integer C_MICROSTEP_WIDTH = 3,
 	parameter integer C_ZPD = 0,
+	parameter integer C_MICROSTEP_PASSTHOUGH = 0,
 	parameter integer C_REVERSE_DELAY = 4	/// >= 2
 )(
 	input  wire clk,
@@ -25,7 +26,7 @@ module single_step_motor #(
 	input  wire zpd,	/// zero position detection
 	output reg  o_drive,
 	output reg  o_dir,
-	output reg  [C_MICROSTEP_WIDTH-1:0] o_ms,
+	output wire [C_MICROSTEP_WIDTH-1:0] o_ms,
 	output wire o_xen,
 	output wire o_xrst,
 
@@ -166,11 +167,28 @@ module single_step_motor #(
 		end
 	end
 
+	/// should start
+	wire should_start;
+	assign should_start = (clk_en && start_pulse && is_idle);
+
+	generate
+		if (C_MICROSTEP_PASSTHOUGH) begin
+			assign o_ms = i_ms;
+		end
+		else begin
+			reg [C_MICROSTEP_WIDTH-1:0] r_ms;
+			assign o_ms = r_ms;
+			always @ (posedge clk) begin
+				if (should_start) begin
+					r_ms <= i_ms;
+				end
+			end
+		end
+	endgenerate
 	/// store instruction
 	always @ (posedge clk) begin
-		if (clk_en && start_pulse && is_idle) begin
+		if (should_start) begin
 			speed_max <= i_speed;
-			o_ms <= i_ms;
 			o_dir <= i_dir;
 		end
 	end

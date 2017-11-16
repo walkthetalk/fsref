@@ -9,8 +9,8 @@ module step_motor #(
 
 	parameter integer C_CLK_DIV_NBR = 32,	/// >= 4 (block_ram read delay)
 	parameter integer C_MOTOR_NBR = 4,
-	parameter integer C_ZPD_SEQ = 32'hFFFFFFFF
-
+	parameter integer C_ZPD_SEQ = 32'hFFFFFFFF,
+	parameter integer C_MICROSTEP_PASSTHOUGH_SEQ = 32'h0
 )(
 	input	clk,
 	input	resetn,
@@ -332,7 +332,8 @@ module step_motor #(
 			.C_SPEED_DATA_WIDTH(C_SPEED_DATA_WIDTH),
 			.C_SPEED_ADDRESS_WIDTH(C_SPEED_ADDRESS_WIDTH),
 			.C_MICROSTEP_WIDTH(C_MICROSTEP_WIDTH),
-			.C_ZPD((C_ZPD_SEQ >> i) & 1)
+			.C_ZPD((C_ZPD_SEQ >> i) & 1),
+			.C_MICROSTEP_PASSTHOUGH((C_MICROSTEP_PASSTHOUGH_SEQ >> i) & 1)
 		) step_motor_inst (
 			.clk(clk),
 			.resetn(resetn),
