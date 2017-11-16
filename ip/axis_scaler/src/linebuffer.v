@@ -18,10 +18,7 @@ module linebuffer #(
 	end
 
 	always @ (posedge clk) begin
-		if (rd_en)
-			rd_data <= ram[rd_addr];
-		else
-			rd_data <= rd_data;
+		rd_data <= ram[rd_addr];
 	end
 
 endmodule
