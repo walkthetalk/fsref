@@ -132,6 +132,20 @@ proc create_fscore {
 	endgroup
 
 	startgroup
+		create_bd_cell -type ip -vlnv ocfb:pvip:pwm:1.0.9 $mname/pwm0
+		set_property -dict [list \
+			CONFIG.C_PWM_CNT_WIDTH {16} \
+		] [get_bd_cells $mname/pwm0]
+	endgroup
+
+	startgroup
+		create_bd_cell -type ip -vlnv ocfb:pvip:pwm:1.0.9 $mname/pwm1
+		set_property -dict [list \
+			CONFIG.C_PWM_CNT_WIDTH {16} \
+		] [get_bd_cells $mname/pwm1]
+	endgroup
+
+	startgroup
 	create_bd_cell -type ip -vlnv $VENDOR:$LIBRARY:axilite2regctl:$VERSION $mname/axilite2regctl
 	endgroup
 
@@ -219,6 +233,8 @@ proc create_fscore {
 		$mname/fsctl/MOTOR3_CTL          $mname/align_motor/S1
 		$mname/align_motor/M0            $mname/ALIGN_MOTOR0_IC_CTL
 		$mname/align_motor/M1            $mname/ALIGN_MOTOR1_IC_CTL
+		$mname/fsctl/PWM0_CTL            $mname/pwm0/S_CTL
+		$mname/fsctl/PWM1_CTL            $mname/pwm1/S_CTL
 	}]
 	pip_connect_net [subst {
 		$mname/fsctl/s0_soft_resetn $mname/pvdma_0/soft_resetn
@@ -282,6 +298,8 @@ proc create_fscore {
 		$mname/axis_blender/clk
 		$mname/push_motor/clk
 		$mname/align_motor/clk
+		$mname/pwm0/clk
+		$mname/pwm1/clk
 	}]
 	create_bd_pin -dir I $mname/resetn
 	pip_connect_pin $mname/resetn [subst {
@@ -292,5 +310,14 @@ proc create_fscore {
 		$mname/axis_blender/resetn
 		$mname/push_motor/resetn
 		$mname/align_motor/resetn
+	}]
+
+	create_bd_pin -dir O $mname/cmos0_light
+	pip_connect_pin $mname/pwm0/drive [subst {
+		$mname/cmos0_light
+	}]
+	create_bd_pin -dir O $mname/cmos1_light
+	pip_connect_pin $mname/pwm1/drive [subst {
+		$mname/cmos1_light
 	}]
 }

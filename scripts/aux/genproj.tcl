@@ -320,6 +320,13 @@ foreach i {pm_ms pm_xen pm0_zpd pm0_drive pm0_dir pm1_zpd pm1_drive pm1_dir
         connect_bd_net [get_bd_pins /fsmotor/$i] [get_bd_ports $i]
 }
 
+# connect from/to external cmoslight
+create_bd_port -dir O cmos0_light
+create_bd_port -dir O cmos1_light
+foreach i {cmos0_light cmos1_light} {
+        connect_bd_net [get_bd_pins /fscore/$i] [get_bd_ports $i]
+}
+
 # 9. address
 # auto assign all addresses
 assign_bd_address
