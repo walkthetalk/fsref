@@ -219,10 +219,7 @@ module step_motor #(
 		.addrB(deac_addr_final),
 		.qB(deac_data_final)
 	);
-	reg br_init_d1;
-	always @ (posedge clk) begin
-		br_init_d1 <= br_init;
-	end
+
 	always @ (posedge clk) begin
 		if (resetn == 1'b0) begin
 			acce_we_addr <= 0;
