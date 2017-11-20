@@ -235,7 +235,7 @@ module single_step_motor #(
 				step_done <= 0;
 			end
 			RUNNING: begin
-				if (o_drive == 1 && step_remain == 0)
+				if (o_drive == 1 && speed_cnt == 0 && step_remain == 0)
 					step_done <= 1;
 			end
 			endcase
