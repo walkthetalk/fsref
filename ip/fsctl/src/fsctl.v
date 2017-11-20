@@ -459,11 +459,9 @@ module fsctl #
 	`COND((C_BR_INITOR_NBR >= 7), `DEFREG_EXTERNAL(32, 6, 1, br6_init, 0))
 	`COND((C_BR_INITOR_NBR >= 8), `DEFREG_EXTERNAL(32, 7, 1, br7_init, 0))
 
-	`WR_EN_POSEDGE(33, wr_en_pos_33)
-	always @ (posedge o_clk) begin
-		br_wr_en <= wr_en_pos_33;
-		br_data  <= wr_data[C_SPEED_DATA_WIDTH-1:0];
-	end
+	`WR_TRIG(33, br_wr_en, 0, 1)
+	`WR_SYNC_REG(33, 0, C_SPEED_DATA_WIDTH, br_data, 0, 0)
+
 /// step motor
 	localparam EN_MT0 = (C_MOTOR_NBR > 0);
 	localparam EN_MT1 = (C_MOTOR_NBR > 1);
