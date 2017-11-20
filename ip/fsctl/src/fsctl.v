@@ -385,7 +385,28 @@ module fsctl #
 			o_fsync <= fsync_posedge;
 	end
 
+/// write sync
+	reg clk_d1;
+	reg wr_en_d1;
+	reg [C_DATA_WIDTH-1:0] wr_data_d1;
+	reg [C_REG_IDX_WIDTH-1:0] wr_index_d1;
+	wire wr_sync;
+	assign wr_sync = (clk && ~clk_d1 && wr_en_d1);
+	always @ (posedge o_clk) begin
+		clk_d1      <= clk;
+		wr_en_d1    <= wr_en;
+		wr_data_d1  <= wr_data;
+		wr_index_d1 <= wr_index;
+	end
 
+	wire wr_sync_reg[C_REG_NUM-1 : 0];
+	generate
+		for (i = 0; i < C_REG_NUM; i = i + 1) begin: single_wr_sync
+			assign wr_sync_reg[i] = (wr_sync && (wr_index_d1 == i));
+		end
+	endgenerate
+
+/// start register definition
 	`DEFREG_EXTERNAL(0, 0, 1, soft_resetn, 0)
 	`DEFREG_INTERNAL(0, 1, 1, display_cfging, 0)
 
