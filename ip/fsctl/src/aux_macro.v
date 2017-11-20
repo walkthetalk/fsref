@@ -11,6 +11,26 @@
 	wire _name; \
 	assign _name = (s_wr_en[_ridx] & s_wr_en_d1_``_name);
 
+`define WR_TRIG(_ridx, _name, _defv, _autoclr) \
+	always @ (posedge o_clk) begin \
+		if (resetn == 1'b0) \
+			_name <= _defv; \
+		else if (wr_sync_reg[_ridx]) \
+			_name <= ~_defv; \
+		else \
+			_name <= (_autoclr ? _defv : ~_defv); \
+	end
+
+`define WR_SYNC_REG(_ridx, _bstart, _bwidth, _name, _defv, _autoclr) \
+	always @ (posedge o_clk) begin \
+		if (resetn == 1'b0) \
+			_name <= _defv; \
+		else if (wr_sync_reg[_ridx]) \
+			_name <= wr_data_d1[_bstart + _bwidth - 1 : _bstart]; \
+		else \
+			_name <= (_autoclr ? 0 : _name); \
+	end
+
 `define DEFREG(_ridx, _bstart, _bwidth, _name, _defv, _autoclr) \
 	reg [_bwidth-1 : 0] r_``_name; \
 	assign slv_reg[_ridx][_bstart + _bwidth - 1 : _bstart] = r_``_name; \
