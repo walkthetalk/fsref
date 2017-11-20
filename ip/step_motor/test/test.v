@@ -34,8 +34,28 @@ reg			       s0_start;
 reg			       s0_stop;
 reg			       s0_dir;
 reg  [C_MICROSTEP_WIDTH-1:0]   s0_ms = 0;
-reg			       s0_xen = 1;
+reg			       s0_xen = 0;
 reg			       s0_xrst = 0;
+
+reg			       m1_zpd = 0;
+wire			       m1_drive;
+wire			       m1_dir;
+wire [C_MICROSTEP_WIDTH-1:0]   m1_ms;
+wire			       m1_xen;
+wire			       m1_xrst;
+
+wire			       s1_zpsign;
+wire			       s1_tpsign;
+wire			       s1_state;
+reg  [C_STEP_NUMBER_WIDTH-1:0] s1_stroke = 100;
+reg  [C_SPEED_DATA_WIDTH-1:0]  s1_speed;
+reg  [C_STEP_NUMBER_WIDTH-1:0] s1_step;
+reg			       s1_start;
+reg			       s1_stop;
+reg			       s1_dir;
+reg  [C_MICROSTEP_WIDTH-1:0]   s1_ms = 0;
+reg			       s1_xen = 0;
+reg			       s1_xrst = 0;
 
 step_motor # (
 	.C_STEP_NUMBER_WIDTH  (C_STEP_NUMBER_WIDTH  ),
@@ -70,7 +90,26 @@ step_motor # (
 	.s0_ms    (s0_ms    ),
 	.s0_state (s0_state ),
 	.s0_xen   (s0_xen   ),
-	.s0_xrst  (s0_xrst  )
+	.s0_xrst  (s0_xrst  ),
+
+	.m1_zpd   (m1_zpd   ),
+	.m1_drive (m1_drive ),
+	.m1_dir   (m1_dir   ),
+	.m1_ms    (m1_ms    ),
+	.m1_xen   (m1_xen   ),
+	.m1_xrst  (m1_xrst  ),
+	.s1_zpsign(s1_zpsign),
+	.s1_tpsign(s1_tpsign),
+	.s1_stroke(s1_stroke),
+	.s1_speed (s1_speed ),
+	.s1_step  (s1_step  ),
+	.s1_start (s1_start ),
+	.s1_stop  (s1_stop  ),
+	.s1_dir   (s1_dir   ),
+	.s1_ms    (s1_ms    ),
+	.s1_state (s1_state ),
+	.s1_xen   (s1_xen   ),
+	.s1_xrst  (s1_xrst  )
 );
 
 initial begin
@@ -123,6 +162,27 @@ always @ (posedge ctl_clk) begin
 	end
 	else begin
 		s0_start <= 0;
+	end
+end
+
+reg [31:0] s1_cnt = 1000;
+always @ (posedge ctl_clk) begin
+	if (~br_init && s1_cnt != 0)
+		s1_cnt <= s1_cnt - 1;
+end
+
+always @ (posedge ctl_clk) begin
+	if (resetn == 1'b0) begin
+		s1_start <= 0;
+	end
+	else if (s1_state == 1'b0 && ~s1_start && s1_cnt == 0) begin
+		s1_speed <= 10;
+		s1_step  <= 30;
+		s1_dir   <= 0;
+		s1_start <= 1;
+	end
+	else begin
+		s1_start <= 0;
 	end
 end
 
