@@ -56,7 +56,16 @@ pip_add_bus_if [ipx::current_core] DISPBUF_ADDR [subst {
 	ADDR0 dispbuf0_addr
 }
 
-pip_add_bus_if [ipx::current_core] CMOS0BUF_ADDR [subst {
+pip_add_bus_if [ipx::current_core] S1_MBUF_R [subst {
+	abstraction_type_vlnv $VENDOR:interface:mutex_buffer_ctl_rtl:1.0
+	bus_type_vlnv $VENDOR:interface:mutex_buffer_ctl:1.0
+	interface_mode master
+}] {
+	SOF s1_rd_en
+	IDX s1_rd_buf_idx
+}
+
+pip_add_bus_if [ipx::current_core] S1_BUF_ADDR [subst {
 	abstraction_type_vlnv $VENDOR:interface:addr_array_rtl:1.0
 	bus_type_vlnv $VENDOR:interface:addr_array:1.0
 	interface_mode master
@@ -67,7 +76,16 @@ pip_add_bus_if [ipx::current_core] CMOS0BUF_ADDR [subst {
 	ADDR3 cmos0buf3_addr
 }
 
-pip_add_bus_if [ipx::current_core] CMOS1BUF_ADDR [subst {
+pip_add_bus_if [ipx::current_core] S2_MBUF_R [subst {
+	abstraction_type_vlnv $VENDOR:interface:mutex_buffer_ctl_rtl:1.0
+	bus_type_vlnv $VENDOR:interface:mutex_buffer_ctl:1.0
+	interface_mode master
+}] {
+	SOF s2_rd_en
+	IDX s2_rd_buf_idx
+}
+
+pip_add_bus_if [ipx::current_core] S2_BUF_ADDR [subst {
 	abstraction_type_vlnv $VENDOR:interface:addr_array_rtl:1.0
 	bus_type_vlnv $VENDOR:interface:addr_array:1.0
 	interface_mode master
@@ -251,6 +269,7 @@ pip_add_bus_if [ipx::current_core] o_clk {
 	CLK o_clk
 } {
 	ASSOCIATED_BUSIF {o_fsync:
+		S1_MBUF_R:S2_MBUF_R
 		OUT_SIZE:
 		S0_SIZE:S0_WIN:S0_SCALE:S0_DST:
 		S1_SIZE:S1_WIN:S1_SCALE:S1_DST:
@@ -258,6 +277,15 @@ pip_add_bus_if [ipx::current_core] o_clk {
 		BR0_INIT_CTL:BR1_INIT_CTL:BR2_INIT_CTL:BR3_INIT_CTL:
 		BR4_INIT_CTL:BR5_INIT_CTL:BR6_INIT_CTL:BR7_INIT_CTL}
 	ASSOCIATED_RESET {o_resetn:s0_soft_resetn:s1_soft_resetn:s2_soft_resetn}
+}
+
+# interrupt
+pip_add_bus_if [ipx::current_core] intr {
+	abstraction_type_vlnv xilinx.com:signal:interrupt_rtl:1.0
+	bus_type_vlnv xilinx.com:signal:interrupt:1.0
+	interface_mode master
+} {
+	INTERRUPT intr
 }
 
 # parameters
