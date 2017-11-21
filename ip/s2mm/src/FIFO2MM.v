@@ -8,8 +8,6 @@ module FIFO2MM #
 	parameter integer C_DATACOUNT_BITS = 12,
 	// Burst Length. Supports 1, 2, 4, 8, 16, 32, 64, 128, 256 burst lengths
 	parameter integer C_M_AXI_BURST_LEN	= 16,
-	// Thread ID Width
-	parameter integer C_M_AXI_ID_WIDTH	= 1,
 	// Width of Address Bus
 	parameter integer C_M_AXI_ADDR_WIDTH	= 32,
 	// Width of Data Bus
@@ -38,7 +36,6 @@ module FIFO2MM #
 	input wire  M_AXI_ACLK,
 	input wire  M_AXI_ARESETN,
 
-	output wire [C_M_AXI_ID_WIDTH-1 : 0] M_AXI_AWID,
 	output wire [C_M_AXI_ADDR_WIDTH-1 : 0] M_AXI_AWADDR,
 	output wire [7 : 0] M_AXI_AWLEN,
 	output wire [2 : 0] M_AXI_AWSIZE,
@@ -56,7 +53,6 @@ module FIFO2MM #
 	output wire M_AXI_WVALID,
 	input wire  M_AXI_WREADY,
 
-	input wire [C_M_AXI_ID_WIDTH-1 : 0] M_AXI_BID,
 	input wire [1 : 0] M_AXI_BRESP,
 	input wire  M_AXI_BVALID,
 	output wire  M_AXI_BREADY
@@ -142,7 +138,6 @@ module FIFO2MM #
 			r_dvalid <= r_dvalid;
 	end
 
-	assign M_AXI_AWID	= 0;
 	assign M_AXI_AWADDR	= axi_awaddr;
 	assign M_AXI_AWLEN	= C_M_AXI_BURST_LEN - 1;
 	assign M_AXI_AWSIZE	= clogb2((C_M_AXI_DATA_WIDTH/8)-1);

@@ -54,7 +54,6 @@ pip_add_bus_if [ipx::current_core] M_AXI {
 	bus_type_vlnv {xilinx.com:interface:aximm:1.0}
 	interface_mode {master}
 } {
-	AWID	m_axi_awid
 	AWADDR	m_axi_awaddr
 	AWLEN	m_axi_awlen
 	AWSIZE	m_axi_awsize
@@ -70,7 +69,6 @@ pip_add_bus_if [ipx::current_core] M_AXI {
 	WLAST	m_axi_wlast
 	WVALID	m_axi_wvalid
 	WREADY	m_axi_wready
-	BID	m_axi_bid
 	BRESP	m_axi_bresp
 	BVALID	m_axi_bvalid
 	BREADY	m_axi_bready

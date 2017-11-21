@@ -14,8 +14,6 @@ module MM2FIFO #
 
 	// Burst Length. Supports 1, 2, 4, 8, 16, 32, 64, 128, 256 burst lengths
 	parameter integer C_M_AXI_BURST_LEN	= 16,
-	// Thread ID Width
-	parameter integer C_M_AXI_ID_WIDTH	= 1,
 	// Width of Address Bus
 	parameter integer C_M_AXI_ADDR_WIDTH	= 32,
 	// Width of Data Bus
@@ -43,7 +41,6 @@ module MM2FIFO #
 	input wire  M_AXI_ACLK,
 	input wire  M_AXI_ARESETN,
 
-	output wire [C_M_AXI_ID_WIDTH-1 : 0] M_AXI_ARID,
 	output wire [C_M_AXI_ADDR_WIDTH-1 : 0] M_AXI_ARADDR,
 	output wire [7 : 0] M_AXI_ARLEN,
 	output wire [2 : 0] M_AXI_ARSIZE,
@@ -55,7 +52,6 @@ module MM2FIFO #
 	output wire  M_AXI_ARVALID,
 	input wire  M_AXI_ARREADY,
 
-	input wire [C_M_AXI_ID_WIDTH-1 : 0] M_AXI_RID,
 	input wire [C_M_AXI_DATA_WIDTH-1 : 0] M_AXI_RDATA,
 	input wire [1 : 0] M_AXI_RRESP,
 	input wire  M_AXI_RLAST,
@@ -132,7 +128,6 @@ module MM2FIFO #
 	assign wr_en		= rnext && ~resetting;
 
 	//Read Address (AR)
-	assign M_AXI_ARID	= 0;
 	assign M_AXI_ARADDR	= axi_araddr;
 	assign M_AXI_ARLEN	= C_M_AXI_BURST_LEN - 1;
 	assign M_AXI_ARSIZE	= clogb2((C_M_AXI_DATA_WIDTH/8)-1);

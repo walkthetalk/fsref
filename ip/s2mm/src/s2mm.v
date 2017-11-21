@@ -32,7 +32,6 @@ module s2mm #
 
 	// Parameters of Axi Master Bus Interface M_AXI
 	parameter integer C_M_AXI_BURST_LEN	= 16,
-	parameter integer C_M_AXI_ID_WIDTH	= 1,
 	parameter integer C_M_AXI_ADDR_WIDTH	= 32,
 	parameter integer C_M_AXI_DATA_WIDTH	= 32
 )
@@ -70,7 +69,6 @@ module s2mm #
 	input wire [C_DATACOUNT_BITS-1:0] s2mm_rd_data_count,
 
 	// Ports of Axi Master Bus Interface M_AXI
-	output wire [C_M_AXI_ID_WIDTH-1 : 0] m_axi_awid,
 	output wire [C_M_AXI_ADDR_WIDTH-1 : 0] m_axi_awaddr,
 	output wire [7 : 0] m_axi_awlen,
 	output wire [2 : 0] m_axi_awsize,
@@ -86,7 +84,6 @@ module s2mm #
 	output wire  m_axi_wlast,
 	output wire  m_axi_wvalid,
 	input wire  m_axi_wready,
-	input wire [C_M_AXI_ID_WIDTH-1 : 0] m_axi_bid,
 	input wire [1 : 0] m_axi_bresp,
 	input wire  m_axi_bvalid,
 	output wire  m_axi_bready
@@ -138,7 +135,6 @@ module s2mm #
 	FIFO2MM # (
 		.C_DATACOUNT_BITS(C_DATACOUNT_BITS),
 		.C_M_AXI_BURST_LEN(C_M_AXI_BURST_LEN),
-		.C_M_AXI_ID_WIDTH(C_M_AXI_ID_WIDTH),
 		.C_M_AXI_ADDR_WIDTH(C_M_AXI_ADDR_WIDTH),
 		.C_M_AXI_DATA_WIDTH(C_M_AXI_DATA_WIDTH),
 		.C_IMG_WBITS(C_IMG_WBITS),
@@ -162,7 +158,6 @@ module s2mm #
 
 		.M_AXI_ACLK(f2m_aclk),
 		.M_AXI_ARESETN(resetn),
-		.M_AXI_AWID(m_axi_awid),
 		.M_AXI_AWADDR(m_axi_awaddr),
 		.M_AXI_AWLEN(m_axi_awlen),
 		.M_AXI_AWSIZE(m_axi_awsize),
@@ -178,7 +173,6 @@ module s2mm #
 		.M_AXI_WLAST(m_axi_wlast),
 		.M_AXI_WVALID(m_axi_wvalid),
 		.M_AXI_WREADY(m_axi_wready),
-		.M_AXI_BID(m_axi_bid),
 		.M_AXI_BRESP(m_axi_bresp),
 		.M_AXI_BVALID(m_axi_bvalid),
 		.M_AXI_BREADY(m_axi_bready)
