@@ -164,10 +164,10 @@ proc create_pvdma {
 		endgroup
 
 		# interrupt
-		create_bd_pin -dir O -type intr $mname/intr
-		connect_bd_net [get_bd_pins $mname/intr] [get_bd_pins $mname/mutex_buffer/intr]
+		create_bd_pin -dir O $mname/wr_done
+		connect_bd_net [get_bd_pins $mname/wr_done] [get_bd_pins $mname/mutex_buffer/wr_done]
 		# signal
-		create_bd_intf_pin -mode Master -vlnv $VENDOR:interface:mutex_buffer_ctl_rtl:1.0 $mname/MBUF_R
+		create_bd_intf_pin -mode Slave -vlnv $VENDOR:interface:mutex_buffer_ctl_rtl:1.0 $mname/MBUF_R
 		connect_bd_intf_net [get_bd_intf_pins $mname/mm2s/MBUF_R] [get_bd_intf_pins $mname/mutex_buffer/MBUF_R1]
 		connect_bd_intf_net [get_bd_intf_pins $mname/s2mm/MBUF_W] [get_bd_intf_pins $mname/mutex_buffer/MBUF_W]
 		connect_bd_intf_net [get_bd_intf_pins $mname/mutex_buffer/MBUF_R0] [get_bd_intf_pins $mname/MBUF_R]
@@ -200,7 +200,7 @@ proc create_pvdma {
 	} elseif {$dir_s2mm == 1} {
 		# signal
 		create_bd_intf_pin -mode Master -vlnv $VENDOR:interface:mutex_buffer_ctl_rtl:1.0 $mname/MBUF_W
-		connect_bd_intf_net [get_bd_intf_pins $mname/s2mm/MBUF_R] [get_bd_intf_pins $mname/MBUF_W]
+		connect_bd_intf_net [get_bd_intf_pins $mname/s2mm/MBUF_W] [get_bd_intf_pins $mname/MBUF_W]
 
 		create_bd_intf_pin -mode Master -vlnv xilinx.com:interface:aximm_rtl:1.0 $mname/M_AXI
 		connect_bd_intf_net [get_bd_intf_pins $mname/s2mm/M_AXI] [get_bd_intf_pins $mname/M_AXI]
@@ -209,7 +209,7 @@ proc create_pvdma {
 		connect_bd_intf_net [get_bd_intf_pins $mname/s2mm/IMG_SIZE] [get_bd_intf_pins $mname/IMG_SIZE]
 	} elseif {$dir_mm2s == 1} {
 		# signal
-		create_bd_intf_pin -mode Slave -vlnv $VENDOR:interface:mutex_buffer_ctl_rtl:1.0 $mname/MBUF_R
+		create_bd_intf_pin -mode Master -vlnv $VENDOR:interface:mutex_buffer_ctl_rtl:1.0 $mname/MBUF_R
 		connect_bd_intf_net [get_bd_intf_pins $mname/mm2s/MBUF_R] [get_bd_intf_pins $mname/MBUF_R]
 
 		create_bd_intf_pin -mode Master -vlnv xilinx.com:interface:aximm_rtl:1.0 $mname/M_AXI
