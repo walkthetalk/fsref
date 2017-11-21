@@ -327,6 +327,9 @@ foreach i {cmos0_light cmos1_light} {
         connect_bd_net [get_bd_pins /fscore/$i] [get_bd_ports $i]
 }
 
+# connect interrupt
+connect_bd_net [get_bd_pins fscore/intr] [get_bd_pins cpu/IRQ_F2P]
+
 # 9. address
 # auto assign all addresses
 assign_bd_address

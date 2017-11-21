@@ -175,8 +175,10 @@ proc create_fscore {
 		$mname/axis_window_2/M_AXIS     $mname/axis_scaler_2/S_AXIS
 		$mname/axis_scaler_2/M_AXIS	$mname/axis_relay_2/S_AXIS
 		$mname/axis_relay_2/M_AXIS	$mname/axis_blender/S2_AXIS
-		$mname/fsctl/CMOS0BUF_ADDR      $mname/pvdma_1/BUF_ADDR
-		$mname/fsctl/CMOS1BUF_ADDR      $mname/pvdma_2/BUF_ADDR
+		$mname/fsctl/S1_BUF_ADDR        $mname/pvdma_1/BUF_ADDR
+		$mname/fsctl/S2_BUF_ADDR        $mname/pvdma_2/BUF_ADDR
+		$mname/fsctl/S1_MBUF_R          $mname/pvdma_1/MBUF_R
+		$mname/fsctl/S2_MBUF_R          $mname/pvdma_2/MBUF_R
 		$mname/fsctl/OUT_SIZE           $mname/axis_blender/OUT_SIZE
 		$mname/fsctl/S0_DST             $mname/axis_blender/S0_WIN_CTL
 		$mname/fsctl/S1_DST             $mname/axis_blender/S1_WIN_CTL
@@ -189,6 +191,8 @@ proc create_fscore {
 	pip_connect_net [subst {
 		$mname/fsctl/dispbuf0_addr      $mname/pvdma_0/MBUF_R_addr
 		$mname/fsctl/order_1over2       $mname/axis_blender/order_1over2
+		$mname/fsctl/s1_wr_done         $mname/pvdma_1/wr_done
+		$mname/fsctl/s2_wr_done         $mname/pvdma_2/wr_done
 	}]
 
 	# external interface
@@ -319,5 +323,10 @@ proc create_fscore {
 	create_bd_pin -dir O $mname/cmos1_light
 	pip_connect_pin $mname/pwm1/drive [subst {
 		$mname/cmos1_light
+	}]
+
+	create_bd_pin -dir O -type intr $mname/intr
+	pip_connect_pin $mname/fsctl/intr [subst {
+		$mname/intr
 	}]
 }
