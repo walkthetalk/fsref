@@ -16,6 +16,7 @@ module fsctl #
 	parameter integer C_IMG_HDEF = 240,
 
 	parameter integer C_BUF_ADDR_WIDTH = 32,
+	parameter integer C_BUF_IDX_WIDTH = 2,
 	parameter integer C_DISPBUF0_ADDR  = 'h3FF00000,
 	parameter integer C_CMOS0BUF0_ADDR = 'h3F000000,
 	parameter integer C_CMOS0BUF1_ADDR = 'h3F100000,
@@ -57,6 +58,8 @@ module fsctl #
 	output reg order_1over2,
 	input wire fsync,
 	output reg o_fsync,
+
+	output wire intr,
 
 	output wire [C_BUF_ADDR_WIDTH-1:0] dispbuf0_addr,
 	output wire [C_BUF_ADDR_WIDTH-1:0] cmos0buf0_addr,
@@ -108,6 +111,10 @@ module fsctl #
 	output reg [C_IMG_WBITS-1:0] s1_dst_width,
 	output reg [C_IMG_HBITS-1:0] s1_dst_top,
 	output reg [C_IMG_HBITS-1:0] s1_dst_height,
+
+	input  wire                        s1_wr_done,
+	output reg                         s1_rd_en,
+	input  wire [C_BUF_IDX_WIDTH-1:0]  s1_rd_buf_idx,
 /// stream 2
 	output reg s2_soft_resetn,
 	output reg [C_IMG_WBITS-1:0] s2_width,
@@ -127,6 +134,10 @@ module fsctl #
 	output reg [C_IMG_WBITS-1:0] s2_dst_width,
 	output reg [C_IMG_HBITS-1:0] s2_dst_top,
 	output reg [C_IMG_HBITS-1:0] s2_dst_height,
+
+	input  wire                        s2_wr_done,
+	output reg                         s2_rd_en,
+	input  wire [C_BUF_IDX_WIDTH-1:0]  s2_rd_buf_idx,
 
 /// blockram initor 0
 	output reg                           br0_init,
@@ -418,17 +429,34 @@ module fsctl #
 	`DEFREG_INTERNAL(1, 2, 1, s1_running, 0)
 	`DEFREG_INTERNAL(1, 3, 1, s2_running, 0)
 
-	`DEFREG_IMGSIZE( 2, s1_width,              0,  s1_height,              0)
-	`DEFREG_IMGSIZE( 3, s1_win_left,           0,  s1_win_top,             0)
-	`DEFREG_IMGSIZE( 4, s1_win_width,          0,  s1_win_height,          0)
-	`DEFREG_IMGSIZE( 5, s1_dst_left,           0,  s1_dst_top,             0)
-	`DEFREG_IMGSIZE( 6, s1_dst_width,          0,  s1_dst_height,          0)
+	/// STREAM INT ENABLE
+	`DEFREG_INT_EN(2, 4, s1_wr_done)
+	`DEFREG_INT_EN(2, 8, s2_wr_done)
 
-	`DEFREG_IMGSIZE( 7, s2_width,              0,  s2_height,              0)
-	`DEFREG_IMGSIZE( 8, s2_win_left,           0,  s2_win_top,             0)
-	`DEFREG_IMGSIZE( 9, s2_win_width,          0,  s2_win_height,          0)
-	`DEFREG_IMGSIZE(10, s2_dst_left,           0,  s2_dst_top,             0)
-	`DEFREG_IMGSIZE(11, s2_dst_width,          0,  s2_dst_height,          0)
+	`DEFREG_DIRECT_IN_D1(1, s1_wr_done)
+	`DEFREG_DIRECT_IN_D1(1, s2_wr_done)
+
+	/// STREAM INT STATE
+	`DEFREG_INT_STATE(3, 4, s1_wr_done, 1)
+	`DEFREG_INT_STATE(3, 8, s2_wr_done, 1)
+	`WR_SYNC_REG(3, 4, 1, s1_rd_en, 0, 1)
+	`WR_SYNC_REG(3, 8, 1, s2_rd_en, 0, 1)
+
+	/// STREAM BUF INDEX
+	`DEFREG_DIRECT_IN(4, 4, C_BUF_IDX_WIDTH, s1_rd_buf_idx)
+	`DEFREG_DIRECT_IN(4, 8, C_BUF_IDX_WIDTH, s2_rd_buf_idx)
+
+	`DEFREG_IMGSIZE( 5, s1_width,              0,  s1_height,              0)
+	`DEFREG_IMGSIZE( 6, s1_win_left,           0,  s1_win_top,             0)
+	`DEFREG_IMGSIZE( 7, s1_win_width,          0,  s1_win_height,          0)
+	`DEFREG_IMGSIZE( 8, s1_dst_left,           0,  s1_dst_top,             0)
+	`DEFREG_IMGSIZE( 9, s1_dst_width,          0,  s1_dst_height,          0)
+
+	`DEFREG_IMGSIZE(10, s2_width,              0,  s2_height,              0)
+	`DEFREG_IMGSIZE(11, s2_win_left,           0,  s2_win_top,             0)
+	`DEFREG_IMGSIZE(12, s2_win_width,          0,  s2_win_height,          0)
+	`DEFREG_IMGSIZE(13, s2_dst_left,           0,  s2_dst_top,             0)
+	`DEFREG_IMGSIZE(14, s2_dst_width,          0,  s2_dst_height,          0)
 
 /// blockram initor
 	reg br_wr_en;
@@ -500,36 +528,36 @@ module fsctl #
 	/// MOTOR INT ENABLE 33
 	/// MOTOR INT STATE  34
 	/// MOTOR STATE  35
-`define DEFREG_FOR_MOTOR_INT(_idx, _name) \
+`define DEFREG_FOR_MOTOR_INT(_idx, _trigV, _name) \
 	`DEFREG_DIRECT_IN(35,  _idx, 1, _name) \
 	`DEFREG_DIRECT_IN_D1(1, _name) \
-	`DEFREG_INT_STATE(34, _idx, _name) \
+	`DEFREG_INT_STATE(34, _idx, _name, _trigV) \
 	`DEFREG_INT_EN(33, _idx, _name)
 
-	`COND(EN_ZP0, `DEFREG_FOR_MOTOR_INT(( 0+0), motor0_zpsign))
-	`COND(EN_ZP0, `DEFREG_FOR_MOTOR_INT(( 0+1), motor0_tpsign))
-	`COND(EN_MT0, `DEFREG_FOR_MOTOR_INT(( 0+2), motor0_state))
-	`COND(EN_ZP1, `DEFREG_FOR_MOTOR_INT(( 4+0), motor1_zpsign))
-	`COND(EN_ZP1, `DEFREG_FOR_MOTOR_INT(( 4+1), motor1_tpsign))
-	`COND(EN_MT1, `DEFREG_FOR_MOTOR_INT(( 4+2), motor1_state))
-	`COND(EN_ZP2, `DEFREG_FOR_MOTOR_INT(( 8+0), motor2_zpsign))
-	`COND(EN_ZP2, `DEFREG_FOR_MOTOR_INT(( 8+1), motor2_tpsign))
-	`COND(EN_MT2, `DEFREG_FOR_MOTOR_INT(( 8+2), motor2_state))
-	`COND(EN_ZP3, `DEFREG_FOR_MOTOR_INT((12+0), motor3_zpsign))
-	`COND(EN_ZP3, `DEFREG_FOR_MOTOR_INT((12+1), motor3_tpsign))
-	`COND(EN_MT3, `DEFREG_FOR_MOTOR_INT((12+2), motor3_state))
-	`COND(EN_ZP4, `DEFREG_FOR_MOTOR_INT((16+0), motor4_zpsign))
-	`COND(EN_ZP4, `DEFREG_FOR_MOTOR_INT((16+1), motor4_tpsign))
-	`COND(EN_MT4, `DEFREG_FOR_MOTOR_INT((16+2), motor4_state))
-	`COND(EN_ZP5, `DEFREG_FOR_MOTOR_INT((20+0), motor5_zpsign))
-	`COND(EN_ZP5, `DEFREG_FOR_MOTOR_INT((20+1), motor5_tpsign))
-	`COND(EN_MT5, `DEFREG_FOR_MOTOR_INT((20+2), motor5_state))
-	`COND(EN_ZP6, `DEFREG_FOR_MOTOR_INT((24+0), motor6_zpsign))
-	`COND(EN_ZP6, `DEFREG_FOR_MOTOR_INT((24+1), motor6_tpsign))
-	`COND(EN_MT6, `DEFREG_FOR_MOTOR_INT((24+2), motor6_state))
-	`COND(EN_ZP7, `DEFREG_FOR_MOTOR_INT((28+0), motor7_zpsign))
-	`COND(EN_ZP7, `DEFREG_FOR_MOTOR_INT((28+1), motor7_tpsign))
-	`COND(EN_MT7, `DEFREG_FOR_MOTOR_INT((28+2), motor7_state))
+	`COND(EN_ZP0, `DEFREG_FOR_MOTOR_INT(( 0+0), 1, motor0_zpsign))
+	`COND(EN_ZP0, `DEFREG_FOR_MOTOR_INT(( 0+1), 1, motor0_tpsign))
+	`COND(EN_MT0, `DEFREG_FOR_MOTOR_INT(( 0+2), 0, motor0_state))
+	`COND(EN_ZP1, `DEFREG_FOR_MOTOR_INT(( 4+0), 1, motor1_zpsign))
+	`COND(EN_ZP1, `DEFREG_FOR_MOTOR_INT(( 4+1), 1, motor1_tpsign))
+	`COND(EN_MT1, `DEFREG_FOR_MOTOR_INT(( 4+2), 0, motor1_state))
+	`COND(EN_ZP2, `DEFREG_FOR_MOTOR_INT(( 8+0), 1, motor2_zpsign))
+	`COND(EN_ZP2, `DEFREG_FOR_MOTOR_INT(( 8+1), 1, motor2_tpsign))
+	`COND(EN_MT2, `DEFREG_FOR_MOTOR_INT(( 8+2), 0, motor2_state))
+	`COND(EN_ZP3, `DEFREG_FOR_MOTOR_INT((12+0), 1, motor3_zpsign))
+	`COND(EN_ZP3, `DEFREG_FOR_MOTOR_INT((12+1), 1, motor3_tpsign))
+	`COND(EN_MT3, `DEFREG_FOR_MOTOR_INT((12+2), 0, motor3_state))
+	`COND(EN_ZP4, `DEFREG_FOR_MOTOR_INT((16+0), 1, motor4_zpsign))
+	`COND(EN_ZP4, `DEFREG_FOR_MOTOR_INT((16+1), 1, motor4_tpsign))
+	`COND(EN_MT4, `DEFREG_FOR_MOTOR_INT((16+2), 0, motor4_state))
+	`COND(EN_ZP5, `DEFREG_FOR_MOTOR_INT((20+0), 1, motor5_zpsign))
+	`COND(EN_ZP5, `DEFREG_FOR_MOTOR_INT((20+1), 1, motor5_tpsign))
+	`COND(EN_MT5, `DEFREG_FOR_MOTOR_INT((20+2), 0, motor5_state))
+	`COND(EN_ZP6, `DEFREG_FOR_MOTOR_INT((24+0), 1, motor6_zpsign))
+	`COND(EN_ZP6, `DEFREG_FOR_MOTOR_INT((24+1), 1, motor6_tpsign))
+	`COND(EN_MT6, `DEFREG_FOR_MOTOR_INT((24+2), 0, motor6_state))
+	`COND(EN_ZP7, `DEFREG_FOR_MOTOR_INT((28+0), 1, motor7_zpsign))
+	`COND(EN_ZP7, `DEFREG_FOR_MOTOR_INT((28+1), 1, motor7_tpsign))
+	`COND(EN_MT7, `DEFREG_FOR_MOTOR_INT((28+2), 0, motor7_state))
 
 	/// MOTOR START_STOP
 	`COND(EN_MT0, `DEFREG_DIRECT_OUT(36,  ( 0+0), 1, motor0_start, 0, 1))
@@ -682,4 +710,9 @@ module fsctl #
 			s2_soft_resetn <= (s2_running);
 	end
 
+	wire stream_intr;
+	assign stream_intr = ((slv_reg[2] & slv_reg[3]) != 0);
+	wire motor_intr;
+	assign motor_intr = ((slv_reg[33] & slv_reg[34]) != 0);
+	assign intr = (stream_intr | motor_intr);
 endmodule

@@ -80,13 +80,26 @@
 	end
 
 /// write '1' for clear
-`define DEFREG_INT_STATE(_ridx, _bitIdx, _name) \
+`define DEFREG_INT_CHANGE_STATE(_ridx, _bitIdx, _name) \
 	reg int_state_``_name; \
 	assign slv_reg[_ridx][_bitIdx] = int_state_``_name; \
 	always @ (posedge o_clk) begin \
 		if (o_resetn == 1'b0) \
 			int_state_``_name <= 0; \
 		else if (_name``_d1 != _name) \
+			int_state_``_name <= 1; \
+		else if (wr_sync_reg[_ridx] && wr_data_d1[_bitIdx]) \
+			int_state_``_name <= 0; \
+	end
+
+/// write '1' for clear
+`define DEFREG_INT_STATE(_ridx, _bitIdx, _name, _trigV) \
+	reg int_state_``_name; \
+	assign slv_reg[_ridx][_bitIdx] = int_state_``_name; \
+	always @ (posedge o_clk) begin \
+		if (o_resetn == 1'b0) \
+			int_state_``_name <= 0; \
+		else if (_name``_d1 != _name && _name == _trigV) \
 			int_state_``_name <= 1; \
 		else if (wr_sync_reg[_ridx] && wr_data_d1[_bitIdx]) \
 			int_state_``_name <= 0; \
