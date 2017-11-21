@@ -20,7 +20,7 @@ pip_set_prop [ipx::current_busabs] [subst {
 pip_add_bus_abstraction_port [ipx::current_busabs] SOF {
 	default_value 0
 	master_presence required
-	master_direction in
+	master_direction out
 	master_width 1
 	slave_presence required
 	slave_width 1
@@ -29,11 +29,13 @@ pip_add_bus_abstraction_port [ipx::current_busabs] SOF {
 
 pip_add_bus_abstraction_port [ipx::current_busabs] ADDR {
 	default_value 0
-	master_presence required
-	master_width 32
-	slave_presence required
-	slave_direction in
-	slave_width 32
+	master_direction in
+	is_address true
+}
+
+pip_add_bus_abstraction_port [ipx::current_busabs] IDX {
+	default_value 0
+	master_direction in
 	is_address true
 }
 
