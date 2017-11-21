@@ -22,28 +22,31 @@ pip_clr_def_if_par_memmap [ipx::current_core]
 pip_add_bus_if [ipx::current_core] MBUF_R0 [subst {
 	abstraction_type_vlnv $VENDOR:interface:mutex_buffer_ctl_rtl:1.0
 	bus_type_vlnv $VENDOR:interface:mutex_buffer_ctl:1.0
-	interface_mode {master}
+	interface_mode slave
 }] {
 	SOF r0_sof
 	ADDR r0_addr
+	IDX r0_idx
 }
 
 pip_add_bus_if [ipx::current_core] MBUF_R1 [subst {
 	abstraction_type_vlnv $VENDOR:interface:mutex_buffer_ctl_rtl:1.0
 	bus_type_vlnv $VENDOR:interface:mutex_buffer_ctl:1.0
-	interface_mode master
+	interface_mode slave
 }] {
 	SOF r1_sof
 	ADDR r1_addr
+	IDX r1_idx
 }
 
 pip_add_bus_if [ipx::current_core] MBUF_W [subst {
 	abstraction_type_vlnv $VENDOR:interface:mutex_buffer_ctl_rtl:1.0
 	bus_type_vlnv $VENDOR:interface:mutex_buffer_ctl:1.0
-	interface_mode master
+	interface_mode slave
 }] {
 	SOF w_sof
 	ADDR w_addr
+	IDX w_idx
 }
 
 pip_add_bus_if [ipx::current_core] BUF_ADDR [subst {
