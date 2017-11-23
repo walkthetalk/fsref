@@ -18,6 +18,7 @@ set ip_list [list \
 	window_broadcaster \
 	axis_window \
 	axis_interconnector \
+	axis_generator \
 	axis_blender \
 	axis_relay \
 	axis_bayer_extractor \
