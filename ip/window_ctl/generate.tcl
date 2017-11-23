@@ -33,18 +33,28 @@ pip_add_bus_abstraction_port [ipx::current_busabs] TOP {
 
 pip_add_bus_abstraction_port [ipx::current_busabs] WIDTH {
 	default_value 0
-	master_presence required
 	master_direction out
-	slave_presence required
+	slave_direction in
+	is_data true
+}
+
+pip_add_bus_abstraction_port [ipx::current_busabs] RIGHTE {
+	default_value 0
+	master_direction out
 	slave_direction in
 	is_data true
 }
 
 pip_add_bus_abstraction_port [ipx::current_busabs] HEIGHT {
 	default_value 0
-	master_presence required
 	master_direction out
-	slave_presence required
+	slave_direction in
+	is_data true
+}
+
+pip_add_bus_abstraction_port [ipx::current_busabs] BOTTOME {
+	default_value 0
+	master_direction out
 	slave_direction in
 	is_data true
 }
