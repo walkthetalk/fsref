@@ -77,7 +77,8 @@ pip_add_bus_if [ipx::current_core] clk {
 } {
 	ASSOCIATED_BUSIF {
 		S0_AXIS:S1_AXIS:S2_AXIS:S3_AXIS:S4_AXIS:S5_AXIS:S6_AXIS:S7_AXIS:
-		M0_AXIS:M1_AXIS:M2_AXIS:M3_AXIS:M4_AXIS:M5_AXIS:M6_AXIS:M7_AXIS
+		M0_AXIS:M1_AXIS:M2_AXIS:M3_AXIS:M4_AXIS:M5_AXIS:M6_AXIS:M7_AXIS:
+		m0_src_bmp:m1_src_bmp:m2_src_bmp:m3_src_bmp:m4_src_bmp:m5_src_bmp:m6_src_bmp:m7_src_bmp
 	}
 	ASSOCIATED_RESET {resetn}
 }
