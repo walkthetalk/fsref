@@ -45,8 +45,6 @@ module axis_relay #
 
 	wire snext;
 	assign snext = s_axis_tvalid && s_axis_tready;
-	wire mnext;
-	assign mnext = m_axis_tvalid && m_axis_tready;
 	assign m_axis_tvalid = relay_tvalid[0];
 	assign m_axis_tdata = relay_tdata[0];
 	assign m_axis_tlast = relay_tlast[0];
