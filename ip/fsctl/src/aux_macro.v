@@ -124,6 +124,16 @@
 			_name <= _name; \
 	end
 
+`define DEFSUM_DISP(_name, _defv, _n1, _n2) \
+	always @ (posedge o_clk) begin \
+		if (o_resetn == 1'b0) \
+			_name <= _defv; \
+		else if (update_display_cfg) \
+			_name <= r_``_n1 + r_``_n2; \
+		else \
+			_name <= _name; \
+	end
+
 `define DEFREG_IMGSIZE(_ridx, _name1, _defv1, _name0, _defv0) \
 	`DEFREG_DISP(_ridx, 16, C_IMG_WBITS, _name1, _defv1) \
 	`DEFREG_DISP(_ridx,  0, C_IMG_HBITS, _name0, _defv0)

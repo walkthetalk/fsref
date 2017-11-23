@@ -120,10 +120,12 @@ for {set i 0} {$i < 3} {incr i} {
 		bus_type_vlnv {$VENDOR:interface:window_ctl:1.0}
 		interface_mode {master}
 	}] [subst {
-		LEFT   s[set i]_win_left
-		WIDTH  s[set i]_win_width
-		TOP    s[set i]_win_top
-		HEIGHT s[set i]_win_height
+		LEFT    s[set i]_win_left
+		WIDTH   s[set i]_win_width
+		RIGHTE  s[set i]_win_righte
+		TOP     s[set i]_win_top
+		HEIGHT  s[set i]_win_height
+		BOTTOME s[set i]_win_bottome
 	}]
 
 	pip_add_bus_if [ipx::current_core] S[set i]_SCALE [subst {
@@ -142,10 +144,12 @@ for {set i 0} {$i < 3} {incr i} {
 		bus_type_vlnv {$VENDOR:interface:window_ctl:1.0}
 		interface_mode {master}
 	}] [subst {
-		LEFT   s[set i]_dst_left
-		WIDTH  s[set i]_dst_width
-		TOP    s[set i]_dst_top
-		HEIGHT s[set i]_dst_height
+		LEFT    s[set i]_dst_left
+		WIDTH   s[set i]_dst_width
+		RIGHTE  s[set i]_dst_righte
+		TOP     s[set i]_dst_top
+		HEIGHT  s[set i]_dst_height
+		BOTTOME s[set i]_dst_bottome
 	}]
 }
 
