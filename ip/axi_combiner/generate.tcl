@@ -115,6 +115,7 @@ pip_add_bus_if [ipx::current_core] S_AXI_W {
 	BREADY	s_axi_bready
 }
 
+# NOTE: don't delete, the clk is for frequency checking.
 pip_add_bus_if [ipx::current_core] clk {
 	abstraction_type_vlnv xilinx.com:signal:clock_rtl:1.0
 	bus_type_vlnv xilinx.com:signal:clock:1.0
