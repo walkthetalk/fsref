@@ -4,9 +4,11 @@ set tmp_dir $ip_dir/tmp
 
 source $origin_dir/scripts/aux/util.tcl
 
-ipx::infer_core -vendor $VENDOR -library $LIBRARY -name axis_generator -taxonomy $TAXONOMY $ip_dir
+ipx::infer_core -vendor $VENDOR -library $LIBRARY -name axis_generator -taxonomy $TAXONOMY -root_dir $ip_dir $ip_dir/src
 ipx::edit_ip_in_project -upgrade true -name edit_ip_project -directory $tmp_dir $ip_dir/component.xml
 ipx::current_core $ip_dir/component.xml
+
+define_associate_busif clk
 
 pip_set_prop [ipx::current_core] [subst {
 	display_name {AXI Stream Generator}
@@ -30,8 +32,9 @@ pip_add_bus_if [ipx::current_core] M_AXIS {
 	TLAST	m_axis_tlast
 	TREADY	m_axis_tready
 }
+append_associate_busif clk M_AXIS
 
-pip_add_bus_if [ipx::current_core] IMG_SIZE [subst {
+pip_add_bus_if [ipx::current_core] OUT_SIZE [subst {
 	abstraction_type_vlnv {$VENDOR:interface:window_ctl_rtl:1.0}
 	bus_type_vlnv {$VENDOR:interface:window_ctl:1.0}
 	interface_mode {slave}
@@ -39,30 +42,64 @@ pip_add_bus_if [ipx::current_core] IMG_SIZE [subst {
 	WIDTH   width
 	HEIGHT  height
 }
+append_associate_busif clk OUT_SIZE
 
 for {set i 0} {$i < 8} {incr i} {
-	pip_add_bus_if [ipx::current_core] WIN[set i] [subst {
+	pip_add_bus_if [ipx::current_core] s[set i]_enable [subst {
+		abstraction_type_vlnv {xilinx.com:signal:reset_rtl:1.0}
+		bus_type_vlnv {xilinx.com:signal:reset:1.0}
+		interface_mode {slave}
+		enablement_dependency {spirit:decode(id('MODELPARAM_VALUE.C_WIN_NUM')) > $i}
+	}] [subst {
+		RST s[set i]_enable
+	}] {
+		POLARITY {ACTIVE_LOW}
+	}
+	append_associate_busif clk s[set i]_enable
+
+	pip_add_bus_if [ipx::current_core] S[set i]_WIN [subst {
 		abstraction_type_vlnv {$VENDOR:interface:window_ctl_rtl:1.0}
 		bus_type_vlnv {$VENDOR:interface:window_ctl:1.0}
 		interface_mode {slave}
 		enablement_dependency {spirit:decode(id('MODELPARAM_VALUE.C_WIN_NUM')) > $i}
 	}] [subst {
-		LEFT    win[set i]_left
-		TOP     win[set i]_top
-		WIDTH   win[set i]_width
-		RIGHTE  win[set i]_righte
-		HEIGHT  win[set i]_height
-		BOTTOME win[set i]_bottome
+		LEFT    s[set i]_left
+		TOP     s[set i]_top
+		WIDTH   s[set i]_width
+		RIGHTE  s[set i]_righte
+		HEIGHT  s[set i]_height
+		BOTTOME s[set i]_bottome
 	}]
+	append_associate_busif clk S[set i]_WIN
+
+	pip_add_bus_if [ipx::current_core] s[set i]_dst_bmp [subst {
+		abstraction_type_vlnv {xilinx.com:signal:data_rtl:1.0}
+		bus_type_vlnv {xilinx.com:signal:data:1.0}
+		interface_mode {slave}
+		enablement_dependency {spirit:decode(id('MODELPARAM_VALUE.C_WIN_NUM')) > $i}
+	}] [subst {
+		DATA s[set i]_dst_bmp
+	}]
+	append_associate_busif clk s[set i]_dst_bmp
+
+	pip_add_bus_if [ipx::current_core] s[set i]_dst_bmp_o [subst {
+		abstraction_type_vlnv {xilinx.com:signal:data_rtl:1.0}
+		bus_type_vlnv {xilinx.com:signal:data:1.0}
+		interface_mode {master}
+		enablement_dependency {spirit:decode(id('MODELPARAM_VALUE.C_WIN_NUM')) > $i}
+	}] [subst {
+		DATA s[set i]_dst_bmp_o
+	}]
+	append_associate_busif clk s[set i]_dst_bmp_o
 }
 
-pip_add_bus_if [ipx::current_core] win_pixel_need {
-	abstraction_type_vlnv {xilinx.com:signal:data_rtl:1.0}
-	bus_type_vlnv {xilinx.com:signal:data:1.0}
-	interface_mode {master}
-	enablement_dependency {spirit:decode(id('MODELPARAM_VALUE.C_WIN_NUM')) > 0}
+pip_add_bus_if [ipx::current_core] fsync {
+	abstraction_type_vlnv xilinx.com:signal:video_frame_sync_rtl:1.0
+	bus_type_vlnv xilinx.com:signal:video_frame_sync:1.0
+	interface_mode slave
+	enablement_dependency {spirit:decode(id('MODELPARAM_VALUE.C_EXT_FSYNC')) == 1}
 } {
-	DATA win_pixel_need
+	FRAME_SYNC fsync
 }
 
 # clock & reset
@@ -82,10 +119,10 @@ pip_add_bus_if [ipx::current_core] clk {
 	interface_mode slave
 } {
 	CLK clk
-} {
-	ASSOCIATED_BUSIF {WIN0:WIN1:WIN2:WIN3:WIN4:WIN5:WIN6:WIN7:win_pixel_need:M_AXIS}
+} [subst {
+	ASSOCIATED_BUSIF [get_associate_busif clk]
 	ASSOCIATED_RESET {resetn}
-}
+}]
 
 # parameters
 
@@ -102,6 +139,19 @@ pip_add_usr_par [ipx::current_core] {C_WIN_NUM} {
 } {
 	value 2
 	value_format long
+}
+
+pip_add_usr_par [ipx::current_core] {C_EXT_FSYNC} {
+	display_name {External Fsync}
+	tooltip {External Fsync}
+	widget {checkBox}
+} {
+	value_resolve_type user
+	value false
+	value_format bool
+} {
+	value false
+	value_format bool
 }
 
 pip_add_usr_par [ipx::current_core] {C_IMG_WBITS} {
