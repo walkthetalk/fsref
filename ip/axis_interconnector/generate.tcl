@@ -4,9 +4,11 @@ set tmp_dir $ip_dir/tmp
 
 source $origin_dir/scripts/aux/util.tcl
 
-ipx::infer_core -vendor $VENDOR -library $LIBRARY -name axis_interconnector -taxonomy $TAXONOMY $ip_dir
+ipx::infer_core -vendor $VENDOR -library $LIBRARY -name axis_interconnector -taxonomy $TAXONOMY -root_dir $ip_dir $ip_dir/src
 ipx::edit_ip_in_project -upgrade true -name edit_ip_project -directory $tmp_dir $ip_dir/component.xml
 ipx::current_core $ip_dir/component.xml
+
+define_associate_busif clk
 
 pip_set_prop [ipx::current_core] [subst {
 	display_name {AXI Stream InterConnector}
@@ -32,6 +34,7 @@ for {set i 0} {$i < 8} {incr i} {
 		TLAST	s[set i]_axis_tlast
 		TREADY	s[set i]_axis_tready
 	}]
+	append_associate_busif clk S[set i]_AXIS
 }
 for {set i 0} {$i < 8} {incr i} {
 	pip_add_bus_if [ipx::current_core] M[set i]_AXIS [subst {
@@ -46,15 +49,17 @@ for {set i 0} {$i < 8} {incr i} {
 		TLAST	m[set i]_axis_tlast
 		TREADY	m[set i]_axis_tready
 	}]
+	append_associate_busif clk M[set i]_AXIS
 
-	pip_add_bus_if [ipx::current_core] m[set i]_src_bmp [subst {
-		abstraction_type_vlnv {xilinx.com:interface:data_rtl:1.0}
-		bus_type_vlnv {xilinx.com:interface:data:1.0}
+	pip_add_bus_if [ipx::current_core] s[set i]_dst_bmp [subst {
+		abstraction_type_vlnv {xilinx.com:signal:data_rtl:1.0}
+		bus_type_vlnv {xilinx.com:signal:data:1.0}
 		interface_mode {slave}
 		enablement_dependency {spirit:decode(id('MODELPARAM_VALUE.C_M_STREAM_NUM')) > $i}
 	}] [subst {
-		DATA m[set i]_src_bmp
+		DATA s[set i]_dst_bmp
 	}]
+	append_associate_busif clk s[set i]_dst_bmp
 }
 
 # clock & reset
@@ -74,14 +79,10 @@ pip_add_bus_if [ipx::current_core] clk {
 	interface_mode slave
 } {
 	CLK clk
-} {
-	ASSOCIATED_BUSIF {
-		S0_AXIS:S1_AXIS:S2_AXIS:S3_AXIS:S4_AXIS:S5_AXIS:S6_AXIS:S7_AXIS:
-		M0_AXIS:M1_AXIS:M2_AXIS:M3_AXIS:M4_AXIS:M5_AXIS:M6_AXIS:M7_AXIS:
-		m0_src_bmp:m1_src_bmp:m2_src_bmp:m3_src_bmp:m4_src_bmp:m5_src_bmp:m6_src_bmp:m7_src_bmp
-	}
+} [subst {
+	ASSOCIATED_BUSIF [get_associate_busif clk]
 	ASSOCIATED_RESET {resetn}
-}
+}]
 
 # parameters
 pip_add_usr_par [ipx::current_core] {C_PIXEL_WIDTH} {

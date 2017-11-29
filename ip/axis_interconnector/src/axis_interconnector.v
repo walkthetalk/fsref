@@ -17,9 +17,9 @@ module axis_interconnector #
 	input  wire                        s0_axis_tuser,
 	input  wire                        s0_axis_tlast,
 	output wire                        s0_axis_tready,
+	input  wire [C_M_STREAM_NUM-1:0]   s0_dst_bmp,
 
 	/// M0_AXIS
-	input  wire [C_S_STREAM_NUM-1:0]   m0_src_bmp,
 	output wire                        m0_axis_tvalid,
 	output wire [C_PIXEL_WIDTH-1:0]    m0_axis_tdata,
 	output wire                        m0_axis_tuser,
@@ -32,9 +32,9 @@ module axis_interconnector #
 	input  wire                        s1_axis_tuser,
 	input  wire                        s1_axis_tlast,
 	output wire                        s1_axis_tready,
+	input  wire [C_M_STREAM_NUM-1:0]   s1_dst_bmp,
 
 	/// M1_AXIS
-	input  wire [C_S_STREAM_NUM-1:0]   m1_src_bmp,
 	output wire                        m1_axis_tvalid,
 	output wire [C_PIXEL_WIDTH-1:0]    m1_axis_tdata,
 	output wire                        m1_axis_tuser,
@@ -47,9 +47,9 @@ module axis_interconnector #
 	input  wire                        s2_axis_tuser,
 	input  wire                        s2_axis_tlast,
 	output wire                        s2_axis_tready,
+	input  wire [C_M_STREAM_NUM-1:0]   s2_dst_bmp,
 
 	/// M2_AXIS
-	input  wire [C_S_STREAM_NUM-1:0]   m2_src_bmp,
 	output wire                        m2_axis_tvalid,
 	output wire [C_PIXEL_WIDTH-1:0]    m2_axis_tdata,
 	output wire                        m2_axis_tuser,
@@ -62,9 +62,9 @@ module axis_interconnector #
 	input  wire                        s3_axis_tuser,
 	input  wire                        s3_axis_tlast,
 	output wire                        s3_axis_tready,
+	input  wire [C_M_STREAM_NUM-1:0]   s3_dst_bmp,
 
 	/// M3_AXIS
-	input  wire [C_S_STREAM_NUM-1:0]   m3_src_bmp,
 	output wire                        m3_axis_tvalid,
 	output wire [C_PIXEL_WIDTH-1:0]    m3_axis_tdata,
 	output wire                        m3_axis_tuser,
@@ -77,9 +77,9 @@ module axis_interconnector #
 	input  wire                        s4_axis_tuser,
 	input  wire                        s4_axis_tlast,
 	output wire                        s4_axis_tready,
+	input  wire [C_M_STREAM_NUM-1:0]   s4_dst_bmp,
 
 	/// M4_AXIS
-	input  wire [C_S_STREAM_NUM-1:0]   m4_src_bmp,
 	output wire                        m4_axis_tvalid,
 	output wire [C_PIXEL_WIDTH-1:0]    m4_axis_tdata,
 	output wire                        m4_axis_tuser,
@@ -92,9 +92,9 @@ module axis_interconnector #
 	input  wire                        s5_axis_tuser,
 	input  wire                        s5_axis_tlast,
 	output wire                        s5_axis_tready,
+	input  wire [C_M_STREAM_NUM-1:0]   s5_dst_bmp,
 
 	/// M5_AXIS
-	input  wire [C_S_STREAM_NUM-1:0]   m5_src_bmp,
 	output wire                        m5_axis_tvalid,
 	output wire [C_PIXEL_WIDTH-1:0]    m5_axis_tdata,
 	output wire                        m5_axis_tuser,
@@ -107,9 +107,9 @@ module axis_interconnector #
 	input  wire                        s6_axis_tuser,
 	input  wire                        s6_axis_tlast,
 	output wire                        s6_axis_tready,
+	input  wire [C_M_STREAM_NUM-1:0]   s6_dst_bmp,
 
 	/// M6_AXIS
-	input  wire [C_S_STREAM_NUM-1:0]   m6_src_bmp,
 	output wire                        m6_axis_tvalid,
 	output wire [C_PIXEL_WIDTH-1:0]    m6_axis_tdata,
 	output wire                        m6_axis_tuser,
@@ -122,9 +122,9 @@ module axis_interconnector #
 	input  wire                        s7_axis_tuser,
 	input  wire                        s7_axis_tlast,
 	output wire                        s7_axis_tready,
+	input  wire [C_M_STREAM_NUM-1:0]   s7_dst_bmp,
 
 	/// M7_AXIS
-	input  wire [C_S_STREAM_NUM-1:0]   m7_src_bmp,
 	output wire                        m7_axis_tvalid,
 	output wire [C_PIXEL_WIDTH-1:0]    m7_axis_tdata,
 	output wire                        m7_axis_tuser,
@@ -142,8 +142,8 @@ module axis_interconnector #
 	wire                        s_tuser  [C_MAX_STREAM_NUM-1:0];
 	wire                        s_tlast  [C_MAX_STREAM_NUM-1:0];
 	wire                        s_tready [C_MAX_STREAM_NUM-1:0];
+	wire [C_M_STREAM_NUM-1:0]   s_dst_bmp[C_MAX_STREAM_NUM-1:0];
 
-	wire [C_S_STREAM_NUM-1:0]   m_src_bmp[C_MAX_STREAM_NUM-1:0];
 	wire                        m_tvalid [C_MAX_STREAM_NUM-1:0];
 	wire [C_PIXEL_WIDTH-1:0]    m_tdata  [C_MAX_STREAM_NUM-1:0];
 	wire                        m_tuser  [C_MAX_STREAM_NUM-1:0];
@@ -156,7 +156,7 @@ module axis_interconnector #
 	assign s_tuser[i]         = s``i``_axis_tuser; \
 	assign s_tlast[i]         = s``i``_axis_tlast; \
 	assign s``i``_axis_tready = s_tready[i]; \
-	assign m_src_bmp[i]       = m``i``_src_bmp; \
+	assign s_dst_bmp[i]       = s``i``_dst_bmp; \
 	assign m``i``_axis_tvalid = m_tvalid[i]; \
 	assign m``i``_axis_tdata  = m_tdata[i] ; \
 	assign m``i``_axis_tuser  = m_tuser[i] ; \
@@ -179,8 +179,6 @@ module axis_interconnector #
 	wire [C_S_STREAM_NUM-1:0]  sc_tlast                    ;
 	wire [C_S_STREAM_NUM-1:0]  sc_tready                   ;
 
-	wire [C_M_STREAM_NUM-1:0]  s_dst_bmp[C_S_STREAM_NUM-1:0];
-
 	reg                        m_valid[C_M_STREAM_NUM-1:0];
 	reg [C_PIXEL_WIDTH-1:0]    m_data [C_M_STREAM_NUM-1:0];
 	reg                        m_user [C_M_STREAM_NUM-1:0];
@@ -188,6 +186,7 @@ module axis_interconnector #
 	wire [C_M_STREAM_NUM-1:0]  m_4s_ready;
 	wire [C_M_STREAM_NUM-1:0]  s_2m_valid;
 	wire [C_M_STREAM_NUM-1:0]  s_2m_next;
+	wire [C_S_STREAM_NUM-1:0]  m_src_bmp[C_M_STREAM_NUM-1:0];
 
 	generate
 		for (i = 0; i < C_S_STREAM_NUM; i = i+1) begin: single_stream_convert
@@ -208,7 +207,7 @@ module axis_interconnector #
 	generate
 		for (i = 0; i < C_M_STREAM_NUM; i = i+1) begin: single_out
 			for (j = 0; j < C_S_STREAM_NUM; j = j+1) begin: single_in_bmp
-				assign s_dst_bmp[j][i] = m_src_bmp[i][j];
+				assign m_src_bmp[i][j] = s_dst_bmp[j][i];
 			end
 
 			assign m_4s_ready[i]   = (~m_tvalid[i] | m_tready[i]);
