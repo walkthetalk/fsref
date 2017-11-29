@@ -240,24 +240,12 @@ module FIFO2MM #
 	wire  	write_resp_error;
 	assign write_resp_error = M_AXI_BVALID & M_AXI_BRESP[1];
 
-	/// @TODO: just for not overriding uboot code, delete it.
-	reg[31:0] idle_cnt;
-	always @ ( posedge M_AXI_ACLK ) begin
-		if (M_AXI_ARESETN == 1'b0)
-			idle_cnt <= 'hFFFFFFFF;
-		else if (idle_cnt > 0)
-			idle_cnt <= idle_cnt - 1;
-		else
-			idle_cnt <= idle_cnt;
-	end
-
 	always @(posedge M_AXI_ACLK) begin
 		if (M_AXI_ARESETN == 1'b0)
 			start_burst_pulse <= 1'b0;
 		else if (~start_burst_pulse && ~burst_active
 			&& soft_resetn
 			&& (rd_data_count >= C_M_AXI_BURST_LEN)
-			//&& idle_cnt == 0
 			)
 			start_burst_pulse <= 1'b1;
 		else
