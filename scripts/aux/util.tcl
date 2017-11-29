@@ -166,3 +166,29 @@ proc pip_connect_pin {
 		connect_bd_net [get_bd_pins $src_pin] [get_bd_pins $i]
 	}
 }
+
+proc define_associate_busif {
+	clk_name
+} {
+	upvar [set clk_name]_ASSOCIATED_BUSIF locvar
+	set locvar ""
+}
+
+proc append_associate_busif {
+	clk_name
+	busif_name
+} {
+	upvar [set clk_name]_ASSOCIATED_BUSIF locvar
+	if {$locvar == ""} {
+		append locvar $busif_name
+	} else {
+		append locvar :$busif_name
+	}
+}
+
+proc get_associate_busif {
+	clk_name
+} {
+	upvar [set clk_name]_ASSOCIATED_BUSIF locvar
+	return $locvar
+}
