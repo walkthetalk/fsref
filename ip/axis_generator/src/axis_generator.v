@@ -16,7 +16,6 @@ module axis_generator #
 	input wire [C_IMG_WBITS-1:0] width,
 	input wire [C_IMG_HBITS-1:0] height,
 
-	input  wire                   s0_enable,
 	input  wire [C_IMG_WBITS-1:0] s0_left,
 	input  wire [C_IMG_HBITS-1:0] s0_top,
 	input  wire [C_IMG_WBITS-1:0] s0_width,
@@ -26,7 +25,6 @@ module axis_generator #
 	input  wire [C_WIN_NUM-1:0]   s0_dst_bmp,
 	output wire [C_WIN_NUM-1:0]   s0_dst_bmp_o,
 
-	input  wire                   s1_enable,
 	input  wire [C_IMG_WBITS-1:0] s1_left,
 	input  wire [C_IMG_HBITS-1:0] s1_top,
 	input  wire [C_IMG_WBITS-1:0] s1_width,
@@ -36,7 +34,6 @@ module axis_generator #
 	input  wire [C_WIN_NUM-1:0]   s1_dst_bmp,
 	output wire [C_WIN_NUM-1:0]   s1_dst_bmp_o,
 
-	input  wire                   s2_enable,
 	input  wire [C_IMG_WBITS-1:0] s2_left,
 	input  wire [C_IMG_HBITS-1:0] s2_top,
 	input  wire [C_IMG_WBITS-1:0] s2_width,
@@ -46,7 +43,6 @@ module axis_generator #
 	input  wire [C_WIN_NUM-1:0]   s2_dst_bmp,
 	output wire [C_WIN_NUM-1:0]   s2_dst_bmp_o,
 
-	input  wire                   s3_enable,
 	input  wire [C_IMG_WBITS-1:0] s3_left,
 	input  wire [C_IMG_HBITS-1:0] s3_top,
 	input  wire [C_IMG_WBITS-1:0] s3_width,
@@ -56,7 +52,6 @@ module axis_generator #
 	input  wire [C_WIN_NUM-1:0]   s3_dst_bmp,
 	output wire [C_WIN_NUM-1:0]   s3_dst_bmp_o,
 
-	input  wire                   s4_enable,
 	input  wire [C_IMG_WBITS-1:0] s4_left,
 	input  wire [C_IMG_HBITS-1:0] s4_top,
 	input  wire [C_IMG_WBITS-1:0] s4_width,
@@ -66,7 +61,6 @@ module axis_generator #
 	input  wire [C_WIN_NUM-1:0]   s4_dst_bmp,
 	output wire [C_WIN_NUM-1:0]   s4_dst_bmp_o,
 
-	input  wire                   s5_enable,
 	input  wire [C_IMG_WBITS-1:0] s5_left,
 	input  wire [C_IMG_HBITS-1:0] s5_top,
 	input  wire [C_IMG_WBITS-1:0] s5_width,
@@ -76,7 +70,6 @@ module axis_generator #
 	input  wire [C_WIN_NUM-1:0]   s5_dst_bmp,
 	output wire [C_WIN_NUM-1:0]   s5_dst_bmp_o,
 
-	input  wire                   s6_enable,
 	input  wire [C_IMG_WBITS-1:0] s6_left,
 	input  wire [C_IMG_HBITS-1:0] s6_top,
 	input  wire [C_IMG_WBITS-1:0] s6_width,
@@ -86,7 +79,6 @@ module axis_generator #
 	input  wire [C_WIN_NUM-1:0]   s6_dst_bmp,
 	output wire [C_WIN_NUM-1:0]   s6_dst_bmp_o,
 
-	input  wire                   s7_enable,
 	input  wire [C_IMG_WBITS-1:0] s7_left,
 	input  wire [C_IMG_HBITS-1:0] s7_top,
 	input  wire [C_IMG_WBITS-1:0] s7_width,
@@ -99,7 +91,7 @@ module axis_generator #
 	/// M_AXIS
 	output reg  m_axis_tvalid,
 	output wire [C_PIXEL_WIDTH-1:0] m_axis_tdata,
-	output reg  [C_WIN_NUM:0]       m_axis_tuser,
+	output wire [C_WIN_NUM:0]       m_axis_tuser,
 	output reg  m_axis_tlast,
 	input  wire m_axis_tready
 );
@@ -110,14 +102,8 @@ module axis_generator #
 	reg [C_IMG_HBITS-1:0] ridx;
 	reg [C_IMG_HBITS-1:0] ridx_next;
 
-	always @ (posedge clk) begin
-		if (resetn == 1'b0)
-			m_axis_tuser <= 0;
-		else if (cidx == 0 && ridx == 0)
-			m_axis_tuser <= 1;
-		else
-			m_axis_tuser <= 0;
-	end
+	reg m_tuser;
+	assign m_axis_tuser[0] = m_tuser;
 
 	wire cupdate;
 	wire rupdate;
@@ -135,6 +121,32 @@ if (C_EXT_FSYNC) begin
 			&& ridx == height - 1)
 			m_axis_tvalid <= 0;
 	end
+
+	always @ (posedge clk) begin
+		if (resetn == 1'b0)
+			cidx_next <= 0;
+		else if (cidx_next == 0 && ridx_next == 0 && ~fsync)
+			cidx_next <= 0;
+		else if (cupdate) begin
+			if (cidx_next == width - 1)
+				cidx_next <= 0;
+			else
+				cidx_next <= cidx_next + 1;
+		end
+	end
+
+	always @ (posedge clk) begin
+		if (resetn == 1'b0)
+			ridx_next <= 0;
+		else if (ridx_next == 0 && ~fsync)
+			ridx_next <= 0;
+		else if (rupdate) begin
+			if (ridx_next == height - 1)
+				ridx_next <= 0;
+			else
+				ridx_next <= ridx_next + 1;
+		end
+	end
 end
 else begin
 	assign cupdate = ~m_axis_tvalid || m_axis_tready;
@@ -146,16 +158,11 @@ else begin
 		else
 			m_axis_tvalid <= 1;
 	end
-end
-endgenerate
 
 	always @ (posedge clk) begin
-		if (resetn == 1'b0) begin
-			cidx <= 0;
+		if (resetn == 1'b0)
 			cidx_next <= 0;
-		end
 		else if (cupdate) begin
-			cidx <= cidx_next;
 			if (cidx_next == width - 1)
 				cidx_next <= 0;
 			else
@@ -164,17 +171,30 @@ endgenerate
 	end
 
 	always @ (posedge clk) begin
-		if (resetn == 1'b0) begin
-			ridx <= 0;
+		if (resetn == 1'b0)
 			ridx_next <= 0;
-		end
 		else if (rupdate) begin
-			ridx <= ridx_next;
 			if (ridx_next == height - 1)
 				ridx_next <= 0;
 			else
 				ridx_next <= ridx_next + 1;
 		end
+	end
+end
+endgenerate
+
+	always @ (posedge clk) begin
+		if (resetn == 1'b0)
+			cidx <= 0;
+		else if (cupdate)
+			cidx <= cidx_next;
+	end
+
+	always @ (posedge clk) begin
+		if (resetn == 1'b0)
+			ridx <= 0;
+		else if (rupdate)
+			ridx <= ridx_next;
 	end
 
 	always @ (posedge clk) begin
@@ -185,14 +205,14 @@ endgenerate
 	end
 	always @ (posedge clk) begin
 		if (resetn == 1'b0) begin
-			m_axis_tuser[0] <= 0;
+			m_tuser <= 0;
 		end
 		else if (cupdate) begin
 			if (ridx_next == 0
 			    && cidx_next == 0)
-				m_axis_tuser <= 1;
+				m_tuser <= 1;
 			else
-				m_axis_tuser <= 0;
+				m_tuser <= 0;
 		end
 	end
 	assign m_axis_tdata = 0;
@@ -210,7 +230,6 @@ endgenerate
 	wire [C_WIN_NUM-1:0]     s_need;
 
 `define ASSIGN_WIN(i) \
-	assign s_enable   [i] = s``i``_enable ; \
 	assign s_dst_bmp  [i] = s``i``_dst_bmp; \
 	assign win_left   [i] = s``i``_left   ; \
 	assign win_top    [i] = s``i``_top    ; \
@@ -236,7 +255,7 @@ endgenerate
 
 		wire [C_WIN_NUM-1:0]     m_src_bmp  [C_WIN_NUM-1 : 0];
 		for (i = 0; i < C_WIN_NUM; i = i+1) begin: m_src_calc
-			for (j = 0; j < C_WIN_NUM; j = i+1) begin: m_src_bmp
+			for (j = 0; j < C_WIN_NUM; j = j+1) begin: m_src_bit_calc
 				assign m_src_bmp[i][j] = s_dst_bmp[j][j];
 			end
 		end
@@ -248,23 +267,23 @@ endgenerate
 				if (resetn == 1'b0)
 					cpixel_need[i] <= 0;
 				else if (cupdate) begin
-					if (cidx_next == win_left[i])
-						cpixel_need[i] <= 1;
-					else if (cidx == win_righte[i])
+					if (cidx_next == win_left[i] + win_width[i])
 						cpixel_need[i] <= 0;
+					else if (cidx_next == win_left[i])
+						cpixel_need[i] <= 1;
 				end
 			end
 			always @ (posedge clk) begin
 				if (resetn == 1'b0)
 					rpixel_need[i] <= 0;
 				else if (rupdate) begin
-					if (ridx_next == win_top[i])
-						rpixel_need[i] <= 1;
-					else if (ridx == win_bottome[i])
+					if (ridx_next == win_top[i] + win_height[i])
 						rpixel_need[i] <= 0;
+					else if (ridx_next == win_top[i])
+						rpixel_need[i] <= 1;
 				end
 			end
-			assign s_need[i] = (cpixel_need[i] & rpixel_need[i] & s_enable[i]);
+			assign s_need[i] = (cpixel_need[i] & rpixel_need[i]);
 			assign m_axis_tuser[i+1] = ((s_need & m_src_bmp[i]) != 0);
 		end
 	endgenerate

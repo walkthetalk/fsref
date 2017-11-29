@@ -45,18 +45,6 @@ pip_add_bus_if [ipx::current_core] OUT_SIZE [subst {
 append_associate_busif clk OUT_SIZE
 
 for {set i 0} {$i < 8} {incr i} {
-	pip_add_bus_if [ipx::current_core] s[set i]_enable [subst {
-		abstraction_type_vlnv {xilinx.com:signal:reset_rtl:1.0}
-		bus_type_vlnv {xilinx.com:signal:reset:1.0}
-		interface_mode {slave}
-		enablement_dependency {spirit:decode(id('MODELPARAM_VALUE.C_WIN_NUM')) > $i}
-	}] [subst {
-		RST s[set i]_enable
-	}] {
-		POLARITY {ACTIVE_LOW}
-	}
-	append_associate_busif clk s[set i]_enable
-
 	pip_add_bus_if [ipx::current_core] S[set i]_WIN [subst {
 		abstraction_type_vlnv {$VENDOR:interface:window_ctl_rtl:1.0}
 		bus_type_vlnv {$VENDOR:interface:window_ctl:1.0}

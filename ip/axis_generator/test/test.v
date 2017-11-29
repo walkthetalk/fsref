@@ -8,19 +8,14 @@ module test_axis_generator(
 	localparam integer C_IMG_WBITS   = 12;
 	localparam integer C_IMG_HBITS   = 12;
 	localparam integer C_MAX_WIN_NUM = 8;
+	localparam integer C_EXT_FSYNC   = 1;
 
 	reg clk;
 	reg resetn;
+	reg fsync;
 
-	reg                      s_random ;
 	reg [C_IMG_WBITS-1:0]    s_width ;
 	reg [C_IMG_HBITS-1:0]    s_height;
-
-	reg                      s_valid ;
-	wire [C_PIXEL_WIDTH-1:0] s_data  ;
-	wire                     s_user  ;
-	wire                     s_last  ;
-	wire                     s_ready ;
 
 	reg  [C_IMG_WBITS-1 : 0] win_left   [C_MAX_WIN_NUM-1 : 0];
 	reg  [C_IMG_HBITS-1 : 0] win_top    [C_MAX_WIN_NUM-1 : 0];
@@ -42,12 +37,14 @@ module test_axis_generator(
 
 axis_generator # (
 	.C_WIN_NUM     (C_WIN_NUM     ),
+	.C_EXT_FSYNC   (C_EXT_FSYNC   ),
 	.C_PIXEL_WIDTH (C_PIXEL_WIDTH ),
 	.C_IMG_WBITS   (C_IMG_WBITS   ),
 	.C_IMG_HBITS   (C_IMG_HBITS   )
 ) uut (
 	.clk(clk),
 	.resetn(resetn),
+	.fsync(fsync),
 
 	.width(s_width),
 	.height(s_height),
@@ -110,11 +107,9 @@ axis_generator # (
 
 	.m_axis_tvalid(m_valid   ),
 	.m_axis_tdata (m_data    ),
-	.m_axis_tuser (m_user    ),
+	.m_axis_tuser ({win_pixel_need, m_user}    ),
 	.m_axis_tlast (m_last    ),
-	.m_axis_tready(m_ready   ),
-
-	.win_pixel_need(win_pixel_need)
+	.m_axis_tready(m_ready   )
 );
 
 initial begin
@@ -128,7 +123,26 @@ initial begin
 end
 
 initial begin
-	s_random  <= 1;
+	fsync <= 0;
+end
+
+reg [31:0] fsync_cnt;
+always @ (posedge clk) begin
+	if (resetn == 1'b0) begin
+		fsync <= 0;
+		fsync_cnt <= 0;
+	end
+	else if (fsync_cnt == 0) begin
+		fsync_cnt <= 500;
+		fsync     <= 1;
+	end
+	else begin
+		fsync     <= 0;
+		fsync_cnt <= fsync_cnt - 1;
+	end
+end
+
+initial begin
 	m_random  <= 1;
 	m_enprint <= (1 << 5);
 
