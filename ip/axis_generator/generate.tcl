@@ -54,9 +54,7 @@ for {set i 0} {$i < 8} {incr i} {
 		LEFT    s[set i]_left
 		TOP     s[set i]_top
 		WIDTH   s[set i]_width
-		RIGHTE  s[set i]_righte
 		HEIGHT  s[set i]_height
-		BOTTOME s[set i]_bottome
 	}]
 	append_associate_busif clk S[set i]_WIN
 

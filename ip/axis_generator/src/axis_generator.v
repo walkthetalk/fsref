@@ -20,8 +20,6 @@ module axis_generator #
 	input  wire [C_IMG_HBITS-1:0] s0_top,
 	input  wire [C_IMG_WBITS-1:0] s0_width,
 	input  wire [C_IMG_HBITS-1:0] s0_height,
-	input  wire [C_IMG_WBITS-1:0] s0_righte,
-	input  wire [C_IMG_HBITS-1:0] s0_bottome,
 	input  wire [C_WIN_NUM-1:0]   s0_dst_bmp,
 	output wire [C_WIN_NUM-1:0]   s0_dst_bmp_o,
 
@@ -29,8 +27,6 @@ module axis_generator #
 	input  wire [C_IMG_HBITS-1:0] s1_top,
 	input  wire [C_IMG_WBITS-1:0] s1_width,
 	input  wire [C_IMG_HBITS-1:0] s1_height,
-	input  wire [C_IMG_WBITS-1:0] s1_righte,
-	input  wire [C_IMG_HBITS-1:0] s1_bottome,
 	input  wire [C_WIN_NUM-1:0]   s1_dst_bmp,
 	output wire [C_WIN_NUM-1:0]   s1_dst_bmp_o,
 
@@ -38,8 +34,6 @@ module axis_generator #
 	input  wire [C_IMG_HBITS-1:0] s2_top,
 	input  wire [C_IMG_WBITS-1:0] s2_width,
 	input  wire [C_IMG_HBITS-1:0] s2_height,
-	input  wire [C_IMG_WBITS-1:0] s2_righte,
-	input  wire [C_IMG_HBITS-1:0] s2_bottome,
 	input  wire [C_WIN_NUM-1:0]   s2_dst_bmp,
 	output wire [C_WIN_NUM-1:0]   s2_dst_bmp_o,
 
@@ -47,8 +41,6 @@ module axis_generator #
 	input  wire [C_IMG_HBITS-1:0] s3_top,
 	input  wire [C_IMG_WBITS-1:0] s3_width,
 	input  wire [C_IMG_HBITS-1:0] s3_height,
-	input  wire [C_IMG_WBITS-1:0] s3_righte,
-	input  wire [C_IMG_HBITS-1:0] s3_bottome,
 	input  wire [C_WIN_NUM-1:0]   s3_dst_bmp,
 	output wire [C_WIN_NUM-1:0]   s3_dst_bmp_o,
 
@@ -56,8 +48,6 @@ module axis_generator #
 	input  wire [C_IMG_HBITS-1:0] s4_top,
 	input  wire [C_IMG_WBITS-1:0] s4_width,
 	input  wire [C_IMG_HBITS-1:0] s4_height,
-	input  wire [C_IMG_WBITS-1:0] s4_righte,
-	input  wire [C_IMG_HBITS-1:0] s4_bottome,
 	input  wire [C_WIN_NUM-1:0]   s4_dst_bmp,
 	output wire [C_WIN_NUM-1:0]   s4_dst_bmp_o,
 
@@ -65,8 +55,6 @@ module axis_generator #
 	input  wire [C_IMG_HBITS-1:0] s5_top,
 	input  wire [C_IMG_WBITS-1:0] s5_width,
 	input  wire [C_IMG_HBITS-1:0] s5_height,
-	input  wire [C_IMG_WBITS-1:0] s5_righte,
-	input  wire [C_IMG_HBITS-1:0] s5_bottome,
 	input  wire [C_WIN_NUM-1:0]   s5_dst_bmp,
 	output wire [C_WIN_NUM-1:0]   s5_dst_bmp_o,
 
@@ -74,8 +62,6 @@ module axis_generator #
 	input  wire [C_IMG_HBITS-1:0] s6_top,
 	input  wire [C_IMG_WBITS-1:0] s6_width,
 	input  wire [C_IMG_HBITS-1:0] s6_height,
-	input  wire [C_IMG_WBITS-1:0] s6_righte,
-	input  wire [C_IMG_HBITS-1:0] s6_bottome,
 	input  wire [C_WIN_NUM-1:0]   s6_dst_bmp,
 	output wire [C_WIN_NUM-1:0]   s6_dst_bmp_o,
 
@@ -83,8 +69,6 @@ module axis_generator #
 	input  wire [C_IMG_HBITS-1:0] s7_top,
 	input  wire [C_IMG_WBITS-1:0] s7_width,
 	input  wire [C_IMG_HBITS-1:0] s7_height,
-	input  wire [C_IMG_WBITS-1:0] s7_righte,
-	input  wire [C_IMG_HBITS-1:0] s7_bottome,
 	input  wire [C_WIN_NUM-1:0]   s7_dst_bmp,
 	output wire [C_WIN_NUM-1:0]   s7_dst_bmp_o,
 
@@ -224,8 +208,6 @@ endgenerate
 	wire [C_IMG_HBITS-1 : 0] win_top    [C_MAX_WIN_NUM-1 : 0];
 	wire [C_IMG_WBITS-1 : 0] win_width  [C_MAX_WIN_NUM-1 : 0];
 	wire [C_IMG_HBITS-1 : 0] win_height [C_MAX_WIN_NUM-1 : 0];
-	wire [C_IMG_WBITS-1 : 0] win_righte [C_MAX_WIN_NUM-1 : 0];
-	wire [C_IMG_HBITS-1 : 0] win_bottome[C_MAX_WIN_NUM-1 : 0];
 
 	wire [C_WIN_NUM-1:0]     s_need;
 
@@ -235,8 +217,6 @@ endgenerate
 	assign win_top    [i] = s``i``_top    ; \
 	assign win_width  [i] = s``i``_width  ; \
 	assign win_height [i] = s``i``_height ; \
-	assign win_righte [i] = s``i``_righte ; \
-	assign win_bottome[i] = s``i``_bottome; \
 	assign s``i``_dst_bmp_o = s``i``_dst_bmp;
 
 	`ASSIGN_WIN(0)
@@ -256,7 +236,7 @@ endgenerate
 		wire [C_WIN_NUM-1:0]     m_src_bmp  [C_WIN_NUM-1 : 0];
 		for (i = 0; i < C_WIN_NUM; i = i+1) begin: m_src_calc
 			for (j = 0; j < C_WIN_NUM; j = j+1) begin: m_src_bit_calc
-				assign m_src_bmp[i][j] = s_dst_bmp[j][j];
+				assign m_src_bmp[i][j] = s_dst_bmp[j][i];
 			end
 		end
 
