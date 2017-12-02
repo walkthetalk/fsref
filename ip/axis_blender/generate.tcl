@@ -4,7 +4,7 @@ set tmp_dir $ip_dir/tmp
 
 source $origin_dir/scripts/aux/util.tcl
 
-ipx::infer_core -vendor $VENDOR -library $LIBRARY -name axis_blender -taxonomy $TAXONOMY $ip_dir
+ipx::infer_core -vendor $VENDOR -library $LIBRARY -name axis_blender -taxonomy $TAXONOMY -root_dir $ip_dir $ip_dir/src
 ipx::edit_ip_in_project -upgrade true -name edit_ip_project -directory $tmp_dir $ip_dir/component.xml
 ipx::current_core $ip_dir/component.xml
 
@@ -31,15 +31,6 @@ pip_add_bus_if [ipx::current_core] M_AXIS {
 	TREADY	m_axis_tready
 }
 
-pip_add_bus_if [ipx::current_core] OUT_SIZE [subst {
-	abstraction_type_vlnv {$VENDOR:interface:window_ctl_rtl:1.0}
-	bus_type_vlnv {$VENDOR:interface:window_ctl:1.0}
-	interface_mode {slave}
-}] {
-	WIDTH   out_width
-	HEIGHT  out_height
-}
-
 pip_add_bus_if [ipx::current_core] S0_AXIS {
 	abstraction_type_vlnv {xilinx.com:interface:axis_rtl:1.0}
 	bus_type_vlnv {xilinx.com:interface:axis:1.0}
@@ -50,17 +41,6 @@ pip_add_bus_if [ipx::current_core] S0_AXIS {
 	TUSER	s0_axis_tuser
 	TLAST	s0_axis_tlast
 	TREADY	s0_axis_tready
-}
-
-pip_add_bus_if [ipx::current_core] S0_WIN_CTL [subst {
-	abstraction_type_vlnv {$VENDOR:interface:window_ctl_rtl:1.0}
-	bus_type_vlnv {$VENDOR:interface:window_ctl:1.0}
-	interface_mode {slave}
-}] {
-	LEFT    s0_win_left
-	TOP     s0_win_top
-	WIDTH   s0_win_width
-	HEIGHT  s0_win_height
 }
 
 pip_add_bus_if [ipx::current_core] S1_AXIS {
@@ -75,38 +55,15 @@ pip_add_bus_if [ipx::current_core] S1_AXIS {
 	TREADY	s1_axis_tready
 }
 
-pip_add_bus_if [ipx::current_core] S1_WIN_CTL [subst {
-	abstraction_type_vlnv {$VENDOR:interface:window_ctl_rtl:1.0}
-	bus_type_vlnv {$VENDOR:interface:window_ctl:1.0}
-	interface_mode {slave}
-}] {
-	LEFT    s1_win_left
-	TOP     s1_win_top
-	WIDTH   s1_win_width
-	HEIGHT  s1_win_height
-}
-
-pip_add_bus_if [ipx::current_core] S2_AXIS {
-	abstraction_type_vlnv {xilinx.com:interface:axis_rtl:1.0}
-	bus_type_vlnv {xilinx.com:interface:axis:1.0}
-	interface_mode {slave}
+pip_add_bus_if [ipx::current_core] s1_enable {
+	abstraction_type_vlnv xilinx.com:signal:reset_rtl:1.0
+	bus_type_vlnv xilinx.com:signal:reset:1.0
+	interface_mode slave
+	enablement_dependency {$C_S1_ENABLE}
 } {
-	TVALID	s2_axis_tvalid
-	TDATA	s2_axis_tdata
-	TUSER	s2_axis_tuser
-	TLAST	s2_axis_tlast
-	TREADY	s2_axis_tready
-}
-
-pip_add_bus_if [ipx::current_core] S2_WIN_CTL [subst {
-	abstraction_type_vlnv {$VENDOR:interface:window_ctl_rtl:1.0}
-	bus_type_vlnv {$VENDOR:interface:window_ctl:1.0}
-	interface_mode {slave}
-}] {
-	LEFT    s2_win_left
-	TOP     s2_win_top
-	WIDTH   s2_win_width
-	HEIGHT  s2_win_height
+	RST s1_enable
+} {
+	POLARITY {ACTIVE_LOW}
 }
 
 # clock & reset
@@ -127,99 +84,140 @@ pip_add_bus_if [ipx::current_core] clk {
 } {
 	CLK clk
 } {
-	ASSOCIATED_BUSIF {S0_AXIS:S0_WIN_CTL:S1_AXIS:S1_WIN_CTL:S2_AXIS:S2_WIN_CTL:M_AXIS}
+	ASSOCIATED_BUSIF {S0_AXIS:S1_AXIS:M_AXIS}
 	ASSOCIATED_RESET {resetn}
 }
 
 # parameters
-pip_add_usr_par [ipx::current_core] {C_S0_PIXEL_WIDTH} {
-	display_name {S0 Pixel Width}
-	tooltip {Steam 0 PIXEL WIDTH}
-	widget {comboBox}
-} {
-	value_resolve_type user
-	value 32
-	value_format long
-	value_validation_type list
-	value_validation_list {32}
-} {
-	value 32
-	value_format long
-}
 
-pip_add_usr_par [ipx::current_core] {C_S1_PIXEL_WIDTH} {
-	display_name {S1 Pixel Width}
-	tooltip {Stream 1 PIXEL WIDTH}
+pip_add_usr_par [ipx::current_core] {C_CHN_WIDTH} {
+	display_name {Channel Width}
+	tooltip {Channel WIDTH}
 	widget {comboBox}
 } {
 	value_resolve_type user
 	value 8
 	value_format long
 	value_validation_type list
-	value_validation_list {8 10 12}
+	value_validation_list {4 6 8 10}
 } {
 	value 8
 	value_format long
 }
 
-pip_add_usr_par [ipx::current_core] {C_S2_PIXEL_WIDTH} {
-	display_name {S2 Pixel Width}
-	tooltip {Stream 2 PIXEL WIDTH}
+pip_add_usr_par [ipx::current_core] {C_S0_CHN_NUM} {
+	display_name {S0 Channel Number}
+	tooltip {S0 Channel Number}
+	widget {comboBox}
+} {
+	value_resolve_type user
+	value 1
+	value_format long
+	value_validation_type list
+	value_validation_list {1 2 3}
+} {
+	value 1
+	value_format long
+}
+
+pip_add_usr_par [ipx::current_core] {C_S1_CHN_NUM} {
+	display_name {S1 Channel Number}
+	tooltip {S1 Channel Number}
+	widget {comboBox}
+} {
+	value_resolve_type user
+	value 1
+	value_format long
+	value_validation_type list
+	value_validation_list {1 2 3}
+} {
+	value 1
+	value_format long
+}
+
+pip_add_usr_par [ipx::current_core] {C_ALPHA_WIDTH} {
+	display_name {S1 Alpha Channel Width}
+	tooltip {S1 Alpha Channel Width}
 	widget {comboBox}
 } {
 	value_resolve_type user
 	value 8
 	value_format long
 	value_validation_type list
-	value_validation_list {8 10 12}
+	value_validation_list {0 1 2 3 4 5 6 7 8}
 } {
 	value 8
 	value_format long
 }
 
-pip_add_usr_par [ipx::current_core] {C_M_PIXEL_WIDTH} {
-	display_name {Output Pixel Width}
-	tooltip {Output PIXEL WIDTH}
-	widget {comboBox}
+pip_add_usr_par [ipx::current_core] {C_M_WIDTH} {
+	display_name {M_AXIS DATA Width}
+	tooltip {M_AXIS DATA Width}
+	widget {textEdit}
 } {
+	enablement_value false
 	value_resolve_type user
-	value 24
+	value 8
 	value_format long
-	value_validation_type list
-	value_validation_list {24}
+	value_tcl_expr {expr max($C_S0_CHN_NUM,$C_S1_CHN_NUM) * $C_CHN_WIDTH}
 } {
-	value 24
+	value 8
 	value_format long
 }
 
-pip_add_usr_par [ipx::current_core] {C_IMG_WBITS} {
-	display_name {Image Width (PIXEL) Bit Width}
-	tooltip {IMAGE WIDTH/HEIGHT BIT WIDTH}
+pip_add_usr_par [ipx::current_core] {C_S1_ENABLE} {
+	display_name {Seperate Enable Signal for S1}
+	tooltip {Seperate Enable Signal for S1}
+	widget {checkBox}
+} {
+	value_resolve_type user
+	value false
+	value_format bool
+} {
+	value false
+	value_format bool
+}
+
+pip_add_usr_par [ipx::current_core] {C_IN_NEED_WIDTH} {
+	display_name {Input Need Width}
+	tooltip {merged with s0_axis_tuser}
 	widget {comboBox}
 } {
 	value_resolve_type user
-	value 12
+	value 0
 	value_format long
 	value_validation_type list
-	value_validation_list {5 6 7 8 9 10 11 12}
+	value_validation_list {0 1 2 3 4 5 6 7 8}
 } {
-	value 12
+	value 0
 	value_format long
 }
 
-pip_add_usr_par [ipx::current_core] {C_IMG_HBITS} {
-	display_name {Image Height (PIXEL) Bit Width}
-	tooltip {IMAGE WIDTH/HEIGHT BIT WIDTH}
-	widget {comboBox}
+pip_add_usr_par [ipx::current_core] {C_OUT_NEED_WIDTH} {
+	display_name {Output Need Width}
+	tooltip {merged with m_axis_tuser}
+	widget {textEdit}
+} {
+	enablement_value false
+	value_resolve_type user
+	value 0
+	value_format long
+	value_tcl_expr {expr max(($C_IN_NEED_WIDTH - 1), 0)}
+} {
+	value 0
+	value_format long
+}
+pip_add_usr_par [ipx::current_core] {C_TEST} {
+	display_name {Enable Test}
+	tooltip {Enable Test}
+	widget {checkBox}
 } {
 	value_resolve_type user
-	value 12
-	value_format long
-	value_validation_type list
-	value_validation_list {5 6 7 8 9 10 11 12}
+	value false
+	value_format bool
 } {
-	value 12
-	value_format long
+	value false
+	value_format bool
 }
 
 ipx::create_xgui_files [ipx::current_core]

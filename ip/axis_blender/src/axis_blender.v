@@ -16,343 +16,353 @@
 // Revision:
 // Revision 0.01 - File Created
 // Additional Comments:
+//            1. valid cannot depend on ready
+//            2. ready can depend on valid
 //
 //////////////////////////////////////////////////////////////////////////////////
 module axis_blender #
 (
-	parameter integer C_S0_PIXEL_WIDTH	= 32,
-	parameter integer C_S1_PIXEL_WIDTH	= 8,
-	parameter integer C_S2_PIXEL_WIDTH	= 8,
-	parameter integer C_M_PIXEL_WIDTH	= 24,
-	parameter integer C_IMG_WBITS = 12,
-	parameter integer C_IMG_HBITS = 12,
-	parameter integer C_TEST = 0
-
+	parameter integer C_CHN_WIDTH		=  8,
+	parameter integer C_S0_CHN_NUM		=  1,
+	parameter integer C_S1_CHN_NUM		=  3,
+	parameter integer C_ALPHA_WIDTH		=  8,
+	parameter integer C_S1_ENABLE           =  0,
+	parameter integer C_IN_NEED_WIDTH	=  8,
+	parameter integer C_OUT_NEED_WIDTH	=  7,	/// must be (C_IN_NEED_WIDTH - 1), min val is 0
+	parameter integer C_M_WIDTH		= 24,	/// must be max(C_S0_CHN_NUM, C_S1_CHN_NUM) * C_CHN_WIDTH
+	parameter integer C_TEST		= 0
 )
 (
 	input wire clk,
 	input wire resetn,
 
-	input wire order_1over2,
-
-	input wire [C_IMG_WBITS-1 : 0] out_width,
-	input wire [C_IMG_HBITS-1 : 0] out_height,
+	output wire [31:0] test1,
+	output wire [31:0] test2,
+	output wire [31:0] test3,
+	output wire [31:0] test4,
+	output wire [31:0] test5,
 
 	/// S0_AXIS
-	input  wire s0_axis_tvalid,
-	input  wire [C_S0_PIXEL_WIDTH-1:0] s0_axis_tdata,
-	input  wire s0_axis_tuser,
-	input  wire s0_axis_tlast,
-	output wire s0_axis_tready,
-
-	input wire [C_IMG_WBITS-1 : 0] s0_win_left,
-	input wire [C_IMG_HBITS-1 : 0] s0_win_top,
-	input wire [C_IMG_WBITS-1 : 0] s0_win_width,
-	input wire [C_IMG_HBITS-1 : 0] s0_win_height,
+	input  wire                                    s0_axis_tvalid,
+	input  wire [C_CHN_WIDTH * C_S0_CHN_NUM - 1:0] s0_axis_tdata,
+	input  wire [C_IN_NEED_WIDTH:0]                s0_axis_tuser,
+	input  wire                                    s0_axis_tlast,
+	output wire                                    s0_axis_tready,
 
 	/// S1_AXIS
-	input  wire s1_axis_tvalid,
-	input  wire [C_S1_PIXEL_WIDTH-1:0] s1_axis_tdata,
-	input  wire s1_axis_tuser,
-	input  wire s1_axis_tlast,
-	output wire s1_axis_tready,
-
-	input wire [C_IMG_WBITS-1 : 0] s1_win_left,
-	input wire [C_IMG_HBITS-1 : 0] s1_win_top,
-	input wire [C_IMG_WBITS-1 : 0] s1_win_width,
-	input wire [C_IMG_HBITS-1 : 0] s1_win_height,
-
-	/// S2_AXIS
-	input  wire s2_axis_tvalid,
-	input  wire [C_S2_PIXEL_WIDTH-1:0] s2_axis_tdata,
-	input  wire s2_axis_tuser,
-	input  wire s2_axis_tlast,
-	output wire s2_axis_tready,
-
-	input wire [C_IMG_WBITS-1 : 0] s2_win_left,
-	input wire [C_IMG_HBITS-1 : 0] s2_win_top,
-	input wire [C_IMG_WBITS-1 : 0] s2_win_width,
-	input wire [C_IMG_HBITS-1 : 0] s2_win_height,
+	input  wire                                    s1_enable,
+	input  wire                                    s1_axis_tvalid,
+	input  wire [C_CHN_WIDTH * C_S1_CHN_NUM + C_ALPHA_WIDTH - 1:0] s1_axis_tdata,
+	input  wire                                    s1_axis_tuser,
+	input  wire                                    s1_axis_tlast,
+	output wire                                    s1_axis_tready,
 
 	/// M_AXIS
-	output reg m_axis_tvalid,
-	output reg [C_M_PIXEL_WIDTH-1:0] m_axis_tdata,
-	output reg m_axis_tuser,
-	output reg m_axis_tlast,
-	input  wire m_axis_tready
+	output wire                                    m_axis_tvalid,
+	output wire [C_M_WIDTH-1:0]                    m_axis_tdata,
+	output wire [C_OUT_NEED_WIDTH:0]               m_axis_tuser,
+	output wire                                    m_axis_tlast,
+	input  wire                                    m_axis_tready
 );
-	wire out_tvalid;
-	reg out_tuser;
-	wire out_tlast;
-	wire out_tready;
+	localparam integer C_S0_WIDTH = C_CHN_WIDTH * C_S0_CHN_NUM;
+	localparam integer C_S1_WIDTH = C_CHN_WIDTH * C_S1_CHN_NUM;
+	localparam integer C_M_CHN_NUM = (C_S0_CHN_NUM > C_S1_CHN_NUM ? C_S0_CHN_NUM : C_S1_CHN_NUM);
 
-	wire mnext;
-	assign mnext = out_tvalid && m_axis_tready;
+	wire out_ready;
+	assign out_ready = (~m_axis_tvalid || m_axis_tready);
+	wire needs1;
+	wire input_valid;
+generate
+	wire original_needs1;
+	if (C_IN_NEED_WIDTH > 0)
+		assign original_needs1 = s0_axis_tuser[1];
+	else
+		assign original_needs1 = 1'b1;
+	if (C_S1_ENABLE)
+		assign needs1 = s1_enable & original_needs1;
+	else
+		assign needs1 = original_needs1;
+endgenerate
+	assign input_valid = (s0_axis_tvalid && (~needs1 || s1_axis_tvalid));
+	assign s0_axis_tready = (out_ready && input_valid);
+	assign s1_axis_tready = (out_ready && (s0_axis_tvalid && s1_axis_tvalid && needs1));
 
-	reg [C_IMG_WBITS-1 : 0] col_idx_bak;
-	reg [C_IMG_HBITS-1 : 0] row_idx_bak;
-	reg [C_IMG_WBITS-1 : 0] col_idx;
-	reg [C_IMG_HBITS-1 : 0] row_idx;
+generate
+	genvar i;
+if (C_ALPHA_WIDTH == 0) begin: without_alpha
+	reg                                    mr_axis_tvalid;
+	reg [C_M_WIDTH-1:0]                    mr_axis_tdata ;
+	reg [C_OUT_NEED_WIDTH:0]               mr_axis_tuser ;
+	reg                                    mr_axis_tlast ;
+	assign m_axis_tvalid = mr_axis_tvalid;
+	assign m_axis_tdata  = mr_axis_tdata ;
+	assign m_axis_tuser  = mr_axis_tuser ;
+	assign m_axis_tlast  = mr_axis_tlast ;
 
-	reg last_pixel;
-	reg last_line;
-	reg gap0;
-	reg gap1;
-	reg streaming;
-	wire col_update;
-	assign col_update = (gap1 || mnext);
-	wire row_update;
-	assign row_update = gap1;
-	wire fsync;
-	assign fsync = (last_line && gap0);
-
-	always @(posedge clk) begin
-		if (resetn == 1'b0)
-			last_pixel <= 0;
-		else if (col_update)
-			last_pixel <= (col_idx_bak == out_width);
-		else
-			last_pixel <= last_pixel;
+	/// regenerate s_axis_data
+	wire [C_M_WIDTH-1:0] s0_tdata;
+	for (i = 0; i < C_M_WIDTH / C_S0_WIDTH; i = i+1) begin
+		assign s0_tdata[C_S0_WIDTH * (i+1) - 1 : C_S0_WIDTH * i] = s0_axis_tdata;
 	end
-	always @(posedge clk) begin
-		if (resetn == 1'b0)
-			last_line <= 0;
-		else if (row_update)
-			last_line <= (row_idx_bak == out_height);
-		else
-			last_line <= last_line;
-	end
-
-	always @(posedge clk) begin
-		if (resetn == 1'b0)
-			gap0 <= 0;
-		else if (~gap0) begin
-			if (~gap1 && ~streaming)
-				gap0 <= (~last_line ? 1 : (s0_axis_tvalid && s0_axis_tuser));
-			/// @NOTE: just for saving resource (add one more empty clock cycle between lines)
-			//else if (mnext && last_pixel)
-			//	gap0 <= (~last_line ? 1 : (s0_axis_tvalid && s0_axis_tuser));
-			else
-				gap0 <= 0;
-		end
-		else
-			gap0 <= 0;
+	wire [C_M_WIDTH-1:0] s1_tdata;
+	for (i = 0; i < C_M_WIDTH / C_S1_WIDTH; i = i+1) begin
+		assign s1_tdata[C_S1_WIDTH * (i+1) - 1 : C_S1_WIDTH * i] = s1_axis_tdata;
 	end
 
 	always @ (posedge clk) begin
-		if (resetn == 1'b0)
-			gap1 <= 0;
-		else
-			gap1 <= gap0;
-	end
-
-	always @(posedge clk) begin
-		if (resetn == 1'b0)
-			streaming <= 0;
-		else if (row_update)
-			streaming <= 1;
-		else if (mnext && last_pixel)
-			streaming <= 0;
-		else
-			streaming <= streaming;
-	end
-
-	always @ (posedge clk) begin
-		if (resetn == 1'b0 || gap0) begin
-			col_idx <= 0;
-			col_idx_bak <= 1;
+		if (resetn == 1'b0) begin
+			mr_axis_tvalid   <= 0;
+			mr_axis_tdata    <= 0;
+			mr_axis_tuser[0] <= 0;
+			mr_axis_tlast    <= 0;
 		end
-		else if (col_update) begin
-			col_idx <= col_idx_bak;
-			col_idx_bak <= col_idx_bak + 1;
-		end
-		else begin
-			col_idx <= col_idx;
-			col_idx_bak <= col_idx_bak;
+		else if (out_ready) begin
+			mr_axis_tvalid <= input_valid;
+			mr_axis_tdata <= (needs1 ? s1_tdata : s0_tdata);
+			mr_axis_tuser[0] <= s0_axis_tuser[0];
+			mr_axis_tlast <= s0_axis_tlast;
 		end
 	end
 
-	always @ (posedge clk) begin
-		if (resetn == 1'b0 || (gap0 && last_line)) begin
-			row_idx <= 0;
-			row_idx_bak <= 1;
-		end
-		else if (row_update) begin
-			row_idx <= row_idx_bak;
-			row_idx_bak <= row_idx_bak + 1;
-		end
-		else begin
-			row_idx <= row_idx;
-			row_idx_bak <= row_idx_bak;
+	if (C_IN_NEED_WIDTH > 1) begin
+		always @ (posedge clk) begin
+			if (resetn == 1'b0)
+				mr_axis_tuser[C_IN_NEED_WIDTH-1:1] <= 0;
+			else if (out_ready)
+				mr_axis_tuser[C_IN_NEED_WIDTH-1:1] <= s0_axis_tuser[C_IN_NEED_WIDTH:2];
 		end
 	end
+end
+else begin: with_alpha
+	localparam integer C_DELAY = 3;
+	reg                                    mr_axis_tvalid[C_DELAY-1:0];
+	reg [C_OUT_NEED_WIDTH:0]               mr_axis_tuser [C_DELAY-1:0];
+	reg                                    mr_axis_tlast [C_DELAY-1:0];
+	assign m_axis_tvalid = mr_axis_tvalid[C_DELAY-1];
+	assign m_axis_tuser  = mr_axis_tuser [C_DELAY-1];
+	assign m_axis_tlast  = mr_axis_tlast [C_DELAY-1];
 
-/// stream 0
-	wire s0_valid;
-	assign s0_valid = s0_axis_tvalid;
-	wire s0_need;
-	wire[C_S0_PIXEL_WIDTH-1:0] s0_data;
-	assign s0_data = s0_axis_tdata;
-	assign s0_axis_tready = mnext && s0_need;
-
-	axis_shifter # (
-		.C_PIXEL_WIDTH(C_S0_PIXEL_WIDTH),
-		.C_IMG_WBITS(C_IMG_WBITS),
-		.C_IMG_HBITS(C_IMG_HBITS)
-	) axis_shifter_0 (
-		.clk(clk),
-		.resetn(resetn),
-		.fsync(fsync),
-
-		.col_idx(col_idx),
-		.col_update(col_update),
-		.row_idx(row_idx),
-		.row_update(row_update),
-
-		.s_win_left(s0_win_left),
-		.s_win_top(s0_win_top),
-		.s_win_width(s0_win_width),
-		.s_win_height(s0_win_height),
-
-		.s_need(s0_need)
-	);
-
-/// stream 1
-	wire s1_valid;
-	assign s1_valid = s1_axis_tvalid;
-	wire s1_need;
-	wire[7:0] s1_data;
-	assign s1_data = s1_axis_tdata[C_S1_PIXEL_WIDTH-1:C_S1_PIXEL_WIDTH-8];
-	assign s1_axis_tready = mnext && s1_need;
-
-	axis_shifter # (
-		.C_PIXEL_WIDTH(C_S1_PIXEL_WIDTH),
-		.C_IMG_WBITS(C_IMG_WBITS),
-		.C_IMG_HBITS(C_IMG_HBITS)
-	) axis_shifter_1 (
-		.clk(clk),
-		.resetn(resetn),
-		.fsync(fsync),
-
-		.col_idx(col_idx),
-		.col_update(col_update),
-		.row_idx(row_idx),
-		.row_update(row_update),
-
-		.s_win_left(s1_win_left),
-		.s_win_top(s1_win_top),
-		.s_win_width(s1_win_width),
-		.s_win_height(s1_win_height),
-
-		.s_need(s1_need)
-	);
-
-/// stream 2
-	wire s2_valid;
-	assign s2_valid = s2_axis_tvalid;
-	wire s2_need;
-	wire[7:0] s2_data;
-	assign s2_data = s2_axis_tdata[C_S2_PIXEL_WIDTH-1:C_S2_PIXEL_WIDTH-8];
-	assign s2_axis_tready = mnext && s2_need;
-
-	axis_shifter # (
-		.C_PIXEL_WIDTH(C_S2_PIXEL_WIDTH),
-		.C_IMG_WBITS(C_IMG_WBITS),
-		.C_IMG_HBITS(C_IMG_HBITS)
-	) axis_shifter_2 (
-		.clk(clk),
-		.resetn(resetn),
-		.fsync(fsync),
-
-		.col_idx(col_idx),
-		.col_update(col_update),
-		.row_idx(row_idx),
-		.row_update(row_update),
-
-		.s_win_left(s2_win_left),
-		.s_win_top(s2_win_top),
-		.s_win_width(s2_win_width),
-		.s_win_height(s2_win_height),
-
-		.s_need(s2_need)
-	);
-/// m
-	always @ (posedge clk) begin
-		if (resetn == 1'b0)
-			out_tuser <= 0;
-		else if (col_update)
-			out_tuser <= (col_idx == 0 && row_idx == 0);
-		else
-			out_tuser <= out_tuser;
-	end
-	assign out_tlast = last_pixel;
-	assign out_tvalid = (~s0_need || s0_valid)
-	 		&& (~s1_need || s1_valid)
-			&& (~s2_need || s2_valid)
-			&& streaming;
-	//assign out_tdata = s0_data;
-	assign out_tready = (~m_axis_tvalid || m_axis_tready);
-
-	always @ (posedge clk) begin
-		if (resetn == 1'b0)
-			m_axis_tuser <= 0;
-		else if (mnext)
-			m_axis_tuser <= out_tuser;
-		else
-			m_axis_tuser <= m_axis_tuser;
-	end
-
-	always @ (posedge clk) begin
-		if (resetn == 1'b0)
-			m_axis_tlast <= 0;
-		else if (mnext)
-			m_axis_tlast <= out_tlast;
-		else
-			m_axis_tlast <= m_axis_tlast;
-	end
-
-	always @ (posedge clk) begin
-		if (resetn == 1'b0)
-			m_axis_tvalid <= 0;
-		else if (mnext)
-			m_axis_tvalid <= 1;
-		else if (m_axis_tready)
-			m_axis_tvalid <= 0;
-		else
-			m_axis_tvalid <= m_axis_tvalid;
-	end
-
-	wire [7:0] data_12;
-	assign data_12 = (order_1over2 ?
-		 	(s1_need ? s1_data : s2_data) :
-			(s2_need ? s2_data : s1_data));
-
-	wire[7:0] alpha;
-	assign alpha = s0_data[31:24];
-
-`define ALPHA(A, B) (A > B ? (B + (((A-B) * alpha) >> 8)) : (B - (((B-A) * alpha) >> 8)))
-
-	always @ (posedge clk) begin
-		if (resetn == 1'b0)
-			m_axis_tdata <= 0;
-		else if (mnext)
-			if (s1_need || s2_need) begin
-				if (C_TEST) begin
-					if (s1_need)
-						m_axis_tdata <= {s1_data, s1_data, s1_data};
-					else
-						m_axis_tdata <= s0_data;
-				end
-				else begin
-					m_axis_tdata[23:16] <= `ALPHA(s0_data[23:16], data_12);
-					m_axis_tdata[15: 8] <= `ALPHA(s0_data[15: 8], data_12);
-					m_axis_tdata[ 7: 0] <= `ALPHA(s0_data[ 7: 0], data_12);
-				end
+	for (i = 1; i < C_DELAY; i = i+1) begin: single_delay
+		always @ (posedge clk) begin
+			if (resetn == 1'b0) begin
+				mr_axis_tvalid[i] <= 0;
+				mr_axis_tlast [i] <= 0;
+				mr_axis_tuser [i] <= 0;
 			end
-			else
-				m_axis_tdata <= s0_data;
-		else
-			m_axis_tdata <= m_axis_tdata;
+			else if (out_ready) begin
+				mr_axis_tvalid[i] <= mr_axis_tvalid[i-1];
+				mr_axis_tlast [i] <= mr_axis_tlast [i-1];
+				mr_axis_tuser [i] <= mr_axis_tuser [i-1];
+			end
+		end
 	end
+	always @ (posedge clk) begin
+		if (resetn == 1'b0) begin
+			mr_axis_tvalid[0] <= 0;
+			mr_axis_tlast [0] <= 0;
+			mr_axis_tuser [0][0] <= 0;
+		end
+		else if (out_ready) begin
+			mr_axis_tvalid[0] <= input_valid;
+			mr_axis_tlast [0] <= s0_axis_tlast;
+			mr_axis_tuser [0][0] <= s0_axis_tuser[0];
+		end
+	end
+	if (C_IN_NEED_WIDTH > 1) begin
+		always @ (posedge clk) begin
+			if (resetn == 1'b0)
+				mr_axis_tuser[0][C_IN_NEED_WIDTH-1:1] <= 0;
+			else if (out_ready)
+				mr_axis_tuser[0][C_IN_NEED_WIDTH-1:1] = s0_axis_tuser[C_IN_NEED_WIDTH:2];
+		end
+	end
+
+	/// split input
+	wire [C_CHN_WIDTH-1:0]     s0_pure_data[C_S0_CHN_NUM-1:0];
+	wire [C_CHN_WIDTH-1:0]     s1_pure_data[C_S1_CHN_NUM-1:0];
+	wire [C_ALPHA_WIDTH-1:0]   alpha_data;
+	assign alpha_data    = s1_axis_tdata[C_S1_WIDTH + C_ALPHA_WIDTH - 1 : C_S1_WIDTH];
+
+	/// delay0
+	reg[C_CHN_WIDTH-1:0]                   s0_data_d0     [C_S0_CHN_NUM-1:0];
+	reg[C_ALPHA_WIDTH-1:0]                 nalpha_d0;
+	reg[C_CHN_WIDTH + C_ALPHA_WIDTH -1:0]  s1_mul_alpha_d0[C_S1_CHN_NUM-1:0];
+
+	always @ (posedge clk) begin
+		if (out_ready) begin
+			if (needs1)
+				nalpha_d0       <= ~alpha_data;
+			else
+				nalpha_d0       <= {C_ALPHA_WIDTH{1'b1}};
+		end
+	end
+
+	/// delay1
+	reg[C_CHN_WIDTH + C_ALPHA_WIDTH - 1:0]  s0_mul_alpha_d1[C_S0_CHN_NUM-1:0];
+	reg[C_CHN_WIDTH + C_ALPHA_WIDTH - 1:0]  s1_mul_alpha_d1[C_S1_CHN_NUM-1:0];
+
+	for (i = 0; i < C_S0_CHN_NUM; i = i+1) begin
+		assign s0_pure_data[i] = s0_axis_tdata[C_CHN_WIDTH*(i+1)-1:C_CHN_WIDTH*i];
+		always @ (posedge clk) begin
+			if (out_ready)
+				s0_data_d0[i] <= s0_pure_data[i];
+		end
+
+		always @ (posedge clk) begin
+			if (out_ready)
+				s0_mul_alpha_d1[i] <= s0_data_d0[i] * nalpha_d0;
+		end
+	end
+	for (i = 0; i < C_S1_CHN_NUM; i = i+1) begin
+		assign s1_pure_data[i] = s1_axis_tdata[C_CHN_WIDTH*(i+1)-1:C_CHN_WIDTH*i];
+		always @ (posedge clk) begin
+			if (out_ready) begin
+				if (needs1)
+					s1_mul_alpha_d0[i] <= s1_pure_data[i] * alpha_data;
+				else
+					s1_mul_alpha_d0[i] <= 0;
+			end
+		end
+
+		always @ (posedge clk) begin
+			if (out_ready)
+				s1_mul_alpha_d1[i] <= s1_mul_alpha_d0[i];
+		end
+	end
+
+	/// output data
+	wire [C_CHN_WIDTH + C_ALPHA_WIDTH-1:0] s0_mul_alpha_d1_regen[C_M_CHN_NUM-1:0];
+	wire [C_CHN_WIDTH + C_ALPHA_WIDTH-1:0] s1_mul_alpha_d1_regen[C_M_CHN_NUM-1:0];
+	reg [C_CHN_WIDTH-1:0]  mr_axis_tdata[C_M_CHN_NUM-1:0];
+	for (i = 0; i < C_M_CHN_NUM; i = i+1) begin
+		assign s0_mul_alpha_d1_regen[i] = s0_mul_alpha_d1[C_M_CHN_NUM == C_S0_CHN_NUM ? i : 0];
+		assign s1_mul_alpha_d1_regen[i] = s1_mul_alpha_d1[C_M_CHN_NUM == C_S1_CHN_NUM ? i : 0];
+		always @ (posedge clk) begin
+			if (out_ready)
+				mr_axis_tdata[i] <= ((s0_mul_alpha_d1_regen[i] + s1_mul_alpha_d1_regen[i]) >> C_ALPHA_WIDTH);
+		end
+		assign m_axis_tdata[C_CHN_WIDTH*(i+1)-1:C_CHN_WIDTH*i] = mr_axis_tdata[i];
+	end
+end
+endgenerate
+
+generate
+if (C_TEST) begin
+	wire test_axis_tvalid;
+	wire test_axis_tuser ;
+	wire test_axis_tlast ;
+	wire test_axis_tready;
+	assign test_axis_tvalid = s0_axis_tvalid ;
+	assign test_axis_tuser  = s0_axis_tuser  ;
+	assign test_axis_tlast  = s0_axis_tlast  ;
+	assign test_axis_tready = s0_axis_tready ;
+	wire test_next;
+	assign test_next  = test_axis_tvalid && test_axis_tready;
+
+	reg [31:0] width;
+	reg [31:0] height;
+	assign test1 = width;
+	assign test2 = height;
+
+	reg [11:0] cidx;
+	reg [11:0] ridx;
+	always @ (posedge clk) begin
+		if (resetn == 1'b0)
+			cidx <= 0;
+		else if (test_next) begin
+			if (test_axis_tlast)
+				cidx <= 0;
+			else
+				cidx <= cidx + 1;
+		end
+	end
+	always @ (posedge clk) begin
+		if (resetn == 1'b0)
+			ridx <= 0;
+		else if (test_next) begin
+			if (test_axis_tuser)
+				ridx <= 0;
+			else if (test_axis_tlast)
+				ridx <= ridx + 1;
+		end
+	end
+	always @ (posedge clk) begin
+		width [27:16] <= cidx;
+		height[27:16] <= ridx;
+	end
+	always @ (posedge clk) begin
+		width [31:28] <= { s0_axis_tvalid, s0_axis_tready, s0_axis_tlast, s0_axis_tuser};
+		height[31:28] <= { m_axis_tvalid, m_axis_tready, m_axis_tlast, m_axis_tuser};
+	end
+	always @ (posedge clk) begin
+		if (resetn == 1'b0)
+			width[11:0] <= 8;
+		else if (test_next && test_axis_tlast)
+			width[11:0] <= cidx + 1;
+	end
+	always @ (posedge clk) begin
+		if (resetn == 1'b0)
+			height[11:0] <= 9;
+		else if (test_next && test_axis_tuser)
+			height[11:0] <= ridx;
+	end
+
+
+	reg [31:0] rtest3;
+	reg [31:0] rtest4;
+	assign test3 = rtest3;
+	assign test4 = rtest4;
+	reg [31:0] s1_cnt;
+	always @ (posedge clk) begin
+		if (resetn == 1'b0)
+			s1_cnt <= 0;
+		else if (test_next)
+			if (test_axis_tuser)
+				s1_cnt <= 0;
+			else if (s1_axis_tvalid && s1_axis_tready)
+				s1_cnt <= s1_cnt + 1;
+	end
+	always @ (posedge clk) begin
+		if (resetn == 1'b0)
+			rtest3 <= 0;
+		else if (test_next && test_axis_tuser)
+			rtest3 <= s1_cnt;
+	end
+	reg[31:0] rtestp;
+	wire sig;
+	assign sig = s0_axis_tvalid && s0_axis_tuser;
+	reg sig_d1;
+	always @ (posedge clk) begin
+		if (resetn == 1'b0)
+			sig_d1 <= 0;
+		else
+			sig_d1 <= sig;
+	end
+	always @ (posedge clk) begin
+		if (resetn == 1'b0)
+			rtestp <= 0;
+		else if (~sig_d1 && sig)
+			rtestp <= 0;
+		else
+			rtestp <= rtestp + 1;
+	end
+	always @ (posedge clk) begin
+		if (resetn == 1'b0)
+			rtest4 <= 0;
+		else if (s0_axis_tvalid && s0_axis_tready && s1_axis_tvalid && s1_axis_tready)
+			if (s1_axis_tuser)
+				rtest4 <= rtestp;
+	end
+
+	reg[31:0] rtest5;
+	assign test5 = rtest5;
+	always @ (posedge clk) begin
+		if (resetn == 1'b0)
+			rtest5 <= 0;
+		else if (s0_axis_tvalid && s1_axis_tvalid && s0_axis_tready && s1_axis_tready && s0_axis_tlast && ridx == 239)
+			rtest5 <= rtestp;
+	end
+end
+endgenerate
 
 endmodule
