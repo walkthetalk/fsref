@@ -4,7 +4,7 @@ set tmp_dir $ip_dir/tmp
 
 source $origin_dir/scripts/aux/util.tcl
 
-ipx::infer_core -vendor $VENDOR -library $LIBRARY -name fsctl -taxonomy $TAXONOMY $ip_dir
+ipx::infer_core -vendor $VENDOR -library $LIBRARY -name fsctl -taxonomy $TAXONOMY -root_dir $ip_dir $ip_dir/src
 ipx::edit_ip_in_project -upgrade true -name edit_ip_project -directory $tmp_dir $ip_dir/component.xml
 ipx::current_core $ip_dir/component.xml
 
@@ -56,6 +56,26 @@ pip_add_bus_if [ipx::current_core] DISPBUF_ADDR [subst {
 	ADDR0 dispbuf0_addr
 }
 
+pip_add_bus_if [ipx::current_core] S0_MBUF_R [subst {
+	abstraction_type_vlnv $VENDOR:interface:mutex_buffer_ctl_rtl:1.0
+	bus_type_vlnv $VENDOR:interface:mutex_buffer_ctl:1.0
+	interface_mode master
+}] {
+	SOF s0_rd_en
+	IDX s0_rd_buf_idx
+}
+
+pip_add_bus_if [ipx::current_core] S0_BUF_ADDR [subst {
+	abstraction_type_vlnv $VENDOR:interface:addr_array_rtl:1.0
+	bus_type_vlnv $VENDOR:interface:addr_array:1.0
+	interface_mode master
+}] {
+	ADDR0 cmos0buf0_addr
+	ADDR1 cmos0buf1_addr
+	ADDR2 cmos0buf2_addr
+	ADDR3 cmos0buf3_addr
+}
+
 pip_add_bus_if [ipx::current_core] S1_MBUF_R [subst {
 	abstraction_type_vlnv $VENDOR:interface:mutex_buffer_ctl_rtl:1.0
 	bus_type_vlnv $VENDOR:interface:mutex_buffer_ctl:1.0
@@ -70,26 +90,6 @@ pip_add_bus_if [ipx::current_core] S1_BUF_ADDR [subst {
 	bus_type_vlnv $VENDOR:interface:addr_array:1.0
 	interface_mode master
 }] {
-	ADDR0 cmos0buf0_addr
-	ADDR1 cmos0buf1_addr
-	ADDR2 cmos0buf2_addr
-	ADDR3 cmos0buf3_addr
-}
-
-pip_add_bus_if [ipx::current_core] S2_MBUF_R [subst {
-	abstraction_type_vlnv $VENDOR:interface:mutex_buffer_ctl_rtl:1.0
-	bus_type_vlnv $VENDOR:interface:mutex_buffer_ctl:1.0
-	interface_mode master
-}] {
-	SOF s2_rd_en
-	IDX s2_rd_buf_idx
-}
-
-pip_add_bus_if [ipx::current_core] S2_BUF_ADDR [subst {
-	abstraction_type_vlnv $VENDOR:interface:addr_array_rtl:1.0
-	bus_type_vlnv $VENDOR:interface:addr_array:1.0
-	interface_mode master
-}] {
 	ADDR0 cmos1buf0_addr
 	ADDR1 cmos1buf1_addr
 	ADDR2 cmos1buf2_addr
@@ -100,12 +100,21 @@ pip_add_bus_if [ipx::current_core] OUT_SIZE [subst {
 	abstraction_type_vlnv {$VENDOR:interface:window_ctl_rtl:1.0}
 	bus_type_vlnv {$VENDOR:interface:window_ctl:1.0}
 	interface_mode {master}
-}] [subst {
+}] {
 	WIDTH  out_width
 	HEIGHT out_height
-}]
+}
 
-for {set i 0} {$i < 3} {incr i} {
+pip_add_bus_if [ipx::current_core] ST_SIZE [subst {
+	abstraction_type_vlnv {$VENDOR:interface:window_ctl_rtl:1.0}
+	bus_type_vlnv {$VENDOR:interface:window_ctl:1.0}
+	interface_mode {master}
+}] {
+	WIDTH  st_width
+	HEIGHT st_height
+}
+
+for {set i 0} {$i < 2} {incr i} {
 	pip_add_bus_if [ipx::current_core] S[set i]_SIZE [subst {
 		abstraction_type_vlnv {$VENDOR:interface:window_ctl_rtl:1.0}
 		bus_type_vlnv {$VENDOR:interface:window_ctl:1.0}
@@ -255,12 +264,12 @@ pip_add_bus_if [ipx::current_core] s1_soft_resetn {
 } {
 	POLARITY {ACTIVE_LOW}
 }
-pip_add_bus_if [ipx::current_core] s2_soft_resetn {
+pip_add_bus_if [ipx::current_core] st_soft_resetn {
 	abstraction_type_vlnv xilinx.com:signal:reset_rtl:1.0
 	bus_type_vlnv xilinx.com:signal:reset:1.0
 	interface_mode master
 } {
-	RST s2_soft_resetn
+	RST st_soft_resetn
 } {
 	POLARITY {ACTIVE_LOW}
 }
@@ -277,7 +286,7 @@ pip_add_bus_if [ipx::current_core] o_clk {
 		OUT_SIZE:
 		S0_SIZE:S0_WIN:S0_SCALE:S0_DST:
 		S1_SIZE:S1_WIN:S1_SCALE:S1_DST:
-		S2_SIZE:S2_WIN:S2_SCALE:S2_DST:
+		ST_SIZE
 		BR0_INIT_CTL:BR1_INIT_CTL:BR2_INIT_CTL:BR3_INIT_CTL:
 		BR4_INIT_CTL:BR5_INIT_CTL:BR6_INIT_CTL:BR7_INIT_CTL}
 	ASSOCIATED_RESET {o_resetn:s0_soft_resetn:s1_soft_resetn:s2_soft_resetn}

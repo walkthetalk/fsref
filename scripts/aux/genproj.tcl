@@ -143,7 +143,7 @@ create_bd_cell -type ip -vlnv $VENDOR:$LIBRARY:fsmotor:$VERSION fsmotor
 endgroup
 
 # X. fusion splicer core
-create_fscore fscore
+create_fscore /fscore
 
 # interconnection of data
 startgroup
@@ -335,15 +335,15 @@ connect_bd_net [get_bd_pins fscore/intr] [get_bd_pins cpu/IRQ_F2P]
 assign_bd_address
 set_property -dict [list offset {0x43C00000} range {64K}] [get_bd_addr_segs {cpu/Data/SEG_axilite2regctl_S_AXI_LITE_reg}]
 
-set_property -dict [list offset {0x00000000} range {1G}] [get_bd_addr_segs {fscore/pvdma_0/mm2s/M_AXI_REG/SEG_cpu_HP0_DDR_LOWOCM}]
+set_property -dict [list offset {0x00000000} range {1G}] [get_bd_addr_segs {fscore/pvdma_T/mm2s/M_AXI_REG/SEG_cpu_HP0_DDR_LOWOCM}]
+
+set_property -dict [list offset {0x00000000} range {1G}] [get_bd_addr_segs {fscore/pvdma_0/mm2s/M_AXI_REG/SEG_axi_combiner_Reg}]
+set_property -dict [list offset {0x00000000} range {1G}] [get_bd_addr_segs {fscore/pvdma_0/s2mm/M_AXI_REG/SEG_axi_combiner_Reg}]
+set_property -dict [list offset {0x00000000} range {1G}] [get_bd_addr_segs {fscore/pvdma_0/axi_combiner/M_AXI_REG/SEG_cpu_HP1_DDR_LOWOCM}]
 
 set_property -dict [list offset {0x00000000} range {1G}] [get_bd_addr_segs {fscore/pvdma_1/mm2s/M_AXI_REG/SEG_axi_combiner_Reg}]
 set_property -dict [list offset {0x00000000} range {1G}] [get_bd_addr_segs {fscore/pvdma_1/s2mm/M_AXI_REG/SEG_axi_combiner_Reg}]
-set_property -dict [list offset {0x00000000} range {1G}] [get_bd_addr_segs {fscore/pvdma_1/axi_combiner/M_AXI_REG/SEG_cpu_HP1_DDR_LOWOCM}]
-
-set_property -dict [list offset {0x00000000} range {1G}] [get_bd_addr_segs {fscore/pvdma_2/mm2s/M_AXI_REG/SEG_axi_combiner_Reg}]
-set_property -dict [list offset {0x00000000} range {1G}] [get_bd_addr_segs {fscore/pvdma_2/s2mm/M_AXI_REG/SEG_axi_combiner_Reg}]
-set_property -dict [list offset {0x00000000} range {1G}] [get_bd_addr_segs {fscore/pvdma_2/axi_combiner/M_AXI_REG/SEG_cpu_HP2_DDR_LOWOCM}]
+set_property -dict [list offset {0x00000000} range {1G}] [get_bd_addr_segs {fscore/pvdma_1/axi_combiner/M_AXI_REG/SEG_cpu_HP2_DDR_LOWOCM}]
 
 # save board design
 save_bd_design
@@ -372,3 +372,6 @@ set_property target_constrs_file $xdc_file [current_fileset -constrset]
 #make_wrapper -files [get_files $origin_dir/fsref.srcs/sim_yscaler/bd/test_yscaler/test_yscaler.bd] -top
 #add_files -fileset sim_yscaler -norecurse $origin_dir/fsref.srcs/sim_yscaler/bd/test_yscaler/hdl/test_yscaler_wrapper.v
 #add_files -fileset sim_yscaler $origin_dir/ip/yscaler/test
+
+### set simulation time precision
+#set_property -name {xsim.elaborate.xelab.more_options} -value {-timescale 100ps/100ps -override_timeunit -override_timeprecision} -objects [get_filesets sim_bd]
