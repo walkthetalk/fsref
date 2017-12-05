@@ -36,12 +36,6 @@ module axis_blender #
 	input wire clk,
 	input wire resetn,
 
-	output wire [31:0] test1,
-	output wire [31:0] test2,
-	output wire [31:0] test3,
-	output wire [31:0] test4,
-	output wire [31:0] test5,
-
 	/// S0_AXIS
 	input  wire                                    s0_axis_tvalid,
 	input  wire [C_CHN_WIDTH * C_S0_CHN_NUM - 1:0] s0_axis_tdata,
@@ -242,125 +236,6 @@ else begin: with_alpha
 				mr_axis_tdata[i] <= ((s0_mul_alpha_d1_regen[i] + s1_mul_alpha_d1_regen[i]) >> C_ALPHA_WIDTH);
 		end
 		assign m_axis_tdata[C_CHN_WIDTH*(i+1)-1:C_CHN_WIDTH*i] = mr_axis_tdata[i];
-	end
-end
-endgenerate
-
-generate
-if (C_TEST) begin
-	wire test_axis_tvalid;
-	wire test_axis_tuser ;
-	wire test_axis_tlast ;
-	wire test_axis_tready;
-	assign test_axis_tvalid = s0_axis_tvalid ;
-	assign test_axis_tuser  = s0_axis_tuser  ;
-	assign test_axis_tlast  = s0_axis_tlast  ;
-	assign test_axis_tready = s0_axis_tready ;
-	wire test_next;
-	assign test_next  = test_axis_tvalid && test_axis_tready;
-
-	reg [31:0] width;
-	reg [31:0] height;
-	assign test1 = width;
-	assign test2 = height;
-
-	reg [11:0] cidx;
-	reg [11:0] ridx;
-	always @ (posedge clk) begin
-		if (resetn == 1'b0)
-			cidx <= 0;
-		else if (test_next) begin
-			if (test_axis_tlast)
-				cidx <= 0;
-			else
-				cidx <= cidx + 1;
-		end
-	end
-	always @ (posedge clk) begin
-		if (resetn == 1'b0)
-			ridx <= 0;
-		else if (test_next) begin
-			if (test_axis_tuser)
-				ridx <= 0;
-			else if (test_axis_tlast)
-				ridx <= ridx + 1;
-		end
-	end
-	always @ (posedge clk) begin
-		width [27:16] <= cidx;
-		height[27:16] <= ridx;
-	end
-	always @ (posedge clk) begin
-		width [31:28] <= { s0_axis_tvalid, s0_axis_tready, s0_axis_tlast, s0_axis_tuser};
-		height[31:28] <= { m_axis_tvalid, m_axis_tready, m_axis_tlast, m_axis_tuser};
-	end
-	always @ (posedge clk) begin
-		if (resetn == 1'b0)
-			width[11:0] <= 8;
-		else if (test_next && test_axis_tlast)
-			width[11:0] <= cidx + 1;
-	end
-	always @ (posedge clk) begin
-		if (resetn == 1'b0)
-			height[11:0] <= 9;
-		else if (test_next && test_axis_tuser)
-			height[11:0] <= ridx;
-	end
-
-
-	reg [31:0] rtest3;
-	reg [31:0] rtest4;
-	assign test3 = rtest3;
-	assign test4 = rtest4;
-	reg [31:0] s1_cnt;
-	always @ (posedge clk) begin
-		if (resetn == 1'b0)
-			s1_cnt <= 0;
-		else if (test_next)
-			if (test_axis_tuser)
-				s1_cnt <= 0;
-			else if (s1_axis_tvalid && s1_axis_tready)
-				s1_cnt <= s1_cnt + 1;
-	end
-	always @ (posedge clk) begin
-		if (resetn == 1'b0)
-			rtest3 <= 0;
-		else if (test_next && test_axis_tuser)
-			rtest3 <= s1_cnt;
-	end
-	reg[31:0] rtestp;
-	wire sig;
-	assign sig = s0_axis_tvalid && s0_axis_tuser;
-	reg sig_d1;
-	always @ (posedge clk) begin
-		if (resetn == 1'b0)
-			sig_d1 <= 0;
-		else
-			sig_d1 <= sig;
-	end
-	always @ (posedge clk) begin
-		if (resetn == 1'b0)
-			rtestp <= 0;
-		else if (~sig_d1 && sig)
-			rtestp <= 0;
-		else
-			rtestp <= rtestp + 1;
-	end
-	always @ (posedge clk) begin
-		if (resetn == 1'b0)
-			rtest4 <= 0;
-		else if (s0_axis_tvalid && s0_axis_tready && s1_axis_tvalid && s1_axis_tready)
-			if (s1_axis_tuser)
-				rtest4 <= rtestp;
-	end
-
-	reg[31:0] rtest5;
-	assign test5 = rtest5;
-	always @ (posedge clk) begin
-		if (resetn == 1'b0)
-			rtest5 <= 0;
-		else if (s0_axis_tvalid && s1_axis_tvalid && s0_axis_tready && s1_axis_tready && s0_axis_tlast && ridx == 239)
-			rtest5 <= rtestp;
 	end
 end
 endgenerate

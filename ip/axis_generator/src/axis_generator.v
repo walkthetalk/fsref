@@ -228,7 +228,6 @@ endgenerate
 	`ASSIGN_WIN(6)
 	`ASSIGN_WIN(7)
 
-
 	generate
 		genvar i;
 		genvar j;

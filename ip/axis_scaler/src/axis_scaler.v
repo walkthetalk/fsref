@@ -24,7 +24,8 @@ module axis_scaler #
 	parameter integer C_RESO_WIDTH  = 10,
 	parameter integer C_CH0_WIDTH = 8,
 	parameter integer C_CH1_WIDTH = 0,
-	parameter integer C_CH2_WIDTH = 0
+	parameter integer C_CH2_WIDTH = 0,
+	parameter integer C_TEST = 0
 ) (
 	input  wire clk,
 	input  wire resetn,
@@ -48,6 +49,7 @@ module axis_scaler #
 	output reg  m_axis_tlast,
 	input  wire m_axis_tready
 );
+
 	wire int_reset;
 	assign int_reset = (resetn == 1'b0 || fsync);
 	wire line_reset;
