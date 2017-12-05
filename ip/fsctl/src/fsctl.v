@@ -354,7 +354,7 @@ module fsctl #
 		end
 	endgenerate
 
-/// fsync
+/// sync display config when fsync
 	reg fsync_d1;
 	reg fsync_d2;
 	always @ (posedge o_clk) begin
@@ -367,8 +367,24 @@ module fsctl #
 			fsync_d2 <= fsync_d1;
 		end
 	end
-	wire fsync_posedge;
-	assign fsync_posedge = fsync_d1 && ~fsync_d2;
+
+	wire display_cfging;
+	reg  update_display_cfg;
+	reg  fsync_posedge;
+	always @ (posedge o_clk) begin
+		if (o_resetn == 1'b0) begin
+			fsync_posedge <= 0;
+			update_display_cfg <= 0;
+		end
+		else if (fsync_d1 && ~fsync_d2) begin
+			fsync_posedge <= 1;
+			update_display_cfg <= ~display_cfging;
+		end
+		else begin
+			fsync_posedge <= 0;
+			update_display_cfg <= 0;
+		end
+	end
 	/// @NOTE: o_fsync is delay 1 clock comparing with fsync_posedge, i.e.
 	///        moving config is appeared same time as o_fsync
 	always @ (posedge o_clk) begin
@@ -401,10 +417,7 @@ module fsctl #
 
 /// start register definition
 	`DEFREG_EXTERNAL(0, 0, 1, soft_resetn, 0)
-	`DEFREG_INTERNAL(0, 1, 1, display_cfging, 0)
-
-	wire update_display_cfg;
-	assign update_display_cfg = fsync_posedge && ~display_cfging;
+	`DEFREG_DIRECT_OUT(0, 1, 1, display_cfging, 0, 0)
 
 	//`DEFREG_DISP(1, 0, 1, order_1over2, 0)
 	//`DEFREG_INTERNAL(1, 1, 1, s0_running, 1)
@@ -669,7 +682,6 @@ module fsctl #
 
 	`COND(EN_PWM7, `DEFREG_DIRECT_OUT(80,  0, C_PWM_CNT_WIDTH, pwm7_denominator, 0, 0))
 	`COND(EN_PWM7, `DEFREG_DIRECT_OUT(81,  0, C_PWM_CNT_WIDTH, pwm7_numerator,   0, 0))
-
 
 /// VERSION
 	`DEFREG_FIXED(C_REG_NUM-1, 0, 32, core_version, C_CORE_VERSION)
