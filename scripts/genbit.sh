@@ -9,4 +9,9 @@ if [ ! -d "${out_dir}" ]; then
 	mkdir ${out_dir}
 fi
 
-${dir_main}/scripts/aux/conv ${dir_main}/fsref.runs/impl_1/bd1_wrapper.bit ${out_dir}/system.bit.bin
+BDNAME="bd1"
+if [ "$1" != "" ]; then
+	BDNAME="$1"
+fi
+
+${dir_main}/scripts/aux/conv ${dir_main}/fsref.runs/impl_1/${BDNAME}_wrapper.bit ${out_dir}/system.bit.bin
