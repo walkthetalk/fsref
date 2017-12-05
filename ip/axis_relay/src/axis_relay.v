@@ -20,22 +20,24 @@
 //////////////////////////////////////////////////////////////////////////////////
 module axis_relay #
 (
-	parameter integer C_PIXEL_WIDTH = 8
+	parameter integer C_PIXEL_WIDTH = 8,
+	parameter integer C_TEST = 0
 ) (
 	input  wire clk,
 	input  wire resetn,
 
-	input  wire s_axis_tvalid,
-	input  wire [C_PIXEL_WIDTH-1:0] s_axis_tdata,
-	input  wire s_axis_tuser,
-	input  wire s_axis_tlast,
-	output reg  s_axis_tready,
 
-	output wire  m_axis_tvalid,
-	output wire  [C_PIXEL_WIDTH-1:0] m_axis_tdata,
-	output wire  m_axis_tuser,
-	output wire  m_axis_tlast,
-	input  wire m_axis_tready
+	input  wire                     s_axis_tvalid,
+	input  wire [C_PIXEL_WIDTH-1:0] s_axis_tdata ,
+	input  wire                     s_axis_tuser ,
+	input  wire                     s_axis_tlast ,
+	output reg                      s_axis_tready,
+
+	output wire                     m_axis_tvalid,
+	output wire [C_PIXEL_WIDTH-1:0] m_axis_tdata ,
+	output wire                     m_axis_tuser ,
+	output wire                     m_axis_tlast ,
+	input  wire                     m_axis_tready
 );
 
 	reg                     relay_tvalid[1:0];
