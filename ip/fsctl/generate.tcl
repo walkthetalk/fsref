@@ -545,6 +545,19 @@ pip_add_usr_par [ipx::current_core] {C_MICROSTEP_WIDTH} {
 	value_format long
 }
 
+pip_add_usr_par [ipx::current_core] {C_TEST} {
+	display_name {Enable Test}
+	tooltip {Enable Test}
+	widget {checkBox}
+} {
+	value_resolve_type user
+	value false
+	value_format bool
+} {
+	value false
+	value_format bool
+}
+
 ipx::create_xgui_files [ipx::current_core]
 ipx::update_checksums [ipx::current_core]
 ipx::save_core [ipx::current_core]

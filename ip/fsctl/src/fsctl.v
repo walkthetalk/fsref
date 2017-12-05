@@ -35,7 +35,9 @@ module fsctl #
 	parameter integer C_MICROSTEP_WIDTH = 3,
 
 	parameter integer C_PWM_NBR = 8,
-	parameter integer C_PWM_CNT_WIDTH = 16
+	parameter integer C_PWM_CNT_WIDTH = 16,
+
+	parameter integer C_TEST = 0
 )
 (
 	input clk,
