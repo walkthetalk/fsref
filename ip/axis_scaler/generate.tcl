@@ -91,9 +91,9 @@ pip_add_usr_par [ipx::current_core] {C_PIXEL_WIDTH} {
 	value_format long
 }
 
-pip_add_usr_par [ipx::current_core] {C_RESO_WIDTH} {
-	display_name {Resolution Width}
-	tooltip {RESOLUTION WIDTH}
+pip_add_usr_par [ipx::current_core] {C_SH_WIDTH} {
+	display_name {SAXIS Height Width}
+	tooltip {SAXIS Height Width}
 	widget {comboBox}
 } {
 	value_resolve_type user
@@ -105,6 +105,52 @@ pip_add_usr_par [ipx::current_core] {C_RESO_WIDTH} {
 	value 12
 	value_format long
 }
+
+pip_add_usr_par [ipx::current_core] {C_SW_WIDTH} {
+	display_name {SAXIS Width Width}
+	tooltip {SAXIS Width Width}
+	widget {comboBox}
+} {
+	value_resolve_type user
+	value 12
+	value_format long
+	value_validation_type list
+	value_validation_list {9 10 11 12}
+} {
+	value 12
+	value_format long
+}
+
+pip_add_usr_par [ipx::current_core] {C_MH_WIDTH} {
+	display_name {MAXIS Height Width}
+	tooltip {MAXIS Height Width}
+	widget {comboBox}
+} {
+	value_resolve_type user
+	value 12
+	value_format long
+	value_validation_type list
+	value_validation_list {9 10 11 12}
+} {
+	value 12
+	value_format long
+}
+
+pip_add_usr_par [ipx::current_core] {C_MW_WIDTH} {
+	display_name {MAXIS Width Width}
+	tooltip {MAXIS Width Width}
+	widget {comboBox}
+} {
+	value_resolve_type user
+	value 12
+	value_format long
+	value_validation_type list
+	value_validation_list {9 10 11 12}
+} {
+	value 12
+	value_format long
+}
+
 pip_add_usr_par [ipx::current_core] {C_TEST} {
 	display_name {Enable Test}
 	tooltip {Enable Test}

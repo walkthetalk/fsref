@@ -1,81 +1,70 @@
 `timescale 1ns / 1ps
 
 `include "../src/linebuffer.v"
+`include "../src/common_scaler.v"
 `include "../src/axis_scaler.v"
 
 module test();
 
 	localparam RANDOMOUTPUT = 1;
-	localparam RANDOMINPUT = 1;
+	localparam RANDOMINPUT  = 1;
 
-	localparam  integer C_PIXEL_WIDTH = 8;
-	localparam  integer C_RESO_WIDTH  = 12;
-	localparam integer C_CH0_WIDTH = 8;
-	localparam integer C_CH1_WIDTH = 0;
-	localparam integer C_CH2_WIDTH = 0;
+	localparam integer C_REALDATA = 0;
 
-wire[C_PIXEL_WIDTH-1:0] m_axis_tdata_tb;
-wire m_axis_tlast_tb;
-reg m_axis_tready_tb;
-wire m_axis_tuser_tb;
-wire m_axis_tvalid_tb;
+	localparam integer C_PIXEL_WIDTH = (C_REALDATA ? 8 : 16);
+	localparam integer C_SH_WIDTH    = 12;
+	localparam integer C_SW_WIDTH    = 12;
+	localparam integer C_MH_WIDTH    = 12;
+	localparam integer C_MW_WIDTH    = 12;
+	localparam integer C_CH0_WIDTH   = 8;
+	localparam integer C_CH1_WIDTH   = 0;
+	localparam integer C_CH2_WIDTH   = 0;
 
-reg[C_PIXEL_WIDTH-1:0] s_axis_tdata_tb;
-reg s_axis_tlast_tb;
-wire s_axis_tready_tb;
-reg s_axis_tuser_tb;
-reg s_axis_tvalid_tb;
+wire[C_PIXEL_WIDTH-1:0] m_axis_tdata_tb ;
+wire                    m_axis_tlast_tb ;
+reg                     m_axis_tready_tb;
+wire                    m_axis_tuser_tb ;
+wire                    m_axis_tvalid_tb;
 
-reg[C_RESO_WIDTH-1:0] s_height_tb = 10;
-reg[C_RESO_WIDTH-1:0] s_width_tb = 10;
+wire[C_PIXEL_WIDTH-1:0] s_axis_tdata_tb ;
+wire                    s_axis_tlast_tb ;
+wire                    s_axis_tready_tb;
+wire                    s_axis_tuser_tb ;
+reg                     s_axis_tvalid_tb;
+
+reg[C_SH_WIDTH-1:0] s_height_tb = 10;
+reg[C_SW_WIDTH-1:0] s_width_tb = 10;
 reg resetn_tb;
-reg[C_RESO_WIDTH-1:0] m_height_tb = 240;
-reg[C_RESO_WIDTH-1:0] m_width_tb = 320;
+reg[C_MH_WIDTH-1:0] m_height_tb = 240;
+reg[C_MW_WIDTH-1:0] m_width_tb = 320;
 
 integer fileR, picType, dataPosition, grayDepth;
 reg[80*8:0] outputFileName;
 reg[11:0] outputFileIdx = 0;
 integer fileW = 0;
 initial begin
-    fileR=$fopen("a.pgm", "r");
-    $fscanf(fileR, "P%d\n%d %d\n%d\n", picType, s_width_tb, s_height_tb, grayDepth);
-    dataPosition=$ftell(fileR);
-    $display("header: %dx%d, %d", s_width_tb, s_height_tb, grayDepth);
-    m_height_tb = s_height_tb*3/2;
-    m_width_tb = s_width_tb*3/2;
-    $display("header: %dx%d, %d, %0dx%0d", s_width_tb, s_height_tb, grayDepth, m_width_tb, m_height_tb);
+	if (C_REALDATA) begin
+		fileR=$fopen("a.pgm", "r");
+		$fscanf(fileR, "P%d\n%d %d\n%d\n", picType, s_width_tb, s_height_tb, grayDepth);
+		dataPosition=$ftell(fileR);
+		$display("header: %dx%d, %d", s_width_tb, s_height_tb, grayDepth);
+		m_height_tb = s_height_tb * 10;
+		m_width_tb = s_width_tb * 10;
+		$display("header: %dx%d, %d, %0dx%0d", s_width_tb, s_height_tb, grayDepth, m_width_tb, m_height_tb);
+	end
+	else begin
+		s_width_tb = 60;
+		s_height_tb = 60;
+		m_height_tb = 10;
+		m_width_tb = 10;
+	end
 end
 
 reg clk;
 reg fsync_tb = 0;
 
-axis_scaler # (
-	.C_PIXEL_WIDTH(C_PIXEL_WIDTH),
-	.C_RESO_WIDTH(C_RESO_WIDTH),
-	.C_CH0_WIDTH(C_CH0_WIDTH),
-	.C_CH1_WIDTH(C_CH1_WIDTH),
-	.C_CH2_WIDTH(C_CH2_WIDTH)
-) uut (
-	.m_axis_tdata(m_axis_tdata_tb),
-	.m_axis_tlast(m_axis_tlast_tb),
-	.m_axis_tready(m_axis_tready_tb),
-	.m_axis_tuser(m_axis_tuser_tb),
-	.m_axis_tvalid(m_axis_tvalid_tb),
-	.s_axis_tdata(s_axis_tdata_tb),
-	.s_axis_tlast(s_axis_tlast_tb),
-	.s_axis_tready(s_axis_tready_tb),
-	.s_axis_tuser(s_axis_tuser_tb),
-	.s_axis_tvalid(s_axis_tvalid_tb),
-	.clk(clk),
-	.resetn(resetn_tb),
-	.fsync(1'b0),
-	.s_height(s_height_tb),
-	.s_width(s_width_tb),
-	.m_height(m_height_tb),
-	.m_width(m_width_tb));
-
 initial begin
-    clk <= 1'b1;
+	clk <= 1'b1;
 	forever #1 clk <= ~clk;
 end
 
@@ -93,73 +82,174 @@ initial begin
 	forever #2 resetn_tb <= 1'b1;
 end
 
-reg[23:0] cnt = 0;
+generate
+if (C_REALDATA) begin
+	initial begin
+		fsync_tb <= 0;
+		repeat (10) #2 fsync_tb <= 0;
+		repeat (1) #2 fsync_tb <= 1;
+		repeat (8000) #2 fsync_tb <= 0;
+	end
+end
+else begin
+	initial begin
+		fsync_tb <= 0;
+		repeat (10) #2 fsync_tb <= 0;
+		forever begin
+			repeat (1) #2 fsync_tb <= 1;
+			repeat (8000) #2 fsync_tb <= 0;
+		end
+	end
+end
+endgenerate
 
 reg[23:0] outcnt = 0;
 reg[11:0] outline = 0;
-/*
-reg output_done;
-reg input_done;
-always @ (posedge clk) begin
-	if (resetn_tb == 1'b0)
-		output_done <= 0;
-	else if (~output_done && m_axis_tready_tb && m_axis_tvalid_tb)
-end
-*/
-reg randominput;
-always @(posedge clk) begin
-	if (resetn_tb == 1'b0)
-		randominput <= 1'b0;
-	else
-		randominput <= (RANDOMINPUT ? {$random}%2 : 1);
 
-	if (resetn_tb == 1'b0 || (cnt > s_width_tb * s_height_tb)) begin
-		$fseek(fileR, dataPosition, 0);
-		cnt <= 0;
-		s_axis_tvalid_tb <= 1'b0;
-		s_axis_tdata_tb <= 0;
-		s_axis_tlast_tb <= 1'b0;
-		s_axis_tuser_tb <= 1'b0;
+
+////////////////////////////////////////////////////////////////////////// input
+generate
+if (C_REALDATA) begin
+	reg [C_PIXEL_WIDTH-1:0] s_axis_tdata_tb_r ;
+	reg                     s_axis_tlast_tb_r ;
+	reg                     s_axis_tuser_tb_r ;
+
+	assign s_axis_tdata_tb = s_axis_tdata_tb_r;
+	assign s_axis_tlast_tb = s_axis_tlast_tb_r;
+	assign s_axis_tuser_tb = s_axis_tuser_tb_r;
+
+	reg randominput;
+	reg[23:0] cnt = 0;
+	reg afterfsync;
+	always @ (posedge clk) begin
+		if (resetn_tb == 1'b0)
+			afterfsync <= 0;
+		else if (fsync_tb)
+			afterfsync <= 1;
 	end
-	else if (cnt == 0 && ~s_axis_tvalid_tb) begin
-		if (randominput) begin
-			s_axis_tvalid_tb <= 1'b1;
-			s_axis_tuser_tb <= 1'b1;
-			s_axis_tdata_tb <= $fgetc(fileR);
-			s_axis_tlast_tb <= (s_width_tb == 1);
-			cnt <= 1;
-		end
-	end
-	else if (s_axis_tvalid_tb && s_axis_tready_tb)  begin
-		if (cnt == s_width_tb * s_height_tb) begin
+	always @ (posedge clk) begin
+		if (resetn_tb == 1'b0)
+			randominput <= 1'b0;
+		else
+			randominput <= (RANDOMINPUT ? {$random}%2 : 1);
+
+		if (resetn_tb == 1'b0 || (cnt > s_width_tb * s_height_tb)) begin
+			$fseek(fileR, dataPosition, 0);
 			cnt <= 0;
 			s_axis_tvalid_tb <= 1'b0;
-			s_axis_tdata_tb <= 0;
-			s_axis_tlast_tb <= 1'b0;
-			s_axis_tuser_tb <= 1'b0;
+			s_axis_tdata_tb_r <= 0;
+			s_axis_tlast_tb_r <= 1'b0;
+			s_axis_tuser_tb_r <= 1'b0;
 		end
-		else if (randominput) begin
-			s_axis_tvalid_tb <= 1'b1;
-			s_axis_tdata_tb <= $fgetc(fileR);
-			s_axis_tlast_tb <= ((cnt+1) % s_width_tb == 0);
-			s_axis_tuser_tb <= 1'b0;
-			cnt <= cnt + 1;
+		else if (cnt == 0) begin
+			if (~s_axis_tvalid_tb && afterfsync) begin
+				if (randominput) begin
+					s_axis_tvalid_tb <= 1'b1;
+					s_axis_tuser_tb_r <= 1'b1;
+					s_axis_tdata_tb_r <= $fgetc(fileR);
+					s_axis_tlast_tb_r <= (s_width_tb == 1);
+					cnt <= 1;
+				end
+			end
+		end
+		else if (s_axis_tvalid_tb && s_axis_tready_tb)  begin
+			if (cnt == s_width_tb * s_height_tb) begin
+				cnt <= 0;
+				s_axis_tvalid_tb <= 1'b0;
+				s_axis_tdata_tb_r <= 0;
+				s_axis_tlast_tb_r <= 1'b0;
+				s_axis_tuser_tb_r <= 1'b0;
+			end
+			else if (randominput) begin
+				s_axis_tvalid_tb <= 1'b1;
+				s_axis_tdata_tb_r <= $fgetc(fileR);
+				s_axis_tlast_tb_r <= ((cnt+1) % s_width_tb == 0);
+				s_axis_tuser_tb_r <= 1'b0;
+				cnt <= cnt + 1;
+			end
+			else begin
+				s_axis_tvalid_tb <= 1'b0;
+			end
+		end
+		else if (~s_axis_tvalid_tb) begin
+			if (randominput) begin
+				s_axis_tvalid_tb <= 1'b1;
+				s_axis_tdata_tb_r <= $fgetc(fileR);
+				s_axis_tlast_tb_r <= ((cnt+1) % s_width_tb == 0);
+				s_axis_tuser_tb_r <= 1'b0;
+				cnt <= cnt + 1;
+			end
+		end
+	end
+end
+else begin
+	reg frm_done;
+
+	reg [C_SH_WIDTH-1:0]     s_ridx;
+	reg [C_SW_WIDTH-1:0]     s_cidx;
+	wire en_input;
+
+	wire trans_frm_last;
+	assign trans_frm_last = (s_ridx == (s_height_tb - 1)
+		&& s_cidx == s_width_tb - 1
+		&& s_axis_tvalid_tb);
+	always @ (posedge clk) begin
+		if (resetn_tb == 0)
+			frm_done <= 1;
+		else if (trans_frm_last)
+			frm_done <= 1;
+		else if (fsync_tb)
+			frm_done <= 0;
+	end
+
+	reg randomresult;
+	always @ (posedge clk) begin
+		randomresult <= (RANDOMINPUT ? {$random}%2 : 1);
+	end
+
+	assign en_input = (~trans_frm_last && ~frm_done && randomresult);
+
+	always @ (posedge clk) begin
+		if (resetn_tb == 1'b0)
+			s_axis_tvalid_tb <= 1'b0;
+		else if (~s_axis_tvalid_tb) begin
+			if (en_input)
+				s_axis_tvalid_tb <= 1'b1;
 		end
 		else begin
-			s_axis_tvalid_tb <= 1'b0;
+			if (s_axis_tready_tb)
+				s_axis_tvalid_tb <= en_input;
 		end
 	end
-	else if (~s_axis_tvalid_tb) begin
-		if (randominput) begin
-			s_axis_tvalid_tb <= 1'b1;
-			s_axis_tdata_tb <= $fgetc(fileR);
-			s_axis_tlast_tb <= ((cnt+1) % s_width_tb == 0);
-			s_axis_tuser_tb <= 1'b0;
-			cnt <= cnt + 1;
+	assign s_axis_tdata_tb = (s_ridx * 256 + s_cidx);
+	assign s_axis_tuser_tb = (s_ridx == 0 && s_cidx == 0);
+	assign s_axis_tlast_tb = (s_cidx == s_width_tb - 1);
+
+	always @ (posedge clk) begin
+		if (resetn_tb == 1'b0) begin
+			s_ridx <= 0;
+			s_cidx <= 0;
+		end
+		else if (s_axis_tvalid_tb && s_axis_tready_tb) begin
+			if (s_cidx != s_width_tb - 1) begin
+				s_cidx <= s_cidx + 1;
+				s_ridx <= s_ridx;
+			end
+			else if (s_ridx != s_height_tb - 1) begin
+				s_cidx <= 0;
+				s_ridx <= s_ridx + 1;
+			end
+			else begin
+				s_cidx <= 0;
+				s_ridx <= 0;
+			end
 		end
 	end
+end
+endgenerate
 
-
+///////////////////////////////////////////////////// output
+always @(posedge clk) begin
 	if (resetn_tb == 1'b0 || (outcnt >= m_height_tb * m_width_tb && m_axis_tready_tb)) begin
 		if (fileW == 0) begin
 			outputFileIdx <= outputFileIdx + 1;
@@ -177,14 +267,14 @@ always @(posedge clk) begin
 		//$display("output data to %s", outputFileName);
 		$fwrite(fileW, "%c", m_axis_tdata_tb);
 		if (m_axis_tuser_tb != (outcnt == 0)) begin
-			$display("error sof");
+			$display("error sof %t", $time);
 		end
 		if (m_axis_tlast_tb != ((outcnt+1) % m_width_tb == 0)) begin
-			$display("error eol");
+			$display("error eol %t", $time);
 		end
 		$write("%h ", m_axis_tdata_tb);
 		if (m_axis_tlast_tb) begin
-			$write(outline+1, "\n");
+			$write(outline+1, "   time: %t\n", $time);
 			outline <= outline + 1;
 		end
 		outcnt <= outcnt + 1;
@@ -195,5 +285,35 @@ always @(posedge clk) begin
 		end
 	end
 end
+
+
+axis_scaler # (
+	.C_PIXEL_WIDTH(C_PIXEL_WIDTH),
+	.C_SH_WIDTH   (C_SH_WIDTH   ),
+	.C_SW_WIDTH   (C_SW_WIDTH   ),
+	.C_MH_WIDTH   (C_MH_WIDTH   ),
+	.C_MW_WIDTH   (C_MW_WIDTH   ),
+	.C_CH0_WIDTH  (C_CH0_WIDTH  ),
+	.C_CH1_WIDTH  (C_CH1_WIDTH  ),
+	.C_CH2_WIDTH  (C_CH2_WIDTH  )
+) uut (
+	.m_axis_tdata(m_axis_tdata_tb),
+	.m_axis_tlast(m_axis_tlast_tb),
+	.m_axis_tready(m_axis_tready_tb),
+	.m_axis_tuser(m_axis_tuser_tb),
+	.m_axis_tvalid(m_axis_tvalid_tb),
+	.s_axis_tdata(s_axis_tdata_tb),
+	.s_axis_tlast(s_axis_tlast_tb),
+	.s_axis_tready(s_axis_tready_tb),
+	.s_axis_tuser(s_axis_tuser_tb),
+	.s_axis_tvalid(s_axis_tvalid_tb),
+	.clk(clk),
+	.resetn(resetn_tb),
+	.fsync(fsync_tb),
+	.s_height(s_height_tb),
+	.s_width(s_width_tb),
+	.m_height(m_height_tb),
+	.m_width(m_width_tb)
+);
 
 endmodule

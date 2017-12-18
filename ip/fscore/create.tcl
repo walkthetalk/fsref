@@ -48,9 +48,11 @@ proc create_fscore {
 	endgroup
 	set_property -dict [list \
 		CONFIG.C_PIXEL_WIDTH $pixel_width \
-		CONFIG.C_RESO_WIDTH $img_w_width \
+		CONFIG.C_SH_WIDTH    $img_h_width \
+		CONFIG.C_SW_WIDTH    $img_w_width \
+		CONFIG.C_MH_WIDTH    $img_h_width \
+		CONFIG.C_MW_WIDTH    $img_w_width \
 	] [get_bd_cells $mname/axis_scaler_*]
-	puts "\n\nNOTE: 'axis_scaler' don't support different width/height of image!!\n\n"
 
 	startgroup
 	create_bd_cell -type ip -vlnv $VENDOR:$LIBRARY:axis_relay:$VERSION $mname/axis_relay_0

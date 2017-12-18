@@ -3,22 +3,22 @@ module linebuffer #(
 	parameter C_ADDRESS_WIDTH = 8
 )(
 	input clk,
-	input  wire                       rd_en,
-	input  wire [C_ADDRESS_WIDTH-1:0] rd_addr,
-	output reg  [C_DATA_WIDTH-1   :0] rd_data,
-	input  wire                       wr_en,
-	input  wire [C_ADDRESS_WIDTH-1:0] wr_addr,
-	input  wire [C_DATA_WIDTH-1   :0] wr_data
+
+	input  wire                       w0,
+	input  wire [C_ADDRESS_WIDTH-1:0] a0,
+	input  wire [C_DATA_WIDTH-1   :0] d0,
+
+	input  wire [C_ADDRESS_WIDTH-1:0] a1,
+	output reg  [C_DATA_WIDTH-1   :0] q1
 );
 	reg [C_DATA_WIDTH-1:0] ram[2**C_ADDRESS_WIDTH-1:0];
 
 	always @ (posedge clk) begin
-		if (wr_en)
-			ram[wr_addr] <= wr_data;
+		if (w0)
+			ram[a0] <= d0;
 	end
-
 	always @ (posedge clk) begin
-		rd_data <= ram[rd_addr];
+		q1 <= ram[a1];
 	end
 
 endmodule
