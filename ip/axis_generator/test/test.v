@@ -113,8 +113,37 @@ initial begin
 	forever #2 resetn <= 1'b1;
 end
 
+`define SET_WIN(_idx, _l, _t, _w, _h) \
+	win_left  [_idx] <= _l; \
+	win_top   [_idx] <= _t; \
+	win_width [_idx] <= _w; \
+	win_height[_idx] <= _h
+
 initial begin
 	fsync <= 0;
+	m_random  <= 1;
+	m_enprint <= (1 << 0);
+
+	s_width  <= 20;
+	s_height <= 15;
+
+	s_dst_bmp[0] <= 8'b00000001;
+	s_dst_bmp[1] <= 8'b00000010;
+	s_dst_bmp[2] <= 8'b00000000;
+	s_dst_bmp[3] <= 8'b00000000;
+	s_dst_bmp[4] <= 8'b00000000;
+	s_dst_bmp[5] <= 8'b00000000;
+	s_dst_bmp[6] <= 8'b00000000;
+	s_dst_bmp[7] <= 8'b00000000;
+
+	`SET_WIN(0, 0, 0, 0, 0);
+	`SET_WIN(1, 0, 0, 0, 0);
+	`SET_WIN(2, 0, 0, 0, 0);
+	`SET_WIN(3, 0, 0, 0, 0);
+	`SET_WIN(4, 0, 0, 0, 0);
+	`SET_WIN(5, 0, 0, 0, 0);
+	`SET_WIN(6, 0, 0, 0, 0);
+	`SET_WIN(7, 0, 0, 0, 0);
 end
 
 reg [31:0] fsync_cnt;
@@ -130,40 +159,23 @@ always @ (posedge clk) begin
 		fsync     <= 1;
 		win_seq   <= (win_seq >> 1);
 		if (win_seq[0]) begin
-			win_left[0] <= 0; win_top[0] <= 0; win_width[0] <=  20; win_height[0] <= 15;
+			`SET_WIN(0, 0, 1, 10, 5);
 		end
 		else begin
-			win_left[0] <= 0; win_top[0] <=  0; win_width[0] <=  0; win_height[0] <=  0;
+			`SET_WIN(0, 0, 0, 10, 5);
 		end
-		win_left[1] <= 3; win_top[1] <= 10; win_width[1] <=  5; win_height[1] <=  3;
-		win_left[2] <= 3; win_top[2] <= 10; win_width[2] <=  5; win_height[2] <=  3;
-		win_left[3] <= 3; win_top[3] <= 10; win_width[3] <=  5; win_height[3] <=  3;
-		win_left[4] <= 3; win_top[4] <= 10; win_width[4] <=  5; win_height[4] <=  3;
-		win_left[5] <= 0; win_top[5] <=  0; win_width[5] <= 20; win_height[5] <= 15;
-		win_left[6] <= 3; win_top[6] <= 10; win_width[6] <=  5; win_height[6] <=  3;
-		win_left[7] <= 3; win_top[7] <= 10; win_width[7] <=  5; win_height[7] <=  3;
+		`SET_WIN(1, 3, 10, 5, 3);
+		`SET_WIN(2, 3, 10, 5, 3);
+		`SET_WIN(3, 3, 10, 5, 3);
+		`SET_WIN(4, 3, 10, 5, 3);
+		`SET_WIN(5, 3, 10, 5, 3);
+		`SET_WIN(6, 3, 10, 5, 3);
+		`SET_WIN(7, 3, 10, 5, 3);
 	end
 	else begin
 		fsync     <= 0;
 		fsync_cnt <= fsync_cnt - 1;
 	end
-end
-
-initial begin
-	m_random  <= 1;
-	m_enprint <= (1 << 0);
-
-	s_width  <= 20;
-	s_height <= 15;
-
-	s_dst_bmp[0] <= 8'b00000001;
-	s_dst_bmp[1] <= 8'b00000010;
-	s_dst_bmp[2] <= 8'b00000000;
-	s_dst_bmp[3] <= 8'b00000000;
-	s_dst_bmp[4] <= 8'b00000000;
-	s_dst_bmp[5] <= 8'b00000000;
-	s_dst_bmp[6] <= 8'b00000000;
-	s_dst_bmp[7] <= 8'b00000000;
 end
 
 generate

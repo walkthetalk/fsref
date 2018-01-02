@@ -76,7 +76,7 @@ module axis_generator #
 	output reg  m_axis_tvalid,
 	output wire [C_PIXEL_WIDTH-1:0] m_axis_tdata,
 	output wire [C_WIN_NUM:0]       m_axis_tuser,
-	output reg  m_axis_tlast,
+	output wire m_axis_tlast,
 	input  wire m_axis_tready
 );
 	localparam integer C_MAX_WIN_NUM = 8;
@@ -91,50 +91,44 @@ module axis_generator #
 
 	wire cupdate;
 	wire rupdate;
+
+	reg m_clast;
+	reg m_rlast;
+	assign m_axis_tlast = m_clast;
+	reg m_clast_next;
+	reg m_rlast_next;
+	always @ (posedge clk) begin
+		if (resetn == 1'b0)
+			m_rlast <= 1;
+		else if (rupdate)
+			m_rlast <= m_rlast_next;
+	end
+	always @ (posedge clk) begin
+		if (resetn == 1'b0)
+			m_clast <= 1;
+		else if (cupdate)
+			m_clast <= m_clast_next;
+	end
+
+	wire m_plast;
+	assign m_plast = m_clast & m_rlast;
 generate
 if (C_EXT_FSYNC) begin
-	assign cupdate = (m_axis_tvalid ? m_axis_tready : fsync);
-	assign rupdate = (m_axis_tvalid ? (m_axis_tready && m_axis_tlast) : fsync);
+	assign cupdate = ((m_clast & m_rlast) ? fsync : m_axis_tready);
+	assign rupdate = m_clast && (m_rlast ? fsync : m_axis_tready);
 
 	always @ (posedge clk) begin
 		if (resetn == 1'b0)
 			m_axis_tvalid <= 0;
 		else if (fsync)
 			m_axis_tvalid <= 1;
-		else if (m_axis_tvalid && m_axis_tready && m_axis_tlast
-			&& ridx == height - 1)
+		else if (m_axis_tready && m_plast)
 			m_axis_tvalid <= 0;
-	end
-
-	always @ (posedge clk) begin
-		if (resetn == 1'b0)
-			cidx_next <= 0;
-		else if (cidx_next == 0 && ridx_next == 0 && ~fsync)
-			cidx_next <= 0;
-		else if (cupdate) begin
-			if (cidx_next == width - 1)
-				cidx_next <= 0;
-			else
-				cidx_next <= cidx_next + 1;
-		end
-	end
-
-	always @ (posedge clk) begin
-		if (resetn == 1'b0)
-			ridx_next <= 0;
-		else if (ridx_next == 0 && ~fsync)
-			ridx_next <= 0;
-		else if (rupdate) begin
-			if (ridx_next == height - 1)
-				ridx_next <= 0;
-			else
-				ridx_next <= ridx_next + 1;
-		end
 	end
 end
 else begin
-	assign cupdate = ~m_axis_tvalid || m_axis_tready;
-	assign rupdate = ~m_axis_tvalid || (m_axis_tready && m_axis_tlast);
+	assign cupdate = (~m_axis_tvalid || m_axis_tready);
+	assign rupdate = m_clast && (~m_axis_tvalid || m_axis_tready);
 
 	always @ (posedge clk) begin
 		if (resetn == 1'b0)
@@ -142,30 +136,36 @@ else begin
 		else
 			m_axis_tvalid <= 1;
 	end
+end
+endgenerate
 
 	always @ (posedge clk) begin
-		if (resetn == 1'b0)
+		if (resetn == 1'b0) begin
 			cidx_next <= 0;
+			m_clast_next <= (width == 1);
+		end
 		else if (cupdate) begin
-			if (cidx_next == width - 1)
+			if (m_clast_next)
 				cidx_next <= 0;
 			else
 				cidx_next <= cidx_next + 1;
+			m_clast_next <= (width == 1 || cidx_next == (width - 2));
 		end
 	end
 
 	always @ (posedge clk) begin
-		if (resetn == 1'b0)
+		if (resetn == 1'b0) begin
 			ridx_next <= 0;
+			m_rlast_next <= (height == 1);
+		end
 		else if (rupdate) begin
-			if (ridx_next == height - 1)
+			if (m_rlast_next)
 				ridx_next <= 0;
 			else
 				ridx_next <= ridx_next + 1;
+			m_rlast_next <= (height == 1 || ridx_next == (height - 2));
 		end
 	end
-end
-endgenerate
 
 	always @ (posedge clk) begin
 		if (resetn == 1'b0)
@@ -181,12 +181,6 @@ endgenerate
 			ridx <= ridx_next;
 	end
 
-	always @ (posedge clk) begin
-		if (resetn == 1'b0)
-			m_axis_tlast <= 0;
-		else if (cupdate)
-			m_axis_tlast <= (cidx_next == width - 1);
-	end
 	always @ (posedge clk) begin
 		if (resetn == 1'b0) begin
 			m_tuser <= 0;
@@ -250,6 +244,9 @@ endgenerate
 						cpixel_need[i] <= 0;
 					else if (cidx_next == win_left[i])
 						cpixel_need[i] <= 1;
+					/// NOTE: only need when EXT_FSYNC
+					else if (m_clast)
+						cpixel_need[i] <= 0;
 				end
 			end
 			always @ (posedge clk) begin
@@ -260,6 +257,9 @@ endgenerate
 						rpixel_need[i] <= 0;
 					else if (ridx_next == win_top[i])
 						rpixel_need[i] <= 1;
+					/// NOTE: only need when EXT_FSYNC
+					else if (m_rlast)
+						rpixel_need[i] <= 0;
 				end
 			end
 			assign s_need[i] = (cpixel_need[i] & rpixel_need[i]);
