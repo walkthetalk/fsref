@@ -114,9 +114,9 @@ module axis_relay #
 			2'b00, 2'b10:
 				s_axis_tready <= 1;
 			2'b01:
-				s_axis_tready <= m_axis_tready;
+				s_axis_tready <= (~s_axis_tready || m_axis_tready);
 			2'b11:
-				s_axis_tready <= 0;
+				s_axis_tready <= (~s_axis_tready && m_axis_tready);
 			endcase
 		end
 	end
