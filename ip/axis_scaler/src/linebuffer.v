@@ -8,6 +8,7 @@ module linebuffer #(
 	input  wire [C_ADDRESS_WIDTH-1:0] a0,
 	input  wire [C_DATA_WIDTH-1   :0] d0,
 
+	input  wire                       r1,
 	input  wire [C_ADDRESS_WIDTH-1:0] a1,
 	output reg  [C_DATA_WIDTH-1   :0] q1
 );
@@ -18,7 +19,8 @@ module linebuffer #(
 			ram[a0] <= d0;
 	end
 	always @ (posedge clk) begin
-		q1 <= ram[a1];
+		if (r1)
+			q1 <= ram[a1];
 	end
 
 endmodule

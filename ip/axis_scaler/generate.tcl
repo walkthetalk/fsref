@@ -151,16 +151,16 @@ pip_add_usr_par [ipx::current_core] {C_MW_WIDTH} {
 	value_format long
 }
 
-pip_add_usr_par [ipx::current_core] {C_TEST} {
-	display_name {Enable Test}
-	tooltip {Enable Test}
+pip_add_usr_par [ipx::current_core] {C_OUT_RELAY} {
+	display_name {Enable out relay}
+	tooltip {Enable out relay}
 	widget {checkBox}
 } {
 	value_resolve_type user
-	value false
+	value true
 	value_format bool
 } {
-	value false
+	value true
 	value_format bool
 }
 
