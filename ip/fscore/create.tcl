@@ -55,18 +55,6 @@ proc create_fscore {
 	] [get_bd_cells $mname/axis_scaler_*]
 
 	startgroup
-	create_bd_cell -type ip -vlnv $VENDOR:$LIBRARY:axis_relay:$VERSION $mname/axis_relay_0
-	endgroup
-	startgroup
-	create_bd_cell -type ip -vlnv $VENDOR:$LIBRARY:axis_relay:$VERSION $mname/axis_relay_1
-	endgroup
-	startgroup
-	set_property -dict [list \
-		CONFIG.C_PIXEL_WIDTH $pixel_width \
-	] [get_bd_cells $mname/axis_relay_*]
-	endgroup
-
-	startgroup
 	create_bd_cell -type ip -vlnv $VENDOR:$LIBRARY:axis_bayer_extractor:$VERSION $mname/axis_bayer_extractor_0
 	endgroup
 	startgroup
@@ -162,12 +150,10 @@ proc create_fscore {
 		$mname/pvdma_T/M_AXIS           $mname/pblender/ST_AXIS
 		$mname/pvdma_0/M_AXIS           $mname/axis_window_0/S_AXIS
 		$mname/axis_window_0/M_AXIS     $mname/axis_scaler_0/S_AXIS
-		$mname/axis_scaler_0/M_AXIS	$mname/axis_relay_0/S_AXIS
-		$mname/axis_relay_0/M_AXIS	$mname/pblender/S0_AXIS
+		$mname/axis_scaler_0/M_AXIS	$mname/pblender/S0_AXIS
 		$mname/pvdma_1/M_AXIS           $mname/axis_window_1/S_AXIS
 		$mname/axis_window_1/M_AXIS     $mname/axis_scaler_1/S_AXIS
-		$mname/axis_scaler_1/M_AXIS	$mname/axis_relay_1/S_AXIS
-		$mname/axis_relay_1/M_AXIS	$mname/pblender/S1_AXIS
+		$mname/axis_scaler_1/M_AXIS	$mname/pblender/S1_AXIS
 		$mname/fsctl/S0_BUF_ADDR        $mname/pvdma_0/BUF_ADDR
 		$mname/fsctl/S1_BUF_ADDR        $mname/pvdma_1/BUF_ADDR
 		$mname/fsctl/S0_MBUF_R          $mname/pvdma_0/MBUF_R
@@ -243,7 +229,6 @@ proc create_fscore {
 		$mname/pvdma_0/soft_resetn
 		$mname/axis_window_0/resetn
 		$mname/axis_scaler_0/resetn
-		$mname/axis_relay_0/resetn
 		$mname/axis_bayer_extractor_0/resetn
 		$mname/axis_reshaper_0/resetn
 	}]
@@ -252,7 +237,6 @@ proc create_fscore {
 		$mname/pvdma_1/soft_resetn
 		$mname/axis_window_1/resetn
 		$mname/axis_scaler_1/resetn
-		$mname/axis_relay_1/resetn
 		$mname/axis_bayer_extractor_1/resetn
 		$mname/axis_reshaper_1/resetn
 	}]
@@ -289,8 +273,6 @@ proc create_fscore {
 		$mname/axis_window_1/clk
 		$mname/axis_scaler_0/clk
 		$mname/axis_scaler_1/clk
-		$mname/axis_relay_0/clk
-		$mname/axis_relay_1/clk
 		$mname/axis_bayer_extractor_0/clk
 		$mname/axis_bayer_extractor_1/clk
 		$mname/axis_reshaper_0/clk
