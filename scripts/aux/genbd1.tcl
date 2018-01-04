@@ -57,14 +57,13 @@ endgroup
 startgroup
 create_bd_cell -type ip -vlnv xilinx.com:ip:v_axi4s_vid_out:4.0 videoout
 endgroup
-# @note: must use slave timing mode. for we have not enough time for processing
-#        extra unused pixels in 'axis_window'.
+# @note: use mast mode, don't allow auto adjust phase between in/out
 startgroup
 set_property -dict [list \
     CONFIG.C_S_AXIS_VIDEO_FORMAT.VALUE_SRC USER \
     CONFIG.C_S_AXIS_VIDEO_DATA_WIDTH.VALUE_SRC USER \
     CONFIG.C_HAS_ASYNC_CLK {1} \
-    CONFIG.C_VTG_MASTER_SLAVE {0} \
+    CONFIG.C_VTG_MASTER_SLAVE {1} \
 ] [get_bd_cells videoout]
 endgroup
 # 5. vtc
