@@ -35,18 +35,49 @@ create_bd_intf_pin -mode Slave -vlnv ocfb:interface:reg_ctl_rtl:1.0 fscore/S_REG
 connect_bd_intf_net [get_bd_intf_pins fscore/S_REG_CTL] [get_bd_intf_pins fscore/fsctl/S_REG_CTL]
 create_bd_intf_port -mode Slave -vlnv ocfb:interface:reg_ctl_rtl:1.0 S_REG_CTL
 connect_bd_intf_net [get_bd_intf_ports S_REG_CTL] -boundary_type upper [get_bd_intf_pins fscore/S_REG_CTL]
+make_bd_pins_external  [get_bd_pins videoout/underflow]
 
-# block ram
+# remove stream 2
 startgroup
-create_bd_cell -type ip -vlnv xilinx.com:ip:axi_bram_ctrl:4.0 axi_bram_ctrl_0
-set_property -dict [list CONFIG.DATA_WIDTH {64} CONFIG.ECC_TYPE {0} CONFIG.SINGLE_PORT_BRAM {1}] [get_bd_cells axi_bram_ctrl_0]
+delete_bd_objs [get_bd_intf_nets fscore/axis_window_1_M_AXIS] [get_bd_intf_nets fscore/axis_scaler_1_M_AXIS] [get_bd_intf_nets fscore/fsctl_S1_WIN] [get_bd_intf_nets fscore/pvdma_1_M_AXIS] [get_bd_intf_nets fscore/fsctl_S1_SCALE] [get_bd_cells fscore/axis_scaler_1] [get_bd_cells fscore/axis_window_1]
+delete_bd_objs [get_bd_intf_nets fscore/pvdma_1_M_AXI] [get_bd_nets fscore/fsctl_s1_soft_resetn] [get_bd_intf_nets fscore/fsctl_S1_MBUF_R] [get_bd_intf_nets fscore/fsctl_S1_BUF_ADDR] [get_bd_intf_nets fscore/fsctl_S1_SIZE] [get_bd_nets fscore/pvdma_1_wr_done] [get_bd_cells fscore/pvdma_1]
 endgroup
-copy_bd_objs /  [get_bd_cells {axi_bram_ctrl_0}]
-copy_bd_objs /  [get_bd_cells {axi_bram_ctrl_0}]
-connect_bd_intf_net -boundary_type upper [get_bd_intf_pins fscore/M0_AXI] [get_bd_intf_pins axi_bram_ctrl_0/S_AXI]
-connect_bd_intf_net -boundary_type upper [get_bd_intf_pins fscore/M1_AXI] [get_bd_intf_pins axi_bram_ctrl_1/S_AXI]
-connect_bd_intf_net -boundary_type upper [get_bd_intf_pins fscore/M2_AXI] [get_bd_intf_pins axi_bram_ctrl_2/S_AXI]
+startgroup
+set_property -dict [list CONFIG.C_BR_INITOR_NBR {0} CONFIG.C_MOTOR_NBR {0} CONFIG.C_PWM_NBR {0}] [get_bd_cells fscore/fsctl]
+endgroup
+save_bd_design
 
-connect_bd_net [get_bd_ports clk] [get_bd_pins axi_bram_ctrl_0/s_axi_aclk]
-connect_bd_net [get_bd_ports clk] [get_bd_pins axi_bram_ctrl_1/s_axi_aclk]
-connect_bd_net [get_bd_ports clk] [get_bd_pins axi_bram_ctrl_2/s_axi_aclk]
+delete_bd_objs [get_bd_intf_nets fscore/pvdma_0_M_AXI] [get_bd_intf_nets fscore/pvdma_0_M_AXIS] [get_bd_intf_nets fscore/fsctl_S0_MBUF_R] [get_bd_intf_nets fscore/fsctl_S0_BUF_ADDR] [get_bd_intf_nets fscore/fsctl_S0_SIZE] [get_bd_nets fscore/pvdma_0_wr_done] [get_bd_cells fscore/pvdma_0]
+delete_bd_objs [get_bd_intf_nets fscore/pvdma_T_M_AXI] [get_bd_intf_nets fscore/pvdma_T_M_AXIS] [get_bd_nets fscore/fsctl_dispbuf0_addr] [get_bd_intf_nets fscore/fsctl_ST_SIZE] [get_bd_cells fscore/pvdma_T]
+delete_bd_objs [get_bd_intf_pins fscore/M1_AXI] [get_bd_intf_pins fscore/M0_AXI]
+startgroup
+make_bd_intf_pins_external  [get_bd_intf_pins fscore/pblender/ST_AXIS] [get_bd_intf_pins fscore/axis_window_0/S_AXIS]
+endgroup
+
+startgroup
+create_bd_pin -dir O fscore/st_soft_resetn
+connect_bd_net [get_bd_pins fscore/st_soft_resetn] [get_bd_pins fscore/fsctl/st_soft_resetn]
+endgroup
+startgroup
+create_bd_pin -dir O fscore/s0_soft_resetn
+connect_bd_net [get_bd_pins fscore/s0_soft_resetn] [get_bd_pins fscore/fsctl/s0_soft_resetn]
+endgroup
+startgroup
+create_bd_pin -dir O fscore/o_fsync
+connect_bd_net [get_bd_pins fscore/o_fsync] [get_bd_pins fscore/fsctl/o_fsync]
+endgroup
+startgroup
+make_bd_pins_external  [get_bd_pins fscore/s0_soft_resetn] [get_bd_pins fscore/st_soft_resetn] [get_bd_pins fscore/o_fsync]
+endgroup
+
+startgroup
+make_bd_pins_external  [get_bd_pins fscore/fsctl/out_ce]
+endgroup
+disconnect_bd_net /xlconstant_0_dout [get_bd_pins videoout/vid_io_out_ce]
+connect_bd_net [get_bd_pins videoout/vid_io_out_ce] [get_bd_pins fscore/out_ce]
+
+startgroup
+set_property -dict [list CONFIG.C_TEST {true}] [get_bd_cells fscore/pblender/blender0]
+set_property -dict [list CONFIG.C_TEST {true}] [get_bd_cells fscore/pblender/blender1]
+set_property -dict [list CONFIG.C_TEST {true}] [get_bd_cells fscore/pblender/blender2]
+endgroup

@@ -19,19 +19,22 @@ save_bd_design
 make_wrapper -files [get_files $origin_dir/fsref.srcs/sources_1/bd/bd1/bd1.bd] -top
 add_files -norecurse $origin_dir/fsref.srcs/sources_1/bd/bd1/hdl/bd1_wrapper.v
 
-create_bd_design "simbd"
+create_bd_design -srcset sim_1 "simbd"
 source $origin_dir/scripts/aux/genbd1.tcl
 source $origin_dir/scripts/aux/gensimbd.tcl
 save_bd_design
-make_wrapper -files [get_files $origin_dir/fsref.srcs/sources_1/bd/simbd/simbd.bd] -top
-add_files -norecurse $origin_dir/fsref.srcs/sources_1/bd/simbd/hdl/simbd_wrapper.v
+make_wrapper -files [get_files $origin_dir/fsref.srcs/sim_1/bd/simbd/simbd.bd] -top
+add_files -norecurse $origin_dir/fsref.srcs/sim_1/bd/simbd/hdl/simbd_wrapper.v
+set_property used_in_synthesis      false [get_files $origin_dir/fsref.srcs/sim_1/bd/simbd/hdl/simbd_wrapper.v]
+set_property used_in_implementation false [get_files $origin_dir/fsref.srcs/sim_1/bd/simbd/hdl/simbd_wrapper.v]
 
 # set property of bd1
 set_property used_in_simulation false [get_files  $origin_dir/fsref.srcs/sources_1/bd/bd1/bd1.bd]
 set_property used_in_simulation false [get_files  $origin_dir/fsref.srcs/sources_1/bd/bd1/hdl/bd1_wrapper.v]
-
 update_compile_order -fileset sources_1
-#update_compile_order -fileset sim_1
+
+add_files -fileset sim_1 -norecurse -scan_for_includes $origin_dir/sim/test_simbd.v
+update_compile_order -fileset sim_1
 
 # xdc
 set xdc_file $origin_dir/ip/top.xdc
