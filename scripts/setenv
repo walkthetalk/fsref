@@ -12,3 +12,8 @@ for item in ${dirs[@]};do
 		break
 	fi
 done
+
+if ! [ -f "/usr/bin/gmake" ]; then
+	echo "ERROR: please provide 'gmake': sudo ln -s make /usr/bin/gmake"
+	exit 1
+fi
