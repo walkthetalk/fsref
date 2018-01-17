@@ -17,8 +17,9 @@ if [ ! -d "${out_dir}" ]; then
 fi
 
 cd ${kernel_src}
-quilt import ${dir_main}/scripts/kernelpatch/0001-first-running-version.patch
-quilt push
+#quilt import ${dir_main}/scripts/kernelpatch/0001-first-running-version.patch
+#quilt push
+cp ${dir_main}/scripts/kernelpatch/fsref_defconfig ${kernel_src}/arch/arm/configs/
 
 if [ "${ARCH}" != "arm" ]; then
 	echo "ERROR: please source env file first!"
