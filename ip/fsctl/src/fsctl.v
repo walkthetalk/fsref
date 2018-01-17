@@ -74,6 +74,8 @@ module fsctl #
 
 	output wire [C_IMG_WBITS-1:0] out_width,
 	output wire [C_IMG_HBITS-1:0] out_height,
+
+	output reg                    out_ce,
 /// stream top
 	output reg                    st_soft_resetn,
 	output wire [C_IMG_WBITS-1:0] st_width,
@@ -698,6 +700,13 @@ module fsctl #
 
 	always @ (posedge o_clk) begin
 		st_soft_resetn <= 1'b1;
+	end
+
+	always @ (posedge o_clk) begin
+		if (o_resetn == 1'b0)
+			out_ce <= 0;
+		else if (o_fsync)
+			out_ce <= 1;
 	end
 
 	always @ (posedge o_clk) begin
