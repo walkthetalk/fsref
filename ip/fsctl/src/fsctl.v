@@ -428,21 +428,21 @@ module fsctl #
 	`DEFREG_DISP(1, 4, 2, s1_dst_bmp, 0)
 
 	/// STREAM INT ENABLE
-	`DEFREG_INT_EN(2, 4, s0_wr_done)
-	`DEFREG_INT_EN(2, 8, s1_wr_done)
+	`DEFREG_INT_EN(2, 0, s0_wr_done)
+	`DEFREG_INT_EN(2, 4, s1_wr_done)
 
 	`DEFREG_DIRECT_IN_D1(1, s0_wr_done)
 	`DEFREG_DIRECT_IN_D1(1, s1_wr_done)
 
 	/// STREAM INT STATE
-	`DEFREG_INT_STATE(3, 4, s0_wr_done, 1)
-	`DEFREG_INT_STATE(3, 8, s1_wr_done, 1)
-	`WR_SYNC_REG(3, 4, 1, s0_rd_en, 0, 1)
-	`WR_SYNC_REG(3, 8, 1, s1_rd_en, 0, 1)
+	`DEFREG_INT_STATE(3, 0, s0_wr_done, 1)
+	`DEFREG_INT_STATE(3, 4, s1_wr_done, 1)
+	`WR_SYNC_REG(3, 0, 1, s0_rd_en, 0, 1)
+	`WR_SYNC_REG(3, 4, 1, s1_rd_en, 0, 1)
 
 	/// STREAM BUF INDEX
-	`DEFREG_DIRECT_IN(4, 4, C_BUF_IDX_WIDTH, s0_rd_buf_idx)
-	`DEFREG_DIRECT_IN(4, 8, C_BUF_IDX_WIDTH, s1_rd_buf_idx)
+	`DEFREG_DIRECT_IN(4, 0, C_BUF_IDX_WIDTH, s0_rd_buf_idx)
+	`DEFREG_DIRECT_IN(4, 4, C_BUF_IDX_WIDTH, s1_rd_buf_idx)
 
 	`DEFREG_IMGSIZE( 5, s0_width,              0,  s0_height,              0)
 	`DEFREG_IMGSIZE( 6, s0_win_left,           0,  s0_win_top,             0)
