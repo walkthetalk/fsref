@@ -31,9 +31,8 @@
 			_name <= (_autoclr ? 0 : _name); \
 	end
 
-`define DEFREG(_ridx, _bstart, _bwidth, _name, _defv, _autoclr) \
+`define DEFREG_WO(_ridx, _bstart, _bwidth, _name, _defv, _autoclr) \
 	reg [_bwidth-1 : 0] r_``_name; \
-	assign slv_reg[_ridx][_bstart + _bwidth - 1 : _bstart] = r_``_name; \
 	always @ (posedge clk) begin \
 		if (resetn == 1'b0) \
 			r_``_name <= _defv; \
@@ -43,20 +42,24 @@
 			r_``_name <= (_autoclr ? 0 : r_``_name); \
 	end
 
+`define DEFREG_RW(_ridx, _bstart, _bwidth, _name, _defv, _autoclr) \
+	`DEFREG_WO(_ridx, _bstart, _bwidth, _name, _defv, _autoclr) \
+	assign slv_reg[_ridx][_bstart + _bwidth - 1 : _bstart] = r_``_name; \
+
 `define DEFREG_FIXED(_ridx, _bstart, _bwidth, _name, _defv) \
 	wire [_bwidth-1 : 0] r_``_name; \
 	assign slv_reg[_ridx][_bstart + _bwidth - 1 : _bstart] = r_``_name; \
 	assign r_``_name = _defv;
 
 `define DEFREG_DIRECT_OUT(_ridx, _bstart, _bwidth, _name, _defv, _autoclr) \
-	`DEFREG(_ridx, _bstart, _bwidth, _name, _defv, _autoclr) \
+	`DEFREG_RW(_ridx, _bstart, _bwidth, _name, _defv, _autoclr) \
 	assign _name = r_``_name;
 
 `define DEFREG_DIRECT_IN(_ridx, _bstart, _bwidth, _name) \
 	assign slv_reg[_ridx][_bstart + _bwidth - 1 : _bstart] = _name;
 
 `define DEFREG_EXTERNAL(_ridx, _bstart, _bwidth, _name, _defv) \
-	`DEFREG(_ridx, _bstart, _bwidth, _name, _defv, 0) \
+	`DEFREG_RW(_ridx, _bstart, _bwidth, _name, _defv, 0) \
 	always @ (posedge o_clk) begin \
 		if (o_resetn == 1'b0) \
 			_name <= _defv; \
@@ -65,7 +68,7 @@
 	end
 
 `define DEFREG_INTERNAL(_ridx, _bstart, _bwidth, _name, _defv) \
-	`DEFREG(_ridx, _bstart, _bwidth, _name, _defv, 0) \
+	`DEFREG_RW(_ridx, _bstart, _bwidth, _name, _defv, 0) \
 	wire _name; \
 	assign _name = r_``_name; \
 
@@ -114,7 +117,7 @@
 
 /// imagesize aux macro
 `define DEFREG_DISP(_ridx, _bstart, _bwidth, _name, _defv) \
-	`DEFREG(_ridx, _bstart, _bwidth, _name, _defv, 0) \
+	`DEFREG_RW(_ridx, _bstart, _bwidth, _name, _defv, 0) \
 	always @ (posedge o_clk) begin \
 		if (o_resetn == 1'b0) \
 			_name <= _defv; \
