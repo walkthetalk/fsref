@@ -131,10 +131,8 @@ for {set i 0} {$i < 2} {incr i} {
 	}] [subst {
 		LEFT    s[set i]_win_left
 		WIDTH   s[set i]_win_width
-		RIGHTE  s[set i]_win_righte
 		TOP     s[set i]_win_top
 		HEIGHT  s[set i]_win_height
-		BOTTOME s[set i]_win_bottome
 	}]
 
 	pip_add_bus_if [ipx::current_core] S[set i]_SCALE [subst {
@@ -155,10 +153,8 @@ for {set i 0} {$i < 2} {incr i} {
 	}] [subst {
 		LEFT    s[set i]_dst_left
 		WIDTH   s[set i]_dst_width
-		RIGHTE  s[set i]_dst_righte
 		TOP     s[set i]_dst_top
 		HEIGHT  s[set i]_dst_height
-		BOTTOME s[set i]_dst_bottome
 	}]
 }
 

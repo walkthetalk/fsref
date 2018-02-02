@@ -89,10 +89,8 @@ module fsctl #
 
 	output reg [C_IMG_WBITS-1:0]       s0_win_left,
 	output reg [C_IMG_WBITS-1:0]       s0_win_width,
-	output reg [C_IMG_WBITS-1:0]       s0_win_righte,
 	output reg [C_IMG_HBITS-1:0]       s0_win_top,
 	output reg [C_IMG_HBITS-1:0]       s0_win_height,
-	output reg [C_IMG_WBITS-1:0]       s0_win_bottome,
 
 	output wire [C_IMG_WBITS-1:0]      s0_scale_src_width,
 	output wire [C_IMG_HBITS-1:0]      s0_scale_src_height,
@@ -101,10 +99,8 @@ module fsctl #
 
 	output reg [C_IMG_WBITS-1:0]       s0_dst_left,
 	output reg [C_IMG_WBITS-1:0]       s0_dst_width,
-	output reg [C_IMG_WBITS-1:0]       s0_dst_righte,
 	output reg [C_IMG_HBITS-1:0]       s0_dst_top,
 	output reg [C_IMG_HBITS-1:0]       s0_dst_height,
-	output reg [C_IMG_WBITS-1:0]       s0_dst_bottome,
 
 	input  wire                        s0_wr_done,
 	output reg                         s0_rd_en,
@@ -117,10 +113,8 @@ module fsctl #
 
 	output reg [C_IMG_WBITS-1:0]       s1_win_left,
 	output reg [C_IMG_WBITS-1:0]       s1_win_width,
-	output reg [C_IMG_WBITS-1:0]       s1_win_righte,
 	output reg [C_IMG_HBITS-1:0]       s1_win_top,
 	output reg [C_IMG_HBITS-1:0]       s1_win_height,
-	output reg [C_IMG_WBITS-1:0]       s1_win_bottome,
 
 	output wire [C_IMG_WBITS-1:0]      s1_scale_src_width,
 	output wire [C_IMG_HBITS-1:0]      s1_scale_src_height,
@@ -129,10 +123,8 @@ module fsctl #
 
 	output reg [C_IMG_WBITS-1:0]       s1_dst_left,
 	output reg [C_IMG_WBITS-1:0]       s1_dst_width,
-	output reg [C_IMG_WBITS-1:0]       s1_dst_righte,
 	output reg [C_IMG_HBITS-1:0]       s1_dst_top,
 	output reg [C_IMG_HBITS-1:0]       s1_dst_height,
-	output reg [C_IMG_WBITS-1:0]       s1_dst_bottome,
 
 	input  wire                        s1_wr_done,
 	output reg                         s1_rd_en,
@@ -451,20 +443,12 @@ module fsctl #
 	`DEFREG_IMGSIZE( 7, s0_win_width,          0,  s0_win_height,          0)
 	`DEFREG_IMGSIZE( 8, s0_dst_left,           0,  s0_dst_top,             0)
 	`DEFREG_IMGSIZE( 9, s0_dst_width,          0,  s0_dst_height,          0)
-	`DEFSUM_DISP(s0_win_righte,  0, s0_win_left, s0_win_width)
-	`DEFSUM_DISP(s0_win_bottome, 0, s0_win_top,  s0_win_height)
-	`DEFSUM_DISP(s0_dst_righte,  0, s0_dst_left, s0_dst_width)
-	`DEFSUM_DISP(s0_dst_bottome, 0, s0_dst_top,  s0_dst_height)
 
 	`DEFREG_IMGSIZE(10, s1_width,              0,  s1_height,              0)
 	`DEFREG_IMGSIZE(11, s1_win_left,           0,  s1_win_top,             0)
 	`DEFREG_IMGSIZE(12, s1_win_width,          0,  s1_win_height,          0)
 	`DEFREG_IMGSIZE(13, s1_dst_left,           0,  s1_dst_top,             0)
 	`DEFREG_IMGSIZE(14, s1_dst_width,          0,  s1_dst_height,          0)
-	`DEFSUM_DISP(s1_win_righte,  0, s1_win_left, s1_win_width)
-	`DEFSUM_DISP(s1_win_bottome, 0, s1_win_top,  s1_win_height)
-	`DEFSUM_DISP(s1_dst_righte,  0, s1_dst_left, s1_dst_width)
-	`DEFSUM_DISP(s1_dst_bottome, 0, s1_dst_top,  s1_dst_height)
 
 /// blockram initor
 	reg br_wr_en;
