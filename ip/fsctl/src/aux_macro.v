@@ -60,7 +60,7 @@
 	`DEFREG_RW(_ridx, _bstart, _bwidth, _name, _defv, _autoclr) \
 	assign _name = r_``_name;
 
-`define DEFREG_EXT_IN(_ridx, _bstart, _bwidth, _name) \
+`define DEFREG_DIRECT_IN(_ridx, _bstart, _bwidth, _name) \
 	assign slv_reg[_ridx][_bstart + _bwidth - 1 : _bstart] = _name;
 
 `define DEFREG_EXTERNAL(_ridx, _bstart, _bwidth, _name, _defv) \
@@ -81,7 +81,7 @@
 	`DEFREG_INTERNAL(_ridx, _bitIdx, 1, int_en_``_name, 0)
 
 
-`define DEFREG_EXT_IN_D1(_bwidth, _name) \
+`define DEFREG_DIRECT_IN_D1(_bwidth, _name) \
 	reg [_bwidth-1 : 0] _name``_d1; \
 	always @ (posedge o_clk) begin \
 		_name``_d1 <= _name; \

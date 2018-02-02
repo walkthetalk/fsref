@@ -15,6 +15,8 @@ module fsctl #
 	parameter integer C_IMG_WDEF = 320,
 	parameter integer C_IMG_HDEF = 240,
 
+	parameter integer C_CMOS_NBR = 2,
+
 	parameter integer C_BUF_ADDR_WIDTH = 32,
 	parameter integer C_BUF_IDX_WIDTH = 2,
 	parameter integer C_DISPBUF0_ADDR  = 'h3FF00000,
@@ -425,8 +427,8 @@ module fsctl #
 	`DEFREG_INT_EN(2, 0, s0_wr_done)
 	`DEFREG_INT_EN(2, 4, s1_wr_done)
 
-	`DEFREG_EXT_IN_D1(1, s0_wr_done)
-	`DEFREG_EXT_IN_D1(1, s1_wr_done)
+	`DEFREG_DIRECT_IN_D1(1, s0_wr_done)
+	`DEFREG_DIRECT_IN_D1(1, s1_wr_done)
 
 	/// STREAM INT STATE
 	`DEFREG_INT_STATE(3, 0, s0_wr_done, 1)
@@ -435,8 +437,8 @@ module fsctl #
 	`WR_SYNC_WIRE(3, 4, 1, s1_rd_en, 0, 1)
 
 	/// STREAM BUF INDEX
-	`DEFREG_EXT_IN(4, 0, C_BUF_IDX_WIDTH, s0_rd_buf_idx)
-	`DEFREG_EXT_IN(4, 4, C_BUF_IDX_WIDTH, s1_rd_buf_idx)
+	`DEFREG_DIRECT_IN(4, 0, C_BUF_IDX_WIDTH, s0_rd_buf_idx)
+	`DEFREG_DIRECT_IN(4, 4, C_BUF_IDX_WIDTH, s1_rd_buf_idx)
 
 	`DEFREG_IMGSIZE( 5, s0_width,              0,  s0_height,              0)
 	`DEFREG_IMGSIZE( 6, s0_win_left,           0,  s0_win_top,             0)
@@ -521,8 +523,8 @@ module fsctl #
 	/// MOTOR INT STATE  34
 	/// MOTOR STATE  35
 `define DEFREG_FOR_MOTOR_INT(_idx, _trigV, _name) \
-	`DEFREG_EXT_IN(35,  _idx, 1, _name) \
-	`DEFREG_EXT_IN_D1(1, _name) \
+	`DEFREG_DIRECT_IN(35,  _idx, 1, _name) \
+	`DEFREG_DIRECT_IN_D1(1, _name) \
 	`DEFREG_INT_STATE(34, _idx, _name, _trigV) \
 	`DEFREG_INT_EN(33, _idx, _name)
 
@@ -628,14 +630,14 @@ module fsctl #
 	localparam EN_PWM5 = (C_PWM_NBR > 5);
 	localparam EN_PWM6 = (C_PWM_NBR > 6);
 	localparam EN_PWM7 = (C_PWM_NBR > 7);
-	`COND(EN_PWM0, `DEFREG_EXT_IN(64, 0, 1, pwm0_def))
-	`COND(EN_PWM1, `DEFREG_EXT_IN(64, 1, 1, pwm1_def))
-	`COND(EN_PWM2, `DEFREG_EXT_IN(64, 2, 1, pwm2_def))
-	`COND(EN_PWM3, `DEFREG_EXT_IN(64, 3, 1, pwm3_def))
-	`COND(EN_PWM4, `DEFREG_EXT_IN(64, 4, 1, pwm4_def))
-	`COND(EN_PWM5, `DEFREG_EXT_IN(64, 5, 1, pwm5_def))
-	`COND(EN_PWM6, `DEFREG_EXT_IN(64, 6, 1, pwm6_def))
-	`COND(EN_PWM7, `DEFREG_EXT_IN(64, 7, 1, pwm7_def))
+	`COND(EN_PWM0, `DEFREG_DIRECT_IN(64, 0, 1, pwm0_def))
+	`COND(EN_PWM1, `DEFREG_DIRECT_IN(64, 1, 1, pwm1_def))
+	`COND(EN_PWM2, `DEFREG_DIRECT_IN(64, 2, 1, pwm2_def))
+	`COND(EN_PWM3, `DEFREG_DIRECT_IN(64, 3, 1, pwm3_def))
+	`COND(EN_PWM4, `DEFREG_DIRECT_IN(64, 4, 1, pwm4_def))
+	`COND(EN_PWM5, `DEFREG_DIRECT_IN(64, 5, 1, pwm5_def))
+	`COND(EN_PWM6, `DEFREG_DIRECT_IN(64, 6, 1, pwm6_def))
+	`COND(EN_PWM7, `DEFREG_DIRECT_IN(64, 7, 1, pwm7_def))
 	`COND(EN_PWM0, `DEFREG_DIRECT_OUT(65, 0, 1, pwm0_en, 0, 0))
 	`COND(EN_PWM1, `DEFREG_DIRECT_OUT(65, 1, 1, pwm1_en, 0, 0))
 	`COND(EN_PWM2, `DEFREG_DIRECT_OUT(65, 2, 1, pwm2_en, 0, 0))
