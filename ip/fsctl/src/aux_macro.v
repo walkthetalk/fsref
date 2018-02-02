@@ -31,6 +31,11 @@
 			_name <= (_autoclr ? 0 : _name); \
 	end
 
+`define WR_SYNC_WIRE(_ridx, _bstart, _bwidth, _name, _defv, _autoclr) \
+	reg[_bwidth - 1 : 0] r_``_name; \
+	assign _name = r_``_name; \
+	`WR_SYNC_REG(_ridx, _bstart, _bwidth, r_``_name, _defv, _autoclr)
+
 `define DEFREG_WO(_ridx, _bstart, _bwidth, _name, _defv, _autoclr) \
 	reg [_bwidth-1 : 0] r_``_name; \
 	always @ (posedge clk) begin \
