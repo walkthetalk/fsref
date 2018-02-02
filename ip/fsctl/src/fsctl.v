@@ -103,7 +103,7 @@ module fsctl #
 	output reg [C_IMG_HBITS-1:0]       s0_dst_height,
 
 	input  wire                        s0_wr_done,
-	output reg                         s0_rd_en,
+	output wire                        s0_rd_en,
 	input  wire [C_BUF_IDX_WIDTH-1:0]  s0_rd_buf_idx,
 /// stream 1
 	output reg                         s1_soft_resetn,
@@ -127,7 +127,7 @@ module fsctl #
 	output reg [C_IMG_HBITS-1:0]       s1_dst_height,
 
 	input  wire                        s1_wr_done,
-	output reg                         s1_rd_en,
+	output wire                        s1_rd_en,
 	input  wire [C_BUF_IDX_WIDTH-1:0]  s1_rd_buf_idx,
 
 /// blockram initor 0
@@ -431,8 +431,8 @@ module fsctl #
 	/// STREAM INT STATE
 	`DEFREG_INT_STATE(3, 0, s0_wr_done, 1)
 	`DEFREG_INT_STATE(3, 4, s1_wr_done, 1)
-	`WR_SYNC_REG(3, 0, 1, s0_rd_en, 0, 1)
-	`WR_SYNC_REG(3, 4, 1, s1_rd_en, 0, 1)
+	`WR_SYNC_WIRE(3, 0, 1, s0_rd_en, 0, 1)
+	`WR_SYNC_WIRE(3, 4, 1, s1_rd_en, 0, 1)
 
 	/// STREAM BUF INDEX
 	`DEFREG_DIRECT_IN(4, 0, C_BUF_IDX_WIDTH, s0_rd_buf_idx)
