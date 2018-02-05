@@ -60,13 +60,13 @@ pip_add_bus_if [ipx::current_core] BUF_ADDR [subst {
 	ADDR3 buf3_addr
 }
 
-pip_add_bus_if [ipx::current_core] intr {
-	abstraction_type_vlnv xilinx.com:signal:interrupt_rtl:1.0
-	bus_type_vlnv xilinx.com:signal:interrupt:1.0
-	interface_mode master
-} {
-	INTERRUPT intr
-}
+#pip_add_bus_if [ipx::current_core] intr {
+#	abstraction_type_vlnv xilinx.com:signal:interrupt_rtl:1.0
+#	bus_type_vlnv xilinx.com:signal:interrupt:1.0
+#	interface_mode master
+#} {
+#	INTERRUPT intr
+#}
 
 pip_add_bus_if [ipx::current_core] resetn {
 	abstraction_type_vlnv xilinx.com:signal:reset_rtl:1.0
