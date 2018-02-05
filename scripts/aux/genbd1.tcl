@@ -222,8 +222,6 @@ pip_connect_intf_net {
 
 # connect signal
 pip_connect_net [subst {
-	fscmos_0/vid_io_out_clk   videoin_0/vid_io_in_clk
-	fscmos_1/vid_io_out_clk   videoin_1/vid_io_in_clk
 	vtc/fsync_out             fscore/fsync
 }]
 
@@ -242,7 +240,8 @@ startgroup
 create_bd_port -type clk -dir O cmos0_xclk
 connect_bd_net [get_bd_pins cpu/FCLK_CLK3] [get_bd_ports cmos0_xclk]
 create_bd_port -dir I cmos0_pclk
-connect_bd_net [get_bd_pins /fscmos_0/cmos_pclk] [get_bd_ports cmos0_pclk]
+connect_bd_net [get_bd_pins /fscmos_0/cmos_pclk]      [get_bd_ports cmos0_pclk]
+connect_bd_net [get_bd_pins /videoin_0/vid_io_in_clk] [get_bd_ports cmos0_pclk]
 create_bd_port -dir I cmos0_href
 connect_bd_net [get_bd_pins /fscmos_0/cmos_href] [get_bd_ports cmos0_href]
 create_bd_port -dir I cmos0_vsync
@@ -254,7 +253,8 @@ startgroup
 create_bd_port -type clk -dir O cmos1_xclk
 connect_bd_net [get_bd_pins cpu/FCLK_CLK3] [get_bd_ports cmos1_xclk]
 create_bd_port -dir I cmos1_pclk
-connect_bd_net [get_bd_pins /fscmos_1/cmos_pclk] [get_bd_ports cmos1_pclk]
+connect_bd_net [get_bd_pins /fscmos_1/cmos_pclk]      [get_bd_ports cmos1_pclk]
+connect_bd_net [get_bd_pins /videoin_1/vid_io_in_clk] [get_bd_ports cmos1_pclk]
 create_bd_port -dir I cmos1_href
 connect_bd_net [get_bd_pins /fscmos_1/cmos_href] [get_bd_ports cmos1_href]
 create_bd_port -dir I cmos1_vsync

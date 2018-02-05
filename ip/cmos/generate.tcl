@@ -32,16 +32,6 @@ pip_add_bus_if [ipx::current_core] vid_io_out {
 	VSYNC vid_vsync
 }
 
-pip_add_bus_if [ipx::current_core] vid_io_out_clk {
-	abstraction_type_vlnv xilinx.com:signal:clock_rtl:1.0
-	bus_type_vlnv xilinx.com:signal:clock:1.0
-	interface_mode master
-} {
-	CLK vid_io_out_clk
-} {
-	ASSOCIATED_BUSIF vid_io_out
-}
-
 pip_add_usr_par [ipx::current_core] {C_DATA_WIDTH} {
 	display_name {Data Width}
 	tooltip {DATA WIDTH}

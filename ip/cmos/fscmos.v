@@ -35,12 +35,8 @@ module fscmos #
 	output wire		vid_hblank,
 	output wire		vid_hsync,
 	output wire		vid_vblank,
-	output wire		vid_vsync,
-
-	output wire		vid_io_out_clk
+	output wire		vid_vsync
 );
-
-	assign vid_io_out_clk = cmos_pclk;
 	assign vid_active_video= (cmos_href && ~cmos_vsync);
 	assign vid_data = cmos_data;
 	assign vid_hblank = ~cmos_href;
