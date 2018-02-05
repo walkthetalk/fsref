@@ -71,7 +71,7 @@
 	uio_fscore@43C00000 {
 		compatible = "generic-uio";
 		reg = < 0x43C00000 0x1000 >;
-		interrupts = < 0 61 0 >;
+		interrupts = < 0 29 0x4 >;
 		interrupt-parent = <&intc>;
 	};
 };
