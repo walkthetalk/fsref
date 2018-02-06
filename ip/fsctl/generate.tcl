@@ -97,8 +97,8 @@ for {set i 0} {$i < 8} {incr i} {
 	append_associate_busif o_clk_busif S[set i]_READ
 
 	pip_add_bus_if [ipx::current_core] s[set i]_wr_done [subst {
-		abstraction_type_vlnv $VENDOR:signal:data_rtl:1.0
-		bus_type_vlnv $VENDOR:signal:data:1.0
+		abstraction_type_vlnv xilinx.com:signal:data_rtl:1.0
+		bus_type_vlnv xilinx.com:signal:data:1.0
 		interface_mode slave
 		enablement_dependency {spirit:decode(id('MODELPARAM_VALUE.C_STREAM_NBR')) > $i}
 	}] [subst {
@@ -107,8 +107,8 @@ for {set i 0} {$i < 8} {incr i} {
 	append_associate_busif o_clk_busif s[set i]_wr_done
 
 	pip_add_bus_if [ipx::current_core] s[set i]_dst_bmp [subst {
-		abstraction_type_vlnv $VENDOR:signal:data_rtl:1.0
-		bus_type_vlnv $VENDOR:signal:data:1.0
+		abstraction_type_vlnv xilinx.com:signal:data_rtl:1.0
+		bus_type_vlnv xilinx.com:signal:data:1.0
 		interface_mode master
 		enablement_dependency {spirit:decode(id('MODELPARAM_VALUE.C_STREAM_NBR')) > $i}
 	}] [subst {
@@ -483,12 +483,12 @@ for {set i 0} {$i < 8} {incr i} {
 		enablement_tcl_expr {spirit:decode(id('MODELPARAM_VALUE.C_STREAM_NBR')) > $i}
 		value_bit_string_length 32
 		value_resolve_type user
-		value [format %#x {0x00100000}]
+		value {0x00100000}
 		value_format bitString
 		value_validation_type none
 	}] [subst {
 		value_bit_string_length 32
-		value [format %#x {0x00100000}]
+		value {0x00100000}
 		value_format bitString
 	}]
 }
