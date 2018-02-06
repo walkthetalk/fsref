@@ -1,0 +1,86 @@
+#!/usr/bin/env sh
+export PATH=$PATH:/mnt/sbin
+MEMCMD="./mem"
+
+cat fb1.pgm > /dev/fb1
+cat fb1.pgm > /dev/fb2
+echo -e "\033[9;0]" > /dev/tty1
+
+# MIO configuration
+getAddr() {
+	 echo  $((0xF8000700+$1*4))
+}
+
+WR() {
+	$MEMCMD `getAddr $1` w $2
+}
+
+WR 12 0x1640
+WR 13 0x1640
+WR 14 0x1640
+WR 15 0x1640 
+
+CHIP_ADDR=0x30
+I2CSET_BIN=i2cset
+for cmosidx in 0 1; do
+	for reginfo in 0x1280 \
+		0x0910 \
+		0x1e07 \
+		0x5f18 \
+		0x6904 \
+		0x652a \
+		0x680a \
+		0x3928 \
+		0x4d90 \
+		0xc180 \
+		0x0c30 \
+		0x6d02 \
+		0x96f1 \
+		0xbc68 \
+		0x1200 \
+		0x3b00 \
+		0x9780 \
+		0x1725 \
+		0x18A2 \
+		0x1901 \
+		0x1aCA \
+		0x030A \
+		0x3207 \
+		0x9800 \
+		0x9900 \
+		0x9a00 \
+		0x5700 \
+		0x58C8 \
+		0x59A0 \
+		0x4c13 \
+		0x4b36 \
+		0x3d3c \
+		0x3e03 \
+		0xbdA0 \
+		0xbec8 \
+		0x4e55 \
+		0x4f55 \
+		0x5055 \
+		0x5155 \
+		0x2455 \
+		0x2540 \
+		0x26a1 \
+		0x5c52 \
+		0x5d00 \
+		0x1101 \
+		0x2a98 \
+		0x2b06 \
+		0x2d00 \
+		0x2e00 \
+		0x13A5 \
+		0x1440 \
+		0x4a00 \
+		0x49ce \
+		0x2203 \
+		0x0900; do
+		regIdx=$(($reginfo/256))
+		regVal=$(($reginfo%256))
+		#echo $I2CSET_BIN $cmosidx $CHIP_ADDR $regIdx $regVal b
+		$I2CSET_BIN -y $cmosidx $CHIP_ADDR $regIdx $regVal b
+	done
+done
