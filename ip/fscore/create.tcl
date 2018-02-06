@@ -136,12 +136,19 @@ proc create_fscore {
 	startgroup
 	set_property -dict [list \
 		CONFIG.C_CORE_VERSION $coreversion \
+		CONFIG.C_STREAM_NBR 2 \
+		CONFIG.C_ST_ADDR 0x3FF00000 \
+		CONFIG.C_S0_ADDR 0x3F000000 \
+		CONFIG.C_S0_SIZE 0x00100000 \
+		CONFIG.C_S1_ADDR 0x3F400000 \
+		CONFIG.C_S1_SIZE 0x00100000 \
 		CONFIG.C_BR_INITOR_NBR 2 \
 		CONFIG.C_MOTOR_NBR 4 \
 		CONFIG.C_ZPD_SEQ {"0011"} \
 		CONFIG.C_STEP_NUMBER_WIDTH 16 \
 		CONFIG.C_SPEED_DATA_WIDTH 16 \
 		CONFIG.C_MICROSTEP_WIDTH 3 \
+		CONFIG.C_PWM_NBR 2 \
 	] [get_bd_cells $mname/fsctl]
 	endgroup
 
@@ -154,10 +161,10 @@ proc create_fscore {
 		$mname/pvdma_1/M_AXIS           $mname/axis_window_1/S_AXIS
 		$mname/axis_window_1/M_AXIS     $mname/axis_scaler_1/S_AXIS
 		$mname/axis_scaler_1/M_AXIS	$mname/pblender/S1_AXIS
-		$mname/fsctl/S0_BUF_ADDR        $mname/pvdma_0/BUF_ADDR
-		$mname/fsctl/S1_BUF_ADDR        $mname/pvdma_1/BUF_ADDR
-		$mname/fsctl/S0_MBUF_R          $mname/pvdma_0/MBUF_R
-		$mname/fsctl/S1_MBUF_R          $mname/pvdma_1/MBUF_R
+		$mname/fsctl/S0_ADDR            $mname/pvdma_0/BUF_ADDR
+		$mname/fsctl/S1_ADDR            $mname/pvdma_1/BUF_ADDR
+		$mname/fsctl/S0_READ            $mname/pvdma_0/MBUF_R
+		$mname/fsctl/S1_READ            $mname/pvdma_1/MBUF_R
 		$mname/fsctl/OUT_SIZE           $mname/pblender/OUT_SIZE
 		$mname/fsctl/S0_DST             $mname/pblender/S0_POS
 		$mname/fsctl/S1_DST             $mname/pblender/S1_POS
@@ -167,7 +174,7 @@ proc create_fscore {
 		$mname/fsctl/S1_SCALE           $mname/axis_scaler_1/SCALE_CTL
 	}]
 	pip_connect_net [subst {
-		$mname/fsctl/dispbuf0_addr      $mname/pvdma_T/MBUF_R_addr
+		$mname/fsctl/st_addr            $mname/pvdma_T/MBUF_R_addr
 		$mname/fsctl/s0_dst_bmp         $mname/pblender/s0_dst_bmp
 		$mname/fsctl/s1_dst_bmp         $mname/pblender/s1_dst_bmp
 		$mname/fsctl/s0_wr_done         $mname/pvdma_0/wr_done

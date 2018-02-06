@@ -8,6 +8,11 @@ ipx::infer_core -vendor $VENDOR -library $LIBRARY -name fsctl -taxonomy $TAXONOM
 ipx::edit_ip_in_project -upgrade true -name edit_ip_project -directory $tmp_dir $ip_dir/component.xml
 ipx::current_core $ip_dir/component.xml
 
+define_associate_busif clk_busif
+define_associate_busif clk_reset
+define_associate_busif o_clk_busif
+define_associate_busif o_clk_reset
+
 pip_set_prop [ipx::current_core] [subst {
 	display_name {Fusion Splicer Controller}
 	description {Fusion Splicer Controller}
@@ -31,6 +36,7 @@ pip_add_bus_if [ipx::current_core] S_REG_CTL [subst {
 	WR_ADDR wr_addr
 	WR_DATA wr_data
 }
+append_associate_busif clk_busif S_REG_CTL
 
 pip_add_bus_if [ipx::current_core] fsync {
 	abstraction_type_vlnv xilinx.com:signal:video_frame_sync_rtl:1.0
@@ -47,54 +53,7 @@ pip_add_bus_if [ipx::current_core] o_fsync {
 } {
 	FRAME_SYNC o_fsync
 }
-
-pip_add_bus_if [ipx::current_core] DISPBUF_ADDR [subst {
-	abstraction_type_vlnv $VENDOR:interface:addr_array_rtl:1.0
-	bus_type_vlnv $VENDOR:interface:addr_array:1.0
-	interface_mode master
-}] {
-	ADDR0 dispbuf0_addr
-}
-
-pip_add_bus_if [ipx::current_core] S0_MBUF_R [subst {
-	abstraction_type_vlnv $VENDOR:interface:mutex_buffer_ctl_rtl:1.0
-	bus_type_vlnv $VENDOR:interface:mutex_buffer_ctl:1.0
-	interface_mode master
-}] {
-	SOF s0_rd_en
-	IDX s0_rd_buf_idx
-}
-
-pip_add_bus_if [ipx::current_core] S0_BUF_ADDR [subst {
-	abstraction_type_vlnv $VENDOR:interface:addr_array_rtl:1.0
-	bus_type_vlnv $VENDOR:interface:addr_array:1.0
-	interface_mode master
-}] {
-	ADDR0 cmos0buf0_addr
-	ADDR1 cmos0buf1_addr
-	ADDR2 cmos0buf2_addr
-	ADDR3 cmos0buf3_addr
-}
-
-pip_add_bus_if [ipx::current_core] S1_MBUF_R [subst {
-	abstraction_type_vlnv $VENDOR:interface:mutex_buffer_ctl_rtl:1.0
-	bus_type_vlnv $VENDOR:interface:mutex_buffer_ctl:1.0
-	interface_mode master
-}] {
-	SOF s1_rd_en
-	IDX s1_rd_buf_idx
-}
-
-pip_add_bus_if [ipx::current_core] S1_BUF_ADDR [subst {
-	abstraction_type_vlnv $VENDOR:interface:addr_array_rtl:1.0
-	bus_type_vlnv $VENDOR:interface:addr_array:1.0
-	interface_mode master
-}] {
-	ADDR0 cmos1buf0_addr
-	ADDR1 cmos1buf1_addr
-	ADDR2 cmos1buf2_addr
-	ADDR3 cmos1buf3_addr
-}
+append_associate_busif o_clk_busif o_fsync
 
 pip_add_bus_if [ipx::current_core] OUT_SIZE [subst {
 	abstraction_type_vlnv {$VENDOR:interface:window_ctl_rtl:1.0}
@@ -104,6 +63,16 @@ pip_add_bus_if [ipx::current_core] OUT_SIZE [subst {
 	WIDTH  out_width
 	HEIGHT out_height
 }
+append_associate_busif o_clk_busif OUT_SIZE
+
+pip_add_bus_if [ipx::current_core] ST_ADDR [subst {
+	abstraction_type_vlnv $VENDOR:interface:addr_array_rtl:1.0
+	bus_type_vlnv $VENDOR:interface:addr_array:1.0
+	interface_mode master
+}] {
+	ADDR0 st_addr
+}
+append_associate_busif o_clk_busif ST_ADDR
 
 pip_add_bus_if [ipx::current_core] ST_SIZE [subst {
 	abstraction_type_vlnv {$VENDOR:interface:window_ctl_rtl:1.0}
@@ -113,49 +82,114 @@ pip_add_bus_if [ipx::current_core] ST_SIZE [subst {
 	WIDTH  st_width
 	HEIGHT st_height
 }
+append_associate_busif o_clk_busif ST_SIZE
 
-for {set i 0} {$i < 2} {incr i} {
+for {set i 0} {$i < 8} {incr i} {
+	pip_add_bus_if [ipx::current_core] S[set i]_READ [subst {
+		abstraction_type_vlnv $VENDOR:interface:mutex_buffer_ctl_rtl:1.0
+		bus_type_vlnv $VENDOR:interface:mutex_buffer_ctl:1.0
+		interface_mode master
+		enablement_dependency {spirit:decode(id('MODELPARAM_VALUE.C_STREAM_NBR')) > $i}
+	}] [subst {
+		SOF s[set i]_rd_en
+		IDX s[set i]_rd_buf_idx
+	}]
+	append_associate_busif o_clk_busif S[set i]_READ
+
+	pip_add_bus_if [ipx::current_core] s[set i]_wr_done [subst {
+		abstraction_type_vlnv $VENDOR:signal:data_rtl:1.0
+		bus_type_vlnv $VENDOR:signal:data:1.0
+		interface_mode slave
+		enablement_dependency {spirit:decode(id('MODELPARAM_VALUE.C_STREAM_NBR')) > $i}
+	}] [subst {
+		DATA s[set i]_wr_done
+	}]
+	append_associate_busif o_clk_busif s[set i]_wr_done
+
+	pip_add_bus_if [ipx::current_core] s[set i]_dst_bmp [subst {
+		abstraction_type_vlnv $VENDOR:signal:data_rtl:1.0
+		bus_type_vlnv $VENDOR:signal:data:1.0
+		interface_mode master
+		enablement_dependency {spirit:decode(id('MODELPARAM_VALUE.C_STREAM_NBR')) > $i}
+	}] [subst {
+		DATA s[set i]_dst_bmp
+	}]
+	append_associate_busif o_clk_busif s[set i]_dst_bmp
+
+	pip_add_bus_if [ipx::current_core] S[set i]_ADDR [subst {
+		abstraction_type_vlnv $VENDOR:interface:addr_array_rtl:1.0
+		bus_type_vlnv $VENDOR:interface:addr_array:1.0
+		interface_mode master
+		enablement_dependency {spirit:decode(id('MODELPARAM_VALUE.C_STREAM_NBR')) > $i}
+	}] [subst {
+		ADDR0 s[set i]_buf0_addr
+		ADDR1 s[set i]_buf1_addr
+		ADDR2 s[set i]_buf2_addr
+		ADDR3 s[set i]_buf3_addr
+	}]
+	append_associate_busif o_clk_busif S[set i]_ADDR
+
 	pip_add_bus_if [ipx::current_core] S[set i]_SIZE [subst {
 		abstraction_type_vlnv {$VENDOR:interface:window_ctl_rtl:1.0}
 		bus_type_vlnv {$VENDOR:interface:window_ctl:1.0}
 		interface_mode {master}
+		enablement_dependency {spirit:decode(id('MODELPARAM_VALUE.C_STREAM_NBR')) > $i}
 	}] [subst {
 		WIDTH  s[set i]_width
 		HEIGHT s[set i]_height
 	}]
+	append_associate_busif o_clk_busif S[set i]_SIZE
 
 	pip_add_bus_if [ipx::current_core] S[set i]_WIN [subst {
 		abstraction_type_vlnv {$VENDOR:interface:window_ctl_rtl:1.0}
 		bus_type_vlnv {$VENDOR:interface:window_ctl:1.0}
 		interface_mode {master}
+		enablement_dependency {spirit:decode(id('MODELPARAM_VALUE.C_STREAM_NBR')) > $i}
 	}] [subst {
 		LEFT    s[set i]_win_left
 		WIDTH   s[set i]_win_width
 		TOP     s[set i]_win_top
 		HEIGHT  s[set i]_win_height
 	}]
+	append_associate_busif o_clk_busif S[set i]_WIN
 
 	pip_add_bus_if [ipx::current_core] S[set i]_SCALE [subst {
 		abstraction_type_vlnv {$VENDOR:interface:scale_ctl_rtl:1.0}
 		bus_type_vlnv {$VENDOR:interface:scale_ctl:1.0}
 		interface_mode {master}
+		enablement_dependency {spirit:decode(id('MODELPARAM_VALUE.C_STREAM_NBR')) > $i}
 	}] [subst {
 		SRC_WIDTH  s[set i]_scale_src_width
 		SRC_HEIGHT s[set i]_scale_src_height
 		DST_WIDTH  s[set i]_scale_dst_width
 		DST_HEIGHT s[set i]_scale_dst_height
 	}]
+	append_associate_busif o_clk_busif S[set i]_SCALE
 
 	pip_add_bus_if [ipx::current_core] S[set i]_DST [subst {
 		abstraction_type_vlnv {$VENDOR:interface:window_ctl_rtl:1.0}
 		bus_type_vlnv {$VENDOR:interface:window_ctl:1.0}
 		interface_mode {master}
+		enablement_dependency {spirit:decode(id('MODELPARAM_VALUE.C_STREAM_NBR')) > $i}
 	}] [subst {
 		LEFT    s[set i]_dst_left
 		WIDTH   s[set i]_dst_width
 		TOP     s[set i]_dst_top
 		HEIGHT  s[set i]_dst_height
 	}]
+	append_associate_busif o_clk_busif S[set i]_DST
+
+	pip_add_bus_if [ipx::current_core] s[set i]_soft_resetn [subst {
+		abstraction_type_vlnv xilinx.com:signal:reset_rtl:1.0
+		bus_type_vlnv xilinx.com:signal:reset:1.0
+		interface_mode master
+		enablement_dependency {spirit:decode(id('MODELPARAM_VALUE.C_STREAM_NBR')) > $i}
+	}] [subst {
+		RST s[set i]_soft_resetn
+	}] {
+		POLARITY {ACTIVE_LOW}
+	}
+	append_associate_busif o_clk_reset s[set i]_soft_resetn
 }
 
 for {set i 0} {$i < 8} {incr i} {
@@ -169,6 +203,7 @@ for {set i 0} {$i < 8} {incr i} {
 		WR_EN br[set i]_wr_en
 		DATA  br[set i]_data
 	}]
+	append_associate_busif o_clk_busif BR[set i]_INIT_CTL
 }
 
 for {set i 0} {$i < 8} {incr i} {
@@ -191,6 +226,7 @@ for {set i 0} {$i < 8} {incr i} {
 		STEP      motor[set i]_step
 		DIRECTION motor[set i]_dir
 	}]
+	append_associate_busif o_clk_busif MOTOR[set i]_CTL
 }
 
 for {set i 0} {$i < 8} {incr i} {
@@ -205,6 +241,7 @@ for {set i 0} {$i < 8} {incr i} {
 		NUMERATOR    pwm[set i]_numerator
 		DENOMINATOR  pwm[set i]_denominator
 	}]
+	append_associate_busif o_clk_busif PWM[set i]_CTL
 }
 
 # clock & reset
@@ -217,6 +254,7 @@ pip_add_bus_if [ipx::current_core] resetn {
 } {
 	POLARITY {ACTIVE_LOW}
 }
+append_associate_busif clk_reset resetn
 
 pip_add_bus_if [ipx::current_core] clk {
 	abstraction_type_vlnv xilinx.com:signal:clock_rtl:1.0
@@ -224,12 +262,10 @@ pip_add_bus_if [ipx::current_core] clk {
 	interface_mode slave
 } {
 	CLK clk
-} {
-	ASSOCIATED_BUSIF {S_REG_CTL:
-		MOTOR0_CTL:MOTOR1_CTL:MOTOR2_CTL:MOTOR3_CTL:
-		MOTOR4_CTL:MOTOR5_CTL:MOTOR6_CTL:MOTOR7_CTL}
-	ASSOCIATED_RESET {resetn}
-}
+} [subst {
+	ASSOCIATED_BUSIF [get_associate_busif clk_busif]
+	ASSOCIATED_RESET [get_associate_busif clk_reset]
+}]
 
 pip_add_bus_if [ipx::current_core] o_resetn {
 	abstraction_type_vlnv xilinx.com:signal:reset_rtl:1.0
@@ -240,26 +276,9 @@ pip_add_bus_if [ipx::current_core] o_resetn {
 } {
 	POLARITY {ACTIVE_LOW}
 }
+append_associate_busif o_clk_reset o_resetn
 
 # stream resetn
-pip_add_bus_if [ipx::current_core] s0_soft_resetn {
-	abstraction_type_vlnv xilinx.com:signal:reset_rtl:1.0
-	bus_type_vlnv xilinx.com:signal:reset:1.0
-	interface_mode master
-} {
-	RST s0_soft_resetn
-} {
-	POLARITY {ACTIVE_LOW}
-}
-pip_add_bus_if [ipx::current_core] s1_soft_resetn {
-	abstraction_type_vlnv xilinx.com:signal:reset_rtl:1.0
-	bus_type_vlnv xilinx.com:signal:reset:1.0
-	interface_mode master
-} {
-	RST s1_soft_resetn
-} {
-	POLARITY {ACTIVE_LOW}
-}
 pip_add_bus_if [ipx::current_core] st_soft_resetn {
 	abstraction_type_vlnv xilinx.com:signal:reset_rtl:1.0
 	bus_type_vlnv xilinx.com:signal:reset:1.0
@@ -269,6 +288,7 @@ pip_add_bus_if [ipx::current_core] st_soft_resetn {
 } {
 	POLARITY {ACTIVE_LOW}
 }
+append_associate_busif o_clk_reset st_soft_resetn
 
 pip_add_bus_if [ipx::current_core] o_clk {
 	abstraction_type_vlnv xilinx.com:signal:clock_rtl:1.0
@@ -276,17 +296,10 @@ pip_add_bus_if [ipx::current_core] o_clk {
 	interface_mode slave
 } {
 	CLK o_clk
-} {
-	ASSOCIATED_BUSIF {o_fsync:
-		S1_MBUF_R:S2_MBUF_R
-		OUT_SIZE:
-		S0_SIZE:S0_WIN:S0_SCALE:S0_DST:
-		S1_SIZE:S1_WIN:S1_SCALE:S1_DST:
-		ST_SIZE
-		BR0_INIT_CTL:BR1_INIT_CTL:BR2_INIT_CTL:BR3_INIT_CTL:
-		BR4_INIT_CTL:BR5_INIT_CTL:BR6_INIT_CTL:BR7_INIT_CTL}
-	ASSOCIATED_RESET {o_resetn:s0_soft_resetn:s1_soft_resetn:s2_soft_resetn}
-}
+} [subst {
+	ASSOCIATED_BUSIF [get_associate_busif o_clk_busif]
+	ASSOCIATED_RESET [get_associate_busif o_clk_reset]
+}]
 
 # interrupt
 pip_add_bus_if [ipx::current_core] intr {
@@ -298,6 +311,22 @@ pip_add_bus_if [ipx::current_core] intr {
 }
 
 # parameters
+pip_add_usr_par [ipx::current_core] C_CORE_VERSION {
+	display_name {Version Of IMPLEMENTATION}
+	tooltip {Version Of IMPLEMENTATION}
+	widget {hexEdit}
+} {
+	value_bit_string_length 32
+	value_resolve_type user
+	value {0xFF00FF00}
+	value_format bitString
+	value_validation_type none
+} {
+	value_bit_string_length 32
+	value {0xFF00FF00}
+	value_format bitString
+}
+
 pip_add_usr_par [ipx::current_core] {C_DATA_WIDTH} {
 	display_name {Data Width}
 	tooltip { DATA WIDTH}
@@ -397,31 +426,69 @@ pip_add_usr_par [ipx::current_core] {C_BUF_ADDR_WIDTH} {
 	value_format long
 }
 
-foreach {i j k} {
-	C_CORE_VERSION     {Version Of IMPLEMENTATION} {0xFF00FF00}
-	C_DISPBUF0_ADDR    {Display Buffer Address} {0x3FF00000}
-	C_CMOS0BUF0_ADDR   {CMOS0 BUffer0 Address}  {0x3F000000}
-	C_CMOS0BUF1_ADDR   {CMOS0 BUffer1 Address}  {0x3F100000}
-	C_CMOS0BUF2_ADDR   {CMOS0 BUffer2 Address}  {0x3F200000}
-	C_CMOS0BUF3_ADDR   {CMOS0 BUffer3 Address}  {0x3F300000}
-	C_CMOS1BUF0_ADDR   {CMOS1 BUffer0 Address}  {0x3F400000}
-	C_CMOS1BUF1_ADDR   {CMOS1 BUffer1 Address}  {0x3F500000}
-	C_CMOS1BUF2_ADDR   {CMOS1 BUffer2 Address}  {0x3F600000}
-	C_CMOS1BUF3_ADDR   {CMOS1 BUffer3 Address}  {0x3F700000}
+pip_add_usr_par [ipx::current_core] {C_STREAM_NBR} {
+	display_name {Stream Number}
+	tooltip {Stream Number}
+	widget {comboBox}
 } {
-	pip_add_usr_par [ipx::current_core] $i [subst {
-		display_name {$j}
-		tooltip {$j}
+	value_resolve_type user
+	value 2
+	value_format long
+	value_validation_type list
+	value_validation_list {0 1 2 3 4 5 6 7}
+} {
+	value 2
+	value_format long
+}
+
+pip_add_usr_par [ipx::current_core] C_ST_ADDR {
+	display_name {Stream Top Address}
+	tooltip {Stream Top Address}
+	widget {hexEdit}
+} {
+	value_bit_string_length 32
+	value_resolve_type user
+	value {0x3FF00000}
+	value_format bitString
+	value_validation_type none
+} {
+	value_bit_string_length 32
+	value {0x3FF00000}
+	value_format bitString
+}
+
+for {set i 0} {$i < 8} {incr i} {
+	pip_add_usr_par [ipx::current_core] C_S[set i]_ADDR [subst {
+		display_name {stream $i address}
+		tooltip {first buffer address of stream $i}
 		widget {hexEdit}
 	}] [subst {
+		enablement_tcl_expr {spirit:decode(id('MODELPARAM_VALUE.C_STREAM_NBR')) > $i}
 		value_bit_string_length 32
 		value_resolve_type user
-		value $k
+		value [format %#x [expr 0x3E000000 + 0x400000 * $i]]
 		value_format bitString
 		value_validation_type none
 	}] [subst {
 		value_bit_string_length 32
-		value $k
+		value [format %#x [expr 0x3E000000 + 0x400000 * $i]]
+		value_format bitString
+	}]
+
+	pip_add_usr_par [ipx::current_core] C_S[set i]_SIZE [subst {
+		display_name {stream $i size}
+		tooltip {single buffer size of stream $i}
+		widget {hexEdit}
+	}] [subst {
+		enablement_tcl_expr {spirit:decode(id('MODELPARAM_VALUE.C_STREAM_NBR')) > $i}
+		value_bit_string_length 32
+		value_resolve_type user
+		value [format %#x {0x00100000}]
+		value_format bitString
+		value_validation_type none
+	}] [subst {
+		value_bit_string_length 32
+		value [format %#x {0x00100000}]
 		value_format bitString
 	}]
 }

@@ -15,19 +15,27 @@ module fsctl #
 	parameter integer C_IMG_WDEF = 320,
 	parameter integer C_IMG_HDEF = 240,
 
-	parameter integer C_CMOS_NBR = 2,
+	parameter integer C_STREAM_NBR = 2,
 
 	parameter integer C_BUF_ADDR_WIDTH = 32,
 	parameter integer C_BUF_IDX_WIDTH = 2,
-	parameter integer C_DISPBUF0_ADDR  = 'h3FF00000,
-	parameter integer C_CMOS0BUF0_ADDR = 'h3F000000,
-	parameter integer C_CMOS0BUF1_ADDR = 'h3F100000,
-	parameter integer C_CMOS0BUF2_ADDR = 'h3F200000,
-	parameter integer C_CMOS0BUF3_ADDR = 'h3F300000,
-	parameter integer C_CMOS1BUF0_ADDR = 'h3F400000,
-	parameter integer C_CMOS1BUF1_ADDR = 'h3F500000,
-	parameter integer C_CMOS1BUF2_ADDR = 'h3F600000,
-	parameter integer C_CMOS1BUF3_ADDR = 'h3F700000,
+	parameter integer C_ST_ADDR = 'h3D000000,
+	parameter integer C_S0_ADDR = 'h3E000000,
+	parameter integer C_S0_SIZE = 'h00100000,
+	parameter integer C_S1_ADDR = 'h3E400000,
+	parameter integer C_S1_SIZE = 'h00100000,
+	parameter integer C_S2_ADDR = 'h3E800000,
+	parameter integer C_S2_SIZE = 'h00100000,
+	parameter integer C_S3_ADDR = 'h3EB00000,
+	parameter integer C_S3_SIZE = 'h00100000,
+	parameter integer C_S4_ADDR = 'h3F000000,
+	parameter integer C_S4_SIZE = 'h00100000,
+	parameter integer C_S5_ADDR = 'h3F400000,
+	parameter integer C_S5_SIZE = 'h00100000,
+	parameter integer C_S6_ADDR = 'h3F800000,
+	parameter integer C_S6_SIZE = 'h00100000,
+	parameter integer C_S7_ADDR = 'h3FC00000,
+	parameter integer C_S7_SIZE = 'h00100000,
 
 	parameter integer C_BR_INITOR_NBR = 2, /// <= 8
 	parameter integer C_MOTOR_NBR = 4, /// <= 8
@@ -58,110 +66,295 @@ module fsctl #
 	input o_clk,
 	input o_resetn,
 
-	output reg soft_resetn,
-	input wire fsync,
-	output reg o_fsync,
+	output wire soft_resetn,
+	input  wire fsync,
+	output reg  o_fsync,
 
 	output wire intr,
-
-	output wire [C_BUF_ADDR_WIDTH-1:0] dispbuf0_addr,
-	output wire [C_BUF_ADDR_WIDTH-1:0] cmos0buf0_addr,
-	output wire [C_BUF_ADDR_WIDTH-1:0] cmos0buf1_addr,
-	output wire [C_BUF_ADDR_WIDTH-1:0] cmos0buf2_addr,
-	output wire [C_BUF_ADDR_WIDTH-1:0] cmos0buf3_addr,
-	output wire [C_BUF_ADDR_WIDTH-1:0] cmos1buf0_addr,
-	output wire [C_BUF_ADDR_WIDTH-1:0] cmos1buf1_addr,
-	output wire [C_BUF_ADDR_WIDTH-1:0] cmos1buf2_addr,
-	output wire [C_BUF_ADDR_WIDTH-1:0] cmos1buf3_addr,
 
 	output wire [C_IMG_WBITS-1:0] out_width,
 	output wire [C_IMG_HBITS-1:0] out_height,
 
 	output reg                    out_ce,
 /// stream top
-	output reg                    st_soft_resetn,
-	output wire [C_IMG_WBITS-1:0] st_width,
-	output wire [C_IMG_HBITS-1:0] st_height,
+	output reg                         st_soft_resetn,
+
+	output wire [C_BUF_ADDR_WIDTH-1:0] st_addr,
+
+	output wire [C_IMG_WBITS-1:0]      st_width,
+	output wire [C_IMG_HBITS-1:0]      st_height,
 
 /// stream 0
-	output reg                         s0_soft_resetn,
-	output reg [1:0]                   s0_dst_bmp,
-	output reg [C_IMG_WBITS-1:0]       s0_width,
-	output reg [C_IMG_HBITS-1:0]       s0_height,
+	output wire                        s0_soft_resetn,
 
-	output reg [C_IMG_WBITS-1:0]       s0_win_left,
-	output reg [C_IMG_WBITS-1:0]       s0_win_width,
-	output reg [C_IMG_HBITS-1:0]       s0_win_top,
-	output reg [C_IMG_HBITS-1:0]       s0_win_height,
+	output wire [C_STREAM_NBR -1:0]    s0_dst_bmp,
+	output wire [C_IMG_WBITS-1:0]      s0_width,
+	output wire [C_IMG_HBITS-1:0]      s0_height,
+
+	output wire [C_BUF_ADDR_WIDTH-1:0] s0_buf0_addr,
+	output wire [C_BUF_ADDR_WIDTH-1:0] s0_buf1_addr,
+	output wire [C_BUF_ADDR_WIDTH-1:0] s0_buf2_addr,
+	output wire [C_BUF_ADDR_WIDTH-1:0] s0_buf3_addr,
+
+	output wire [C_IMG_WBITS-1:0]      s0_win_left,
+	output wire [C_IMG_WBITS-1:0]      s0_win_width,
+	output wire [C_IMG_HBITS-1:0]      s0_win_top,
+	output wire [C_IMG_HBITS-1:0]      s0_win_height,
 
 	output wire [C_IMG_WBITS-1:0]      s0_scale_src_width,
 	output wire [C_IMG_HBITS-1:0]      s0_scale_src_height,
 	output wire [C_IMG_WBITS-1:0]      s0_scale_dst_width,
 	output wire [C_IMG_HBITS-1:0]      s0_scale_dst_height,
 
-	output reg [C_IMG_WBITS-1:0]       s0_dst_left,
-	output reg [C_IMG_WBITS-1:0]       s0_dst_width,
-	output reg [C_IMG_HBITS-1:0]       s0_dst_top,
-	output reg [C_IMG_HBITS-1:0]       s0_dst_height,
+	output wire [C_IMG_WBITS-1:0]      s0_dst_left,
+	output wire [C_IMG_WBITS-1:0]      s0_dst_width,
+	output wire [C_IMG_HBITS-1:0]      s0_dst_top,
+	output wire [C_IMG_HBITS-1:0]      s0_dst_height,
 
 	input  wire                        s0_wr_done,
 	output wire                        s0_rd_en,
 	input  wire [C_BUF_IDX_WIDTH-1:0]  s0_rd_buf_idx,
 /// stream 1
-	output reg                         s1_soft_resetn,
-	output reg [1:0]                   s1_dst_bmp,
-	output reg [C_IMG_WBITS-1:0]       s1_width,
-	output reg [C_IMG_HBITS-1:0]       s1_height,
+	output wire                        s1_soft_resetn,
 
-	output reg [C_IMG_WBITS-1:0]       s1_win_left,
-	output reg [C_IMG_WBITS-1:0]       s1_win_width,
-	output reg [C_IMG_HBITS-1:0]       s1_win_top,
-	output reg [C_IMG_HBITS-1:0]       s1_win_height,
+	output wire [C_STREAM_NBR -1:0]    s1_dst_bmp,
+	output wire [C_IMG_WBITS-1:0]      s1_width,
+	output wire [C_IMG_HBITS-1:0]      s1_height,
+
+	output wire [C_BUF_ADDR_WIDTH-1:0] s1_buf0_addr,
+	output wire [C_BUF_ADDR_WIDTH-1:0] s1_buf1_addr,
+	output wire [C_BUF_ADDR_WIDTH-1:0] s1_buf2_addr,
+	output wire [C_BUF_ADDR_WIDTH-1:0] s1_buf3_addr,
+
+	output wire [C_IMG_WBITS-1:0]      s1_win_left,
+	output wire [C_IMG_WBITS-1:0]      s1_win_width,
+	output wire [C_IMG_HBITS-1:0]      s1_win_top,
+	output wire [C_IMG_HBITS-1:0]      s1_win_height,
 
 	output wire [C_IMG_WBITS-1:0]      s1_scale_src_width,
 	output wire [C_IMG_HBITS-1:0]      s1_scale_src_height,
 	output wire [C_IMG_WBITS-1:0]      s1_scale_dst_width,
 	output wire [C_IMG_HBITS-1:0]      s1_scale_dst_height,
 
-	output reg [C_IMG_WBITS-1:0]       s1_dst_left,
-	output reg [C_IMG_WBITS-1:0]       s1_dst_width,
-	output reg [C_IMG_HBITS-1:0]       s1_dst_top,
-	output reg [C_IMG_HBITS-1:0]       s1_dst_height,
+	output wire [C_IMG_WBITS-1:0]      s1_dst_left,
+	output wire [C_IMG_WBITS-1:0]      s1_dst_width,
+	output wire [C_IMG_HBITS-1:0]      s1_dst_top,
+	output wire [C_IMG_HBITS-1:0]      s1_dst_height,
 
 	input  wire                        s1_wr_done,
 	output wire                        s1_rd_en,
 	input  wire [C_BUF_IDX_WIDTH-1:0]  s1_rd_buf_idx,
+/// stream 2
+	output wire                        s2_soft_resetn,
+
+	output wire [C_STREAM_NBR -1:0]    s2_dst_bmp,
+	output wire [C_IMG_WBITS-1:0]      s2_width,
+	output wire [C_IMG_HBITS-1:0]      s2_height,
+
+	output wire [C_BUF_ADDR_WIDTH-1:0] s2_buf0_addr,
+	output wire [C_BUF_ADDR_WIDTH-1:0] s2_buf1_addr,
+	output wire [C_BUF_ADDR_WIDTH-1:0] s2_buf2_addr,
+	output wire [C_BUF_ADDR_WIDTH-1:0] s2_buf3_addr,
+
+	output wire [C_IMG_WBITS-1:0]      s2_win_left,
+	output wire [C_IMG_WBITS-1:0]      s2_win_width,
+	output wire [C_IMG_HBITS-1:0]      s2_win_top,
+	output wire [C_IMG_HBITS-1:0]      s2_win_height,
+
+	output wire [C_IMG_WBITS-1:0]      s2_scale_src_width,
+	output wire [C_IMG_HBITS-1:0]      s2_scale_src_height,
+	output wire [C_IMG_WBITS-1:0]      s2_scale_dst_width,
+	output wire [C_IMG_HBITS-1:0]      s2_scale_dst_height,
+
+	output wire [C_IMG_WBITS-1:0]      s2_dst_left,
+	output wire [C_IMG_WBITS-1:0]      s2_dst_width,
+	output wire [C_IMG_HBITS-1:0]      s2_dst_top,
+	output wire [C_IMG_HBITS-1:0]      s2_dst_height,
+
+	input  wire                        s2_wr_done,
+	output wire                        s2_rd_en,
+	input  wire [C_BUF_IDX_WIDTH-1:0]  s2_rd_buf_idx,
+/// stream 3
+	output wire                        s3_soft_resetn,
+
+	output wire [C_STREAM_NBR -1:0]    s3_dst_bmp,
+	output wire [C_IMG_WBITS-1:0]      s3_width,
+	output wire [C_IMG_HBITS-1:0]      s3_height,
+
+	output wire [C_BUF_ADDR_WIDTH-1:0] s3_buf0_addr,
+	output wire [C_BUF_ADDR_WIDTH-1:0] s3_buf1_addr,
+	output wire [C_BUF_ADDR_WIDTH-1:0] s3_buf2_addr,
+	output wire [C_BUF_ADDR_WIDTH-1:0] s3_buf3_addr,
+
+	output wire [C_IMG_WBITS-1:0]      s3_win_left,
+	output wire [C_IMG_WBITS-1:0]      s3_win_width,
+	output wire [C_IMG_HBITS-1:0]      s3_win_top,
+	output wire [C_IMG_HBITS-1:0]      s3_win_height,
+
+	output wire [C_IMG_WBITS-1:0]      s3_scale_src_width,
+	output wire [C_IMG_HBITS-1:0]      s3_scale_src_height,
+	output wire [C_IMG_WBITS-1:0]      s3_scale_dst_width,
+	output wire [C_IMG_HBITS-1:0]      s3_scale_dst_height,
+
+	output wire [C_IMG_WBITS-1:0]      s3_dst_left,
+	output wire [C_IMG_WBITS-1:0]      s3_dst_width,
+	output wire [C_IMG_HBITS-1:0]      s3_dst_top,
+	output wire [C_IMG_HBITS-1:0]      s3_dst_height,
+
+	input  wire                        s3_wr_done,
+	output wire                        s3_rd_en,
+	input  wire [C_BUF_IDX_WIDTH-1:0]  s3_rd_buf_idx,
+/// stream 4
+	output wire                        s4_soft_resetn,
+
+	output wire [C_STREAM_NBR -1:0]    s4_dst_bmp,
+	output wire [C_IMG_WBITS-1:0]      s4_width,
+	output wire [C_IMG_HBITS-1:0]      s4_height,
+
+	output wire [C_BUF_ADDR_WIDTH-1:0] s4_buf0_addr,
+	output wire [C_BUF_ADDR_WIDTH-1:0] s4_buf1_addr,
+	output wire [C_BUF_ADDR_WIDTH-1:0] s4_buf2_addr,
+	output wire [C_BUF_ADDR_WIDTH-1:0] s4_buf3_addr,
+
+	output wire [C_IMG_WBITS-1:0]      s4_win_left,
+	output wire [C_IMG_WBITS-1:0]      s4_win_width,
+	output wire [C_IMG_HBITS-1:0]      s4_win_top,
+	output wire [C_IMG_HBITS-1:0]      s4_win_height,
+
+	output wire [C_IMG_WBITS-1:0]      s4_scale_src_width,
+	output wire [C_IMG_HBITS-1:0]      s4_scale_src_height,
+	output wire [C_IMG_WBITS-1:0]      s4_scale_dst_width,
+	output wire [C_IMG_HBITS-1:0]      s4_scale_dst_height,
+
+	output wire [C_IMG_WBITS-1:0]      s4_dst_left,
+	output wire [C_IMG_WBITS-1:0]      s4_dst_width,
+	output wire [C_IMG_HBITS-1:0]      s4_dst_top,
+	output wire [C_IMG_HBITS-1:0]      s4_dst_height,
+
+	input  wire                        s4_wr_done,
+	output wire                        s4_rd_en,
+	input  wire [C_BUF_IDX_WIDTH-1:0]  s4_rd_buf_idx,
+/// stream 5
+	output wire                        s5_soft_resetn,
+
+	output wire [C_STREAM_NBR -1:0]    s5_dst_bmp,
+	output wire [C_IMG_WBITS-1:0]      s5_width,
+	output wire [C_IMG_HBITS-1:0]      s5_height,
+
+	output wire [C_BUF_ADDR_WIDTH-1:0] s5_buf0_addr,
+	output wire [C_BUF_ADDR_WIDTH-1:0] s5_buf1_addr,
+	output wire [C_BUF_ADDR_WIDTH-1:0] s5_buf2_addr,
+	output wire [C_BUF_ADDR_WIDTH-1:0] s5_buf3_addr,
+
+	output wire [C_IMG_WBITS-1:0]      s5_win_left,
+	output wire [C_IMG_WBITS-1:0]      s5_win_width,
+	output wire [C_IMG_HBITS-1:0]      s5_win_top,
+	output wire [C_IMG_HBITS-1:0]      s5_win_height,
+
+	output wire [C_IMG_WBITS-1:0]      s5_scale_src_width,
+	output wire [C_IMG_HBITS-1:0]      s5_scale_src_height,
+	output wire [C_IMG_WBITS-1:0]      s5_scale_dst_width,
+	output wire [C_IMG_HBITS-1:0]      s5_scale_dst_height,
+
+	output wire [C_IMG_WBITS-1:0]      s5_dst_left,
+	output wire [C_IMG_WBITS-1:0]      s5_dst_width,
+	output wire [C_IMG_HBITS-1:0]      s5_dst_top,
+	output wire [C_IMG_HBITS-1:0]      s5_dst_height,
+
+	input  wire                        s5_wr_done,
+	output wire                        s5_rd_en,
+	input  wire [C_BUF_IDX_WIDTH-1:0]  s5_rd_buf_idx,
+/// stream 6
+	output wire                        s6_soft_resetn,
+
+	output wire [C_STREAM_NBR -1:0]    s6_dst_bmp,
+	output wire [C_IMG_WBITS-1:0]      s6_width,
+	output wire [C_IMG_HBITS-1:0]      s6_height,
+
+	output wire [C_BUF_ADDR_WIDTH-1:0] s6_buf0_addr,
+	output wire [C_BUF_ADDR_WIDTH-1:0] s6_buf1_addr,
+	output wire [C_BUF_ADDR_WIDTH-1:0] s6_buf2_addr,
+	output wire [C_BUF_ADDR_WIDTH-1:0] s6_buf3_addr,
+
+	output wire [C_IMG_WBITS-1:0]      s6_win_left,
+	output wire [C_IMG_WBITS-1:0]      s6_win_width,
+	output wire [C_IMG_HBITS-1:0]      s6_win_top,
+	output wire [C_IMG_HBITS-1:0]      s6_win_height,
+
+	output wire [C_IMG_WBITS-1:0]      s6_scale_src_width,
+	output wire [C_IMG_HBITS-1:0]      s6_scale_src_height,
+	output wire [C_IMG_WBITS-1:0]      s6_scale_dst_width,
+	output wire [C_IMG_HBITS-1:0]      s6_scale_dst_height,
+
+	output wire [C_IMG_WBITS-1:0]      s6_dst_left,
+	output wire [C_IMG_WBITS-1:0]      s6_dst_width,
+	output wire [C_IMG_HBITS-1:0]      s6_dst_top,
+	output wire [C_IMG_HBITS-1:0]      s6_dst_height,
+
+	input  wire                        s6_wr_done,
+	output wire                        s6_rd_en,
+	input  wire [C_BUF_IDX_WIDTH-1:0]  s6_rd_buf_idx,
+/// stream 7
+	output wire                        s7_soft_resetn,
+
+	output wire [C_STREAM_NBR -1:0]    s7_dst_bmp,
+	output wire [C_IMG_WBITS-1:0]      s7_width,
+	output wire [C_IMG_HBITS-1:0]      s7_height,
+
+	output wire [C_BUF_ADDR_WIDTH-1:0] s7_buf0_addr,
+	output wire [C_BUF_ADDR_WIDTH-1:0] s7_buf1_addr,
+	output wire [C_BUF_ADDR_WIDTH-1:0] s7_buf2_addr,
+	output wire [C_BUF_ADDR_WIDTH-1:0] s7_buf3_addr,
+
+	output wire [C_IMG_WBITS-1:0]      s7_win_left,
+	output wire [C_IMG_WBITS-1:0]      s7_win_width,
+	output wire [C_IMG_HBITS-1:0]      s7_win_top,
+	output wire [C_IMG_HBITS-1:0]      s7_win_height,
+
+	output wire [C_IMG_WBITS-1:0]      s7_scale_src_width,
+	output wire [C_IMG_HBITS-1:0]      s7_scale_src_height,
+	output wire [C_IMG_WBITS-1:0]      s7_scale_dst_width,
+	output wire [C_IMG_HBITS-1:0]      s7_scale_dst_height,
+
+	output wire [C_IMG_WBITS-1:0]      s7_dst_left,
+	output wire [C_IMG_WBITS-1:0]      s7_dst_width,
+	output wire [C_IMG_HBITS-1:0]      s7_dst_top,
+	output wire [C_IMG_HBITS-1:0]      s7_dst_height,
+
+	input  wire                        s7_wr_done,
+	output wire                        s7_rd_en,
+	input  wire [C_BUF_IDX_WIDTH-1:0]  s7_rd_buf_idx,
 
 /// blockram initor 0
-	output reg                           br0_init,
+	output wire                          br0_init,
 	output wire                          br0_wr_en,
 	output wire [C_SPEED_DATA_WIDTH-1:0] br0_data,
 /// blockram initor 1
-	output reg                           br1_init,
+	output wire                          br1_init,
 	output wire                          br1_wr_en,
 	output wire [C_SPEED_DATA_WIDTH-1:0] br1_data,
 /// blockram initor 2
-	output reg                           br2_init,
+	output wire                          br2_init,
 	output wire                          br2_wr_en,
 	output wire [C_SPEED_DATA_WIDTH-1:0] br2_data,
 /// blockram initor 3
-	output reg                           br3_init,
+	output wire                          br3_init,
 	output wire                          br3_wr_en,
 	output wire [C_SPEED_DATA_WIDTH-1:0] br3_data,
 /// blockram initor 4
-	output reg                           br4_init,
+	output wire                          br4_init,
 	output wire                          br4_wr_en,
 	output wire [C_SPEED_DATA_WIDTH-1:0] br4_data,
 /// blockram initor 5
-	output reg                           br5_init,
+	output wire                          br5_init,
 	output wire                          br5_wr_en,
 	output wire [C_SPEED_DATA_WIDTH-1:0] br5_data,
 /// blockram initor 6
-	output reg                           br6_init,
+	output wire                          br6_init,
 	output wire                          br6_wr_en,
 	output wire [C_SPEED_DATA_WIDTH-1:0] br6_data,
 /// blockram initor 7
-	output reg                           br7_init,
+	output wire                          br7_init,
 	output wire                          br7_wr_en,
 	output wire [C_SPEED_DATA_WIDTH-1:0] br7_data,
 /// step motor 0
@@ -310,15 +503,7 @@ module fsctl #
 	output wire [C_PWM_CNT_WIDTH-1:0] pwm7_numerator,
 	output wire [C_PWM_CNT_WIDTH-1:0] pwm7_denominator
 );
-	assign dispbuf0_addr = C_DISPBUF0_ADDR;
-	assign cmos0buf0_addr = C_CMOS0BUF0_ADDR;
-	assign cmos0buf1_addr = C_CMOS0BUF1_ADDR;
-	assign cmos0buf2_addr = C_CMOS0BUF2_ADDR;
-	assign cmos0buf3_addr = C_CMOS0BUF3_ADDR;
-	assign cmos1buf0_addr = C_CMOS1BUF0_ADDR;
-	assign cmos1buf1_addr = C_CMOS1BUF1_ADDR;
-	assign cmos1buf2_addr = C_CMOS1BUF2_ADDR;
-	assign cmos1buf3_addr = C_CMOS1BUF3_ADDR;
+	assign st_addr = C_ST_ADDR;
 
 	wire [C_REG_IDX_WIDTH-1:0] rd_index;
 	assign rd_index = rd_addr;
@@ -411,50 +596,61 @@ module fsctl #
 		end
 	endgenerate
 
-/// start register definition
-	`DEFREG_EXTERNAL(0, 0, 1, soft_resetn, 0)
-	`DEFREG_DIRECT_OUT(0, 1, 1, display_cfging, 0, 0)
+///////////////////////////////// start register definition ////////////////////
+generate
+	`DEFREG_DIRECT_OUT(0, 0, 1, display_cfging, 0, 0)
 
-	//`DEFREG_DISP(1, 0, 1, order_1over2, 0)
-	//`DEFREG_INTERNAL(1, 1, 1, s0_running, 1)
-	//`DEFREG_INTERNAL(1, 2, 1, s1_running, 0)
-	//`DEFREG_INTERNAL(1, 3, 1, s2_running, 0)
+	localparam EN_ST0 = (C_STREAM_NBR > 0);
+	localparam EN_ST1 = (C_STREAM_NBR > 1);
+	localparam EN_ST2 = (C_STREAM_NBR > 2);
+	localparam EN_ST3 = (C_STREAM_NBR > 3);
+	localparam EN_ST4 = (C_STREAM_NBR > 4);
+	localparam EN_ST5 = (C_STREAM_NBR > 5);
+	localparam EN_ST6 = (C_STREAM_NBR > 6);
+	localparam EN_ST7 = (C_STREAM_NBR > 7);
 
-	`DEFREG_DISP(1, 0, 2, s0_dst_bmp, 0)
-	`DEFREG_DISP(1, 4, 2, s1_dst_bmp, 0)
+`define DEFINE_STREAM(_idx) \
+	`DEFREG_INTERNAL(1, (_idx * 4), 1, s``_idx``_op_en, 0, 0, 1) \
+	`DEFREG_INT_EN   (2, (_idx * 4), s``_idx``_wr_done) \
+	`DEFREG_INT_STATE(3, (_idx * 4), s``_idx``_wr_done, 1) \
+		`WR_SYNC_WIRE(3, (_idx * 4), 1, s``_idx``_rd_en, 0, 1) \
+	`DEFREG_DIRECT_IN(4, (_idx * 4), C_BUF_IDX_WIDTH, s``_idx``_rd_buf_idx) \
+ \
+	`DEFREG_STREAM_INDIRECT( 5, 0,            1, s``_idx``_soft_resetn, s``_idx``_op_en, 0) \
+	`DEFREG_STREAM_INDIRECT( 6, 0, C_STREAM_NBR, s``_idx``_dst_bmp,     s``_idx``_op_en, 0) \
+	`DEFREG_STREAM_INDIRECT( 7, 0,  C_IMG_HBITS, s``_idx``_height,      s``_idx``_op_en, 0) \
+	`DEFREG_STREAM_INDIRECT( 7,16,  C_IMG_WBITS, s``_idx``_width,       s``_idx``_op_en, 0) \
+	`DEFREG_STREAM_INDIRECT( 8, 0,  C_IMG_HBITS, s``_idx``_win_top,     s``_idx``_op_en, 0) \
+	`DEFREG_STREAM_INDIRECT( 8,16,  C_IMG_WBITS, s``_idx``_win_left,    s``_idx``_op_en, 0) \
+	`DEFREG_STREAM_INDIRECT( 9, 0,  C_IMG_HBITS, s``_idx``_win_height,  s``_idx``_op_en, 0) \
+	`DEFREG_STREAM_INDIRECT( 9,16,  C_IMG_WBITS, s``_idx``_win_width,   s``_idx``_op_en, 0) \
+	`DEFREG_STREAM_INDIRECT(10, 0,  C_IMG_HBITS, s``_idx``_dst_top,     s``_idx``_op_en, 0) \
+	`DEFREG_STREAM_INDIRECT(10,16,  C_IMG_WBITS, s``_idx``_dst_left,    s``_idx``_op_en, 0) \
+	`DEFREG_STREAM_INDIRECT(11, 0,  C_IMG_HBITS, s``_idx``_dst_height,  s``_idx``_op_en, 0) \
+	`DEFREG_STREAM_INDIRECT(11,16,  C_IMG_WBITS, s``_idx``_dst_width,   s``_idx``_op_en, 0) \
+ \
+	assign s``_idx``_buf0_addr = C_S``_idx``_ADDR; \
+	assign s``_idx``_buf1_addr = C_S``_idx``_ADDR + C_S``_idx``_SIZE; \
+	assign s``_idx``_buf2_addr = C_S``_idx``_ADDR + C_S``_idx``_SIZE * 2; \
+	assign s``_idx``_buf3_addr = C_S``_idx``_ADDR + C_S``_idx``_SIZE * 3; \
+ \
+	assign s``_idx``_scale_src_width  = s``_idx``_win_width; \
+	assign s``_idx``_scale_src_height = s``_idx``_win_height; \
+	assign s``_idx``_scale_dst_width  = s``_idx``_dst_width; \
+	assign s``_idx``_scale_dst_height = s``_idx``_dst_height; \
 
-	/// STREAM INT ENABLE
-	`DEFREG_INT_EN(2, 0, s0_wr_done)
-	`DEFREG_INT_EN(2, 4, s1_wr_done)
-
-	`DEFREG_DIRECT_IN_D1(1, s0_wr_done)
-	`DEFREG_DIRECT_IN_D1(1, s1_wr_done)
-
-	/// STREAM INT STATE
-	`DEFREG_INT_STATE(3, 0, s0_wr_done, 1)
-	`DEFREG_INT_STATE(3, 4, s1_wr_done, 1)
-	`WR_SYNC_WIRE(3, 0, 1, s0_rd_en, 0, 1)
-	`WR_SYNC_WIRE(3, 4, 1, s1_rd_en, 0, 1)
-
-	/// STREAM BUF INDEX
-	`DEFREG_DIRECT_IN(4, 0, C_BUF_IDX_WIDTH, s0_rd_buf_idx)
-	`DEFREG_DIRECT_IN(4, 4, C_BUF_IDX_WIDTH, s1_rd_buf_idx)
-
-	`DEFREG_IMGSIZE( 5, s0_width,              0,  s0_height,              0)
-	`DEFREG_IMGSIZE( 6, s0_win_left,           0,  s0_win_top,             0)
-	`DEFREG_IMGSIZE( 7, s0_win_width,          0,  s0_win_height,          0)
-	`DEFREG_IMGSIZE( 8, s0_dst_left,           0,  s0_dst_top,             0)
-	`DEFREG_IMGSIZE( 9, s0_dst_width,          0,  s0_dst_height,          0)
-
-	`DEFREG_IMGSIZE(10, s1_width,              0,  s1_height,              0)
-	`DEFREG_IMGSIZE(11, s1_win_left,           0,  s1_win_top,             0)
-	`DEFREG_IMGSIZE(12, s1_win_width,          0,  s1_win_height,          0)
-	`DEFREG_IMGSIZE(13, s1_dst_left,           0,  s1_dst_top,             0)
-	`DEFREG_IMGSIZE(14, s1_dst_width,          0,  s1_dst_height,          0)
+	`COND(EN_ST0, `DEFINE_STREAM(0))
+	`COND(EN_ST1, `DEFINE_STREAM(1))
+	`COND(EN_ST2, `DEFINE_STREAM(2))
+	`COND(EN_ST3, `DEFINE_STREAM(3))
+	`COND(EN_ST4, `DEFINE_STREAM(4))
+	`COND(EN_ST5, `DEFINE_STREAM(5))
+	`COND(EN_ST6, `DEFINE_STREAM(6))
+	`COND(EN_ST7, `DEFINE_STREAM(7))
 
 /// blockram initor
 	reg br_wr_en;
-	reg [C_SPEED_DATA_WIDTH-1:0] br_data;
+	wire [C_SPEED_DATA_WIDTH-1:0] br_data;
 	assign br0_wr_en = br_wr_en;
 	assign br1_wr_en = br_wr_en;
 	assign br2_wr_en = br_wr_en;
@@ -482,9 +678,9 @@ module fsctl #
 	`COND((C_BR_INITOR_NBR >= 8), `DEFREG_EXTERNAL(30, 7, 1, br7_init, 0))
 
 	`WR_TRIG(31, br_wr_en, 0, 1)
-	`WR_SYNC_REG(31, 0, C_SPEED_DATA_WIDTH, br_data, 0, 0)
+	`WR_SYNC_WIRE(31, 0, C_SPEED_DATA_WIDTH, br_data, 0, 0)
 
-/// step motor
+///////////////////////////////////// step motor /////////////////////////
 	localparam EN_MT0 = (C_MOTOR_NBR > 0);
 	localparam EN_MT1 = (C_MOTOR_NBR > 1);
 	localparam EN_MT2 = (C_MOTOR_NBR > 2);
@@ -524,7 +720,6 @@ module fsctl #
 	/// MOTOR STATE  35
 `define DEFREG_FOR_MOTOR_INT(_idx, _trigV, _name) \
 	`DEFREG_DIRECT_IN(35,  _idx, 1, _name) \
-	`DEFREG_DIRECT_IN_D1(1, _name) \
 	`DEFREG_INT_STATE(34, _idx, _name, _trigV) \
 	`DEFREG_INT_EN(33, _idx, _name)
 
@@ -621,7 +816,7 @@ module fsctl #
 	`COND(EN_MT6, `DEFREG_DIRECT_OUT(61, 0, C_SPEED_DATA_WIDTH, motor6_speed, 0, 0))
 	`COND(EN_MT7, `DEFREG_DIRECT_OUT(62, 0, C_SPEED_DATA_WIDTH, motor7_speed, 0, 0))
 
-/// PWM
+/////////////////////////////////////////// PWM //////////////////////////
 	localparam EN_PWM0 = (C_PWM_NBR > 0);
 	localparam EN_PWM1 = (C_PWM_NBR > 1);
 	localparam EN_PWM2 = (C_PWM_NBR > 2);
@@ -672,7 +867,8 @@ module fsctl #
 	`COND(EN_PWM7, `DEFREG_DIRECT_OUT(81,  0, C_PWM_CNT_WIDTH, pwm7_numerator,   0, 0))
 
 /// VERSION
-	`DEFREG_FIXED(C_REG_NUM-1, 0, 32, core_version, C_CORE_VERSION)
+	`DEFREG_EXTERNAL(254, 0, 1, soft_resetn, 0)
+	`DEFREG_FIXED(255, 0, 32, core_version, C_CORE_VERSION)
 
 	assign s0_scale_src_width  = s0_win_width;
 	assign s0_scale_src_height = s0_win_height;
@@ -695,22 +891,10 @@ module fsctl #
 			out_ce <= 1;
 	end
 
-	always @ (posedge o_clk) begin
-		if (o_resetn == 1'b0)
-			s0_soft_resetn <= 0;
-		else if (update_display_cfg)
-			s0_soft_resetn <= (r_s0_dst_bmp != 0);
-	end
-	always @ (posedge o_clk) begin
-		if (o_resetn == 1'b0)
-			s1_soft_resetn <= 0;
-		else if (update_display_cfg)
-			s1_soft_resetn <= (r_s1_dst_bmp != 0);
-	end
-
 	wire stream_intr;
 	assign stream_intr = ((slv_reg[2] & slv_reg[3]) != 0);
 	wire motor_intr;
 	assign motor_intr = ((slv_reg[33] & slv_reg[34]) != 0);
 	assign intr = (stream_intr | motor_intr);
+endgenerate
 endmodule

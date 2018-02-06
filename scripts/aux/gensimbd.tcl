@@ -40,14 +40,14 @@ make_bd_pins_external  [get_bd_pins videoout/underflow]
 # remove stream 2
 startgroup
 delete_bd_objs [get_bd_intf_nets fscore/axis_window_1_M_AXIS] [get_bd_intf_nets fscore/axis_scaler_1_M_AXIS] [get_bd_intf_nets fscore/fsctl_S1_WIN] [get_bd_intf_nets fscore/pvdma_1_M_AXIS] [get_bd_intf_nets fscore/fsctl_S1_SCALE] [get_bd_cells fscore/axis_scaler_1] [get_bd_cells fscore/axis_window_1]
-delete_bd_objs [get_bd_intf_nets fscore/pvdma_1_M_AXI] [get_bd_nets fscore/fsctl_s1_soft_resetn] [get_bd_intf_nets fscore/fsctl_S1_MBUF_R] [get_bd_intf_nets fscore/fsctl_S1_BUF_ADDR] [get_bd_intf_nets fscore/fsctl_S1_SIZE] [get_bd_nets fscore/pvdma_1_wr_done] [get_bd_cells fscore/pvdma_1]
+delete_bd_objs [get_bd_intf_nets fscore/pvdma_1_M_AXI] [get_bd_nets fscore/fsctl_s1_soft_resetn] [get_bd_intf_nets fscore/fsctl_S1_READ] [get_bd_intf_nets fscore/fsctl_S1_BUF_ADDR] [get_bd_intf_nets fscore/fsctl_S1_SIZE] [get_bd_nets fscore/pvdma_1_wr_done] [get_bd_cells fscore/pvdma_1]
 endgroup
 startgroup
 set_property -dict [list CONFIG.C_BR_INITOR_NBR {0} CONFIG.C_MOTOR_NBR {0} CONFIG.C_PWM_NBR {0}] [get_bd_cells fscore/fsctl]
 endgroup
 save_bd_design
 
-delete_bd_objs [get_bd_intf_nets fscore/pvdma_0_M_AXI] [get_bd_intf_nets fscore/pvdma_0_M_AXIS] [get_bd_intf_nets fscore/fsctl_S0_MBUF_R] [get_bd_intf_nets fscore/fsctl_S0_BUF_ADDR] [get_bd_intf_nets fscore/fsctl_S0_SIZE] [get_bd_nets fscore/pvdma_0_wr_done] [get_bd_cells fscore/pvdma_0]
+delete_bd_objs [get_bd_intf_nets fscore/pvdma_0_M_AXI] [get_bd_intf_nets fscore/pvdma_0_M_AXIS] [get_bd_intf_nets fscore/fsctl_S0_READ] [get_bd_intf_nets fscore/fsctl_S0_BUF_ADDR] [get_bd_intf_nets fscore/fsctl_S0_SIZE] [get_bd_nets fscore/pvdma_0_wr_done] [get_bd_cells fscore/pvdma_0]
 delete_bd_objs [get_bd_intf_nets fscore/pvdma_T_M_AXI] [get_bd_intf_nets fscore/pvdma_T_M_AXIS] [get_bd_nets fscore/fsctl_dispbuf0_addr] [get_bd_intf_nets fscore/fsctl_ST_SIZE] [get_bd_cells fscore/pvdma_T]
 delete_bd_objs [get_bd_intf_pins fscore/M1_AXI] [get_bd_intf_pins fscore/M0_AXI]
 startgroup
