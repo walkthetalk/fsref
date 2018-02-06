@@ -1,0 +1,77 @@
+From fb9e3e6989bbea9cb343356bf1981f6add40df65 Mon Sep 17 00:00:00 2001
+From: Yi Qingliang <niqingliang2003@gmail.com>
+Date: Tue, 6 Feb 2018 16:32:54 +0800
+Subject: [PATCH] simplefb: add 'memory-region' support for device tree.
+
+Signed-off-by: Yi Qingliang <niqingliang2003@gmail.com>
+---
+ drivers/video/fbdev/simplefb.c | 27 ++++++++++++++++++++++++---
+ 1 file changed, 24 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/video/fbdev/simplefb.c b/drivers/video/fbdev/simplefb.c
+index 61f799a5..edd9d94e 100644
+--- a/drivers/video/fbdev/simplefb.c
++++ b/drivers/video/fbdev/simplefb.c
+@@ -30,6 +30,7 @@
+ #include <linux/clk-provider.h>
+ #include <linux/of.h>
+ #include <linux/of_platform.h>
++#include <linux/of_address.h>
+ #include <linux/parser.h>
+ #include <linux/regulator/consumer.h>
+ 
+@@ -389,6 +390,10 @@ static void simplefb_regulators_destroy(struct simplefb_par *par) { }
+ static int simplefb_probe(struct platform_device *pdev)
+ {
+ 	int ret;
++
++	struct device_node * memnode;
++	struct resource memres;
++
+ 	struct simplefb_params params;
+ 	struct fb_info *info;
+ 	struct simplefb_par *par;
+@@ -405,12 +410,26 @@ static int simplefb_probe(struct platform_device *pdev)
+ 
+ 	if (ret)
+ 		return ret;
+-
++#if 0
+ 	mem = platform_get_resource(pdev, IORESOURCE_MEM, 0);
+ 	if (!mem) {
+ 		dev_err(&pdev->dev, "No memory resource\n");
+ 		return -EINVAL;
+ 	}
++#else
++	memnode = of_parse_phandle(pdev->dev.of_node, "memory-region", 0);
++	if (!memnode) {
++		dev_err(&pdev->dev, "No memory region\n");
++		return -ENODEV;
++	}
++	ret = of_address_to_resource(memnode, 0, &memres);
++	if (ret) {
++		dev_err(&pdev->dev, "of_address_to_resource fail: %d\n", ret);
++		return -ENODEV;
++	}
++	mem = &memres;
++	dev_info(&pdev->dev, "simplefb: start %#x end %#x\n", mem->start, mem->end);
++#endif
+ 
+ 	info = framebuffer_alloc(sizeof(struct simplefb_par), &pdev->dev);
+ 	if (!info)
+@@ -458,8 +477,10 @@ static int simplefb_probe(struct platform_device *pdev)
+ 		goto error_unmap;
+ 
+ 	ret = simplefb_regulators_init(par, pdev);
+-	if (ret < 0)
+-		goto error_clocks;
++	if (ret < 0) {
++		dev_err(&pdev->dev, "simplefb_regulators_init err %d %d\n", ret, __LINE__);
++		//goto error_clocks;
++	}
+ 
+ 	dev_info(&pdev->dev, "framebuffer at 0x%lx, 0x%x bytes, mapped to 0x%p\n",
+ 			     info->fix.smem_start, info->fix.smem_len,
+-- 
+2.15.1
+
