@@ -115,17 +115,6 @@
 	end
 
 /// imagesize aux macro
-`define DEFREG_STREAM_DIRECT(_ridx, _bstart, _bwidth, _name, _defv) \
-	`DRC_RW(_ridx, _bstart, _bwidth, r_sw_``_name, _defv, 0, 1) \
-	`DRC_REG(_bwidth, r_``_name) \
-	always @ (posedge o_clk) begin \
-		if (o_resetn == 1'b0) \
-			r_``_name <= _defv; \
-		else if (update_display_cfg) \
-			r_``_name <= r_sw_``_name; \
-	end \
-	assign _name = r_``_name;
-
 `define DEFREG_STREAM_INDIRECT(_ridx, _bstart, _bwidth, _name, _dep, _defv) \
 	`DRC_REG(_bwidth, r_``_name``_indirect) \
 	`DRC_WL(_ridx, _bstart, _bwidth, r_``_name``_indirect, _defv, 0, _dep) \
