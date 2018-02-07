@@ -598,7 +598,7 @@ module fsctl #
 
 ///////////////////////////////// start register definition ////////////////////
 generate
-	`DEFREG_DIRECT_OUT(0, 0, 1, display_cfging, 0, 0)
+	`DEFREG_DIRECT_OUT(3, 0, 1, display_cfging, 0, 0)
 
 	localparam EN_ST0 = (C_STREAM_NBR > 0);
 	localparam EN_ST1 = (C_STREAM_NBR > 1);
@@ -610,12 +610,12 @@ generate
 	localparam EN_ST7 = (C_STREAM_NBR > 7);
 
 `define DEFINE_STREAM(_idx) \
-	`DEFREG_INTERNAL(1, (_idx * 4), 1, s``_idx``_op_en, 0, 0, 1) \
-	`DEFREG_INT_EN   (2, (_idx * 4), s``_idx``_wr_done) \
-	`DEFREG_INT_STATE(3, (_idx * 4), s``_idx``_wr_done, 1) \
-		`WR_SYNC_WIRE(3, (_idx * 4), 1, s``_idx``_rd_en, 0, 1) \
-	`DEFREG_DIRECT_IN(4, (_idx * 4), C_BUF_IDX_WIDTH, s``_idx``_rd_buf_idx) \
+	`DEFREG_INT_EN   (0, (_idx * 4), s``_idx``_wr_done) \
+	`DEFREG_INT_STATE(1, (_idx * 4), s``_idx``_wr_done, 1) \
+		`WR_SYNC_WIRE(1, (_idx * 4), 1, s``_idx``_rd_en, 0, 1) \
+	`DEFREG_DIRECT_IN(2, (_idx * 4), C_BUF_IDX_WIDTH, s``_idx``_rd_buf_idx) \
  \
+	`DEFREG_INTERNAL(4, (_idx * 4), 1, s``_idx``_op_en, 0, 0, 1) \
 	`DEFREG_STREAM_INDIRECT( 5, 0,            1, s``_idx``_soft_resetn, s``_idx``_op_en, 0) \
 	`DEFREG_STREAM_INDIRECT( 6, 0, C_STREAM_NBR, s``_idx``_dst_bmp,     s``_idx``_op_en, 0) \
 	`DEFREG_STREAM_INDIRECT( 7, 0,  C_IMG_HBITS, s``_idx``_height,      s``_idx``_op_en, 0) \
