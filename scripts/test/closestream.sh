@@ -15,14 +15,14 @@ SBMP=$((2**$SIDXM4))
 
 #echo "SLT is: `printf "%#x" $SLT`"
 #start config
-WR 0 0x1
+WR 3 0x1
 
 # set operator bitmap
-WR 1 $SBMP
+WR 4 $SBMP
 
 # set enable
 WR 5 0x0
 
 #stop config
-WR 0 0x0
+WR 3 0x0
 
