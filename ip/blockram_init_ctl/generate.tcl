@@ -44,6 +44,13 @@ pip_add_bus_abstraction_port [ipx::current_busabs] DATA {
 	is_data true
 }
 
+pip_add_bus_abstraction_port [ipx::current_busabs] SIZE {
+	master_presence required
+	slave_presence required
+	master_direction in
+	is_data true
+}
+
 ipx::save_abstraction_definition [ipx::current_busabs]
 
 pip_set_prop [ipx::current_busdef] [subst {
