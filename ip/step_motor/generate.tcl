@@ -27,6 +27,7 @@ pip_add_bus_if [ipx::current_core] BR_INIT [subst {
 	INIT  br_init
 	WR_EN br_wr_en
 	DATA  br_data
+	SIZE  br_size
 }
 
 for {set i 0} {$i < 8} {incr i} {

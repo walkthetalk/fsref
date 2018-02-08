@@ -202,6 +202,7 @@ for {set i 0} {$i < 8} {incr i} {
 		INIT  br[set i]_init
 		WR_EN br[set i]_wr_en
 		DATA  br[set i]_data
+		SIZE  br[set i]_size
 	}]
 	append_associate_busif o_clk_busif BR[set i]_INIT_CTL
 }
@@ -507,6 +508,22 @@ pip_add_usr_par [ipx::current_core] {C_BR_INITOR_NBR} {
 	value 2
 	value_format long
 }
+
+pip_add_usr_par [ipx::current_core] {C_BR_SIZE_WIDTH} {
+	display_name {Blockram Initor Number}
+	tooltip {Blockram Initor Number}
+	widget {comboBox}
+} {
+	value_resolve_type user
+	value 10
+	value_format long
+	value_validation_type list
+	value_validation_list {1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16}
+} {
+	value 10
+	value_format long
+}
+
 pip_add_usr_par [ipx::current_core] {C_MOTOR_NBR} {
 	display_name {Motor Number}
 	tooltip {Motor Number, must smaller than clock division number}

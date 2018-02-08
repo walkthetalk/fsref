@@ -15,9 +15,10 @@ module step_motor #(
 	input	clk,
 	input	resetn,
 
-	input  wire br_init,
-	input  wire br_wr_en,
-	input  wire [C_SPEED_DATA_WIDTH-1:0] br_data,
+	input  wire                           br_init,
+	input  wire                           br_wr_en,
+	input  wire [C_SPEED_DATA_WIDTH-1:0]  br_data,
+	output wire [C_SPEED_ADDRESS_WIDTH:0] br_size,
 
 	input  wire                           m0_zpd,	/// zero position detection
 	output wire                           m0_drive,
@@ -203,6 +204,7 @@ module step_motor #(
 
 	wire acce_we_en;
 	assign acce_we_en = br_init && br_wr_en;
+	assign br_size = (2**C_SPEED_ADDRESS_WIDTH);
 	reg  [C_SPEED_ADDRESS_WIDTH-1 : 0] acce_we_addr;
 	reg  [C_SPEED_ADDRESS_WIDTH-1 : 0] acce_addr_max;
 	wire [C_SPEED_ADDRESS_WIDTH-1 : 0] deac_addr_max;

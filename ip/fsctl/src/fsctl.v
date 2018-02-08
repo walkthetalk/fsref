@@ -38,6 +38,7 @@ module fsctl #
 	parameter integer C_S7_SIZE = 'h00100000,
 
 	parameter integer C_BR_INITOR_NBR = 2, /// <= 8
+	parameter integer C_BR_SIZE_WIDTH = 10,
 	parameter integer C_MOTOR_NBR = 4, /// <= 8
 	parameter integer C_ZPD_SEQ = 8'b00000011,
 	parameter integer C_SPEED_DATA_WIDTH = 16,
@@ -329,34 +330,42 @@ module fsctl #
 	output wire                          br0_init,
 	output wire                          br0_wr_en,
 	output wire [C_SPEED_DATA_WIDTH-1:0] br0_data,
+	input  wire [C_BR_SIZE_WIDTH-1:0]    br0_size,
 /// blockram initor 1
 	output wire                          br1_init,
 	output wire                          br1_wr_en,
 	output wire [C_SPEED_DATA_WIDTH-1:0] br1_data,
+	input  wire [C_BR_SIZE_WIDTH-1:0]    br1_size,
 /// blockram initor 2
 	output wire                          br2_init,
 	output wire                          br2_wr_en,
 	output wire [C_SPEED_DATA_WIDTH-1:0] br2_data,
+	input  wire [C_BR_SIZE_WIDTH-1:0]    br2_size,
 /// blockram initor 3
 	output wire                          br3_init,
 	output wire                          br3_wr_en,
 	output wire [C_SPEED_DATA_WIDTH-1:0] br3_data,
+	input  wire [C_BR_SIZE_WIDTH-1:0]    br3_size,
 /// blockram initor 4
 	output wire                          br4_init,
 	output wire                          br4_wr_en,
 	output wire [C_SPEED_DATA_WIDTH-1:0] br4_data,
+	input  wire [C_BR_SIZE_WIDTH-1:0]    br4_size,
 /// blockram initor 5
 	output wire                          br5_init,
 	output wire                          br5_wr_en,
 	output wire [C_SPEED_DATA_WIDTH-1:0] br5_data,
+	input  wire [C_BR_SIZE_WIDTH-1:0]    br5_size,
 /// blockram initor 6
 	output wire                          br6_init,
 	output wire                          br6_wr_en,
 	output wire [C_SPEED_DATA_WIDTH-1:0] br6_data,
+	input  wire [C_BR_SIZE_WIDTH-1:0]    br6_size,
 /// blockram initor 7
 	output wire                          br7_init,
 	output wire                          br7_wr_en,
 	output wire [C_SPEED_DATA_WIDTH-1:0] br7_data,
+	input  wire [C_BR_SIZE_WIDTH-1:0]    br7_size,
 /// step motor 0
 	output wire                           motor0_xen,
 	output wire                           motor0_xrst,
@@ -649,6 +658,14 @@ generate
 	`COND(EN_ST7, `DEFINE_STREAM(7))
 
 /// blockram initor
+	localparam integer EN_BR0 = (C_BR_INITOR_NBR > 0);
+	localparam integer EN_BR1 = (C_BR_INITOR_NBR > 1);
+	localparam integer EN_BR2 = (C_BR_INITOR_NBR > 2);
+	localparam integer EN_BR3 = (C_BR_INITOR_NBR > 3);
+	localparam integer EN_BR4 = (C_BR_INITOR_NBR > 4);
+	localparam integer EN_BR5 = (C_BR_INITOR_NBR > 5);
+	localparam integer EN_BR6 = (C_BR_INITOR_NBR > 6);
+	localparam integer EN_BR7 = (C_BR_INITOR_NBR > 7);
 	reg br_wr_en;
 	wire [C_SPEED_DATA_WIDTH-1:0] br_data;
 	assign br0_wr_en = br_wr_en;
@@ -668,17 +685,26 @@ generate
 	assign br6_data = br_data;
 	assign br7_data = br_data;
 
-	`COND((C_BR_INITOR_NBR >= 1), `DEFREG_EXTERNAL(30, 0, 1, br0_init, 0))
-	`COND((C_BR_INITOR_NBR >= 2), `DEFREG_EXTERNAL(30, 1, 1, br1_init, 0))
-	`COND((C_BR_INITOR_NBR >= 3), `DEFREG_EXTERNAL(30, 2, 1, br2_init, 0))
-	`COND((C_BR_INITOR_NBR >= 4), `DEFREG_EXTERNAL(30, 3, 1, br3_init, 0))
-	`COND((C_BR_INITOR_NBR >= 5), `DEFREG_EXTERNAL(30, 4, 1, br4_init, 0))
-	`COND((C_BR_INITOR_NBR >= 6), `DEFREG_EXTERNAL(30, 5, 1, br5_init, 0))
-	`COND((C_BR_INITOR_NBR >= 7), `DEFREG_EXTERNAL(30, 6, 1, br6_init, 0))
-	`COND((C_BR_INITOR_NBR >= 8), `DEFREG_EXTERNAL(30, 7, 1, br7_init, 0))
+	`COND(EN_BR0, `DEFREG_EXTERNAL(16, 0, 1, br0_init, 0))
+	`COND(EN_BR1, `DEFREG_EXTERNAL(16, 1, 1, br1_init, 0))
+	`COND(EN_BR2, `DEFREG_EXTERNAL(16, 2, 1, br2_init, 0))
+	`COND(EN_BR3, `DEFREG_EXTERNAL(16, 3, 1, br3_init, 0))
+	`COND(EN_BR4, `DEFREG_EXTERNAL(16, 4, 1, br4_init, 0))
+	`COND(EN_BR5, `DEFREG_EXTERNAL(16, 5, 1, br5_init, 0))
+	`COND(EN_BR6, `DEFREG_EXTERNAL(16, 6, 1, br6_init, 0))
+	`COND(EN_BR7, `DEFREG_EXTERNAL(16, 7, 1, br7_init, 0))
 
-	`WR_TRIG(31, br_wr_en, 0, 1)
-	`WR_SYNC_WIRE(31, 0, C_SPEED_DATA_WIDTH, br_data, 0, 0)
+	`WR_TRIG(17, br_wr_en, 0, 1)
+	`WR_SYNC_WIRE(17, 0, C_SPEED_DATA_WIDTH, br_data, 0, 0)
+
+	`COND(EN_BR0, `DEFREG_DIRECT_IN(18, 0, C_BR_SIZE_WIDTH, br0_size))
+	`COND(EN_BR1, `DEFREG_DIRECT_IN(19, 0, C_BR_SIZE_WIDTH, br0_size))
+	`COND(EN_BR2, `DEFREG_DIRECT_IN(20, 0, C_BR_SIZE_WIDTH, br0_size))
+	`COND(EN_BR3, `DEFREG_DIRECT_IN(21, 0, C_BR_SIZE_WIDTH, br0_size))
+	`COND(EN_BR4, `DEFREG_DIRECT_IN(22, 0, C_BR_SIZE_WIDTH, br0_size))
+	`COND(EN_BR5, `DEFREG_DIRECT_IN(23, 0, C_BR_SIZE_WIDTH, br0_size))
+	`COND(EN_BR6, `DEFREG_DIRECT_IN(24, 0, C_BR_SIZE_WIDTH, br0_size))
+	`COND(EN_BR7, `DEFREG_DIRECT_IN(25, 0, C_BR_SIZE_WIDTH, br0_size))
 
 ///////////////////////////////////// step motor /////////////////////////
 	localparam EN_MT0 = (C_MOTOR_NBR > 0);
