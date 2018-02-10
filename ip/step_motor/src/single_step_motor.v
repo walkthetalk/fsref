@@ -53,7 +53,7 @@ module single_step_motor #(
 	reg [C_SPEED_DATA_WIDTH-1:0]	speed_max;
 	reg [C_SPEED_DATA_WIDTH-1:0]    speed_cur;
 	reg [C_SPEED_DATA_WIDTH-1:0]    speed_cnt;
-	reg [C_STEP_NUMBER_WIDTH-1:0]   step_cnt;	/// begin with '1'
+	reg [C_STEP_NUMBER_WIDTH-1:0]   step_cnt;
 	reg [C_STEP_NUMBER_WIDTH-1:0]	step_remain;
 	reg step_done;	/// keep one between final half step
 	reg[1:0] motor_state;
@@ -61,11 +61,6 @@ module single_step_motor #(
 	wire is_idle; assign is_idle = (o_state == 0);
 	wire is_running; assign is_running = (o_state);
 	reg rd_en;
-	/// reg [C_SPEED_ADDRESS_WIDTH-1:0] rd_addr;
-	assign acce_en = rd_en;
-	assign acce_addr = (step_cnt > acce_addr_max ? acce_addr_max : step_cnt);
-	assign deac_en = rd_en;
-	assign deac_addr = (step_remain > deac_addr_max ? deac_addr_max : step_remain);
 
 	/// for zpd
 	wire shouldStop;
@@ -126,32 +121,6 @@ module single_step_motor #(
 			PREPARE: rd_en <= 0;
 			RUNNING: rd_en <= ((speed_cnt == 0) && o_drive);
 			endcase
-		end
-	end
-	reg rd_en_d1;
-	reg rd_en_d2;
-	reg rd_en_d3;
-	reg [C_SPEED_DATA_WIDTH-1:0] speed_var;
-	always @ (posedge clk) begin
-		rd_en_d1 <= rd_en;
-		rd_en_d2 <= rd_en_d1;
-		rd_en_d3 <= rd_en_d2;
-	end
-	/// minimum of acce_data_final / deac_data_final / speed_max
-	always @ (posedge clk) begin
-		if (rd_en_d2) begin
-			if (acce_data > deac_data)
-				speed_var <= acce_data;
-			else
-				speed_var <= deac_data;
-		end
-	end
-	always @ (posedge clk) begin
-		if (rd_en_d3) begin
-			if (speed_var > speed_max)
-				speed_cur <= speed_var;
-			else
-				speed_cur <= speed_max;
 		end
 	end
 
@@ -245,14 +214,14 @@ module single_step_motor #(
 	/// step counter (i.e. block ram address)
 	always @ (posedge clk) begin
 		if (resetn == 1'b0) begin
-			step_cnt <= 0;
+			step_cnt    <= 0;
 			step_remain <= 0;
 		end
 		else if (clk_en) begin
 			case (motor_state)
 			IDLE: begin
 				if (start_pulse) begin
-					step_cnt <= 0;
+					step_cnt    <= 0;
 					step_remain <= i_step - 1;
 				end
 			end
@@ -266,6 +235,62 @@ module single_step_motor #(
 		end
 	end
 
+////////////////////////////// read block ram logic ////////////////////////////
+	reg rd_en_d1;
+	reg rd_en_d2;
+	reg rd_en_d3;
+	reg rd_en_d4;
+	reg rd_en_d5;
+	reg [C_SPEED_DATA_WIDTH-1:0] speed_var;
+	always @ (posedge clk) begin
+		rd_en_d1 <= rd_en;
+		rd_en_d2 <= rd_en_d1;
+		rd_en_d3 <= rd_en_d2;
+		rd_en_d4 <= rd_en_d3;
+		rd_en_d5 <= rd_en_d4;
+	end
+
+	/// rd_en_d1: full step counter
+	reg [C_STEP_NUMBER_WIDTH-1:0]   fstep_cnt;
+	reg [C_STEP_NUMBER_WIDTH-1:0]	fstep_remain;
+	always @ (posedge clk) begin
+		if (rd_en) begin
+			fstep_cnt    <= (step_cnt    >> o_ms);
+			fstep_remain <= (step_remain >> o_ms);
+		end
+	end
+
+	/// rd_en_d2: read address for block ram
+	reg [C_SPEED_ADDRESS_WIDTH-1:0] r_acce_addr;
+	reg [C_SPEED_ADDRESS_WIDTH-1:0] r_deac_addr;
+	assign acce_en = rd_en_d2;
+	assign acce_addr = r_acce_addr;
+	assign deac_en = rd_en_d2;
+	assign deac_addr = r_deac_addr;
+	always @ (posedge clk) begin
+		if (rd_en_d1) begin
+			r_acce_addr <= (fstep_cnt    < acce_addr_max ? fstep_cnt    : acce_addr_max);
+			r_deac_addr <= (fstep_remain < deac_addr_max ? fstep_remain : deac_addr_max);
+		end
+	end
+	/// minimum of acce_data_final / deac_data_final / speed_max
+	always @ (posedge clk) begin
+		if (rd_en_d4) begin
+			if (acce_data > deac_data)
+				speed_var <= acce_data;
+			else
+				speed_var <= deac_data;
+		end
+	end
+	always @ (posedge clk) begin
+		if (rd_en_d5) begin
+			if (speed_var > speed_max)
+				speed_cur <= speed_var;
+			else
+				speed_cur <= speed_max;
+		end
+	end
+//////////////////////////////////// read block ram end ////////////////////////
 	/// speed counter result in output driver
 	always @ (posedge clk) begin
 		if (resetn == 1'b0)

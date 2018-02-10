@@ -93,14 +93,14 @@ pip_add_bus_if [ipx::current_core] clk {
 
 pip_add_usr_par [ipx::current_core] {C_CLK_DIV_NBR} {
 	display_name {Clock Division Number}
-	tooltip {Clock Division Number, must bigger than 4 for block ram reading delay}
+	tooltip {Clock Division Number, must bigger than 7 for block ram reading delay}
 	widget {comboBox}
 } {
 	value_resolve_type user
 	value 32
 	value_format long
 	value_validation_type list
-	value_validation_list {4 8 16 32}
+	value_validation_list {8 16 32}
 } {
 	value 32
 	value_format long

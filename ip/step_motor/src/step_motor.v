@@ -7,7 +7,7 @@ module step_motor #(
 	parameter integer C_SPEED_ADDRESS_WIDTH = 9,
 	parameter integer C_MICROSTEP_WIDTH = 3,
 
-	parameter integer C_CLK_DIV_NBR = 32,	/// >= 4 (block_ram read delay)
+	parameter integer C_CLK_DIV_NBR = 32,	/// >= 7 (block_ram read delay)
 	parameter integer C_MOTOR_NBR = 4,
 	parameter integer C_ZPD_SEQ = 32'hFFFFFFFF,
 	parameter integer C_MICROSTEP_PASSTHOUGH_SEQ = 32'h0

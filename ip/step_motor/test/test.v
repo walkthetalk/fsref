@@ -6,9 +6,11 @@ parameter integer C_STEP_NUMBER_WIDTH = 16;
 parameter integer C_SPEED_DATA_WIDTH = 16;
 parameter integer C_SPEED_ADDRESS_WIDTH = 9;
 parameter integer C_MICROSTEP_WIDTH = 3;
-parameter integer C_CLK_DIV_NBR = 5;
+parameter integer C_CLK_DIV_NBR = 7;
 parameter integer C_MOTOR_NBR = 2;
 parameter integer C_ZPD_SEQ = 8'b01;
+
+localparam integer C_MS = 2;
 
 reg	clk;
 reg	resetn;
@@ -154,11 +156,12 @@ always @ (posedge ctl_clk) begin
 	if (resetn == 1'b0) begin
 		s0_start <= 0;
 	end
-	else if (s0_state == 1'b0 && ~s0_start && ({$random}%2) && ~br_init) begin
+	else if (s0_state == 1'b0 && ~s0_start && ({$random}%1000 == 0) && ~br_init) begin
 		s0_speed <= 10;
 		s0_step  <= 30;
 		s0_dir   <= 0;
 		s0_start <= 1;
+		s0_ms    <= C_MS;
 	end
 	else begin
 		s0_start <= 0;
