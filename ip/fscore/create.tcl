@@ -13,6 +13,10 @@ proc create_fscore {
 	{data_width 64}
 	{burst_length 16}
 	{fifo_aximm_depth 128}
+	{motor_step_width 32}
+	{motor_speed_width 32}
+	{motor_br_addr_width 9}
+	{motor_ms_width 3}
 } {
 	if {$coreversion == {}} { set coreversion [format 0x%08x [clock seconds]] }
 
@@ -89,10 +93,10 @@ proc create_fscore {
 		CONFIG.C_MOTOR_NBR 2 \
 		CONFIG.C_ZPD_SEQ {"11"} \
 		CONFIG.C_MICROSTEP_PASSTHOUGH_SEQ {"11"} \
-		CONFIG.C_STEP_NUMBER_WIDTH 16 \
-		CONFIG.C_SPEED_DATA_WIDTH 16 \
-		CONFIG.C_SPEED_ADDRESS_WIDTH 9 \
-		CONFIG.C_MICROSTEP_WIDTH 3 \
+		CONFIG.C_STEP_NUMBER_WIDTH $motor_step_width \
+		CONFIG.C_SPEED_DATA_WIDTH $motor_speed_width \
+		CONFIG.C_SPEED_ADDRESS_WIDTH $motor_br_addr_width \
+		CONFIG.C_MICROSTEP_WIDTH $motor_ms_width \
 	] [get_bd_cells $mname/push_motor]
 	endgroup
 
@@ -105,10 +109,10 @@ proc create_fscore {
 		CONFIG.C_MOTOR_NBR 2 \
 		CONFIG.C_ZPD_SEQ {"00"} \
 		CONFIG.C_MICROSTEP_PASSTHOUGH_SEQ {"11"} \
-		CONFIG.C_STEP_NUMBER_WIDTH 16 \
-		CONFIG.C_SPEED_DATA_WIDTH 16 \
-		CONFIG.C_SPEED_ADDRESS_WIDTH 9 \
-		CONFIG.C_MICROSTEP_WIDTH 3 \
+		CONFIG.C_STEP_NUMBER_WIDTH $motor_step_width \
+		CONFIG.C_SPEED_DATA_WIDTH $motor_speed_width \
+		CONFIG.C_SPEED_ADDRESS_WIDTH $motor_br_addr_width \
+		CONFIG.C_MICROSTEP_WIDTH $motor_ms_width \
 	] [get_bd_cells $mname/align_motor]
 	endgroup
 
@@ -146,9 +150,9 @@ proc create_fscore {
 		CONFIG.C_BR_SIZE_WIDTH 10 \
 		CONFIG.C_MOTOR_NBR 4 \
 		CONFIG.C_ZPD_SEQ {"0011"} \
-		CONFIG.C_STEP_NUMBER_WIDTH 16 \
-		CONFIG.C_SPEED_DATA_WIDTH 16 \
-		CONFIG.C_MICROSTEP_WIDTH 3 \
+		CONFIG.C_STEP_NUMBER_WIDTH $motor_step_width \
+		CONFIG.C_SPEED_DATA_WIDTH $motor_speed_width \
+		CONFIG.C_MICROSTEP_WIDTH $motor_ms_width \
 		CONFIG.C_PWM_NBR 2 \
 	] [get_bd_cells $mname/fsctl]
 	endgroup
