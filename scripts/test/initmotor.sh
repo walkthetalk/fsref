@@ -13,10 +13,10 @@ WR() {
 # 1/32 microstep
 MAXSPEED=$((2000 / 32))
 
-WR 30 0x3
+WR 16 0x3
 for i in `seq 511 -1 0`; do
-	WR 31 $(($MAXSPEED + 10 * $i))
-	#WR 31 $(($MAXSPEED + 1000 * (255 - $i)))
+	WR 17 $(($MAXSPEED + 10 * $i))
+	#WR 17 $(($MAXSPEED + 1000 * (255 - $i)))
 done
-WR 30 0x0
+WR 16 0x0
 
