@@ -509,18 +509,18 @@ pip_add_usr_par [ipx::current_core] {C_BR_INITOR_NBR} {
 	value_format long
 }
 
-pip_add_usr_par [ipx::current_core] {C_BR_SIZE_WIDTH} {
-	display_name {Blockram Initor Number}
-	tooltip {Blockram Initor Number}
+pip_add_usr_par [ipx::current_core] {C_BR_ADDR_WIDTH} {
+	display_name {Blockram Address Width}
+	tooltip {Blockram Address Width}
 	widget {comboBox}
 } {
 	value_resolve_type user
-	value 10
+	value 9
 	value_format long
 	value_validation_type list
 	value_validation_list {1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16}
 } {
-	value 10
+	value 9
 	value_format long
 }
 

@@ -38,7 +38,7 @@ module fsctl #
 	parameter integer C_S7_SIZE = 'h00100000,
 
 	parameter integer C_BR_INITOR_NBR = 2, /// <= 8
-	parameter integer C_BR_SIZE_WIDTH = 10,
+	parameter integer C_BR_ADDR_WIDTH = 9,
 	parameter integer C_MOTOR_NBR = 4, /// <= 8
 	parameter integer C_ZPD_SEQ = 8'b00000011,
 	parameter integer C_SPEED_DATA_WIDTH = 16,
@@ -330,42 +330,42 @@ module fsctl #
 	output wire                          br0_init,
 	output wire                          br0_wr_en,
 	output wire [C_SPEED_DATA_WIDTH-1:0] br0_data,
-	input  wire [C_BR_SIZE_WIDTH-1:0]    br0_size,
+	input  wire [C_BR_ADDR_WIDTH:0]      br0_size,
 /// blockram initor 1
 	output wire                          br1_init,
 	output wire                          br1_wr_en,
 	output wire [C_SPEED_DATA_WIDTH-1:0] br1_data,
-	input  wire [C_BR_SIZE_WIDTH-1:0]    br1_size,
+	input  wire [C_BR_ADDR_WIDTH:0]      br1_size,
 /// blockram initor 2
 	output wire                          br2_init,
 	output wire                          br2_wr_en,
 	output wire [C_SPEED_DATA_WIDTH-1:0] br2_data,
-	input  wire [C_BR_SIZE_WIDTH-1:0]    br2_size,
+	input  wire [C_BR_ADDR_WIDTH:0]      br2_size,
 /// blockram initor 3
 	output wire                          br3_init,
 	output wire                          br3_wr_en,
 	output wire [C_SPEED_DATA_WIDTH-1:0] br3_data,
-	input  wire [C_BR_SIZE_WIDTH-1:0]    br3_size,
+	input  wire [C_BR_ADDR_WIDTH:0]      br3_size,
 /// blockram initor 4
 	output wire                          br4_init,
 	output wire                          br4_wr_en,
 	output wire [C_SPEED_DATA_WIDTH-1:0] br4_data,
-	input  wire [C_BR_SIZE_WIDTH-1:0]    br4_size,
+	input  wire [C_BR_ADDR_WIDTH:0]      br4_size,
 /// blockram initor 5
 	output wire                          br5_init,
 	output wire                          br5_wr_en,
 	output wire [C_SPEED_DATA_WIDTH-1:0] br5_data,
-	input  wire [C_BR_SIZE_WIDTH-1:0]    br5_size,
+	input  wire [C_BR_ADDR_WIDTH:0]      br5_size,
 /// blockram initor 6
 	output wire                          br6_init,
 	output wire                          br6_wr_en,
 	output wire [C_SPEED_DATA_WIDTH-1:0] br6_data,
-	input  wire [C_BR_SIZE_WIDTH-1:0]    br6_size,
+	input  wire [C_BR_ADDR_WIDTH:0]      br6_size,
 /// blockram initor 7
 	output wire                          br7_init,
 	output wire                          br7_wr_en,
 	output wire [C_SPEED_DATA_WIDTH-1:0] br7_data,
-	input  wire [C_BR_SIZE_WIDTH-1:0]    br7_size,
+	input  wire [C_BR_ADDR_WIDTH:0]      br7_size,
 /// step motor 0
 	output wire                           motor0_xen,
 	output wire                           motor0_xrst,
@@ -512,6 +512,9 @@ module fsctl #
 	output wire [C_PWM_CNT_WIDTH-1:0] pwm7_numerator,
 	output wire [C_PWM_CNT_WIDTH-1:0] pwm7_denominator
 );
+
+	localparam C_BR_SIZE_WIDTH = C_BR_ADDR_WIDTH + 1;
+
 	assign st_addr = C_ST_ADDR;
 
 	wire [C_REG_IDX_WIDTH-1:0] rd_index;
