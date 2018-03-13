@@ -251,13 +251,12 @@ module single_step_motor #(
 		rd_en_d5 <= rd_en_d4;
 	end
 
-	/// rd_en_d1: full step counter
-	reg [C_STEP_NUMBER_WIDTH-1:0]   fstep_cnt;
-	reg [C_STEP_NUMBER_WIDTH-1:0]	fstep_remain;
+	reg   acce_ing;
+	reg   deac_ing;
 	always @ (posedge clk) begin
 		if (rd_en) begin
-			fstep_cnt    <= (step_cnt    >> o_ms);
-			fstep_remain <= (step_remain >> o_ms);
+			acce_ing <= (step_cnt    < acce_addr_max);
+			deac_ing <= (step_remain < deac_addr_max);
 		end
 	end
 
@@ -270,8 +269,8 @@ module single_step_motor #(
 	assign deac_addr = r_deac_addr;
 	always @ (posedge clk) begin
 		if (rd_en_d1) begin
-			r_acce_addr <= (fstep_cnt    < acce_addr_max ? fstep_cnt    : acce_addr_max);
-			r_deac_addr <= (fstep_remain < deac_addr_max ? fstep_remain : deac_addr_max);
+			r_acce_addr <= (acce_ing ? step_cnt    : acce_addr_max);
+			r_deac_addr <= (deac_ing ? step_remain : deac_addr_max);
 		end
 	end
 	/// minimum of acce_data_final / deac_data_final / speed_max
