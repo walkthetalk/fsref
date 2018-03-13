@@ -219,6 +219,7 @@ for {set i 0} {$i < 8} {incr i} {
 		ZPSIGN    motor[set i]_zpsign
 		TPSIGN    motor[set i]_tpsign
 		STATE     motor[set i]_state
+		RT_SPEED  motor[set i]_rt_speed
 		STROKE    motor[set i]_stroke
 		START     motor[set i]_start
 		STOP      motor[set i]_stop

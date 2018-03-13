@@ -372,6 +372,7 @@ module fsctl #
 	input  wire                           motor0_zpsign,
 	input  wire                           motor0_tpsign,	/// terminal position detection
 	input  wire                           motor0_state,
+	input  wire [C_SPEED_DATA_WIDTH-1:0]  motor0_rt_speed,
 	output wire [C_STEP_NUMBER_WIDTH-1:0] motor0_stroke,
 	output wire                           motor0_start,
 	output wire                           motor0_stop,
@@ -385,6 +386,7 @@ module fsctl #
 	input  wire                           motor1_zpsign,
 	input  wire                           motor1_tpsign,	/// terminal position detection
 	input  wire                           motor1_state,
+	input  wire [C_SPEED_DATA_WIDTH-1:0]  motor1_rt_speed,
 	output wire [C_STEP_NUMBER_WIDTH-1:0] motor1_stroke,
 	output wire                           motor1_start,
 	output wire                           motor1_stop,
@@ -398,6 +400,7 @@ module fsctl #
 	input  wire                           motor2_zpsign,
 	input  wire                           motor2_tpsign,	/// terminal position detection
 	input  wire                           motor2_state,
+	input  wire [C_SPEED_DATA_WIDTH-1:0]  motor2_rt_speed,
 	output wire [C_STEP_NUMBER_WIDTH-1:0] motor2_stroke,
 	output wire                           motor2_start,
 	output wire                           motor2_stop,
@@ -411,6 +414,7 @@ module fsctl #
 	input  wire                           motor3_zpsign,
 	input  wire                           motor3_tpsign,	/// terminal position detection
 	input  wire                           motor3_state,
+	input  wire [C_SPEED_DATA_WIDTH-1:0]  motor3_rt_speed,
 	output wire [C_STEP_NUMBER_WIDTH-1:0] motor3_stroke,
 	output wire                           motor3_start,
 	output wire                           motor3_stop,
@@ -424,6 +428,7 @@ module fsctl #
 	input  wire                           motor4_zpsign,
 	input  wire                           motor4_tpsign,	/// terminal position detection
 	input  wire                           motor4_state,
+	input  wire [C_SPEED_DATA_WIDTH-1:0]  motor4_rt_speed,
 	output wire [C_STEP_NUMBER_WIDTH-1:0] motor4_stroke,
 	output wire                           motor4_start,
 	output wire                           motor4_stop,
@@ -437,6 +442,7 @@ module fsctl #
 	input  wire                           motor5_zpsign,
 	input  wire                           motor5_tpsign,	/// terminal position detection
 	input  wire                           motor5_state,
+	input  wire [C_SPEED_DATA_WIDTH-1:0]  motor5_rt_speed,
 	output wire [C_STEP_NUMBER_WIDTH-1:0] motor5_stroke,
 	output wire                           motor5_start,
 	output wire                           motor5_stop,
@@ -450,6 +456,7 @@ module fsctl #
 	input  wire                           motor6_zpsign,
 	input  wire                           motor6_tpsign,	/// terminal position detection
 	input  wire                           motor6_state,
+	input  wire [C_SPEED_DATA_WIDTH-1:0]  motor6_rt_speed,
 	output wire [C_STEP_NUMBER_WIDTH-1:0] motor6_stroke,
 	output wire                           motor6_start,
 	output wire                           motor6_stop,
@@ -463,6 +470,7 @@ module fsctl #
 	input  wire                           motor7_zpsign,
 	input  wire                           motor7_tpsign,	/// terminal position detection
 	input  wire                           motor7_state,
+	input  wire [C_SPEED_DATA_WIDTH-1:0]  motor7_rt_speed,
 	output wire [C_STEP_NUMBER_WIDTH-1:0] motor7_stroke,
 	output wire                           motor7_start,
 	output wire                           motor7_stop,
@@ -726,6 +734,7 @@ generate
 	localparam EN_ZP5 = ((C_ZPD_SEQ >> 5) & 1) & EN_MT5;
 	localparam EN_ZP6 = ((C_ZPD_SEQ >> 6) & 1) & EN_MT6;
 	localparam EN_ZP7 = ((C_ZPD_SEQ >> 7) & 1) & EN_MT7;
+
 	/// MOTOR EN_RST
 	`COND(EN_MT0, `DEFREG_DIRECT_OUT(32,  ( 0+0), 1, motor0_xen,  0, 0))
 	`COND(EN_MT0, `DEFREG_DIRECT_OUT(32,  ( 0+1), 1, motor0_xrst, 0, 0))
