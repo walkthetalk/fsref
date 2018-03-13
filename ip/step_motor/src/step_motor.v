@@ -37,6 +37,7 @@ module step_motor #(
 	input  wire                           s0_dir,
 	input  wire [C_MICROSTEP_WIDTH-1:0]   s0_ms,
 	output wire                           s0_state,
+	output wire [C_SPEED_DATA_WIDTH-1:0]  s0_rt_speed,
 	input  wire                           s0_xen,
 	input  wire                           s0_xrst,
 
@@ -57,6 +58,7 @@ module step_motor #(
 	input  wire                           s1_dir,
 	input  wire [C_MICROSTEP_WIDTH-1:0]   s1_ms,
 	output wire                           s1_state,
+	output wire [C_SPEED_DATA_WIDTH-1:0]  s1_rt_speed,
 	input  wire                           s1_xen,
 	input  wire                           s1_xrst,
 
@@ -77,6 +79,7 @@ module step_motor #(
 	input  wire                           s2_dir,
 	input  wire [C_MICROSTEP_WIDTH-1:0]   s2_ms,
 	output wire                           s2_state,
+	output wire [C_SPEED_DATA_WIDTH-1:0]  s2_rt_speed,
 	input  wire                           s2_xen,
 	input  wire                           s2_xrst,
 
@@ -97,6 +100,7 @@ module step_motor #(
 	input  wire                           s3_dir,
 	input  wire [C_MICROSTEP_WIDTH-1:0]   s3_ms,
 	output wire                           s3_state,
+	output wire [C_SPEED_DATA_WIDTH-1:0]  s3_rt_speed,
 	input  wire                           s3_xen,
 	input  wire                           s3_xrst,
 
@@ -117,6 +121,7 @@ module step_motor #(
 	input  wire                           s4_dir,
 	input  wire [C_MICROSTEP_WIDTH-1:0]   s4_ms,
 	output wire                           s4_state,
+	output wire [C_SPEED_DATA_WIDTH-1:0]  s4_rt_speed,
 	input  wire                           s4_xen,
 	input  wire                           s4_xrst,
 
@@ -137,6 +142,7 @@ module step_motor #(
 	input  wire                           s5_dir,
 	input  wire [C_MICROSTEP_WIDTH-1:0]   s5_ms,
 	output wire                           s5_state,
+	output wire [C_SPEED_DATA_WIDTH-1:0]  s5_rt_speed,
 	input  wire                           s5_xen,
 	input  wire                           s5_xrst,
 
@@ -157,6 +163,7 @@ module step_motor #(
 	input  wire                           s6_dir,
 	input  wire [C_MICROSTEP_WIDTH-1:0]   s6_ms,
 	output wire                           s6_state,
+	output wire [C_SPEED_DATA_WIDTH-1:0]  s6_rt_speed,
 	input  wire                           s6_xen,
 	input  wire                           s6_xrst,
 
@@ -177,6 +184,7 @@ module step_motor #(
 	input  wire                           s7_dir,
 	input  wire [C_MICROSTEP_WIDTH-1:0]   s7_ms,
 	output wire                           s7_state,
+	output wire [C_SPEED_DATA_WIDTH-1:0]  s7_rt_speed,
 	input  wire                           s7_xen,
 	input  wire                           s7_xrst
 );
@@ -279,18 +287,19 @@ module step_motor #(
 	wire                           m_xen[MAX_MOTOR_NBR-1:0];
 	wire                           m_xrst[MAX_MOTOR_NBR-1:0];
 
-	wire                           s_zpsign[MAX_MOTOR_NBR-1:0];
-	wire                           s_tpsign[MAX_MOTOR_NBR-1:0];
-	wire [C_STEP_NUMBER_WIDTH-1:0] s_stroke[MAX_MOTOR_NBR-1:0];
-	wire [C_SPEED_DATA_WIDTH-1:0]  s_speed[MAX_MOTOR_NBR-1:0];
-	wire [C_STEP_NUMBER_WIDTH-1:0] s_step[MAX_MOTOR_NBR-1:0];
-	wire                           s_start[MAX_MOTOR_NBR-1:0];
-	wire                           s_stop[MAX_MOTOR_NBR-1:0];
-	wire                           s_dir[MAX_MOTOR_NBR-1:0];
-	wire [C_MICROSTEP_WIDTH-1:0]   s_ms[MAX_MOTOR_NBR-1:0];
-	wire                           s_state[MAX_MOTOR_NBR-1:0];
-	wire                           s_xen[MAX_MOTOR_NBR-1:0];
-	wire                           s_xrst[MAX_MOTOR_NBR-1:0];
+	wire                           s_zpsign   [MAX_MOTOR_NBR-1:0];
+	wire                           s_tpsign   [MAX_MOTOR_NBR-1:0];
+	wire [C_STEP_NUMBER_WIDTH-1:0] s_stroke   [MAX_MOTOR_NBR-1:0];
+	wire [C_SPEED_DATA_WIDTH-1:0]  s_speed    [MAX_MOTOR_NBR-1:0];
+	wire [C_STEP_NUMBER_WIDTH-1:0] s_step     [MAX_MOTOR_NBR-1:0];
+	wire                           s_start    [MAX_MOTOR_NBR-1:0];
+	wire                           s_stop     [MAX_MOTOR_NBR-1:0];
+	wire                           s_dir      [MAX_MOTOR_NBR-1:0];
+	wire [C_MICROSTEP_WIDTH-1:0]   s_ms       [MAX_MOTOR_NBR-1:0];
+	wire                           s_state    [MAX_MOTOR_NBR-1:0];
+	wire [C_SPEED_DATA_WIDTH-1:0]  s_rt_speed [MAX_MOTOR_NBR-1:0];
+	wire                           s_xen      [MAX_MOTOR_NBR-1:0];
+	wire                           s_xrst     [MAX_MOTOR_NBR-1:0];
 `define ASSIGN_M_OUT(_i, _port) assign m``_i``_``_port = m_``_port[_i]
 `define ASSIGN_M_IN(_i, _port) assign m_``_port[_i] = m``_i``_``_port
 `define ASSIGN_S_OUT(_i, _port) assign s``_i``_``_port = s_``_port[_i]
@@ -313,7 +322,8 @@ module step_motor #(
 	`ASSIGN_S_IN(_i, xrst); \
 	`ASSIGN_S_OUT(_i, zpsign); \
 	`ASSIGN_S_OUT(_i, tpsign); \
-	`ASSIGN_S_OUT(_i, state)
+	`ASSIGN_S_OUT(_i, state); \
+	`ASSIGN_S_OUT(_i, rt_speed)
 
 	`ASSIGN_SINGLE_MOTOR(0);
 	`ASSIGN_SINGLE_MOTOR(1);
@@ -366,6 +376,7 @@ module step_motor #(
 			.i_dir(s_dir[i]),
 			.i_ms(s_ms[i]),
 			.o_state(s_state[i]),
+			.o_speed(s_rt_speed[i]),
 			.i_xen(s_xen[i]),
 			.i_xrst(s_xrst[i])
 		);

@@ -31,18 +31,19 @@ module single_step_motor #(
 	output wire o_xrst,
 
 	/// valid when C_ZPD == 1
-	output wire zpsign,
-	output wire tpsign,	/// terminal position detection
-	input  wire [C_STEP_NUMBER_WIDTH-1:0]   stroke,
+	output wire                             zpsign ,
+	output wire                             tpsign ,	/// terminal position detection
+	input  wire [C_STEP_NUMBER_WIDTH-1:0]   stroke ,
 	input  wire [C_SPEED_DATA_WIDTH-1:0]	i_speed,
-	input  wire [C_STEP_NUMBER_WIDTH-1:0]	i_step,
-	input  wire i_start,
-	input  wire i_stop,
-	input  wire i_dir,
-	input  wire [C_MICROSTEP_WIDTH-1:0] i_ms,
-	output wire o_state,
-	input  wire i_xen,
-	input  wire i_xrst
+	input  wire [C_STEP_NUMBER_WIDTH-1:0]	i_step ,
+	input  wire                             i_start,
+	input  wire                             i_stop ,
+	input  wire                             i_dir  ,
+	input  wire [C_MICROSTEP_WIDTH-1:0]     i_ms   ,
+	output wire                             o_state,
+	output wire [C_SPEED_DATA_WIDTH-1:0]    o_speed,
+	input  wire                             i_xen  ,
+	input  wire                             i_xrst
 );
 	/// state macro
 	localparam integer IDLE = 2'b00;
@@ -282,6 +283,8 @@ module single_step_motor #(
 				speed_var <= deac_data;
 		end
 	end
+
+	assign o_speed = speed_cur;
 	always @ (posedge clk) begin
 		if (rd_en_d5) begin
 			if (speed_var > speed_max)

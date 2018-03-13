@@ -56,6 +56,7 @@ for {set i 0} {$i < 8} {incr i} {
 		ZPSIGN    s[set i]_zpsign
 		TPSIGN    s[set i]_tpsign
 		STATE     s[set i]_state
+		RT_SPEED  s[set i]_rt_speed
 		STROKE    s[set i]_stroke
 		START     s[set i]_start
 		STOP      s[set i]_stop
