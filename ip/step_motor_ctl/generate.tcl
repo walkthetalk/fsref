@@ -59,6 +59,12 @@ pip_add_bus_abstraction_port [ipx::current_busabs] STATE {
 	is_data true
 }
 
+pip_add_bus_abstraction_port [ipx::current_busabs] RT_SPEED {
+	default_value 0
+	master_direction in
+	is_data true
+}
+
 # stroke
 pip_add_bus_abstraction_port [ipx::current_busabs] STROKE {
 	default_value 0
