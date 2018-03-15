@@ -30,6 +30,7 @@ set ip_list [list \
 	axi_combiner \
 	step_motor \
 	fsctl \
+	timestamper \
 ]
 
 if { $argc eq 1 } {
