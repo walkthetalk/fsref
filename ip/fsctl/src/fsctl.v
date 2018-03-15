@@ -4,21 +4,22 @@
 
 module fsctl #
 (
-	parameter integer C_CORE_VERSION = 32'hFF00FF00,
+	parameter integer C_CORE_VERSION   = 32'hFF00FF00,
+	parameter integer C_TS_WIDTH       = 64,
 
-	parameter integer C_DATA_WIDTH	= 32,
-	parameter integer C_REG_IDX_WIDTH	= 8,
+	parameter integer C_DATA_WIDTH     = 32,
+	parameter integer C_REG_IDX_WIDTH  = 8,
 
-	parameter integer C_IMG_WBITS = 12,
-	parameter integer C_IMG_HBITS = 12,
+	parameter integer C_IMG_WBITS      = 12,
+	parameter integer C_IMG_HBITS      = 12,
 
-	parameter integer C_IMG_WDEF = 320,
-	parameter integer C_IMG_HDEF = 240,
+	parameter integer C_IMG_WDEF       = 320,
+	parameter integer C_IMG_HDEF       = 240,
 
-	parameter integer C_STREAM_NBR = 2,
+	parameter integer C_STREAM_NBR     = 2,
 
 	parameter integer C_BUF_ADDR_WIDTH = 32,
-	parameter integer C_BUF_IDX_WIDTH = 2,
+	parameter integer C_BUF_IDX_WIDTH  = 2,
 	parameter integer C_ST_ADDR = 'h3D000000,
 	parameter integer C_S0_ADDR = 'h3E000000,
 	parameter integer C_S0_SIZE = 'h00100000,
@@ -115,6 +116,7 @@ module fsctl #
 	input  wire                        s0_wr_done,
 	output wire                        s0_rd_en,
 	input  wire [C_BUF_IDX_WIDTH-1:0]  s0_rd_buf_idx,
+	input  wire [C_TS_WIDTH-1:0]       s0_rd_buf_ts,
 /// stream 1
 	output wire                        s1_soft_resetn,
 
@@ -145,6 +147,7 @@ module fsctl #
 	input  wire                        s1_wr_done,
 	output wire                        s1_rd_en,
 	input  wire [C_BUF_IDX_WIDTH-1:0]  s1_rd_buf_idx,
+	input  wire [C_TS_WIDTH-1:0]       s1_rd_buf_ts,
 /// stream 2
 	output wire                        s2_soft_resetn,
 
@@ -175,6 +178,7 @@ module fsctl #
 	input  wire                        s2_wr_done,
 	output wire                        s2_rd_en,
 	input  wire [C_BUF_IDX_WIDTH-1:0]  s2_rd_buf_idx,
+	input  wire [C_TS_WIDTH-1:0]       s2_rd_buf_ts,
 /// stream 3
 	output wire                        s3_soft_resetn,
 
@@ -205,6 +209,7 @@ module fsctl #
 	input  wire                        s3_wr_done,
 	output wire                        s3_rd_en,
 	input  wire [C_BUF_IDX_WIDTH-1:0]  s3_rd_buf_idx,
+	input  wire [C_TS_WIDTH-1:0]       s3_rd_buf_ts,
 /// stream 4
 	output wire                        s4_soft_resetn,
 
@@ -235,6 +240,7 @@ module fsctl #
 	input  wire                        s4_wr_done,
 	output wire                        s4_rd_en,
 	input  wire [C_BUF_IDX_WIDTH-1:0]  s4_rd_buf_idx,
+	input  wire [C_TS_WIDTH-1:0]       s4_rd_buf_ts,
 /// stream 5
 	output wire                        s5_soft_resetn,
 
@@ -265,6 +271,7 @@ module fsctl #
 	input  wire                        s5_wr_done,
 	output wire                        s5_rd_en,
 	input  wire [C_BUF_IDX_WIDTH-1:0]  s5_rd_buf_idx,
+	input  wire [C_TS_WIDTH-1:0]       s5_rd_buf_ts,
 /// stream 6
 	output wire                        s6_soft_resetn,
 
@@ -295,6 +302,7 @@ module fsctl #
 	input  wire                        s6_wr_done,
 	output wire                        s6_rd_en,
 	input  wire [C_BUF_IDX_WIDTH-1:0]  s6_rd_buf_idx,
+	input  wire [C_TS_WIDTH-1:0]       s6_rd_buf_ts,
 /// stream 7
 	output wire                        s7_soft_resetn,
 
@@ -325,6 +333,7 @@ module fsctl #
 	input  wire                        s7_wr_done,
 	output wire                        s7_rd_en,
 	input  wire [C_BUF_IDX_WIDTH-1:0]  s7_rd_buf_idx,
+	input  wire [C_TS_WIDTH-1:0]       s7_rd_buf_ts,
 
 /// blockram initor 0
 	output wire                          br0_init,

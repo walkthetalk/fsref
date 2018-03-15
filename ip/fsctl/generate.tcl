@@ -93,6 +93,7 @@ for {set i 0} {$i < 8} {incr i} {
 	}] [subst {
 		SOF s[set i]_rd_en
 		IDX s[set i]_rd_buf_idx
+		TS  s[set i]_rd_buf_ts
 	}]
 	append_associate_busif o_clk_busif S[set i]_READ
 
@@ -327,6 +328,21 @@ pip_add_usr_par [ipx::current_core] C_CORE_VERSION {
 	value_bit_string_length 32
 	value {0xFF00FF00}
 	value_format bitString
+}
+
+pip_add_usr_par [ipx::current_core] {C_TS_WIDTH} {
+	display_name {Data Width}
+	tooltip { DATA WIDTH}
+	widget {comboBox}
+} {
+	value_resolve_type user
+	value 64
+	value_format long
+	value_validation_type list
+	value_validation_list {64}
+} {
+	value 64
+	value_format long
 }
 
 pip_add_usr_par [ipx::current_core] {C_DATA_WIDTH} {
