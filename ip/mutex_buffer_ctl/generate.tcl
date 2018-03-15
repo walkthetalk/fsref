@@ -39,6 +39,12 @@ pip_add_bus_abstraction_port [ipx::current_busabs] IDX {
 	is_address true
 }
 
+pip_add_bus_abstraction_port [ipx::current_busabs] TS {
+	default_value 0
+	master_direction in
+	is_data true
+}
+
 ipx::save_abstraction_definition [ipx::current_busabs]
 
 pip_set_prop [ipx::current_busdef] [subst {

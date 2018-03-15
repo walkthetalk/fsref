@@ -11,6 +11,7 @@ proc create_pvdma {
 	{data_width 64}
 	{burst_length 16}
 	{fifo_aximm_depth 128}
+	{ts_width 64}
 } {
 	global VENDOR
 	global LIBRARY
@@ -151,7 +152,10 @@ proc create_pvdma {
 		startgroup
 		create_bd_cell -type ip -vlnv $VENDOR:$LIBRARY:mutex_buffer:$VERSION $mname/mutex_buffer
 		endgroup
-		set_property -dict [list CONFIG.C_ADDR_WIDTH $addr_width] [get_bd_cells $mname/mutex_buffer]
+		set_property -dict [list \
+			CONFIG.C_ADDR_WIDTH $addr_width \
+			CONFIG.C_TS_WIDTH   $ts_width \
+		] [get_bd_cells $mname/mutex_buffer]
 
 		startgroup
 		create_bd_cell -type ip -vlnv $VENDOR:$LIBRARY:axi_combiner:$VERSION $mname/axi_combiner
@@ -171,6 +175,9 @@ proc create_pvdma {
 		connect_bd_intf_net [get_bd_intf_pins $mname/mm2s/MBUF_R] [get_bd_intf_pins $mname/mutex_buffer/MBUF_R1]
 		connect_bd_intf_net [get_bd_intf_pins $mname/s2mm/MBUF_W] [get_bd_intf_pins $mname/mutex_buffer/MBUF_W]
 		connect_bd_intf_net [get_bd_intf_pins $mname/mutex_buffer/MBUF_R0] [get_bd_intf_pins $mname/MBUF_R]
+
+		create_bd_pin -from [expr $ts_width - 1] -to 0 -dir I -type data $mname/sys_ts
+		connect_bd_net [get_bd_pins $mname/sys_ts] [get_bd_pins $mname/mutex_buffer/sys_ts]
 
 		#cfg
 		#     address

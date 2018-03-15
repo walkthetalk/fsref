@@ -17,6 +17,7 @@ proc create_fscore {
 	{motor_speed_width 32}
 	{motor_br_addr_width 9}
 	{motor_ms_width 3}
+	{ts_width 64}
 } {
 	if {$coreversion == {}} { set coreversion [format 0x%08x [clock seconds]] }
 
@@ -26,9 +27,16 @@ proc create_fscore {
 
 	create_bd_cell -type hier $mname
 
+	startgroup
+	create_bd_cell -type ip -vlnv $VENDOR:$LIBRARY:timestamper:$VERSION $mname/sys_timestamper
+	endgroup
+	startgroup
+	set_property -dict [list CONFIG.C_TS_WIDTH $ts_width] [get_bd_cells $mname/sys_timestamper]
+	endgroup
+
 	create_pvdma $mname/pvdma_T mm2s 32 $img_w_width $img_h_width $addr_width $data_width $burst_length $fifo_aximm_depth
-	create_pvdma $mname/pvdma_0 bidirection $pixel_width $img_w_width $img_h_width $addr_width $data_width $burst_length $fifo_aximm_depth
-	create_pvdma $mname/pvdma_1 bidirection $pixel_width $img_w_width $img_h_width $addr_width $data_width $burst_length $fifo_aximm_depth
+	create_pvdma $mname/pvdma_0 bidirection $pixel_width $img_w_width $img_h_width $addr_width $data_width $burst_length $fifo_aximm_depth $ts_width
+	create_pvdma $mname/pvdma_1 bidirection $pixel_width $img_w_width $img_h_width $addr_width $data_width $burst_length $fifo_aximm_depth $ts_width
 
 	startgroup
 	create_bd_cell -type ip -vlnv $VENDOR:$LIBRARY:axis_window:$VERSION $mname/axis_window_0
@@ -237,6 +245,11 @@ proc create_fscore {
 		$mname/pblender/st_enable
 	}]
 
+	pip_connect_pin $mname/sys_timestamper/ts [subst {
+		$mname/pvdma_0/sys_ts
+		$mname/pvdma_1/sys_ts
+	}]
+
 	pip_connect_pin $mname/fsctl/s0_soft_resetn [subst {
 		$mname/pvdma_0/soft_resetn
 		$mname/axis_window_0/resetn
@@ -277,6 +290,7 @@ proc create_fscore {
 	}]
 	create_bd_pin -dir I $mname/clk
 	pip_connect_pin $mname/clk [subst {
+		$mname/sys_timestamper/clk
 		$mname/fsctl/o_clk
 		$mname/pvdma_T/clk
 		$mname/pvdma_0/clk
@@ -297,6 +311,7 @@ proc create_fscore {
 	}]
 	create_bd_pin -dir I $mname/resetn
 	pip_connect_pin $mname/resetn [subst {
+		$mname/sys_timestamper/resetn
 		$mname/fsctl/o_resetn
 		$mname/pvdma_T/resetn
 		$mname/pvdma_0/resetn

@@ -24,9 +24,10 @@ pip_add_bus_if [ipx::current_core] MBUF_R0 [subst {
 	bus_type_vlnv $VENDOR:interface:mutex_buffer_ctl:1.0
 	interface_mode slave
 }] {
-	SOF r0_sof
+	SOF  r0_sof
 	ADDR r0_addr
-	IDX r0_idx
+	IDX  r0_idx
+	TS   r0_ts
 }
 
 pip_add_bus_if [ipx::current_core] MBUF_R1 [subst {
@@ -34,9 +35,10 @@ pip_add_bus_if [ipx::current_core] MBUF_R1 [subst {
 	bus_type_vlnv $VENDOR:interface:mutex_buffer_ctl:1.0
 	interface_mode slave
 }] {
-	SOF r1_sof
+	SOF  r1_sof
 	ADDR r1_addr
-	IDX r1_idx
+	IDX  r1_idx
+	TS   r1_ts
 }
 
 pip_add_bus_if [ipx::current_core] MBUF_W [subst {
@@ -58,6 +60,14 @@ pip_add_bus_if [ipx::current_core] BUF_ADDR [subst {
 	ADDR1 buf1_addr
 	ADDR2 buf2_addr
 	ADDR3 buf3_addr
+}
+
+pip_add_bus_if [ipx::current_core] sys_ts {
+	abstraction_type_vlnv {xilinx.com:signal:data_rtl:1.0}
+	bus_type_vlnv {xilinx.com:signal:data:1.0}
+	interface_mode {slave}
+} {
+	DATA sys_ts
 }
 
 #pip_add_bus_if [ipx::current_core] intr {
@@ -101,6 +111,21 @@ pip_add_usr_par [ipx::current_core] {C_ADDR_WIDTH} {
 	value_validation_list {32 64}
 } {
 	value 32
+	value_format long
+}
+
+pip_add_usr_par [ipx::current_core] {C_TS_WIDTH} {
+	display_name {Timestamp Width}
+	tooltip {TIMESTAMP WIDTH}
+	widget {comboBox}
+} {
+	value_resolve_type user
+	value 64
+	value_format long
+	value_validation_type list
+	value_validation_list {32 64}
+} {
+	value 64
 	value_format long
 }
 
