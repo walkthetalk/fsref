@@ -380,6 +380,8 @@ module single_step_motor #(
 		end
 	end
 	else begin
+		assign zpsign = 0;
+		assign tpsign = 0;
 		assign shouldStop = (step_done && (speed_cnt == 0));
 	end
 	endgenerate
