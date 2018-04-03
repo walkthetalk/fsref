@@ -80,5 +80,5 @@ set_property -dict {IOSTANDARD LVCMOS33 PACKAGE_PIN V20} [get_ports {am0_dir}]
 set_property -dict {IOSTANDARD LVCMOS33 PACKAGE_PIN T17} [get_ports {am1_drive}]
 set_property -dict {IOSTANDARD LVCMOS33 PACKAGE_PIN V16} [get_ports {am1_dir}]
 
-set_clock_groups -asynchronous -group clk_fpga_0 -group clk_fpga_1
-set_clock_groups -asynchronous -group clk_fpga_2 -group clk_fpga_1
+set_clock_groups -asynchronous -group [get_clocks {clk_fpga_0 clk_fpga_1}]
+set_clock_groups -asynchronous -group [get_clocks {clk_fpga_2 clk_fpga_1}]
