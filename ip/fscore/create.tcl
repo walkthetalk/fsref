@@ -15,7 +15,7 @@ proc create_fscore {
 	{fifo_aximm_depth 128}
 	{motor_step_width 32}
 	{motor_speed_width 32}
-	{motor_br_addr_width 9}
+	{motor_br_addr_width 10}
 	{motor_ms_width 3}
 	{ts_width 64}
 } {
