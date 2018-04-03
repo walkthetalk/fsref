@@ -81,7 +81,7 @@ module axis_generator #
 );
 	localparam integer C_MAX_WIN_NUM = 8;
 
-	reg [C_IMG_WBITS-1:0] cidx;
+	//reg [C_IMG_WBITS-1:0] cidx;
 	reg [C_IMG_WBITS-1:0] cidx_next;
 	reg [C_IMG_HBITS-1:0] ridx;
 	reg [C_IMG_HBITS-1:0] ridx_next;
@@ -167,12 +167,12 @@ endgenerate
 		end
 	end
 
-	always @ (posedge clk) begin
-		if (resetn == 1'b0)
-			cidx <= 0;
-		else if (cupdate)
-			cidx <= cidx_next;
-	end
+	//always @ (posedge clk) begin
+	//	if (resetn == 1'b0)
+	//		cidx <= 0;
+	//	else if (cupdate)
+	//		cidx <= cidx_next;
+	//end
 
 	always @ (posedge clk) begin
 		if (resetn == 1'b0)
@@ -196,23 +196,30 @@ endgenerate
 	assign m_axis_tdata = 0;
 
 	/// window calc
-	wire                     s_enable   [C_MAX_WIN_NUM-1 : 0];
-	wire [C_WIN_NUM-1:0]     s_dst_bmp  [C_MAX_WIN_NUM-1 : 0];
-	wire [C_IMG_WBITS-1 : 0] win_left   [C_MAX_WIN_NUM-1 : 0];
-	wire [C_IMG_HBITS-1 : 0] win_top    [C_MAX_WIN_NUM-1 : 0];
-	wire [C_IMG_WBITS-1 : 0] win_width  [C_MAX_WIN_NUM-1 : 0];
-	wire [C_IMG_HBITS-1 : 0] win_height [C_MAX_WIN_NUM-1 : 0];
+	wire                     s_enable   [C_WIN_NUM-1 : 0];
+	wire [C_WIN_NUM-1:0]     s_dst_bmp  [C_WIN_NUM-1 : 0];
+	wire [C_IMG_WBITS-1 : 0] win_left   [C_WIN_NUM-1 : 0];
+	wire [C_IMG_HBITS-1 : 0] win_top    [C_WIN_NUM-1 : 0];
+	wire [C_IMG_WBITS-1 : 0] win_width  [C_WIN_NUM-1 : 0];
+	wire [C_IMG_HBITS-1 : 0] win_height [C_WIN_NUM-1 : 0];
 
 	wire [C_WIN_NUM-1:0]     s_need;
 
-`define ASSIGN_WIN(i) \
-	assign s_dst_bmp  [i] = s``i``_dst_bmp; \
-	assign win_left   [i] = s``i``_left   ; \
-	assign win_top    [i] = s``i``_top    ; \
-	assign win_width  [i] = s``i``_width  ; \
-	assign win_height [i] = s``i``_height ; \
-	assign s``i``_dst_bmp_o = s``i``_dst_bmp;
+`define ASSIGN_WIN(_idx) \
+	if (C_WIN_NUM > _idx) begin \
+		assign s_dst_bmp  [_idx] = s``_idx``_dst_bmp; \
+		assign win_left   [_idx] = s``_idx``_left   ; \
+		assign win_top    [_idx] = s``_idx``_top    ; \
+		assign win_width  [_idx] = s``_idx``_width  ; \
+		assign win_height [_idx] = s``_idx``_height ; \
+		assign s``_idx``_dst_bmp_o = s``_idx``_dst_bmp; \
+	end \
+	else begin \
+		assign s``_idx``_dst_bmp_o = 0; \
+	end
 
+
+	generate
 	`ASSIGN_WIN(0)
 	`ASSIGN_WIN(1)
 	`ASSIGN_WIN(2)
@@ -221,11 +228,11 @@ endgenerate
 	`ASSIGN_WIN(5)
 	`ASSIGN_WIN(6)
 	`ASSIGN_WIN(7)
+	endgenerate
 
 	generate
 		genvar i;
 		genvar j;
-
 		wire [C_WIN_NUM-1:0]     m_src_bmp  [C_WIN_NUM-1 : 0];
 		for (i = 0; i < C_WIN_NUM; i = i+1) begin: m_src_calc
 			for (j = 0; j < C_WIN_NUM; j = j+1) begin: m_src_bit_calc

@@ -53,7 +53,7 @@ module axis_window #
 	reg streaming;
 
 	reg [C_PIXEL_WIDTH-1:0] idata;
-	reg iuser;
+	///reg iuser;
 	reg ilast;
 	reg ivalid;
 	wire iready;
@@ -93,18 +93,13 @@ module axis_window #
 	always @(posedge clk) begin
 		if (resetn == 1'b0 || gap0) begin
 			idata <= 0;
-			iuser <= 0;
+			///iuser <= 0;
 			ilast <= 0;
 		end
 		else if (snext) begin
 			idata <= s_axis_tdata;
-			iuser <= s_axis_tuser;
+			///iuser <= s_axis_tuser;
 			ilast <= s_axis_tlast;
-		end
-		else begin
-			idata <= idata;
-			iuser <= iuser;
-			ilast <= ilast;
 		end
 	end
 
@@ -171,7 +166,7 @@ module axis_window #
 		.col_idx_next(col_idx_bak),
 		.col_update(col_update),
 		.row_idx(row_idx),
-		.row_idx_next(row_idx_bak),
+		///.row_idx_next(row_idx_bak),
 		.row_update(row_update),
 
 		.s_win_left(win_left),

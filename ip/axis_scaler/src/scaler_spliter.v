@@ -10,7 +10,7 @@ module scaler_spliter # (
 	input wire clk,
 	input wire resetn,
 
-	input [C_S_WIDTH-1:0] s_nbr,
+	///input [C_S_WIDTH-1:0] s_nbr,
 	input [C_M_WIDTH-1:0] m_nbr,
 
 	input wire enable,

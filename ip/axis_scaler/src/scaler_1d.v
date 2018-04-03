@@ -103,7 +103,7 @@ module scaler_1d # (
 		.clk      (clk   ),
 		.resetn   (resetn),
 
-		.s_nbr    (s_nbr),
+		///.s_nbr    (s_nbr),
 		.m_nbr    (m_nbr),
 
 		.enable          (sd_algo_enable               ),

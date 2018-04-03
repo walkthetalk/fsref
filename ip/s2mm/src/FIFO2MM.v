@@ -24,9 +24,9 @@ module FIFO2MM #
 	input wire [C_IMG_WBITS-1:0] img_width,
 	input wire [C_IMG_HBITS-1:0] img_height,
 
-	input wire sof,
+	//input wire sof,
 	input wire [C_M_AXI_DATA_WIDTH-1 : 0] din,
-	input wire empty,
+	//input wire empty,
 	output wire rd_en,
 	input wire [C_DATACOUNT_BITS-1:0] rd_data_count,
 
@@ -55,7 +55,9 @@ module FIFO2MM #
 
 	input wire [1 : 0] M_AXI_BRESP,
 	input wire  M_AXI_BVALID,
-	output wire  M_AXI_BREADY
+	output wire  M_AXI_BREADY,
+
+	output wire write_resp_error
 );
 
 	function integer clogb2 (input integer bit_depth);
@@ -237,7 +239,6 @@ module FIFO2MM #
 	//----------------------------
 
 	//Interface response error flags
-	wire  	write_resp_error;
 	assign write_resp_error = M_AXI_BVALID & M_AXI_BRESP[1];
 
 	always @(posedge M_AXI_ACLK) begin

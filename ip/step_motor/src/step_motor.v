@@ -226,6 +226,8 @@ module step_motor #(
 		.addrA(acce_we_en ? acce_we_addr : acce_addr_final),
 		.dataA(br_data),
 		.qA(acce_data_final),
+		.weB(1'b0),
+		.dataB(0),
 		.addrB(deac_addr_final),
 		.qB(deac_data_final)
 	);
@@ -280,12 +282,12 @@ module step_motor #(
 
 	/// motor logic
 	localparam  MAX_MOTOR_NBR = 8;
-	wire                           m_zpd[MAX_MOTOR_NBR-1:0];
-	wire                           m_drive[MAX_MOTOR_NBR-1:0];
-	wire                           m_dir[MAX_MOTOR_NBR-1:0];
-	wire [C_MICROSTEP_WIDTH-1:0]   m_ms[MAX_MOTOR_NBR-1:0];
-	wire                           m_xen[MAX_MOTOR_NBR-1:0];
-	wire                           m_xrst[MAX_MOTOR_NBR-1:0];
+	wire                           m_zpd      [MAX_MOTOR_NBR-1:0];
+	wire                           m_drive    [MAX_MOTOR_NBR-1:0];
+	wire                           m_dir      [MAX_MOTOR_NBR-1:0];
+	wire [C_MICROSTEP_WIDTH-1:0]   m_ms       [MAX_MOTOR_NBR-1:0];
+	wire                           m_xen      [MAX_MOTOR_NBR-1:0];
+	wire                           m_xrst     [MAX_MOTOR_NBR-1:0];
 
 	wire                           s_zpsign   [MAX_MOTOR_NBR-1:0];
 	wire                           s_tpsign   [MAX_MOTOR_NBR-1:0];
@@ -381,6 +383,19 @@ module step_motor #(
 			.i_xrst(s_xrst[i])
 		);
 		end	/// for
+		for (i = C_MOTOR_NBR; i < MAX_MOTOR_NBR; i = i + 1) begin: disabled_motor
+			assign m_drive   [i] = 0;
+			assign m_dir     [i] = 0;
+			assign m_ms      [i] = 0;
+			assign m_xen     [i] = 0;
+			assign m_xrst    [i] = 0;
+			assign s_zpsign  [i] = 0;
+			assign s_tpsign  [i] = 0;
+			assign s_state   [i] = 0;
+			assign s_rt_speed[i] = 0;
+			assign s_xen     [i] = 0;
+			assign s_xrst    [i] = 0;
+		end
 	endgenerate
 
 endmodule

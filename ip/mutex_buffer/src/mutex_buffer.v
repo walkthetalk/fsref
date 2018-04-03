@@ -57,9 +57,7 @@ module mutex_buffer #
 	assign wr_done = w_sof;
 
 	reg [C_BUFF_NUM-1:0]	r0_bmp;
-	reg [C_TS_WIDTH-1:0]    r0_ts;
 	reg [C_BUFF_NUM-1:0]	r1_bmp;
-	reg [C_TS_WIDTH-1:0]    r1_ts;
 
 	reg [C_ADDR_WIDTH-1:0]	last_addr;
 	reg [C_BUFF_NUM-1:0]	last_bmp;

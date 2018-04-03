@@ -147,9 +147,9 @@ module s2mm #
 		.soft_resetn(soft_resetn),
 		//.resetting(resetting),
 
-		.sof(s2mm_rd_data[sofIdx(reverseI(0))]),
+		//.sof(s2mm_rd_data[sofIdx(reverseI(0))]),
 		.din(s2mm_pixel_data),
-		.empty(s2mm_empty),
+		//.empty(s2mm_empty),
 		.rd_en(s2mm_rd_en),
 		.rd_data_count(s2mm_rd_data_count),
 

@@ -34,7 +34,7 @@ module axis_shifter_v2 #
 	input wire [C_IMG_WBITS-1 : 0] col_idx_next,
 	input wire col_update,
 	input wire [C_IMG_HBITS-1 : 0] row_idx,
-	input wire [C_IMG_HBITS-1 : 0] row_idx_next,
+	///input wire [C_IMG_HBITS-1 : 0] row_idx_next,
 	input wire row_update,
 
 	input wire [C_IMG_WBITS-1 : 0] s_win_left,

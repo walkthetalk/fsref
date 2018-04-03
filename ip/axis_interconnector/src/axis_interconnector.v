@@ -203,6 +203,9 @@ module axis_interconnector #
 			else
 				assign sc_tready[i]   = ((m_4s_ready & s_dst_bmp[i]) != 0);
 		end
+		for (i = C_S_STREAM_NUM; i < C_MAX_STREAM_NUM; i = i+1) begin: disabled_s_stream
+			assign s_tready[i] = 0;
+		end
 	endgenerate
 	generate
 		for (i = 0; i < C_M_STREAM_NUM; i = i+1) begin: single_out
@@ -262,6 +265,12 @@ module axis_interconnector #
 					end
 				end
 			end
+		end
+		for (i = C_M_STREAM_NUM; i < C_MAX_STREAM_NUM; i = i+1) begin: disabled_m_stream
+			assign m_tvalid[i] = 0;
+			assign m_tdata [i] = 0;
+			assign m_tuser [i] = 0;
+			assign m_tlast [i] = 0;
 		end
 	endgenerate
 
