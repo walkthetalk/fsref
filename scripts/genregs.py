@@ -29,8 +29,8 @@ def suppsection(lvl, s):
 	ret += h + ' *{: ^{}}*\n'.format(sstr, str(clen - 4))
 	ret += h + ' *{:*<{}}*/\n'.format('',str(clen - 4))
 	return ret
-def suppemptyreg(lvl, ridx):
-	return suppcomment(lvl, 'empty')
+def suppreadreg0(lvl, ridx):
+	return suppline(lvl, "assign slv_reg[{}] = 0;".format(str(ridx)))
 
 def str4array(ifname='', pname='', namelen = 0):
 	ifprefix = '' if ifname == '' else (ifname + '_')
@@ -54,8 +54,8 @@ def str4regdef(ridx):
 	return 'reg{}define'.format(str(ridx))
 def str4regdefcomment(ridx):
 	return 'reg {} - {:=09_b}'.format(str(ridx), ridx)
-def str4loopheader(size, name, varname='i'):
-	return "for ({0} = 0; {0} < {1}; {0}={0}+1) begin: {2}".format(varname, str(size), name)
+def str4loopheader(start, end, name, varname='i'):
+	return "for ({0} = {1}; {0} < {2}; {0}={0}+1) begin: {3}".format(varname, str(start), str(end), name)
 def str4looptail():
 	return 'end'
 def str4alwaysbegin():
@@ -140,13 +140,13 @@ def drc_ind(lvl, ridx, lbit, width, rwtype, name, dstlbit, loopsize, sel, defv=0
 
 
 	if (rwtype == 'wo' or rwtype == 'rw'):
-		ret += suppline(lvl, str4loopheader(loopsize, 'loop4write_' + wrapper))
+		ret += suppline(lvl, str4loopheader(0, loopsize, 'loop4write_' + wrapper))
 		ret += drc_WL(lvl+1, ridx, lbit, width, dstnamei, defv, autoclr, sel + '[i]')
 		ret += suppline(lvl, str4looptail())
 	if (rwtype == 'ro' or rwtype == 'rw'):
 		ret += suppcomment(lvl, 'load to ind reg continuously')
 		ret += suppline(lvl, 'always @ (posedge o_clk) begin')
-		ret += suppline(lvl+1, str4loopheader(loopsize, 'loop4read_' + wrapper, 'j'))
+		ret += suppline(lvl+1, str4loopheader(0, loopsize, 'loop4read_' + wrapper, 'j'))
 		ret += suppline(lvl+2, 'if ({})'.format(sel + '[j]'))
 		ret += suppline(lvl+3, '{} <= {};'.format(wrapper, dstnamej))
 		ret += suppline(lvl+1, str4looptail())
@@ -584,11 +584,19 @@ class VIntface(VBase):
 				ret += suppline(lvl, assignstr)
 			lvl -= 1
 			ret += suppline(lvl, "end")
+			ret += suppline(lvl, 'else begin')
+			lvl += 1
+			for i, item in enumerate(self._outports):
+				ifstr = self.__getportstr4port(ifidx, item.name, lenof(self._outports, "name"))
+				assignstr = "assign /*output*/ {} = 0;".format(ifstr)
+				ret += suppline(lvl, assignstr)
+			lvl -= 1
+			ret += suppline(lvl, 'end')
 		ret += self.serialize4c2arrayloop(lvl, lendict, isext, islast)
 		return ret
 	def serialize4c2arrayloop(self, lvl, lendict, isext, islast):
 		ret = ""
-		ret += suppline(lvl, str4loopheader(self.realsize, 'sync_cfg_for_' + self.name))
+		ret += suppline(lvl, str4loopheader(0, self.realsize, 'sync_cfg_for_' + self.name))
 		lvl += 1
 
 		if (self._has('outsync')):
@@ -799,7 +807,7 @@ class VerilogModuleFile:
 
 	def gen_loop(self, lvl, size, loopname, contentstr):
 		ret = ''
-		ret += suppline(lvl, str4loopheader(size, loopname))
+		ret += suppline(lvl, str4loopheader(0, size, loopname))
 		ret += contentstr
 		ret += suppline(lvl, str4looptail())
 		return ret
@@ -1051,7 +1059,7 @@ class VMFsctl(VerilogModuleFile):
 		ret = ''
 		ret += suppsection(lvl, 'misc logic')
 		ret += suppcomment(lvl, 'register read logic')
-		ret += suppline(lvl, 'reg r_rd_data;')
+		ret += suppline(lvl, 'reg[C_DATA_WIDTH-1:0] r_rd_data;')
 		ret += suppline(lvl, 'assign rd_data = r_rd_data;')
 		ret += suppline(lvl, 'always @ (posedge o_clk)')
 		ret += suppline(lvl+1, 'if (rd_en)')
@@ -1166,7 +1174,7 @@ class VMFsctl(VerilogModuleFile):
 
 		ridx += 1
 		ret += suppcomment(lvl, str4regdefcomment(ridx))
-		ret += suppemptyreg(lvl, ridx)
+		ret += suppreadreg0(lvl, ridx)
 
 		ridx += 1
 		ret += suppcomment(lvl, str4regdefcomment(ridx))
@@ -1223,7 +1231,7 @@ class VMFsctl(VerilogModuleFile):
 
 		ridx += 1
 		ret += suppcomment(lvl, str4regdefcomment(ridx))
-		ret += suppemptyreg(lvl, ridx)
+		ret += suppreadreg0(lvl, ridx)
 
 		intf = self.getif('br')
 		ridx += 1
@@ -1235,6 +1243,7 @@ class VMFsctl(VerilogModuleFile):
 		ret += suppcomment(lvl, str4regdefcomment(ridx))
 		ret += drc_wo(lvl, ridx, 0, 'C_SPEED_DATA_WIDTH', 'br_wrd')
 		ret += drc_trig(lvl, 'br_wre', 'wre_sync[{}]'.format(str(ridx)), 0, 'true')
+		ret += suppreadreg0(lvl, ridx)
 
 		ridx += 1
 		ret += suppcomment(lvl, str4regdefcomment(ridx))
@@ -1242,43 +1251,43 @@ class VMFsctl(VerilogModuleFile):
 
 		ridx += 1
 		ret += suppcomment(lvl, str4regdefcomment(ridx))
-		ret += suppemptyreg(lvl, ridx)
+		ret += suppreadreg0(lvl, ridx)
 		ridx += 1
 		ret += suppcomment(lvl, str4regdefcomment(ridx))
-		ret += suppemptyreg(lvl, ridx)
+		ret += suppreadreg0(lvl, ridx)
 		ridx += 1
 		ret += suppcomment(lvl, str4regdefcomment(ridx))
-		ret += suppemptyreg(lvl, ridx)
+		ret += suppreadreg0(lvl, ridx)
 		ridx += 1
 		ret += suppcomment(lvl, str4regdefcomment(ridx))
-		ret += suppemptyreg(lvl, ridx)
+		ret += suppreadreg0(lvl, ridx)
 		ridx += 1
 		ret += suppcomment(lvl, str4regdefcomment(ridx))
-		ret += suppemptyreg(lvl, ridx)
+		ret += suppreadreg0(lvl, ridx)
 		ridx += 1
 		ret += suppcomment(lvl, str4regdefcomment(ridx))
-		ret += suppemptyreg(lvl, ridx)
+		ret += suppreadreg0(lvl, ridx)
 		ridx += 1
 		ret += suppcomment(lvl, str4regdefcomment(ridx))
-		ret += suppemptyreg(lvl, ridx)
+		ret += suppreadreg0(lvl, ridx)
 		ridx += 1
 		ret += suppcomment(lvl, str4regdefcomment(ridx))
-		ret += suppemptyreg(lvl, ridx)
+		ret += suppreadreg0(lvl, ridx)
 		ridx += 1
 		ret += suppcomment(lvl, str4regdefcomment(ridx))
-		ret += suppemptyreg(lvl, ridx)
+		ret += suppreadreg0(lvl, ridx)
 		ridx += 1
 		ret += suppcomment(lvl, str4regdefcomment(ridx))
-		ret += suppemptyreg(lvl, ridx)
+		ret += suppreadreg0(lvl, ridx)
 		ridx += 1
 		ret += suppcomment(lvl, str4regdefcomment(ridx))
-		ret += suppemptyreg(lvl, ridx)
+		ret += suppreadreg0(lvl, ridx)
 		ridx += 1
 		ret += suppcomment(lvl, str4regdefcomment(ridx))
-		ret += suppemptyreg(lvl, ridx)
+		ret += suppreadreg0(lvl, ridx)
 		ridx += 1
 		ret += suppcomment(lvl, str4regdefcomment(ridx))
-		ret += suppemptyreg(lvl, ridx)
+		ret += suppreadreg0(lvl, ridx)
 
 		intf = self.getif('motor')
 		ridx += 1
@@ -1324,6 +1333,7 @@ class VMFsctl(VerilogModuleFile):
 		ret += self.gen_loop(lvl, intf.realsize, str4regdef(ridx),
 			  drc_wo(lvl+1, ridx, 'i*4+0', 1, str4array(intf.name, 'start') + '[i]', 0, 'true')
 			+ drc_wo(lvl+1, ridx, 'i*4+1', 1, str4array(intf.name, 'stop') + '[i]', 0, 'true'))
+		ret += suppreadreg0(lvl, ridx)
 
 		ridx += 1
 		ret += suppcomment(lvl, str4regdefcomment(ridx))
@@ -1352,19 +1362,19 @@ class VMFsctl(VerilogModuleFile):
 
 		ridx += 1
 		ret += suppcomment(lvl, str4regdefcomment(ridx))
-		ret += suppemptyreg(lvl, ridx)
+		ret += suppreadreg0(lvl, ridx)
 		ridx += 1
 		ret += suppcomment(lvl, str4regdefcomment(ridx))
-		ret += suppemptyreg(lvl, ridx)
+		ret += suppreadreg0(lvl, ridx)
 		ridx += 1
 		ret += suppcomment(lvl, str4regdefcomment(ridx))
-		ret += suppemptyreg(lvl, ridx)
+		ret += suppreadreg0(lvl, ridx)
 		ridx += 1
 		ret += suppcomment(lvl, str4regdefcomment(ridx))
-		ret += suppemptyreg(lvl, ridx)
+		ret += suppreadreg0(lvl, ridx)
 		ridx += 1
 		ret += suppcomment(lvl, str4regdefcomment(ridx))
-		ret += suppemptyreg(lvl, ridx)
+		ret += suppreadreg0(lvl, ridx)
 
 		intf = self.getif('pwm')
 		ridx += 1
@@ -1392,13 +1402,13 @@ class VMFsctl(VerilogModuleFile):
 
 		ridx += 1
 		ret += suppcomment(lvl, str4regdefcomment(ridx))
-		ret += suppemptyreg(lvl, ridx)
+		ret += suppreadreg0(lvl, ridx)
 		ridx += 1
 		ret += suppcomment(lvl, str4regdefcomment(ridx))
-		ret += suppemptyreg(lvl, ridx)
+		ret += suppreadreg0(lvl, ridx)
 		ridx += 1
 		ret += suppcomment(lvl, str4regdefcomment(ridx))
-		ret += suppemptyreg(lvl, ridx)
+		ret += suppreadreg0(lvl, ridx)
 
 		ridx += 1
 		all_int_ridx = ridx
@@ -1409,27 +1419,32 @@ class VMFsctl(VerilogModuleFile):
 
 		ridx += 1
 		ret += suppcomment(lvl, str4regdefcomment(ridx))
-		ret += suppemptyreg(lvl, ridx)
+		ret += suppreadreg0(lvl, ridx)
 		ridx += 1
 		ret += suppcomment(lvl, str4regdefcomment(ridx))
-		ret += suppemptyreg(lvl, ridx)
+		ret += suppreadreg0(lvl, ridx)
 		ridx += 1
 		ret += suppcomment(lvl, str4regdefcomment(ridx))
-		ret += suppemptyreg(lvl, ridx)
+		ret += suppreadreg0(lvl, ridx)
 
 		ridx += 1
 		ret += suppcomment(lvl, str4regdefcomment(ridx))
-		ret += suppemptyreg(lvl, ridx)
+		ret += suppreadreg0(lvl, ridx)
 		ridx += 1
 		ret += suppcomment(lvl, str4regdefcomment(ridx))
-		ret += suppemptyreg(lvl, ridx)
+		ret += suppreadreg0(lvl, ridx)
 		ridx += 1
 		ret += suppcomment(lvl, str4regdefcomment(ridx))
-		ret += suppemptyreg(lvl, ridx)
+		ret += suppreadreg0(lvl, ridx)
 
 		ridx += 1
 		ret += suppcomment(lvl, str4regdefcomment(ridx))
-		ret += suppemptyreg(lvl, ridx)
+		ret += suppreadreg0(lvl, ridx)
+
+		ridx += 1
+		ret += suppline(lvl, str4loopheader(ridx, 'C_REG_NUM', 'remain_regs', 'i'))
+		ret += suppreadreg0(lvl+1, 'i')
+		ret += suppline(lvl, str4looptail())
 
 		return ret
 def main(argv):
