@@ -4,9 +4,9 @@ module test_step_motor();
 
 parameter integer C_STEP_NUMBER_WIDTH = 16;
 parameter integer C_SPEED_DATA_WIDTH = 16;
-parameter integer C_SPEED_ADDRESS_WIDTH = 9;
+parameter integer C_SPEED_ADDRESS_WIDTH = 4;
 parameter integer C_MICROSTEP_WIDTH = 3;
-parameter integer C_CLK_DIV_NBR = 7;
+parameter integer C_CLK_DIV_NBR = 8;
 parameter integer C_MOTOR_NBR = 2;
 parameter integer C_ZPD_SEQ = 8'b01;
 
@@ -179,7 +179,7 @@ always @ (posedge ctl_clk) begin
 		s1_start <= 0;
 	end
 	else if (s1_state == 1'b0 && ~s1_start && s1_cnt == 0) begin
-		s1_speed <= 10;
+		s1_speed <= 2;
 		s1_step  <= 30;
 		s1_dir   <= 0;
 		s1_start <= 1;
