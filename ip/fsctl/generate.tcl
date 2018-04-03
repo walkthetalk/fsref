@@ -331,8 +331,8 @@ pip_add_usr_par [ipx::current_core] C_CORE_VERSION {
 }
 
 pip_add_usr_par [ipx::current_core] {C_TS_WIDTH} {
-	display_name {Data Width}
-	tooltip { DATA WIDTH}
+	display_name {Timestamp Width}
+	tooltip {Timestamp WIDTH}
 	widget {comboBox}
 } {
 	value_resolve_type user
@@ -346,8 +346,8 @@ pip_add_usr_par [ipx::current_core] {C_TS_WIDTH} {
 }
 
 pip_add_usr_par [ipx::current_core] {C_DATA_WIDTH} {
-	display_name {Data Width}
-	tooltip { DATA WIDTH}
+	display_name {Register Width}
+	tooltip {Register WIDTH}
 	widget {comboBox}
 } {
 	value_resolve_type user
