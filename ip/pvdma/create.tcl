@@ -63,7 +63,7 @@ proc create_pvdma {
 		set fifo_aximm_width [expr {$fifo_axis_width*$adata_pixels}]
 
 		startgroup
-		create_bd_cell -type ip -vlnv xilinx.com:ip:fifo_generator:13.1 $mname/fifo_mm2s
+		create_bd_cell -type ip -vlnv xilinx.com:ip:fifo_generator:13.2 $mname/fifo_mm2s
 		endgroup
 		startgroup
 		set_property -dict [list \
@@ -119,7 +119,7 @@ proc create_pvdma {
 		set fifo_aximm_width [expr {$fifo_axis_width*$adata_pixels}]
 
 		startgroup
-		create_bd_cell -type ip -vlnv xilinx.com:ip:fifo_generator:13.1 $mname/fifo_s2mm
+		create_bd_cell -type ip -vlnv xilinx.com:ip:fifo_generator:13.2 $mname/fifo_s2mm
 		endgroup
 		startgroup
 		set_property -dict [list \
