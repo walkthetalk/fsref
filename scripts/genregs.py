@@ -693,7 +693,7 @@ class VIfBlockram(VIntface):
 		self._addPort({'ftype': 'fixedV', "name": "data",  "iotype": "output", "width": dictdata["datawidth"], 'fixedV': 'getwrdata' })
 		self._addPort({'ftype': 'inro', "name": "size",  "iotype": "input",  "hbit": dictdata["sizehbit"] })
 	def getinit(self, ifidx):
-		return self._get("init_val")
+		return self._get("init_val") + "[{}]".format(str(ifidx))
 	def getwren(self, ifidx):
 		return self._get("wr_en_val")
 	def getwrdata(self, ifidx):
