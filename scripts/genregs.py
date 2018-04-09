@@ -750,7 +750,7 @@ class VIfMotorCtl(VIntface):
 		self._addPort({'ftype': 'intsrc', "trigint": "posedge",  'iotype': 'input',  'name': 'zpsign'})
 		self._addPort({'ftype': 'intsrc', "trigint": "posedge",  'iotype': 'input',  'name': 'tpsign'})
 
-		self._addPort({'ftype': 'intsrc', "trigint": "posedge", 'iotype': 'input',  'name': 'state'})
+		self._addPort({'ftype': 'intsrc', "trigint": "negedge", 'iotype': 'input',  'name': 'state'})
 		self._addPort({'ftype': 'inro',    'iotype': 'input',  'name': 'rt_speed', 'width': dictData["speedwidth"] })
 		self._addPort({'ftype': 'cfg',     'iotype': 'output', 'name': 'stroke',   'width': dictData["stepwidth"] })
 		self._addPort({'ftype': 'cfg',     'iotype': 'output', 'name': 'start'})
