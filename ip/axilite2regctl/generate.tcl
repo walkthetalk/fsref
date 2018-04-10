@@ -25,7 +25,6 @@ pip_add_bus_if [ipx::current_core] S_AXI_LITE {
 	interface_mode {slave}
 } {
 	AWADDR	s_axi_awaddr
-	AWPROT	s_axi_awprot
 	AWVALID	s_axi_awvalid
 	AWREADY	s_axi_awready
 	WDATA	s_axi_wdata
@@ -36,7 +35,6 @@ pip_add_bus_if [ipx::current_core] S_AXI_LITE {
 	BREADY	s_axi_bready
 
 	ARADDR	s_axi_araddr
-	ARPROT	s_axi_arprot
 	ARVALID	s_axi_arvalid
 	ARREADY	s_axi_arready
 	RDATA	s_axi_rdata
