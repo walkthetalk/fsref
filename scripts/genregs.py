@@ -531,12 +531,17 @@ class VIntface(VBase):
 			if self._has("comments"):
 				ret += suppcomment(lvl, self.comments + " array for config (sync source)")
 			for i, item in enumerate(self._cfgports):
-				ret += suppline(lvl, stringfy2(
-						item, hlwname,
-						self, hlsname,
-						str4cfg(self.name), item.name, item.iotype, "reg",
-						self.__lendict(self._cfgports), False, False
-					))
+				if item._get('sync') == 'false':
+					ret += suppcomment(lvl, str4array(self.name, item.name))
+				elif item._has('expr'):
+					ret += suppcomment(lvl, str4array(self.name, item.name))
+				else:
+					ret += suppline(lvl, stringfy2(
+							item, hlwname,
+							self, hlsname,
+							str4cfg(self.name), item.name, item.iotype, "reg",
+							self.__lendict(self._cfgports), False, False
+						))
 		return ret
 	def serialize4c2array(self, lvl, lendict, isext, islast):
 		ret = ""
@@ -605,19 +610,24 @@ class VIntface(VBase):
 			ret += suppline(lvl, "if (o_resetn == 1'b0) begin")
 			lvl += 1
 			for i, item in enumerate(self._cfgports):
-				srcstr = "{:<}".format(item.defV, lenof(self._cfgports, "defV"))
-				dststr = str4array(self.name, item.name, lenof(self._cfgports, "name"))
-				assignstr = "{}[i] <= {:<};".format(dststr, srcstr)
-				ret += suppline(lvl, assignstr)
+				if item._get('sync') == 'true':
+					srcstr = "{:<}".format(item.defV, lenof(self._cfgports, "defV"))
+					dststr = str4array(self.name, item.name, lenof(self._cfgports, "name"))
+					assignstr = "{}[i] <= {:<};".format(dststr, srcstr)
+					ret += suppline(lvl, assignstr)
 			lvl -= 1
 			ret += suppline(lvl, "end")
 			ret += suppline(lvl, "else if ({}) begin".format(self._get("outsync")))
 			lvl += 1
 			for i, item in enumerate(self._cfgports):
-				srcstr = str4cfg(self.name, item.name, lenof(self._cfgports, "name"))
-				dststr = str4array(self.name, item.name, lenof(self._cfgports, "name"))
-				assignstr = "{}[i] <= {:<}[i];".format(dststr, srcstr)
-				ret += suppline(lvl, assignstr)
+				if item._get('sync') == 'true':
+					if item._has('expr'):
+						srcstr = eval("self." + item._get('expr'))('i')
+					else:
+						srcstr = str4cfg(self.name, item.name, lenof(self._cfgports, "name")) + '[i]'
+					dststr = str4array(self.name, item.name, lenof(self._cfgports, "name"))
+					assignstr = "{}[i] <= {:<};".format(dststr, srcstr)
+					ret += suppline(lvl, assignstr)
 			lvl -= 1
 			ret += suppline(lvl, "end")
 			lvl -= 1
@@ -704,35 +714,39 @@ class VIfStreamCtl(VIntface):
 	def __init__(self, dictData):
 		super(VIfStreamCtl, self).__init__(dictData)
 
-		self._addPort({'ftype': 'cfg',     'iotype': 'output', 'name': 'soft_resetn'})
-		self._addPort({'ftype': 'cfg',     'iotype': 'output', 'name': 'dst_bmp', 'width': dictData["bmpwidth"] })
-		self._addPort({'ftype': 'cfg',     'iotype': 'output', 'name': 'width',   'width': dictData["iwwidth"] })
-		self._addPort({'ftype': 'cfg',     'iotype': 'output', 'name': 'height',  'width': dictData["ihwidth"] })
+		self._addPort({'ftype': 'cfg',     'iotype': 'output', 'name': 'in_resetn', 'sync': 'false' })
+
+		self._addPort({'ftype': 'cfg',     'iotype': 'output', 'name': 'soft_resetn', 'sync': 'true', 'expr': 'calcsoft_resetn' })
+		self._addPort({'ftype': 'cfg',     'iotype': 'output', 'name': 'dst_bmp', 'width': dictData["bmpwidth"], 'sync': 'true' })
+		self._addPort({'ftype': 'cfg',     'iotype': 'output', 'name': 'width',   'width': dictData["iwwidth"], 'sync': 'true' })
+		self._addPort({'ftype': 'cfg',     'iotype': 'output', 'name': 'height',  'width': dictData["ihwidth"], 'sync': 'true' })
 
 		self._addPort({'ftype': 'fixedV',  'iotype': 'output', 'name': 'buf0_addr', 'fixedV': 'genbufaddr0', 'width': dictData["addrwidth"] })
 		self._addPort({'ftype': 'fixedV',  'iotype': 'output', 'name': 'buf1_addr', 'fixedV': 'genbufaddr1', 'width': dictData["addrwidth"] })
 		self._addPort({'ftype': 'fixedV',  'iotype': 'output', 'name': 'buf2_addr', 'fixedV': 'genbufaddr2', 'width': dictData["addrwidth"] })
 		self._addPort({'ftype': 'fixedV',  'iotype': 'output', 'name': 'buf3_addr', 'fixedV': 'genbufaddr3', 'width': dictData["addrwidth"] })
 
-		self._addPort({'ftype': 'cfg',     'iotype': 'output', 'name': 'win_left',   'width': dictData["iwwidth"] })
-		self._addPort({'ftype': 'cfg',     'iotype': 'output', 'name': 'win_width',  'width': dictData["iwwidth"] })
-		self._addPort({'ftype': 'cfg',     'iotype': 'output', 'name': 'win_top',    'width': dictData["ihwidth"] })
-		self._addPort({'ftype': 'cfg',     'iotype': 'output', 'name': 'win_height', 'width': dictData["ihwidth"] })
+		self._addPort({'ftype': 'cfg',     'iotype': 'output', 'name': 'win_left',   'width': dictData["iwwidth"], 'sync': 'true' })
+		self._addPort({'ftype': 'cfg',     'iotype': 'output', 'name': 'win_width',  'width': dictData["iwwidth"], 'sync': 'true' })
+		self._addPort({'ftype': 'cfg',     'iotype': 'output', 'name': 'win_top',    'width': dictData["ihwidth"], 'sync': 'true' })
+		self._addPort({'ftype': 'cfg',     'iotype': 'output', 'name': 'win_height', 'width': dictData["ihwidth"], 'sync': 'true' })
 
 		self._addPort({'ftype': 'mirror',  'iotype': 'output', 'name': 'scale_src_width',  'mirror':'win_width',  'width': dictData["iwwidth"] })
 		self._addPort({'ftype': 'mirror',  'iotype': 'output', 'name': 'scale_src_height', 'mirror':'win_height', 'width': dictData["ihwidth"] })
 		self._addPort({'ftype': 'mirror',  'iotype': 'output', 'name': 'scale_dst_width',  'mirror':'dst_width',  'width': dictData["iwwidth"] })
 		self._addPort({'ftype': 'mirror',  'iotype': 'output', 'name': 'scale_dst_height', 'mirror':'dst_height', 'width': dictData["ihwidth"] })
 
-		self._addPort({'ftype': 'cfg',     'iotype': 'output', 'name': 'dst_left',   'width': dictData["iwwidth"] })
-		self._addPort({'ftype': 'cfg',     'iotype': 'output', 'name': 'dst_width',  'width': dictData["iwwidth"] })
-		self._addPort({'ftype': 'cfg',     'iotype': 'output', 'name': 'dst_top',    'width': dictData["ihwidth"] })
-		self._addPort({'ftype': 'cfg',     'iotype': 'output', 'name': 'dst_height', 'width': dictData["ihwidth"] })
+		self._addPort({'ftype': 'cfg',     'iotype': 'output', 'name': 'dst_left',   'width': dictData["iwwidth"], 'sync': 'true' })
+		self._addPort({'ftype': 'cfg',     'iotype': 'output', 'name': 'dst_width',  'width': dictData["iwwidth"], 'sync': 'true' })
+		self._addPort({'ftype': 'cfg',     'iotype': 'output', 'name': 'dst_top',    'width': dictData["ihwidth"], 'sync': 'true' })
+		self._addPort({'ftype': 'cfg',     'iotype': 'output', 'name': 'dst_height', 'width': dictData["ihwidth"], 'sync': 'true' })
 
 		self._addPort({'ftype': 'intsrc',  'iotype': 'input',  'name': 'wr_done',    "trigint": "posedge" })
 		self._addPort({'ftype': 'trigbyclrint',   'iotype': 'output', 'name': 'rd_en',      'trigger': "wr_done", 'autoclr': 'true' })
 		self._addPort({'ftype': 'inro',    'iotype': 'input',  'name': 'rd_buf_idx', 'width': dictData["bufidxwidth"] })
 		self._addPort({'ftype': 'inro',    'iotype': 'input',  'name': 'rd_buf_ts',  'width': dictData["tswidth"]     })
+	def calcsoft_resetn(self, ifidx):
+		return '({}[{}] != 0)'.format(str4cfg(self.name, 'dst_bmp'), str(ifidx))
 	def genbufaddr0(self, ifidx):
 		return 'C_S{}_ADDR'.format(ifidx2str(ifidx))
 	def genbufaddr1(self, ifidx):
@@ -1174,6 +1188,11 @@ class VMFsctl(VerilogModuleFile):
 
 		ridx += 1
 		ret += suppcomment(lvl, str4regdefcomment(ridx))
+		ret += self.gen_loop(lvl, intf.realsize, 'loop4' + str4cfg(intf.name, 'in_resetn'),
+				drc_rw(lvl+1, ridx, 'i', 1, str4array(intf.name, 'in_resetn') + '[i]'))
+
+		ridx += 1
+		ret += suppcomment(lvl, str4regdefcomment(ridx))
 		ret += suppreadreg0(lvl, ridx)
 
 		ridx += 1
@@ -1184,9 +1203,6 @@ class VMFsctl(VerilogModuleFile):
 		ret += suppcomment(lvl, str4regdefcomment(ridx))
 		ret += self.gen_loop(lvl, intf.realsize, str4regdef(ridx),
 				drc_rw(lvl+1, ridx, "i", 1, 'stream_cfgsel[i]'))
-		ridx += 1
-		ret += suppcomment(lvl, str4regdefcomment(ridx))
-		ret += self.gen_ind_reg(lvl, ridx, 0, 'rw', 's', 'soft_resetn')
 
 		ridx += 1
 		ret += suppcomment(lvl, str4regdefcomment(ridx))
