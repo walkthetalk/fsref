@@ -180,8 +180,14 @@ pip_connect_pin rst_cpu_fclk1/interconnect_aresetn ic_data_*/ARESETN
 pip_connect_pin rst_cpu_fclk1/peripheral_aresetn {
 	ic_data_*/*_ARESETN
 	fscore/resetn
-	videoout/aresetn
-	videoin_*/aresetn
+}
+
+pip_connect_pin fscore/s0_in_resetn {
+	videoin_0/aresetn
+}
+
+pip_connect_pin fscore/s1_in_resetn {
+	videoin_1/aresetn
 }
 
 #     fclk2
@@ -194,6 +200,7 @@ pip_connect_pin cpu/FCLK_CLK2 {
 pip_connect_pin cpu/FCLK_RESET2_N rst_cpu_fclk2/ext_reset_in
 pip_connect_pin rst_cpu_fclk2/peripheral_reset videoout/vid_io_out_reset
 pip_connect_pin rst_cpu_fclk2/peripheral_aresetn vtc/resetn
+pip_connect_pin fscore/st_out_resetn videoout/aresetn
 
 # connect data
 

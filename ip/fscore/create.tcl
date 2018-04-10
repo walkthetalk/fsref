@@ -241,7 +241,7 @@ proc create_fscore {
 	}]
 
 	pip_connect_pin $mname/fsctl/st_soft_resetn [subst {
-		$mname/pvdma_T/soft_resetn
+		$mname/pvdma_T/mm2s_resetn
 		$mname/pblender/st_enable
 	}]
 
@@ -251,17 +251,25 @@ proc create_fscore {
 	}]
 
 	pip_connect_pin $mname/fsctl/s0_soft_resetn [subst {
-		$mname/pvdma_0/soft_resetn
+		$mname/pvdma_0/mm2s_resetn
 		$mname/axis_window_0/resetn
 		$mname/axis_scaler_0/resetn
+	}]
+
+	pip_connect_pin $mname/fsctl/s0_in_resetn [subst {
+		$mname/pvdma_0/s2mm_resetn
 		$mname/axis_bayer_extractor_0/resetn
 		$mname/axis_reshaper_0/resetn
 	}]
 
 	pip_connect_pin $mname/fsctl/s1_soft_resetn [subst {
-		$mname/pvdma_1/soft_resetn
+		$mname/pvdma_1/mm2s_resetn
 		$mname/axis_window_1/resetn
 		$mname/axis_scaler_1/resetn
+	}]
+
+	pip_connect_pin $mname/fsctl/s1_in_resetn [subst {
+		$mname/pvdma_1/s2mm_resetn
 		$mname/axis_bayer_extractor_1/resetn
 		$mname/axis_reshaper_1/resetn
 	}]
@@ -333,5 +341,20 @@ proc create_fscore {
 	create_bd_pin -dir O -type intr $mname/intr
 	pip_connect_pin $mname/fsctl/intr [subst {
 		$mname/intr
+	}]
+
+	create_bd_pin -dir O $mname/s0_in_resetn
+	pip_connect_pin $mname/fsctl/s0_in_resetn [subst {
+		$mname/s0_in_resetn
+	}]
+
+	create_bd_pin -dir O $mname/s1_in_resetn
+	pip_connect_pin $mname/fsctl/s1_in_resetn [subst {
+		$mname/s1_in_resetn
+	}]
+
+	create_bd_pin -dir O $mname/st_out_resetn
+	pip_connect_pin $mname/fsctl/st_soft_resetn [subst {
+		$mname/st_out_resetn
 	}]
 }

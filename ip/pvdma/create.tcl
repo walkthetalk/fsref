@@ -237,6 +237,13 @@ proc create_pvdma {
 		connect_bd_net [get_bd_pins $mname/$i/resetting] [get_bd_pins $mname/fifo_$i/srst]
 	}
 
-	create_bd_pin -dir I -type rst $mname/soft_resetn
-	connect_bd_net [get_bd_pins $mname/soft_resetn] [get_bd_pins $mname/*/soft_resetn]
+	if {$dir_s2mm == 1} {
+		create_bd_pin -dir I -type rst $mname/s2mm_resetn
+		connect_bd_net [get_bd_pins $mname/s2mm_resetn] [get_bd_pins $mname/s2mm/soft_resetn]
+	}
+
+	if {$dir_mm2s == 1} {
+		create_bd_pin -dir I -type rst $mname/mm2s_resetn
+		connect_bd_net [get_bd_pins $mname/mm2s_resetn] [get_bd_pins $mname/mm2s/soft_resetn]
+	}
 }
