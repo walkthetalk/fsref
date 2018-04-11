@@ -328,14 +328,39 @@ module single_step_motor #(
 	/// zero position process
 	generate
 	if (C_ZPD) begin
-		wire reach_zero_position;
-		assign reach_zero_position = (zpd == 1'b1);
 		wire forwarding;
 		assign forwarding = (o_dir == 1'b0);
 		wire backwarding;
 		assign backwarding = o_dir;
+
+		reg internal_zpd;
+		always @ (posedge clk) begin
+			if (resetn == 1'b0)
+				internal_zpd <= 0;
+			else begin
+				case (motor_state)
+				RUNNING: begin
+					if (forwarding) begin
+						if (zpd == 0)
+							internal_zpd <= 0;
+					end
+					else begin
+						if (zpd == 1)
+							internal_zpd <= 1;
+					end
+				end
+				default: begin
+					if (zpd == 1)
+						internal_zpd <= 1;
+				end
+				endcase
+			end
+		end
+
+		wire reach_zero_position;
+		assign reach_zero_position = (internal_zpd == 1'b1);
 		/// for shouldStop
-		assign zpsign = zpd;
+		assign zpsign = internal_zpd;
 		reg r_tpsign;
 		assign tpsign = r_tpsign;
 		assign shouldStop = ((step_done && (speed_cnt == 0))
