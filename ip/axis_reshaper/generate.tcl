@@ -80,6 +80,51 @@ pip_add_usr_par [ipx::current_core] {C_PIXEL_WIDTH} {
 	value_format long
 }
 
+pip_add_usr_par [ipx::current_core] {C_LOCK_FRAMES} {
+	display_name {Lock Frames}
+	tooltip {check frames for lock，will drop n+2 frames}
+	widget {comboBox}
+} {
+	value_resolve_type user
+	value 2
+	value_format long
+	value_validation_type list
+	value_validation_list {2 3 4 5 6 7 8 9 10}
+} {
+	value 2
+	value_format long
+}
+
+pip_add_usr_par [ipx::current_core] {C_WIDTH_BITS} {
+	display_name {Frame Width Bits}
+	tooltip {Frame Width Bits}
+	widget {comboBox}
+} {
+	value_resolve_type user
+	value 12
+	value_format long
+	value_validation_type list
+	value_validation_list {8 9 10 11 12}
+} {
+	value 12
+	value_format long
+}
+
+pip_add_usr_par [ipx::current_core] {C_HEIGHT_BITS} {
+	display_name {Frame Height Bits}
+	tooltip {Frame Height Bits}
+	widget {comboBox}
+} {
+	value_resolve_type user
+	value 12
+	value_format long
+	value_validation_type list
+	value_validation_list {8 9 10 11 12}
+} {
+	value 12
+	value_format long
+}
+
 ipx::create_xgui_files [ipx::current_core]
 ipx::update_checksums [ipx::current_core]
 ipx::save_core [ipx::current_core]
