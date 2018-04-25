@@ -129,6 +129,7 @@ proc create_pvdma {
 			CONFIG.Output_Depth $fifo_aximm_depth \
 			CONFIG.Read_Data_Count {true} \
 			CONFIG.Reset_Type {Synchronous_Reset} \
+			CONFIG.Almost_Full_Flag {true} \
 		] [get_bd_cells $mname/fifo_s2mm]
 		endgroup
 

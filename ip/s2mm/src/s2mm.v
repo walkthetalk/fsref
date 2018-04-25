@@ -55,9 +55,10 @@ module s2mm #
 	input wire s_axis_tlast,
 	output wire s_axis_tready,
 
-	input wire	s2mm_full,
+	input  wire                       s2mm_full,
+	input  wire                       s2mm_almost_full,
 	output wire [C_PIXEL_WIDTH+1 : 0] s2mm_wr_data,
-	output wire	s2mm_wr_en,
+	output wire                       s2mm_wr_en,
 
 	/// fifo to memory
 	output wire s2mm_sof,
@@ -115,12 +116,20 @@ module s2mm #
 	assign resetting = ~working;
 
 	/// use s2f_aclk
-	assign s_axis_tready = ~s2mm_full && working;
 	assign s2mm_wr_data = {s_axis_tlast, s_axis_tuser, s_axis_tdata};
-	assign s2mm_wr_en = s_axis_tvalid && (~s2mm_full) && working;
+	assign s2mm_wr_en = s_axis_tvalid && s_axis_tready;
 
-	wire s2f_aclk; assign s2f_aclk = clk;
-	wire f2m_aclk; assign f2m_aclk = clk;
+	reg sready;
+	assign s_axis_tready = sready;
+	always @ (posedge clk) begin
+		if (resetting)
+			sready <= 0;
+		else if (s2mm_wr_en && s2mm_almost_full)
+			sready <= 0;
+		else
+			sready <= 1;
+	end
+
 // fifo to mm
 	/// use f2m_aclk
 	wire [C_M_AXI_DATA_WIDTH-1 : 0] s2mm_pixel_data;
@@ -156,7 +165,7 @@ module s2mm #
 		.frame_pulse(s2mm_sof),
 		.base_addr(s2mm_addr),
 
-		.M_AXI_ACLK(f2m_aclk),
+		.M_AXI_ACLK(clk),
 		.M_AXI_ARESETN(resetn),
 		.M_AXI_AWADDR(m_axi_awaddr),
 		.M_AXI_AWLEN(m_axi_awlen),

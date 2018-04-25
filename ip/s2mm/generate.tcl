@@ -82,6 +82,7 @@ pip_add_bus_if [ipx::current_core] FIFO_WRITE {
 	WR_DATA s2mm_wr_data
 	WR_EN s2mm_wr_en
 	FULL s2mm_full
+	ALMOST_FULL s2mm_almost_full
 }
 
 pip_add_bus_if [ipx::current_core] FIFO_READ {
