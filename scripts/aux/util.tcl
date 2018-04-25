@@ -85,6 +85,40 @@ proc pip_add_bus_if {
 	}
 }
 
+proc pip_add_bus_ifa {
+	core_inst
+	bus_name_fp
+	bus_num
+	bus_enadep
+	bus_prop
+	{port_map {}}
+	{para_set {}}
+} {
+	for {set idx 0} {$idx < $bus_num} {incr idx} {
+		set bus_name [$bus_name_fp $idx]
+		ipx::add_bus_interface $bus_name $core_inst
+		set bus_inst [ipx::get_bus_interfaces $bus_name -of_objects $core_inst]
+
+		pip_set_prop $bus_inst $bus_prop
+		pip_set_prop $bus_inst [subst {enablement_dependency {$bus_enadep > $idx}}]
+
+		foreach {i j k} $port_map {
+			ipx::add_port_map $i $bus_inst
+
+			set_property physical_name $j [ipx::get_port_maps $i -of_objects $bus_inst]
+			set_property physical_left_resolve_type dependent [ipx::get_port_maps $i -of_objects $bus_inst]
+			set_property physical_right_dependency [subst {($idx * $k)}]           [ipx::get_port_maps $i -of_objects $bus_inst]
+			set_property physical_right_resolve_type dependent [ipx::get_port_maps $i -of_objects $bus_inst]
+			set_property physical_left_dependency  [subst {(([expr $idx + 1] * $k) - 1)}] [ipx::get_port_maps $i -of_objects $bus_inst]
+		}
+
+		foreach {i j} $para_set {
+			ipx::add_bus_parameter $i $bus_inst
+			set_property value $j [ipx::get_bus_parameters $i -of_objects $bus_inst]
+		}
+	}
+}
+
 proc pip_add_usr_par {
 	core_inst
 	par_name
@@ -183,6 +217,22 @@ proc append_associate_busif {
 		append locvar $busif_name
 	} else {
 		append locvar :$busif_name
+	}
+}
+
+proc append_associate_busifa {
+	clk_name
+	busif_name_fp
+	num
+} {
+	upvar [set clk_name]_ASSOCIATED_BUSIF locvar
+	for {set i 0} {$i < $num} {incr i} {
+		set busif_name [$busif_name_fp $i]
+		if {$locvar == ""} {
+			append locvar $busif_name
+		} else {
+			append locvar :$busif_name
+		}
 	}
 }
 
