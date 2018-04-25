@@ -9,6 +9,8 @@ set ip_list [list \
 	pwm_ctl \
 	reg_ctl \
 	scale_ctl \
+	mbr_rd_ctl \
+	fsa_ctl \
 	cmos \
 	lcd \
 	pwm \
@@ -31,6 +33,7 @@ set ip_list [list \
 	step_motor \
 	fsctl \
 	timestamper \
+	fsa \
 ]
 
 if { $argc eq 1 } {
