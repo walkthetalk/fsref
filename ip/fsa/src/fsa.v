@@ -8,7 +8,8 @@ module fsa #(
 	parameter integer C_PIXEL_WIDTH = 8,
 	parameter integer C_IMG_HW = 12,
 	parameter integer C_IMG_WW = 12,
-	parameter integer BR_NUM   = 4,
+	parameter integer C_READER_NUM = 2,
+	parameter integer BR_NUM   = 4,		/// C_READER_NUM + 2
 	parameter integer BR_AW    = 12,	/// same as C_IMG_WW
 	parameter integer BR_DW    = 32
 )(
@@ -18,15 +19,10 @@ module fsa #(
 	input  wire [C_IMG_HW-1:0]      height  ,
 	input  wire [C_IMG_WW-1:0]      width   ,
 
-	input  wire                     r0_sof  ,
-	input  wire                     r0_rd_en,
-	input  wire [BR_AW-1:0]         r0_rd_addr,
-	output wire [BR_DW-1:0]         r0_data ,
-
-	input  wire                     r1_sof  ,
-	input  wire                     r1_rd_en,
-	input  wire [BR_AW-1:0]         r1_rd_addr,
-	output wire [BR_DW-1:0]         r1_data ,
+	input  wire [1     *C_READER_NUM-1:0] r_sof  ,
+	input  wire [1     *C_READER_NUM-1:0] r_en   ,
+	input  wire [BR_AW *C_READER_NUM-1:0] r_addr ,
+	output wire [BR_DW *C_READER_NUM-1:0] r_data ,
 
 	input  wire [C_PIXEL_WIDTH-1:0] ref_data,
 	output wire [C_IMG_WW-1:0]      lft_v   ,
@@ -105,17 +101,17 @@ generate
 			end
 		end
 	end
+
+	for (i = 0; i < C_READER_NUM; i=i+1) begin
+		assign rd_en_p1[i] = r_en[i];
+		assign rd_addr_p1[i] = r_addr[BR_AW*(i+1)-1: BR_AW*i];
+		assign r_data[BR_DW*(i+1)-1:BR_DW*i] = rd_data_f[i];
+	end
 endgenerate
-	assign rd_en_p1  [0] = r0_rd_en  ;
-	assign rd_addr_p1[0] = r0_rd_addr;
-	assign rd_en_p1  [1] = r1_rd_en  ;
-	assign rd_addr_p1[1] = r1_rd_addr;
 	assign rd_en_p1  [2] = wr_ren    ;
 	assign rd_addr_p1[2] = wr_raddr  ;
 
 	assign wr_rdata = rd_data_f[2];
-	assign r0_data  = rd_data_f[0];
-	assign r1_data  = rd_data_f[1];
 
 
 	mutex_buffer # (

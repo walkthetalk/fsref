@@ -1,5 +1,3 @@
-`include "../src/fsa.v"
-
 module test_fsa # (
 	parameter integer C_PIXEL_WIDTH = 8,
 	parameter integer C_IMG_HW = 8,
@@ -8,6 +6,7 @@ module test_fsa # (
 ) (
 );
 
+	localparam RANDOMINPUT = 1;
 	localparam integer height = 20;
 	localparam integer width  = 40;
 	localparam integer BR_AW = C_IMG_WW;
@@ -40,6 +39,7 @@ module test_fsa # (
 		.C_PIXEL_WIDTH (C_PIXEL_WIDTH),
 		.C_IMG_HW (C_IMG_HW),
 		.C_IMG_WW (C_IMG_WW),
+		.C_READER_NUM (2),
 		.BR_NUM   (4),
 		.BR_AW    (BR_AW),	/// same as C_IMG_WW
 		.BR_DW    (BR_DW)
@@ -50,15 +50,10 @@ module test_fsa # (
 		.height(height),
 		.width (width),
 
-		.r0_sof    (r0_sof    ),
-		.r0_rd_en  (r0_rd_en  ),
-		.r0_rd_addr(r0_rd_addr),
-		.r0_data   (r0_data   ),
-
-		.r1_sof    (r1_sof    ),
-		.r1_rd_en  (r1_rd_en  ),
-		.r1_rd_addr(r1_rd_addr),
-		.r1_data   (r1_data   ),
+		.r_sof ({r1_sof,    r0_sof    }),
+		.r_en  ({r1_rd_en,  r0_rd_en  }),
+		.r_addr({r1_rd_addr,r0_rd_addr}),
+		.r_data({r1_data,   r0_data   }),
 
 		.ref_data     (ref_data),
 		.lft_v        (lft_v   ),
@@ -85,7 +80,7 @@ integer i, j;
 initial begin
 	for (i = 0; i < height; i=i+1) begin
 		for (j=0; j < width; j=j+1) begin
-			if ((i >= 5 && i <= 15)
+			if (((i >= 5 && i <= 7) || (i >= 10 && i <= 15))
 				&& (j <= 17 || j >= 23))
 				data[i][j] = 10;
 			else
@@ -95,10 +90,18 @@ initial begin
 	assign ref_data = 128;
 end
 
+	reg randomoutput;
+	always @ (posedge clk) begin
+		if (resetn == 1'b0)
+			randomoutput <= 1'b0;
+		else
+			randomoutput <= (RANDOMINPUT ? {$random}%2 : 1);
+	end
+
 	reg[C_IMG_WW-1:0] col;
 	reg[C_IMG_HW-1:0] row;
 	wire snext;
-	assign snext = (~s_axis_tvalid | s_axis_tready);
+	assign snext = (~s_axis_tvalid | s_axis_tready) && randomoutput;
 	always @ (posedge clk) begin
 		if (resetn == 1'b0) begin
 			col <= 0;
