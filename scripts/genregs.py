@@ -745,6 +745,10 @@ class VIfStreamCtl(VIntface):
 		self._addPort({'ftype': 'trigbyclrint',   'iotype': 'output', 'name': 'rd_en',      'trigger': "wr_done", 'autoclr': 'true' })
 		self._addPort({'ftype': 'inro',    'iotype': 'input',  'name': 'rd_buf_idx', 'width': dictData["bufidxwidth"] })
 		self._addPort({'ftype': 'inro',    'iotype': 'input',  'name': 'rd_buf_ts',  'width': dictData["tswidth"]     })
+
+		self._addPort({'ftype': 'inro',    'iotype': 'input',  'name': 'lft_v',      'width': dictData['iwwidth'] })
+		self._addPort({'ftype': 'inro',    'iotype': 'input',  'name': 'rt_v',       'width': dictData['iwwidth'] })
+		self._addPort({'ftype': 'cfg',     'iotype': 'output', 'name': 'ref_data',   'width': dictData['ipwidth'], 'sync': 'true' })
 	def calcsoft_resetn(self, ifidx):
 		return '({}[{}] != 0)'.format(str4cfg(self.name, 'dst_bmp'), str(ifidx))
 	def genbufaddr0(self, ifidx):
@@ -887,6 +891,7 @@ class VMFsctl(VerilogModuleFile):
 		self.addParam({'dtype': 'integer', 'name': 'C_TS_WIDTH',          'defV': "64"          })
 		self.addParam({'dtype': 'integer', 'name': 'C_DATA_WIDTH',        'defV': "32"          })
 		self.addParam({'dtype': 'integer', 'name': 'C_REG_IDX_WIDTH',     'defV': "8"           })
+		self.addParam({'dtype': 'integer', 'name': 'C_IMG_PBITS',         'defV': "8"          })
 		self.addParam({'dtype': 'integer', 'name': 'C_IMG_WBITS',         'defV': "12"          })
 		self.addParam({'dtype': 'integer', 'name': 'C_IMG_HBITS',         'defV': "12"          })
 		self.addParam({'dtype': 'integer', 'name': 'C_IMG_WDEF',          'defV': "320"         })
@@ -958,6 +963,7 @@ class VMFsctl(VerilogModuleFile):
 			"bmpwidth": "C_STREAM_NBR",
 			"iwwidth": "C_IMG_WBITS",
 			"ihwidth": "C_IMG_HBITS",
+			"ipwidth": "C_IMG_PBITS",
 			"addrwidth": "C_BUF_ADDR_WIDTH",
 			"bufidxwidth": "C_BUF_IDX_WIDTH",
 			"tswidth": "C_TS_WIDTH"
@@ -1247,6 +1253,46 @@ class VMFsctl(VerilogModuleFile):
 
 		ridx += 1
 		ret += suppcomment(lvl, str4regdefcomment(ridx))
+		ret += self.gen_ind_reg(lvl, ridx, 0, 'ro', 's', 'lft_v')
+		ret += self.gen_ind_reg(lvl, ridx, 16, 'ro', 's', 'rt_v')
+		#ret += suppreadreg0(lvl, ridx)
+
+		ridx += 1
+		ret += suppcomment(lvl, str4regdefcomment(ridx))
+		ret += self.gen_ind_reg(lvl, ridx, 0, 'rw', 's', 'ref_data')
+
+		ridx += 1
+		ret += suppcomment(lvl, str4regdefcomment(ridx))
+		ret += suppreadreg0(lvl, ridx)
+		ridx += 1
+		ret += suppcomment(lvl, str4regdefcomment(ridx))
+		ret += suppreadreg0(lvl, ridx)
+		ridx += 1
+		ret += suppcomment(lvl, str4regdefcomment(ridx))
+		ret += suppreadreg0(lvl, ridx)
+		ridx += 1
+		ret += suppcomment(lvl, str4regdefcomment(ridx))
+		ret += suppreadreg0(lvl, ridx)
+		ridx += 1
+		ret += suppcomment(lvl, str4regdefcomment(ridx))
+		ret += suppreadreg0(lvl, ridx)
+		ridx += 1
+		ret += suppcomment(lvl, str4regdefcomment(ridx))
+		ret += suppreadreg0(lvl, ridx)
+		ridx += 1
+		ret += suppcomment(lvl, str4regdefcomment(ridx))
+		ret += suppreadreg0(lvl, ridx)
+		ridx += 1
+		ret += suppcomment(lvl, str4regdefcomment(ridx))
+		ret += suppreadreg0(lvl, ridx)
+		ridx += 1
+		ret += suppcomment(lvl, str4regdefcomment(ridx))
+		ret += suppreadreg0(lvl, ridx)
+		ridx += 1
+		ret += suppcomment(lvl, str4regdefcomment(ridx))
+		ret += suppreadreg0(lvl, ridx)
+		ridx += 1
+		ret += suppcomment(lvl, str4regdefcomment(ridx))
 		ret += suppreadreg0(lvl, ridx)
 
 		intf = self.getif('br')
@@ -1265,42 +1311,6 @@ class VMFsctl(VerilogModuleFile):
 		ret += suppcomment(lvl, str4regdefcomment(ridx))
 		ret += self.gen_ind_reg(lvl, ridx, 0, 'ro', 'br', 'size')
 
-		ridx += 1
-		ret += suppcomment(lvl, str4regdefcomment(ridx))
-		ret += suppreadreg0(lvl, ridx)
-		ridx += 1
-		ret += suppcomment(lvl, str4regdefcomment(ridx))
-		ret += suppreadreg0(lvl, ridx)
-		ridx += 1
-		ret += suppcomment(lvl, str4regdefcomment(ridx))
-		ret += suppreadreg0(lvl, ridx)
-		ridx += 1
-		ret += suppcomment(lvl, str4regdefcomment(ridx))
-		ret += suppreadreg0(lvl, ridx)
-		ridx += 1
-		ret += suppcomment(lvl, str4regdefcomment(ridx))
-		ret += suppreadreg0(lvl, ridx)
-		ridx += 1
-		ret += suppcomment(lvl, str4regdefcomment(ridx))
-		ret += suppreadreg0(lvl, ridx)
-		ridx += 1
-		ret += suppcomment(lvl, str4regdefcomment(ridx))
-		ret += suppreadreg0(lvl, ridx)
-		ridx += 1
-		ret += suppcomment(lvl, str4regdefcomment(ridx))
-		ret += suppreadreg0(lvl, ridx)
-		ridx += 1
-		ret += suppcomment(lvl, str4regdefcomment(ridx))
-		ret += suppreadreg0(lvl, ridx)
-		ridx += 1
-		ret += suppcomment(lvl, str4regdefcomment(ridx))
-		ret += suppreadreg0(lvl, ridx)
-		ridx += 1
-		ret += suppcomment(lvl, str4regdefcomment(ridx))
-		ret += suppreadreg0(lvl, ridx)
-		ridx += 1
-		ret += suppcomment(lvl, str4regdefcomment(ridx))
-		ret += suppreadreg0(lvl, ridx)
 		ridx += 1
 		ret += suppcomment(lvl, str4regdefcomment(ridx))
 		ret += suppreadreg0(lvl, ridx)
