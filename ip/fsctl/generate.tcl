@@ -203,6 +203,18 @@ for {set i 0} {$i < 8} {incr i} {
 		POLARITY {ACTIVE_LOW}
 	}
 	append_associate_busif o_clk_reset s[set i]_soft_resetn
+
+	pip_add_bus_if [ipx::current_core] S[set i]_FSA_CTL [subst {
+		abstraction_type_vlnv {$VENDOR:interface:fsa_ctl_rtl:1.0}
+		bus_type_vlnv {$VENDOR:interface:fsa_ctl:1.0}
+		interface_mode {master}
+		enablement_dependency {spirit:decode(id('MODELPARAM_VALUE.C_STREAM_NBR')) > $i}
+	}] [subst {
+		REF_DATA     s[set i]_ref_data
+		LEFT_VERTEX  s[set i]_lft_v
+		RIGHT_VERTEX s[set i]_rt_v
+	}]
+	append_associate_busif o_clk_busif S[set i]_FSA_CTL
 }
 
 for {set i 0} {$i < 8} {incr i} {
@@ -386,6 +398,21 @@ pip_add_usr_par [ipx::current_core] {C_REG_IDX_WIDTH} {
 	value 8
 	value_format long
 }
+pip_add_usr_par [ipx::current_core] {C_IMG_PBITS} {
+	display_name {Image PIXEL Bit Width}
+	tooltip {IMAGE PIXEL BIT WIDTH}
+	widget {comboBox}
+} {
+	value_resolve_type user
+	value 8
+	value_format long
+	value_validation_type list
+	value_validation_list {8 10 12 24 32}
+} {
+	value 8
+	value_format long
+}
+
 pip_add_usr_par [ipx::current_core] {C_IMG_WBITS} {
 	display_name {Image Width (PIXEL) Bit Width}
 	tooltip {IMAGE WIDTH BIT WIDTH}
