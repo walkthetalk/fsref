@@ -267,6 +267,30 @@ endgenerate
 	end
 
 	///////////////////////////// 2 ////////////////////////////////////////
+`define INTERPLOT(_ref, _dst, _v0, _v1) \
+	case (_ref) \
+	0:	_dst <= _v0; \
+	1:	_dst <= (_v0 * 3 + _v1) / 4; \
+	2:	_dst <= (_v0 + _v1) / 2; \
+	3:	_dst <= (_v0 + _v1 * 3) / 4; \
+	default: _dst <= _v1; \
+	endcase
+
+`define EXTRACT0(_v) _v[C_CH0_WIDTH-1:0]
+`define EXTRACT1(_v) _v[C_CH1_WIDTH+C_CH0_WIDTH-1:C_CH0_WIDTH]
+`define EXTRACT2(_v) _v[C_CH2_WIDTH+C_CH1_WIDTH+C_CH0_WIDTH-1:C_CH1_WIDTH+C_CH0_WIDTH]
+
+`define INTERPLOTAC(_ref, _dst, _v0, _v1) \
+	if (C_CH0_WIDTH > 0) begin \
+		`INTERPLOT(_ref, `EXTRACT0(_dst), `EXTRACT0(_v0), `EXTRACT0(_v1)) \
+	end \
+	if (C_CH1_WIDTH > 0) begin \
+		`INTERPLOT(_ref, `EXTRACT1(_dst), `EXTRACT1(_v0), `EXTRACT1(_v1)) \
+	end \
+	if (C_CH2_WIDTH > 0) begin \
+		`INTERPLOT(_ref, `EXTRACT2(_dst), `EXTRACT2(_v0), `EXTRACT2(_v1)) \
+	end
+
 	reg                    o2_valid;
 	reg[C_PIXEL_WIDTH-1:0] o2_xinterp0;
 	reg[C_PIXEL_WIDTH-1:0] o2_xinterp1;
@@ -279,28 +303,8 @@ endgenerate
 		end
 		else if (pipe_en) begin
 			o2_valid <= o1_valid;
-			case (o1_xid)
-			0: begin
-				o2_xinterp0 <= o1_01;
-				o2_xinterp1 <= o1_11;
-			end
-			1: begin
-				o2_xinterp0 <= (o1_01 * 3 + o1_00) / 4;
-				o2_xinterp1 <= (o1_11 * 3 + o1_10) / 4;
-			end
-			2: begin
-				o2_xinterp0 <= (o1_01 + o1_00) / 2;
-				o2_xinterp1 <= (o1_11 + o1_10) / 2;
-			end
-			3: begin
-				o2_xinterp0 <= (o1_01 + o1_00 * 3) / 4;
-				o2_xinterp1 <= (o1_11 + o1_10 * 3) / 4;
-			end
-			default: begin
-				o2_xinterp0 <= o1_00;
-				o2_xinterp1 <= o1_10;
-			end
-			endcase
+			`INTERPLOTAC(o1_xid, o2_xinterp0, o1_01, o1_00)
+			`INTERPLOTAC(o1_xid, o2_xinterp1, o1_11, o1_10)
 			o2_yid <= o1_yid;
 			o2_user  <= o1_user;
 			o2_last  <= o1_last;
@@ -313,13 +317,7 @@ endgenerate
 			o_valid <= 0;
 		else if (pipe_en) begin
 			o_valid <= o2_valid;
-			case (o2_yid)
-			0:	o_data <= o2_xinterp1;
-			1:	o_data <= (o2_xinterp1 * 3 + o2_xinterp0    ) / 4;
-			2:	o_data <= (o2_xinterp1     + o2_xinterp0    ) / 2;
-			3:	o_data <= (o2_xinterp1     + o2_xinterp0 * 3) / 4;
-			default:o_data <= o2_xinterp0;
-			endcase
+			`INTERPLOTAC(o2_yid, o_data, o2_xinterp1, o2_xinterp0)
 			o_user <= o2_user;
 			o_last <= o2_last;
 		end

@@ -76,16 +76,59 @@ pip_add_bus_if [ipx::current_core] clk {
 }
 
 # parameters
-pip_add_usr_par [ipx::current_core] {C_PIXEL_WIDTH} {
-	display_name {Pixel Width}
-	tooltip {PIXEL WIDTH}
+pip_add_usr_par [ipx::current_core] {C_CH0_WIDTH} {
+	display_name {Pixel Channel 0 Width}
+	tooltip {PIXEL Channel 0 WIDTH}
 	widget {comboBox}
 } {
 	value_resolve_type user
 	value 8
 	value_format long
 	value_validation_type list
-	value_validation_list {8 10 12}
+	value_validation_list {5 6 8 10 12}
+} {
+	value 8
+	value_format long
+}
+pip_add_usr_par [ipx::current_core] {C_CH1_WIDTH} {
+	display_name {Pixel Channel 1 Width}
+	tooltip {PIXEL Channel 1 WIDTH}
+	widget {comboBox}
+} {
+	value_resolve_type user
+	value 0
+	value_format long
+	value_validation_type list
+	value_validation_list {0 5 6 8 10 12}
+} {
+	value 0
+	value_format long
+}
+pip_add_usr_par [ipx::current_core] {C_CH2_WIDTH} {
+	display_name {Pixel Channel 2 Width}
+	tooltip {PIXEL Channel 2 WIDTH}
+	widget {comboBox}
+} {
+	value_resolve_type user
+	value 0
+	value_format long
+	value_validation_type list
+	value_validation_list {0 5 6 8 10 12}
+} {
+	value 0
+	value_format long
+}
+
+pip_add_usr_par [ipx::current_core] {C_PIXEL_WIDTH} {
+	display_name {Pixel Width}
+	tooltip {PIXEL WIDTH}
+	widget {textEdit}
+} {
+	value_resolve_type user
+	enablement_value false
+	value_tcl_expr {expr ($C_CH0_WIDTH + $C_CH1_WIDTH + $C_CH2_WIDTH)}
+	value 8
+	value_format long
 } {
 	value 8
 	value_format long
