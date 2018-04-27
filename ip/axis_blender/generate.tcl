@@ -150,6 +150,23 @@ pip_add_usr_par [ipx::current_core] {C_ALPHA_WIDTH} {
 	value_format long
 }
 
+pip_add_usr_par [ipx::current_core] C_FIXED_ALPHA {
+	display_name {Fixed Alpha}
+	tooltip {if 0, then use input alpha, or use the fixed alpha value.}
+	widget {hexEdit}
+} {
+	value_bit_string_length 32
+	value_resolve_type user
+	value {0}
+	value_format bitString
+	value_validation_type none
+	enablement_tcl_expr {$C_ALPHA_WIDTH > 0}
+} {
+	value_bit_string_length 32
+	value {0}
+	value_format bitString
+}
+
 pip_add_usr_par [ipx::current_core] {C_M_WIDTH} {
 	display_name {M_AXIS DATA Width}
 	tooltip {M_AXIS DATA Width}

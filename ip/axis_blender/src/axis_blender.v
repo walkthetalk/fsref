@@ -26,6 +26,7 @@ module axis_blender #
 	parameter integer C_S0_CHN_NUM		=  1,
 	parameter integer C_S1_CHN_NUM		=  3,
 	parameter integer C_ALPHA_WIDTH		=  8,
+	parameter integer C_FIXED_ALPHA         =  0,
 	parameter integer C_S1_ENABLE           =  0,
 	parameter integer C_IN_NEED_WIDTH	=  8,
 	parameter integer C_OUT_NEED_WIDTH	=  7,	/// must be (C_IN_NEED_WIDTH - 1), min val is 0
@@ -175,7 +176,13 @@ else begin: with_alpha
 	wire [C_CHN_WIDTH-1:0]     s0_pure_data[C_S0_CHN_NUM-1:0];
 	wire [C_CHN_WIDTH-1:0]     s1_pure_data[C_S1_CHN_NUM-1:0];
 	wire [C_ALPHA_WIDTH-1:0]   alpha_data;
-	assign alpha_data    = s1_axis_tdata[C_S1_WIDTH + C_ALPHA_WIDTH - 1 : C_S1_WIDTH];
+
+	if (C_FIXED_ALPHA != 0) begin
+		assign alpha_data    = C_FIXED_ALPHA;
+	end
+	else begin
+		assign alpha_data    = s1_axis_tdata[C_S1_WIDTH + C_ALPHA_WIDTH - 1 : C_S1_WIDTH];
+	end
 
 	/// delay0
 	reg[C_CHN_WIDTH-1:0]                   s0_data_d0     [C_S0_CHN_NUM-1:0];
@@ -236,6 +243,51 @@ else begin: with_alpha
 				mr_axis_tdata[i] <= ((s0_mul_alpha_d1_regen[i] + s1_mul_alpha_d1_regen[i]) >> C_ALPHA_WIDTH);
 		end
 		assign m_axis_tdata[C_CHN_WIDTH*(i+1)-1:C_CHN_WIDTH*i] = mr_axis_tdata[i];
+	end
+end
+endgenerate
+
+generate
+if (C_TEST) begin
+	wire      valid[2:0];
+	wire      ready[2:0];
+	wire      tlast[2:0];
+	wire      tuser[2:0];
+	assign valid[0] = s0_axis_tvalid;
+	assign ready[0] = s0_axis_tready;
+	assign tuser[0] = s0_axis_tuser;
+	assign tlast[0] = s0_axis_tlast;
+	assign valid[1] = s1_axis_tvalid;
+	assign ready[1] = s1_axis_tready;
+	assign tuser[1] = s1_axis_tuser;
+	assign tlast[1] = s1_axis_tlast;
+	assign valid[2] = m_axis_tvalid;
+	assign ready[2] = m_axis_tready;
+	assign tuser[2] = m_axis_tuser;
+	assign tlast[2] = m_axis_tlast;
+	reg[15:0] ridx[2:0];
+	reg[15:0] cidx[2:0];
+	for (i = 0; i < 3; i = i+1) begin: single_cnt
+		always @ (posedge clk) begin
+			if (resetn == 1'b0) begin
+				ridx[i] <= 0;
+				cidx[i] <= 0;
+			end
+			else if (valid[i] && ready[i]) begin
+				if (tuser[i]) begin
+					ridx[i] <= 0;
+					cidx[i] <= 1;
+				end
+				else if (tlast[i]) begin
+					ridx[i] <= ridx[i] + 1;
+					cidx[i] <= 0;
+				end
+				else begin
+					cidx[i] <= cidx[i] + 1;
+					ridx[i] <= ridx[i];
+				end
+			end
+		end
 	end
 end
 endgenerate
