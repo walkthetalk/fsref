@@ -79,7 +79,7 @@ generate
 		block_ram # (
 			.C_DATA_WIDTH(BR_DW),
 			.C_ADDRESS_WIDTH(BR_AW)
-		) speed_data (
+		) fsa_ppinfo (
 			.clk(clk),
 			.wr_en  (wr_wen[i]),
 			.wr_addr(wr_waddr ),
