@@ -45,22 +45,18 @@ pip_add_bus_if [ipx::current_core] S_AXIS {
 }
 append_associate_busif clk S_AXIS
 
-proc MBR_RD_F {idx} {
-	return "MBR_RD_$idx"
-}
-
-pip_add_bus_ifa [ipx::current_core] MBR_RD_F 8 {spirit:decode(id('MODELPARAM_VALUE.C_READER_NUM'))} [subst {
+pip_add_bus_if [ipx::current_core] MBR_RD [subst {
 	abstraction_type_vlnv $VENDOR:interface:mbr_rd_ctl_rtl:1.0
 	bus_type_vlnv $VENDOR:interface:mbr_rd_ctl:1.0
 	interface_mode slave
 }] {
-	SOF       r_sof     1
-	EN        r_en      1
-	ADDR      r_addr    {spirit:decode(id('MODELPARAM_VALUE.BR_AW'))}
-	DATA      r_data    {spirit:decode(id('MODELPARAM_VALUE.BR_DW'))}
+	SOF       r_sof
+	EN        r_en
+	ADDR      r_addr
+	DATA      r_data
 }
 
-append_associate_busifa clk MBR_RD_F 8
+append_associate_busif clk MBR_RD
 
 pip_add_bus_if [ipx::current_core] FSA_CTL [subst {
 	abstraction_type_vlnv $VENDOR:interface:fsa_ctl_rtl:1.0
@@ -72,13 +68,49 @@ pip_add_bus_if [ipx::current_core] FSA_CTL [subst {
 	RIGHT_VERTEX rt_v
 }
 
+pip_add_bus_if [ipx::current_core] m_axis_fsync {
+	abstraction_type_vlnv xilinx.com:signal:video_frame_sync_rtl:1.0
+	bus_type_vlnv xilinx.com:signal:video_frame_sync:1.0
+	interface_mode slave
+	enablement_dependency {$C_OUT_DW > 0}
+} {
+	FRAME_SYNC m_axis_fsync
+}
+append_associate_busif clk m_axis_fsync
+
+pip_add_bus_if [ipx::current_core] M_AXIS {
+	abstraction_type_vlnv {xilinx.com:interface:axis_rtl:1.0}
+	bus_type_vlnv {xilinx.com:interface:axis:1.0}
+	interface_mode {master}
+	enablement_dependency {$C_OUT_DW > 0}
+} {
+	TVALID	m_axis_tvalid
+	TDATA	m_axis_tdata
+	TUSER	m_axis_tuser
+	TLAST	m_axis_tlast
+	TREADY	m_axis_tready
+}
+append_associate_busif clk M_AXIS
+
 # clock & reset
+
 pip_add_bus_if [ipx::current_core] resetn {
 	abstraction_type_vlnv xilinx.com:signal:reset_rtl:1.0
 	bus_type_vlnv xilinx.com:signal:reset:1.0
 	interface_mode slave
 } {
 	RST resetn
+} {
+	POLARITY {ACTIVE_LOW}
+}
+
+pip_add_bus_if [ipx::current_core] m_axis_resetn {
+	abstraction_type_vlnv xilinx.com:signal:reset_rtl:1.0
+	bus_type_vlnv xilinx.com:signal:reset:1.0
+	interface_mode slave
+	enablement_dependency {$C_OUT_DW > 0}
+} {
+	RST m_axis_resetn
 } {
 	POLARITY {ACTIVE_LOW}
 }
@@ -91,7 +123,7 @@ pip_add_bus_if [ipx::current_core] clk {
 	CLK clk
 } [subst {
 	ASSOCIATED_BUSIF [get_associate_busif clk]
-	ASSOCIATED_RESET {resetn}
+	ASSOCIATED_RESET {resetn m_axis_resetn}
 }]
 
 # parameters
@@ -141,35 +173,6 @@ pip_add_usr_par [ipx::current_core] {C_IMG_HW} {
 	value_format long
 }
 
-pip_add_usr_par [ipx::current_core] {C_READER_NUM} {
-	display_name {Reader Number}
-	tooltip {Reader Number}
-	widget {comboBox}
-} {
-	value_resolve_type user
-	value 2
-	value_format long
-	value_validation_type list
-	value_validation_list {1 2 3 4 5 6}
-} {
-	value 2
-	value_format long
-}
-
-pip_add_usr_par [ipx::current_core] {BR_NUM} {
-	display_name {blockram Number}
-	tooltip {blockram Number}
-	widget {textEdit}
-} {
-	value_resolve_type user
-	enablement_value false
-	value_tcl_expr {spirit:decode(id('MODELPARAM_VALUE.C_READER_NUM')) + 2}
-	value 4
-	value_format long
-} {
-	value 4
-	value_format long
-}
 pip_add_usr_par [ipx::current_core] {BR_AW} {
 	display_name {Blockram Address Width}
 	tooltip {Blockram Address Width}
@@ -198,6 +201,38 @@ pip_add_usr_par [ipx::current_core] {BR_DW} {
 } {
 	value 32
 	value_format long
+}
+
+pip_add_usr_par [ipx::current_core] {C_OUT_DW} {
+	display_name {MAXIS Data Width}
+	tooltip {MAXIS Data Width}
+	widget {comboBox}
+} {
+	value_resolve_type user
+	value 8
+	value_format long
+	value_validation_type list
+	value_validation_list {0 1 6 8 10 12 16 24 32}
+} {
+	value 8
+	value_format long
+}
+
+pip_add_usr_par [ipx::current_core] {C_OUT_DV} {
+	display_name {MAXIS Data Value}
+	tooltip {MAXIS Data Value}
+	widget {hexEdit}
+} {
+	value_bit_string_length 32
+	value_resolve_type user
+	value {0x1}
+	value_format bitString
+	value_validation_type none
+	enablement_tcl_expr {$C_OUT_DW > 0}
+} {
+	value_bit_string_length 32
+	value {0x1}
+	value_format bitString
 }
 
 ipx::create_xgui_files [ipx::current_core]

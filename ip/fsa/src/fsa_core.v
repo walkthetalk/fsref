@@ -152,6 +152,7 @@ module fsa_core #(
 		end
 	end
 
+	reg wr_sof_d3;
 	reg rd_en_d3;
 	reg [BR_AW-1:0] x_d3;
 	reg [C_PIXEL_WIDTH-1:0] tdata_p3;
@@ -161,6 +162,7 @@ module fsa_core #(
 	reg [C_IMG_HW-1:0] y_p3;
 	always @ (posedge clk) begin
 		if (resetn == 1'b0) begin
+			wr_sof_d3   <= 0;
 			rd_en_d3    <= 0;
 			x_d3        <= 0;
 			tdata_p3    <= 0;
@@ -170,6 +172,7 @@ module fsa_core #(
 			y_p3        <= 0;
 		end
 		else begin
+			wr_sof_d3   <= rd_en_d2 && plast_p2;
 			rd_en_d3    <= rd_en_d2;
 			x_d3        <= x_d2;
 			tdata_p3    <= tdata_p2;
@@ -179,7 +182,16 @@ module fsa_core #(
 			y_p3        <= y_p2;
 		end
 	end
-	assign sof = plast_p3;
+	assign sof = wr_sof_d3;
+
+	/// delay 4
+	reg wr_sof_d4;
+	always @ (posedge clk) begin
+		if (resetn == 1'b0)
+			wr_sof_d4 <= 0;
+		else
+			wr_sof_d4 <= wr_sof_d3;
+	end
 
 	always @ (posedge clk) begin
 		if (resetn == 1'b0) begin
@@ -219,6 +231,15 @@ module fsa_core #(
 		end
 	end
 
+	/// delay 5
+	reg wr_sof_d5;
+	always @ (posedge clk) begin
+		if (resetn == 1'b0)
+			wr_sof_d5 <= 0;
+		else
+			wr_sof_d5 <= wr_sof_d4;
+	end
+
 	/// detect edge
 	reg lft_val;
 	reg[C_IMG_WW-1:0] lft_edge;
@@ -248,20 +269,12 @@ module fsa_core #(
 		end
 	end
 
-	reg update_edge_p4;
-	always @ (posedge clk) begin
-		if (resetn == 1'b0)
-			update_edge_p4 <= 0;
-		else
-			update_edge_p4 <= (plast_p3 && rd_en_d3);
-	end
-
 	always @ (posedge clk) begin
 		if (resetn == 1'b0) begin
 			lft_v <= 0;
 			rt_v  <= 0;
 		end
-		else if (update_edge_p4) begin
+		else if (wr_sof_d4) begin
 			lft_v <= lft_edge;
 			rt_v  <= rt_edge ;
 		end

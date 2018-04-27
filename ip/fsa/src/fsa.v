@@ -3,13 +3,16 @@
 `include "./block_ram.v"
 `include "./mutex_buffer.v"
 `include "./fsa_core.v"
+`include "./fsa_stream.v"
 
 module fsa #(
+	parameter integer C_TEST = 0,
+	parameter integer C_OUT_DW = 1,
+	parameter integer C_OUT_DV = 1,
 	parameter integer C_PIXEL_WIDTH = 8,
 	parameter integer C_IMG_HW = 12,
 	parameter integer C_IMG_WW = 12,
-	parameter integer C_READER_NUM = 2,
-	parameter integer BR_NUM   = 4,		/// C_READER_NUM + 2
+	parameter integer BR_NUM   = 4,
 	parameter integer BR_AW    = 12,	/// same as C_IMG_WW
 	parameter integer BR_DW    = 32
 )(
@@ -19,10 +22,10 @@ module fsa #(
 	input  wire [C_IMG_HW-1:0]      height  ,
 	input  wire [C_IMG_WW-1:0]      width   ,
 
-	input  wire [1     *C_READER_NUM-1:0] r_sof  ,
-	input  wire [1     *C_READER_NUM-1:0] r_en   ,
-	input  wire [BR_AW *C_READER_NUM-1:0] r_addr ,
-	output wire [BR_DW *C_READER_NUM-1:0] r_data ,
+	input  wire r_sof  ,
+	input  wire r_en   ,
+	input  wire [BR_AW-1:0] r_addr ,
+	output wire [BR_DW-1:0] r_data ,
 
 	input  wire [C_PIXEL_WIDTH-1:0] ref_data,
 	output wire [C_IMG_WW-1:0]      lft_v   ,
@@ -32,9 +35,19 @@ module fsa #(
 	input  wire [C_PIXEL_WIDTH-1:0] s_axis_tdata,
 	input  wire                     s_axis_tuser,
 	input  wire                     s_axis_tlast,
-	output wire                     s_axis_tready
+	output wire                     s_axis_tready,
+
+	input  wire                       m_axis_fsync,
+	input  wire                       m_axis_resetn,
+
+	output wire                       m_axis_tvalid,
+	output wire [C_TEST+C_OUT_DW-1:0] m_axis_tdata,
+	output wire                       m_axis_tuser,
+	output wire                       m_axis_tlast,
+	input  wire                       m_axis_tready
 );
-	localparam integer RD_NUM = BR_NUM - 2 + 1;
+	localparam integer RD_OUT_STREAM = (C_OUT_DW > 0 ? 1 : 0);
+	localparam integer RD_NUM = 1 + 1 + RD_OUT_STREAM;
 
 	/// block ram for speed data
 	wire              wr_sof;
@@ -102,18 +115,18 @@ generate
 		end
 	end
 
-	for (i = 0; i < C_READER_NUM; i=i+1) begin
-		assign rd_en_p1[i] = r_en[i];
-		assign rd_addr_p1[i] = r_addr[BR_AW*(i+1)-1: BR_AW*i];
-		assign r_data[BR_DW*(i+1)-1:BR_DW*i] = rd_data_f[i];
-	end
+	assign rd_en_p1[0] = r_en;
+	assign rd_addr_p1[0] = r_addr;
+	assign r_data = rd_data_f[0];
 endgenerate
-	assign rd_en_p1  [2] = wr_ren    ;
-	assign rd_addr_p1[2] = wr_raddr  ;
+	assign rd_en_p1  [RD_NUM-1] = wr_ren    ;
+	assign rd_addr_p1[RD_NUM-1] = wr_raddr  ;
 
-	assign wr_rdata = rd_data_f[2];
+	assign wr_rdata = rd_data_f[RD_NUM-1];
 
 
+	wire r_sof_stream;
+	wire [BR_NUM-1:0] r_bmp_stream;
 	mutex_buffer # (
 		.C_BUFF_NUM(BR_NUM)
 	) mutex_buffer_controller (
@@ -125,13 +138,50 @@ endgenerate
 		.w_sof(wr_sof),
 		.w_bmp(wr_bmp),
 
-		.r0_sof(r0_sof),
+		.r0_sof(r_sof),
 		.r0_bmp(rd_bmp[0]),
 
-		.r1_sof(r1_sof),
-		.r1_bmp(rd_bmp[1])
+		.r1_sof(r_sof_stream),
+		.r1_bmp(r_bmp_stream)
 	);
-	assign rd_bmp[2] = wr_bmp;
+	assign rd_bmp[RD_NUM-1] = wr_bmp;
+
+generate
+	if (C_OUT_DW <= 0) begin
+		assign r_sof_stream = 0;
+	end
+	else begin
+		assign rd_bmp[RD_NUM-2] = r_bmp_stream;
+		fsa_stream # (
+			.C_TEST(C_TEST),
+			.C_OUT_DW(C_OUT_DW),
+			.C_OUT_DV(C_OUT_DV),
+			.C_IMG_HW(C_IMG_HW),
+			.C_IMG_WW(C_IMG_WW),
+			.BR_AW(BR_AW),
+			.BR_DW(BR_DW)
+		) fsa_stream_inst (
+			.clk(clk),
+			.resetn(m_axis_resetn),
+
+			.height(height),
+			.width(width),
+			.rd_sof(r_sof_stream),
+			.rd_en(rd_en_p1[RD_NUM-2]),
+			.rd_addr(rd_addr_p1[RD_NUM-2]),
+			.rd_data(rd_data_f[RD_NUM-2]),
+			.lft_v(lft_v),
+			.rt_v(rt_v),
+
+			.fsync(m_axis_fsync),
+			.m_axis_tvalid(m_axis_tvalid),
+			.m_axis_tdata (m_axis_tdata ),
+			.m_axis_tuser (m_axis_tuser ),
+			.m_axis_tlast (m_axis_tlast ),
+			.m_axis_tready(m_axis_tready)
+		);
+	end
+endgenerate
 
 	fsa_core # (
 		.C_PIXEL_WIDTH (C_PIXEL_WIDTH),

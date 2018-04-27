@@ -1,3 +1,5 @@
+`include "../src/fsa.v"
+
 module test_fsa # (
 	parameter integer C_PIXEL_WIDTH = 8,
 	parameter integer C_IMG_HW = 8,
@@ -7,9 +9,13 @@ module test_fsa # (
 );
 
 	localparam RANDOMINPUT = 1;
+	localparam RANDOMOUTPUT = 1;
 	localparam integer height = 20;
 	localparam integer width  = 40;
 	localparam integer BR_AW = C_IMG_WW;
+	localparam integer TEST_BW = 12;
+	localparam integer GEN_BW = 2;
+	localparam integer GEN_BV = 2'b10;
 
 	reg [C_PIXEL_WIDTH-1:0] data[height-1:0][width-1:0];
 
@@ -35,11 +41,20 @@ module test_fsa # (
 	reg                      s_axis_tlast ;
 	wire                     s_axis_tready;
 
+	reg                      fsync;
+	wire                     m_axis_tvalid;
+	wire [TEST_BW+GEN_BW-1:0]         m_axis_tdata ;
+	wire                     m_axis_tuser ;
+	wire                     m_axis_tlast ;
+	reg                      m_axis_tready;
+
 	fsa # (
+		.C_TEST(TEST_BW),
+		.C_OUT_DW(GEN_BW),
+		.C_OUT_DV(GEN_BV),
 		.C_PIXEL_WIDTH (C_PIXEL_WIDTH),
 		.C_IMG_HW (C_IMG_HW),
 		.C_IMG_WW (C_IMG_WW),
-		.C_READER_NUM (2),
 		.BR_NUM   (4),
 		.BR_AW    (BR_AW),	/// same as C_IMG_WW
 		.BR_DW    (BR_DW)
@@ -62,7 +77,14 @@ module test_fsa # (
 		.s_axis_tdata (s_axis_tdata ),
 		.s_axis_tuser (s_axis_tuser ),
 		.s_axis_tlast (s_axis_tlast ),
-		.s_axis_tready(s_axis_tready)
+		.s_axis_tready(s_axis_tready),
+
+		.fsync(fsync),
+		.m_axis_tvalid(m_axis_tvalid),
+		.m_axis_tdata (m_axis_tdata ),
+		.m_axis_tuser (m_axis_tuser ),
+		.m_axis_tlast (m_axis_tlast ),
+		.m_axis_tready(m_axis_tready)
 	);
 
 initial begin
@@ -90,18 +112,33 @@ initial begin
 	assign ref_data = 128;
 end
 
-	reg randomoutput;
+	reg[63:0] clk_cnt;
 	always @ (posedge clk) begin
 		if (resetn == 1'b0)
-			randomoutput <= 1'b0;
+			clk_cnt <= 0;
 		else
-			randomoutput <= (RANDOMINPUT ? {$random}%2 : 1);
+			clk_cnt <= clk_cnt + 1;
+	end
+
+	reg randominput;
+	always @ (posedge clk) begin
+		if (resetn == 1'b0)
+			randominput <= 1'b0;
+		else
+			randominput <= (RANDOMINPUT ? {$random}%2 : 1);
+	end
+
+	always @ (posedge clk) begin
+		if (resetn == 1'b0)
+			m_axis_tready <= 1'b0;
+		else
+			m_axis_tready <= (RANDOMOUTPUT ? {$random}%2 : 1);
 	end
 
 	reg[C_IMG_WW-1:0] col;
 	reg[C_IMG_HW-1:0] row;
 	wire snext;
-	assign snext = (~s_axis_tvalid | s_axis_tready) && randomoutput;
+	assign snext = (~s_axis_tvalid | s_axis_tready) && randominput;
 	always @ (posedge clk) begin
 		if (resetn == 1'b0) begin
 			col <= 0;
@@ -138,5 +175,30 @@ end
 		end
 	end
 
+	always @ (posedge clk) begin
+		if (resetn == 1'b0)
+			fsync <= 0;
+		else
+			fsync <= (clk_cnt[11:0] == 0);
+	end
+
+	always @ (posedge clk) begin
+		if (resetn == 1'b0) begin
+		end
+		else if (m_axis_tvalid && m_axis_tready) begin
+			if (m_axis_tuser)
+				$write("\nstart new frame:\n");
+			/*
+			if (m_axis_tdata[GEN_BW-1:0] == GEN_BV)
+				$write("1");
+			else
+				$write("0");
+			*/
+			$write("%b ", m_axis_tdata[GEN_BW-1:0]);
+			//$write("%d ", (m_axis_tdata/2));
+			if (m_axis_tlast)
+				$write("\n");
+		end
+	end
 
 endmodule
