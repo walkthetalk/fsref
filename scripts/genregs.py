@@ -717,6 +717,7 @@ class VIfStreamCtl(VIntface):
 		self._addPort({'ftype': 'cfg',     'iotype': 'output', 'name': 'in_resetn', 'sync': 'false' })
 
 		self._addPort({'ftype': 'cfg',     'iotype': 'output', 'name': 'soft_resetn', 'sync': 'true', 'expr': 'calcsoft_resetn' })
+		self._addPort({'ftype': 'cfg',     'iotype': 'output', 'name': 'fsa_disp_resetn', 'sync': 'true' })
 		self._addPort({'ftype': 'cfg',     'iotype': 'output', 'name': 'dst_bmp', 'width': dictData["bmpwidth"], 'sync': 'true' })
 		self._addPort({'ftype': 'cfg',     'iotype': 'output', 'name': 'width',   'width': dictData["iwwidth"], 'sync': 'true' })
 		self._addPort({'ftype': 'cfg',     'iotype': 'output', 'name': 'height',  'width': dictData["ihwidth"], 'sync': 'true' })
@@ -1199,7 +1200,8 @@ class VMFsctl(VerilogModuleFile):
 
 		ridx += 1
 		ret += suppcomment(lvl, str4regdefcomment(ridx))
-		ret += suppreadreg0(lvl, ridx)
+		ret += self.gen_loop(lvl, intf.realsize, 'loop4' + str4cfg(intf.name, 'fsa_disp_resetn'),
+				drc_rw(lvl+1, ridx, 'i', 1, str4cfg(intf.name, 'fsa_disp_resetn') + '[i]'))
 
 		ridx += 1
 		ret += suppcomment(lvl, str4regdefcomment(ridx))
