@@ -192,6 +192,18 @@ for {set i 0} {$i < 8} {incr i} {
 	}
 	append_associate_busif o_clk_reset s[set i]_in_resetn
 
+	pip_add_bus_if [ipx::current_core] s[set i]_fsa_disp_resetn [subst {
+		abstraction_type_vlnv xilinx.com:signal:reset_rtl:1.0
+		bus_type_vlnv xilinx.com:signal:reset:1.0
+		interface_mode master
+		enablement_dependency {spirit:decode(id('MODELPARAM_VALUE.C_STREAM_NBR')) > $i}
+	}] [subst {
+		RST s[set i]_fsa_disp_resetn
+	}] {
+		POLARITY {ACTIVE_LOW}
+	}
+	append_associate_busif o_clk_reset s[set i]_fsa_disp_resetn
+
 	pip_add_bus_if [ipx::current_core] s[set i]_soft_resetn [subst {
 		abstraction_type_vlnv xilinx.com:signal:reset_rtl:1.0
 		bus_type_vlnv xilinx.com:signal:reset:1.0
