@@ -2,6 +2,7 @@
 `include "./single_step_motor.v"
 
 module step_motor #(
+	parameter integer C_OPT_BR_TIME = 0,
 	parameter integer C_STEP_NUMBER_WIDTH = 16,
 	parameter integer C_SPEED_DATA_WIDTH = 16,
 	parameter integer C_SPEED_ADDRESS_WIDTH = 9,
@@ -339,6 +340,7 @@ module step_motor #(
 	generate
 		for (i = 0; i < C_MOTOR_NBR; i = i+1) begin: single_motor_logic
 		single_step_motor #(
+			.C_OPT_BR_TIME(C_OPT_BR_TIME),
 			.C_STEP_NUMBER_WIDTH(C_STEP_NUMBER_WIDTH),
 			.C_SPEED_DATA_WIDTH(C_SPEED_DATA_WIDTH),
 			.C_SPEED_ADDRESS_WIDTH(C_SPEED_ADDRESS_WIDTH),

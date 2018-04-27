@@ -105,6 +105,7 @@ proc create_fscore {
 		CONFIG.C_SPEED_DATA_WIDTH $motor_speed_width \
 		CONFIG.C_SPEED_ADDRESS_WIDTH $motor_br_addr_width \
 		CONFIG.C_MICROSTEP_WIDTH $motor_ms_width \
+		CONFIG.C_OPT_BR_TIME {true} \
 	] [get_bd_cells $mname/push_motor]
 	endgroup
 
@@ -121,6 +122,7 @@ proc create_fscore {
 		CONFIG.C_SPEED_DATA_WIDTH $motor_speed_width \
 		CONFIG.C_SPEED_ADDRESS_WIDTH $motor_br_addr_width \
 		CONFIG.C_MICROSTEP_WIDTH $motor_ms_width \
+		CONFIG.C_OPT_BR_TIME {true} \
 	] [get_bd_cells $mname/align_motor]
 	endgroup
 

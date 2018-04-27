@@ -1,4 +1,5 @@
 module single_step_motor #(
+	parameter integer C_OPT_BR_TIME = 0,
 	parameter integer C_STEP_NUMBER_WIDTH = 16,
 	parameter integer C_SPEED_DATA_WIDTH = 16,
 	parameter integer C_SPEED_ADDRESS_WIDTH = 9,
@@ -273,7 +274,10 @@ module single_step_motor #(
 			r_deac_addr <= (deac_ing ? step_remain : deac_addr_max);
 		end
 	end
+
 	/// minimum of acce_data_final / deac_data_final / speed_max
+generate
+if (C_OPT_BR_TIME == 0) begin
 	always @ (posedge clk) begin
 		if (rd_en_d4) begin
 			if (acce_data > deac_data)
@@ -292,6 +296,45 @@ module single_step_motor #(
 				speed_cur <= speed_max;
 		end
 	end
+end
+else begin
+	reg [C_SPEED_DATA_WIDTH-1:0] acce_data_d1;
+	reg [C_SPEED_DATA_WIDTH-1:0] deac_data_d1;
+	reg acceBdeac;
+	always @ (posedge clk) begin
+		if (rd_en_d4) begin
+			acceBdeac <= (acce_data > deac_data);
+			acce_data_d1 <= acce_data;
+			deac_data_d1 <= deac_data;
+		end
+	end
+	always @ (posedge clk) begin
+		if (rd_en_d5) begin
+			speed_var <= (acceBdeac ? acce_data_d1 : deac_data_d1);
+		end
+	end
+
+	reg rd_en_d6;
+	always @ (posedge clk) rd_en_d6 <= rd_en_d5;
+	reg varBmax;
+	reg [C_SPEED_DATA_WIDTH-1:0] speed_var_d1;
+	always @ (posedge clk) begin
+		if (rd_en_d6) begin
+			speed_var_d1 <= speed_var;
+			varBmax      <= (speed_var > speed_max);
+		end
+	end
+
+	reg rd_en_d7;
+	always @ (posedge clk) rd_en_d7 <= rd_en_d6;
+	assign o_speed = speed_cur;
+	always @ (posedge clk) begin
+		if (rd_en_d7) begin
+			speed_cur <= (varBmax ? speed_var_d1 : speed_max);
+		end
+	end
+end
+endgenerate
 //////////////////////////////////// read block ram end ////////////////////////
 	/// speed counter result in output driver
 	always @ (posedge clk) begin

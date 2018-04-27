@@ -94,14 +94,14 @@ pip_add_bus_if [ipx::current_core] clk {
 
 pip_add_usr_par [ipx::current_core] {C_CLK_DIV_NBR} {
 	display_name {Clock Division Number}
-	tooltip {Clock Division Number, must bigger than 7 for block ram reading delay}
+	tooltip {Clock Division Number, must bigger than 7 for block ram reading delay, I don't know if it can be 8 when enable OPT_BR_TIME.}
 	widget {comboBox}
 } {
 	value_resolve_type user
 	value 32
 	value_format long
 	value_validation_type list
-	value_validation_list {8 16 32}
+	value_validation_list {16 32}
 } {
 	value 32
 	value_format long
@@ -207,6 +207,19 @@ pip_add_usr_par [ipx::current_core] {C_MICROSTEP_WIDTH} {
 } {
 	value 3
 	value_format long
+}
+
+pip_add_usr_par [ipx::current_core] {C_OPT_BR_TIME} {
+	display_name {Optimize for blockram timing}
+	tooltip {Optimize for timing of reading blockram， which will use more resource.}
+	widget {checkBox}
+} {
+	value_resolve_type user
+	value false
+	value_format bool
+} {
+	value false
+	value_format bool
 }
 
 ipx::create_xgui_files [ipx::current_core]
