@@ -716,7 +716,7 @@ class VIfStreamCtl(VIntface):
 
 		self._addPort({'ftype': 'cfg',     'iotype': 'output', 'name': 'in_resetn', 'sync': 'false' })
 
-		self._addPort({'ftype': 'cfg',     'iotype': 'output', 'name': 'soft_resetn', 'sync': 'true', 'expr': 'calcsoft_resetn' })
+		self._addPort({'ftype': 'cfg',     'iotype': 'output', 'name': 'out_resetn', 'sync': 'true', 'expr': 'calcout_resetn' })
 		self._addPort({'ftype': 'cfg',     'iotype': 'output', 'name': 'fsa_disp_resetn', 'sync': 'true' })
 		self._addPort({'ftype': 'cfg',     'iotype': 'output', 'name': 'dst_bmp', 'width': dictData["bmpwidth"], 'sync': 'true' })
 		self._addPort({'ftype': 'cfg',     'iotype': 'output', 'name': 'width',   'width': dictData["iwwidth"], 'sync': 'true' })
@@ -750,7 +750,7 @@ class VIfStreamCtl(VIntface):
 		self._addPort({'ftype': 'inro',    'iotype': 'input',  'name': 'lft_v',      'width': dictData['iwwidth'] })
 		self._addPort({'ftype': 'inro',    'iotype': 'input',  'name': 'rt_v',       'width': dictData['iwwidth'] })
 		self._addPort({'ftype': 'cfg',     'iotype': 'output', 'name': 'ref_data',   'width': dictData['ipwidth'], 'sync': 'true' })
-	def calcsoft_resetn(self, ifidx):
+	def calcout_resetn(self, ifidx):
 		return '({}[{}] != 0)'.format(str4cfg(self.name, 'dst_bmp'), str(ifidx))
 	def genbufaddr0(self, ifidx):
 		return 'C_S{}_ADDR'.format(ifidx2str(ifidx))
@@ -949,7 +949,7 @@ class VMFsctl(VerilogModuleFile):
 		self.addExtPort({'iotype': 'output', 'wrtype': 'wire', 'name': 'out_width',  'width': 'C_IMG_WBITS' })
 		self.addExtPort({'iotype': 'output', 'wrtype': 'wire', 'name': 'out_height', 'width': 'C_IMG_HBITS' })
 
-		self.addExtPort({'iotype': 'output', 'wrtype': 'wire', 'name': 'st_soft_resetn'})
+		self.addExtPort({'iotype': 'output', 'wrtype': 'wire', 'name': 'st_out_resetn'})
 		self.addExtPort({'iotype': 'output', 'wrtype': 'wire', 'name': 'st_addr',   'width': 'C_BUF_ADDR_WIDTH'})
 		self.addExtPort({'iotype': 'output', 'wrtype': 'wire', 'name': 'st_width',  'width': 'C_IMG_WBITS' })
 		self.addExtPort({'iotype': 'output', 'wrtype': 'wire', 'name': 'st_height', 'width': 'C_IMG_HBITS' })
@@ -1090,8 +1090,8 @@ class VMFsctl(VerilogModuleFile):
 		ret += suppline(lvl, 'assign out_width  = C_IMG_WDEF;')
 		ret += suppline(lvl, 'assign out_height = C_IMG_HDEF;')
 
-		ret += suppcomment(lvl, 'st_soft_resetn')
-		ret += suppline(lvl, 'assign st_soft_resetn = 1;')
+		ret += suppcomment(lvl, 'st_out_resetn')
+		ret += suppline(lvl, 'assign st_out_resetn = 1;')
 
 		ret += suppcomment(lvl, 'st_addr')
 		ret += suppline(lvl, 'assign st_addr = C_ST_ADDR;')

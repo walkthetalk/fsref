@@ -204,17 +204,17 @@ for {set i 0} {$i < 8} {incr i} {
 	}
 	append_associate_busif o_clk_reset s[set i]_fsa_disp_resetn
 
-	pip_add_bus_if [ipx::current_core] s[set i]_soft_resetn [subst {
+	pip_add_bus_if [ipx::current_core] s[set i]_out_resetn [subst {
 		abstraction_type_vlnv xilinx.com:signal:reset_rtl:1.0
 		bus_type_vlnv xilinx.com:signal:reset:1.0
 		interface_mode master
 		enablement_dependency {spirit:decode(id('MODELPARAM_VALUE.C_STREAM_NBR')) > $i}
 	}] [subst {
-		RST s[set i]_soft_resetn
+		RST s[set i]_out_resetn
 	}] {
 		POLARITY {ACTIVE_LOW}
 	}
-	append_associate_busif o_clk_reset s[set i]_soft_resetn
+	append_associate_busif o_clk_reset s[set i]_out_resetn
 
 	pip_add_bus_if [ipx::current_core] S[set i]_FSA_CTL [subst {
 		abstraction_type_vlnv {$VENDOR:interface:fsa_ctl_rtl:1.0}
@@ -318,16 +318,16 @@ pip_add_bus_if [ipx::current_core] o_resetn {
 append_associate_busif o_clk_reset o_resetn
 
 # stream resetn
-pip_add_bus_if [ipx::current_core] st_soft_resetn {
+pip_add_bus_if [ipx::current_core] st_out_resetn {
 	abstraction_type_vlnv xilinx.com:signal:reset_rtl:1.0
 	bus_type_vlnv xilinx.com:signal:reset:1.0
 	interface_mode master
 } {
-	RST st_soft_resetn
+	RST st_out_resetn
 } {
 	POLARITY {ACTIVE_LOW}
 }
-append_associate_busif o_clk_reset st_soft_resetn
+append_associate_busif o_clk_reset st_out_resetn
 
 pip_add_bus_if [ipx::current_core] o_clk {
 	abstraction_type_vlnv xilinx.com:signal:clock_rtl:1.0
