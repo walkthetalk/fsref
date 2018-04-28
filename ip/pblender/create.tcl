@@ -3,13 +3,15 @@ source $origin_dir/scripts/aux/util.tcl
 
 proc create_pblender {
 	mname
-	{pixel_width  8}
+	{channel_width  8}
 	{img_w_width 12}
 	{img_h_width 12}
 } {
 	global VENDOR
 	global LIBRARY
 	global VERSION
+
+	set pixel_width [expr $channel_width * 3]
 
 	create_bd_cell -type hier $mname
 
@@ -43,9 +45,9 @@ proc create_pblender {
 	endgroup
 	startgroup
 	set_property -dict [list \
-		CONFIG.C_CHN_WIDTH        $pixel_width \
-		CONFIG.C_S0_CHN_NUM       1 \
-		CONFIG.C_S1_CHN_NUM       1 \
+		CONFIG.C_CHN_WIDTH        $channel_width \
+		CONFIG.C_S0_CHN_NUM       3 \
+		CONFIG.C_S1_CHN_NUM       3 \
 		CONFIG.C_ALPHA_WIDTH	  0 \
 		CONFIG.C_IN_NEED_WIDTH	  2 \
 	] [get_bd_cells $mname/blender0]
@@ -56,9 +58,9 @@ proc create_pblender {
 	endgroup
 	startgroup
 	set_property -dict [list \
-		CONFIG.C_CHN_WIDTH        $pixel_width \
-		CONFIG.C_S0_CHN_NUM       1 \
-		CONFIG.C_S1_CHN_NUM       1 \
+		CONFIG.C_CHN_WIDTH        $channel_width \
+		CONFIG.C_S0_CHN_NUM       3 \
+		CONFIG.C_S1_CHN_NUM       3 \
 		CONFIG.C_ALPHA_WIDTH	  0 \
 		CONFIG.C_IN_NEED_WIDTH	  1 \
 	] [get_bd_cells $mname/blender1]
@@ -69,10 +71,11 @@ proc create_pblender {
 	endgroup
 	startgroup
 	set_property -dict [list \
-		CONFIG.C_CHN_WIDTH        $pixel_width \
-		CONFIG.C_S0_CHN_NUM       1 \
+		CONFIG.C_CHN_WIDTH        $channel_width \
+		CONFIG.C_S0_CHN_NUM       3 \
 		CONFIG.C_S1_CHN_NUM       3 \
-		CONFIG.C_ALPHA_WIDTH	  8 \
+		CONFIG.C_ALPHA_WIDTH      8 \
+		CONFIG.C_FIXED_ALPHA      {0x80} \
 		CONFIG.C_S1_ENABLE        {true} \
 		CONFIG.C_IN_NEED_WIDTH	  0 \
 	] [get_bd_cells $mname/blender2]

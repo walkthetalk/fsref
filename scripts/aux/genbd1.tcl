@@ -326,10 +326,10 @@ set_property -dict [list offset {0x43C00000} range {64K}] [get_bd_addr_segs {cpu
 
 set_property -dict [list offset {0x00000000} range {1G}] [get_bd_addr_segs {fscore/pvdma_T/mm2s/M_AXI_REG/SEG_cpu_HP0_DDR_LOWOCM}]
 
-set_property -dict [list offset {0x00000000} range {1G}] [get_bd_addr_segs {fscore/pvdma_0/mm2s/M_AXI_REG/SEG_axi_combiner_Reg}]
-set_property -dict [list offset {0x00000000} range {1G}] [get_bd_addr_segs {fscore/pvdma_0/s2mm/M_AXI_REG/SEG_axi_combiner_Reg}]
-set_property -dict [list offset {0x00000000} range {1G}] [get_bd_addr_segs {fscore/pvdma_0/axi_combiner/M_AXI_REG/SEG_cpu_HP1_DDR_LOWOCM}]
+set_property -dict [list offset {0x00000000} range {1G}] [get_bd_addr_segs {fscore/stream0/pvdma/mm2s/M_AXI_REG/SEG_axi_combiner_Reg}]
+set_property -dict [list offset {0x00000000} range {1G}] [get_bd_addr_segs {fscore/stream0/pvdma/s2mm/M_AXI_REG/SEG_axi_combiner_Reg}]
+set_property -dict [list offset {0x00000000} range {1G}] [get_bd_addr_segs {fscore/stream0/pvdma/axi_combiner/M_AXI_REG/SEG_cpu_HP1_DDR_LOWOCM}]
 
-set_property -dict [list offset {0x00000000} range {1G}] [get_bd_addr_segs {fscore/pvdma_1/mm2s/M_AXI_REG/SEG_axi_combiner_Reg}]
-set_property -dict [list offset {0x00000000} range {1G}] [get_bd_addr_segs {fscore/pvdma_1/s2mm/M_AXI_REG/SEG_axi_combiner_Reg}]
-set_property -dict [list offset {0x00000000} range {1G}] [get_bd_addr_segs {fscore/pvdma_1/axi_combiner/M_AXI_REG/SEG_cpu_HP2_DDR_LOWOCM}]
+set_property -dict [list offset {0x00000000} range {1G}] [get_bd_addr_segs {fscore/stream1/pvdma/mm2s/M_AXI_REG/SEG_axi_combiner_Reg}]
+set_property -dict [list offset {0x00000000} range {1G}] [get_bd_addr_segs {fscore/stream1/pvdma/s2mm/M_AXI_REG/SEG_axi_combiner_Reg}]
+set_property -dict [list offset {0x00000000} range {1G}] [get_bd_addr_segs {fscore/stream1/pvdma/axi_combiner/M_AXI_REG/SEG_cpu_HP2_DDR_LOWOCM}]

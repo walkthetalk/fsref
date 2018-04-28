@@ -3,6 +3,131 @@ source $origin_dir/scripts/aux/util.tcl
 source $origin_dir/ip/pvdma/create.tcl
 source $origin_dir/ip/pblender/create.tcl
 
+proc creat_stream {
+	mname
+	{pixel_width 8}
+	{img_w_width 12}
+	{img_h_width 12}
+	{addr_width 32}
+	{data_width 64}
+	{burst_length 16}
+	{fifo_aximm_depth 128}
+	{ts_width 64}
+} {
+	global VENDOR
+	global LIBRARY
+	global VERSION
+
+	create_bd_cell -type hier $mname
+
+	startgroup
+	create_bd_cell -type ip -vlnv $VENDOR:$LIBRARY:axis_reshaper:$VERSION $mname/axis_reshaper
+	endgroup
+	startgroup
+	set_property -dict [list \
+		CONFIG.C_PIXEL_WIDTH $pixel_width \
+	] [get_bd_cells $mname/axis_reshaper]
+	endgroup
+
+	startgroup
+	create_bd_cell -type ip -vlnv $VENDOR:$LIBRARY:axis_bayer_extractor:$VERSION $mname/axis_bayer_extractor
+	endgroup
+	startgroup
+	set_property -dict [list \
+		CONFIG.C_PIXEL_WIDTH $pixel_width \
+	] [get_bd_cells $mname/axis_bayer_extractor]
+	endgroup
+
+	create_pvdma $mname/pvdma bidirection $pixel_width $img_w_width $img_h_width $addr_width $data_width $burst_length $fifo_aximm_depth $ts_width
+
+	startgroup
+	create_bd_cell -type ip -vlnv $VENDOR:$LIBRARY:axis_window:$VERSION $mname/axis_window
+	endgroup
+	startgroup
+	set_property -dict [list \
+		CONFIG.C_PIXEL_WIDTH $pixel_width \
+		CONFIG.C_IMG_WBITS $img_w_width \
+		CONFIG.C_IMG_HBITS $img_h_width \
+	] [get_bd_cells $mname/axis_window]
+	endgroup
+
+	startgroup
+	create_bd_cell -type ip -vlnv $VENDOR:$LIBRARY:axis_scaler:$VERSION $mname/axis_scaler
+	endgroup
+	set_property -dict [list \
+		CONFIG.C_PIXEL_WIDTH $pixel_width \
+		CONFIG.C_SH_WIDTH    $img_h_width \
+		CONFIG.C_SW_WIDTH    $img_w_width \
+		CONFIG.C_MH_WIDTH    $img_h_width \
+		CONFIG.C_MW_WIDTH    $img_w_width \
+	] [get_bd_cells $mname/axis_scaler]
+
+	# interfaces
+	# input
+	create_bd_intf_pin -mode Slave -vlnv xilinx.com:interface:axis_rtl:1.0 $mname/S_AXIS
+	create_bd_intf_pin -mode Master -vlnv xilinx.com:interface:axis_rtl:1.0 $mname/M_AXIS
+	pip_connect_intf_net [subst {
+		$mname/S_AXIS                       $mname/axis_reshaper/S_AXIS
+		$mname/axis_reshaper/M_AXIS         $mname/axis_bayer_extractor/S_AXIS
+		$mname/axis_bayer_extractor/M_AXIS  $mname/pvdma/S_AXIS
+		$mname/pvdma/M_AXIS                 $mname/axis_window/S_AXIS
+		$mname/axis_window/M_AXIS           $mname/axis_scaler/S_AXIS
+		$mname/axis_scaler/M_AXIS           $mname/M_AXIS
+	}]
+
+	create_bd_intf_pin -mode Slave -vlnv $VENDOR:interface:mutex_buffer_ctl_rtl:1.0 $mname/MBUF_R
+	pip_connect_intf_net [subst {$mname/MBUF_R     $mname/pvdma/MBUF_R}]
+	create_bd_intf_pin -mode Slave -vlnv $VENDOR:interface:addr_array_rtl:1.0 $mname/BUF_ADDR
+	pip_connect_intf_net [subst {$mname/BUF_ADDR   $mname/pvdma/BUF_ADDR}]
+	create_bd_intf_pin -mode Slave -vlnv $VENDOR:interface:window_ctl_rtl:1.0 $mname/IMG_SIZE
+	pip_connect_intf_net [subst {$mname/IMG_SIZE   $mname/pvdma/IMG_SIZE}]
+	create_bd_intf_pin -mode Slave -vlnv $VENDOR:interface:window_ctl_rtl:1.0 $mname/M_WIN
+	pip_connect_intf_net [subst {$mname/M_WIN      $mname/axis_window/S_WIN_CTL}]
+	create_bd_intf_pin -mode Slave -vlnv $VENDOR:interface:scale_ctl_rtl:1.0 $mname/M_SCALE
+	pip_connect_intf_net [subst {$mname/M_SCALE    $mname/axis_scaler/SCALE_CTL}]
+
+	create_bd_pin -from [expr $ts_width - 1] -to 0 -dir I -type data $mname/sys_ts
+	connect_bd_net [get_bd_pins $mname/sys_ts] [get_bd_pins $mname/pvdma/sys_ts]
+
+	create_bd_pin -dir I $mname/fsync
+	pip_connect_pin $mname/fsync [subst {
+		$mname/pvdma/fsync
+		$mname/axis_scaler/fsync
+	}]
+
+	# output
+	create_bd_intf_pin -mode Master -vlnv xilinx.com:interface:aximm_rtl:1.0 $mname/M_AXI
+	pip_connect_intf_net [subst {$mname/M_AXI    $mname/pvdma/M_AXI}]
+	create_bd_pin -dir O $mname/wr_done
+	pip_connect_pin $mname/pvdma/wr_done $mname/wr_done
+
+	# clk/resetn
+	create_bd_pin -dir I $mname/clk
+	pip_connect_pin $mname/clk [subst {
+		$mname/pvdma/clk
+		$mname/axis_window/clk
+		$mname/axis_scaler/clk
+		$mname/axis_bayer_extractor/clk
+		$mname/axis_reshaper/clk
+	}]
+	create_bd_pin -dir I $mname/resetn
+	pip_connect_pin $mname/resetn [subst {
+		$mname/pvdma/resetn
+	}]
+	create_bd_pin -dir I $mname/s_resetn
+	pip_connect_pin $mname/s_resetn [subst {
+		$mname/axis_reshaper/resetn
+		$mname/axis_bayer_extractor/resetn
+		$mname/pvdma/s2mm_resetn
+	}]
+	create_bd_pin -dir I $mname/m_resetn
+	pip_connect_pin $mname/m_resetn [subst {
+		$mname/axis_window/resetn
+		$mname/axis_scaler/resetn
+		$mname/pvdma/mm2s_resetn
+	}]
+}
+
 proc create_fscore {
 	mname
 	{coreversion {}}
@@ -35,60 +160,8 @@ proc create_fscore {
 	endgroup
 
 	create_pvdma $mname/pvdma_T mm2s 32 $img_w_width $img_h_width $addr_width $data_width $burst_length $fifo_aximm_depth
-	create_pvdma $mname/pvdma_0 bidirection $pixel_width $img_w_width $img_h_width $addr_width $data_width $burst_length $fifo_aximm_depth $ts_width
-	create_pvdma $mname/pvdma_1 bidirection $pixel_width $img_w_width $img_h_width $addr_width $data_width $burst_length $fifo_aximm_depth $ts_width
-
-	startgroup
-	create_bd_cell -type ip -vlnv $VENDOR:$LIBRARY:axis_window:$VERSION $mname/axis_window_0
-	endgroup
-	startgroup
-	create_bd_cell -type ip -vlnv $VENDOR:$LIBRARY:axis_window:$VERSION $mname/axis_window_1
-	endgroup
-	startgroup
-	set_property -dict [list \
-		CONFIG.C_PIXEL_WIDTH $pixel_width \
-		CONFIG.C_IMG_WBITS $img_w_width \
-		CONFIG.C_IMG_HBITS $img_h_width \
-	] [get_bd_cells $mname/axis_window_*]
-	endgroup
-
-	startgroup
-	create_bd_cell -type ip -vlnv $VENDOR:$LIBRARY:axis_scaler:$VERSION $mname/axis_scaler_0
-	endgroup
-	startgroup
-	create_bd_cell -type ip -vlnv $VENDOR:$LIBRARY:axis_scaler:$VERSION $mname/axis_scaler_1
-	endgroup
-	set_property -dict [list \
-		CONFIG.C_PIXEL_WIDTH $pixel_width \
-		CONFIG.C_SH_WIDTH    $img_h_width \
-		CONFIG.C_SW_WIDTH    $img_w_width \
-		CONFIG.C_MH_WIDTH    $img_h_width \
-		CONFIG.C_MW_WIDTH    $img_w_width \
-	] [get_bd_cells $mname/axis_scaler_*]
-
-	startgroup
-	create_bd_cell -type ip -vlnv $VENDOR:$LIBRARY:axis_bayer_extractor:$VERSION $mname/axis_bayer_extractor_0
-	endgroup
-	startgroup
-	create_bd_cell -type ip -vlnv $VENDOR:$LIBRARY:axis_bayer_extractor:$VERSION $mname/axis_bayer_extractor_1
-	endgroup
-	startgroup
-	set_property -dict [list \
-		CONFIG.C_PIXEL_WIDTH $pixel_width \
-	] [get_bd_cells $mname/axis_bayer_extractor_*]
-	endgroup
-
-	startgroup
-	create_bd_cell -type ip -vlnv $VENDOR:$LIBRARY:axis_reshaper:$VERSION $mname/axis_reshaper_0
-	endgroup
-	startgroup
-	create_bd_cell -type ip -vlnv $VENDOR:$LIBRARY:axis_reshaper:$VERSION $mname/axis_reshaper_1
-	endgroup
-	startgroup
-	set_property -dict [list \
-		CONFIG.C_PIXEL_WIDTH $pixel_width \
-	] [get_bd_cells $mname/axis_reshaper_*]
-	endgroup
+	creat_stream $mname/stream0 $pixel_width $img_w_width $img_h_width $addr_width $data_width $burst_length $fifo_aximm_depth $ts_width
+	creat_stream $mname/stream1 $pixel_width $img_w_width $img_h_width $addr_width $data_width $burst_length $fifo_aximm_depth $ts_width
 
 	create_pblender $mname/pblender $pixel_width 12 12
 
@@ -170,30 +243,26 @@ proc create_fscore {
 	pip_connect_intf_net [subst {
 		$mname/axilite2regctl/M_REG_CTL $mname/fsctl/S_REG_CTL
 		$mname/pvdma_T/M_AXIS           $mname/pblender/ST_AXIS
-		$mname/pvdma_0/M_AXIS           $mname/axis_window_0/S_AXIS
-		$mname/axis_window_0/M_AXIS     $mname/axis_scaler_0/S_AXIS
-		$mname/axis_scaler_0/M_AXIS	$mname/pblender/S0_AXIS
-		$mname/pvdma_1/M_AXIS           $mname/axis_window_1/S_AXIS
-		$mname/axis_window_1/M_AXIS     $mname/axis_scaler_1/S_AXIS
-		$mname/axis_scaler_1/M_AXIS	$mname/pblender/S1_AXIS
-		$mname/fsctl/S0_ADDR            $mname/pvdma_0/BUF_ADDR
-		$mname/fsctl/S1_ADDR            $mname/pvdma_1/BUF_ADDR
-		$mname/fsctl/S0_READ            $mname/pvdma_0/MBUF_R
-		$mname/fsctl/S1_READ            $mname/pvdma_1/MBUF_R
+		$mname/stream0/M_AXIS           $mname/pblender/S0_AXIS
+		$mname/stream1/M_AXIS           $mname/pblender/S1_AXIS
+		$mname/fsctl/S0_ADDR            $mname/stream0/BUF_ADDR
+		$mname/fsctl/S1_ADDR            $mname/stream1/BUF_ADDR
+		$mname/fsctl/S0_READ            $mname/stream0/MBUF_R
+		$mname/fsctl/S1_READ            $mname/stream1/MBUF_R
 		$mname/fsctl/OUT_SIZE           $mname/pblender/OUT_SIZE
 		$mname/fsctl/S0_DST             $mname/pblender/S0_POS
 		$mname/fsctl/S1_DST             $mname/pblender/S1_POS
-		$mname/fsctl/S0_WIN             $mname/axis_window_0/S_WIN_CTL
-		$mname/fsctl/S1_WIN             $mname/axis_window_1/S_WIN_CTL
-		$mname/fsctl/S0_SCALE           $mname/axis_scaler_0/SCALE_CTL
-		$mname/fsctl/S1_SCALE           $mname/axis_scaler_1/SCALE_CTL
+		$mname/fsctl/S0_WIN             $mname/stream0/M_WIN
+		$mname/fsctl/S1_WIN             $mname/stream1/M_WIN
+		$mname/fsctl/S0_SCALE           $mname/stream0/M_SCALE
+		$mname/fsctl/S1_SCALE           $mname/stream1/M_SCALE
 	}]
 	pip_connect_net [subst {
 		$mname/fsctl/st_addr            $mname/pvdma_T/MBUF_R_addr
 		$mname/fsctl/s0_dst_bmp         $mname/pblender/s0_dst_bmp
 		$mname/fsctl/s1_dst_bmp         $mname/pblender/s1_dst_bmp
-		$mname/fsctl/s0_wr_done         $mname/pvdma_0/wr_done
-		$mname/fsctl/s1_wr_done         $mname/pvdma_1/wr_done
+		$mname/fsctl/s0_wr_done         $mname/stream0/wr_done
+		$mname/fsctl/s1_wr_done         $mname/stream1/wr_done
 	}]
 
 	# external interface
@@ -216,18 +285,14 @@ proc create_fscore {
 	pip_connect_intf_net [subst {
 		$mname/axilite2regctl/S_AXI_LITE $mname/S_AXI_LITE
 		$mname/pvdma_T/M_AXI             $mname/M0_AXI
-		$mname/pvdma_0/M_AXI             $mname/M1_AXI
-		$mname/pvdma_1/M_AXI             $mname/M2_AXI
-		$mname/S0_AXIS                   $mname/axis_reshaper_0/S_AXIS
-		$mname/axis_reshaper_0/M_AXIS    $mname/axis_bayer_extractor_0/S_AXIS
-		$mname/axis_bayer_extractor_0/M_AXIS $mname/pvdma_0/S_AXIS
-		$mname/S1_AXIS                   $mname/axis_reshaper_1/S_AXIS
-		$mname/axis_reshaper_1/M_AXIS    $mname/axis_bayer_extractor_1/S_AXIS
-		$mname/axis_bayer_extractor_1/M_AXIS $mname/pvdma_1/S_AXIS
-		$mname/pblender/M_AXIS       $mname/M_AXIS
+		$mname/stream0/M_AXI             $mname/M1_AXI
+		$mname/stream1/M_AXI             $mname/M2_AXI
+		$mname/S0_AXIS                   $mname/stream0/S_AXIS
+		$mname/S1_AXIS                   $mname/stream1/S_AXIS
+		$mname/pblender/M_AXIS           $mname/M_AXIS
 		$mname/fsctl/ST_SIZE             $mname/pvdma_T/IMG_SIZE
-		$mname/fsctl/S0_SIZE             $mname/pvdma_0/IMG_SIZE
-		$mname/fsctl/S1_SIZE             $mname/pvdma_1/IMG_SIZE
+		$mname/fsctl/S0_SIZE             $mname/stream0/IMG_SIZE
+		$mname/fsctl/S1_SIZE             $mname/stream1/IMG_SIZE
 		$mname/fsctl/BR0_INIT_CTL        $mname/push_motor/BR_INIT
 		$mname/fsctl/MOTOR0_CTL          $mname/push_motor/S0
 		$mname/fsctl/MOTOR1_CTL          $mname/push_motor/S1
@@ -248,33 +313,14 @@ proc create_fscore {
 	}]
 
 	pip_connect_pin $mname/sys_timestamper/ts [subst {
-		$mname/pvdma_0/sys_ts
-		$mname/pvdma_1/sys_ts
+		$mname/stream0/sys_ts
+		$mname/stream1/sys_ts
 	}]
 
-	pip_connect_pin $mname/fsctl/s0_soft_resetn [subst {
-		$mname/pvdma_0/mm2s_resetn
-		$mname/axis_window_0/resetn
-		$mname/axis_scaler_0/resetn
-	}]
-
-	pip_connect_pin $mname/fsctl/s0_in_resetn [subst {
-		$mname/pvdma_0/s2mm_resetn
-		$mname/axis_bayer_extractor_0/resetn
-		$mname/axis_reshaper_0/resetn
-	}]
-
-	pip_connect_pin $mname/fsctl/s1_soft_resetn [subst {
-		$mname/pvdma_1/mm2s_resetn
-		$mname/axis_window_1/resetn
-		$mname/axis_scaler_1/resetn
-	}]
-
-	pip_connect_pin $mname/fsctl/s1_in_resetn [subst {
-		$mname/pvdma_1/s2mm_resetn
-		$mname/axis_bayer_extractor_1/resetn
-		$mname/axis_reshaper_1/resetn
-	}]
+	pip_connect_pin $mname/fsctl/s0_soft_resetn $mname/stream0/m_resetn
+	pip_connect_pin $mname/fsctl/s0_in_resetn   $mname/stream0/s_resetn
+	pip_connect_pin $mname/fsctl/s1_soft_resetn $mname/stream1/m_resetn
+	pip_connect_pin $mname/fsctl/s1_in_resetn   $mname/stream1/s_resetn
 
 	# external signal
 	create_bd_pin -dir I $mname/s_axi_clk
@@ -292,10 +338,8 @@ proc create_fscore {
 	pip_connect_pin $mname/fsync $mname/fsctl/fsync
 	pip_connect_pin $mname/fsctl/o_fsync [subst {
 		$mname/pvdma_T/fsync
-		$mname/pvdma_0/fsync
-		$mname/pvdma_1/fsync
-		$mname/axis_scaler_0/fsync
-		$mname/axis_scaler_1/fsync
+		$mname/stream0/fsync
+		$mname/stream1/fsync
 		$mname/pblender/fsync
 	}]
 	create_bd_pin -dir I $mname/clk
@@ -303,16 +347,8 @@ proc create_fscore {
 		$mname/sys_timestamper/clk
 		$mname/fsctl/o_clk
 		$mname/pvdma_T/clk
-		$mname/pvdma_0/clk
-		$mname/pvdma_1/clk
-		$mname/axis_window_0/clk
-		$mname/axis_window_1/clk
-		$mname/axis_scaler_0/clk
-		$mname/axis_scaler_1/clk
-		$mname/axis_bayer_extractor_0/clk
-		$mname/axis_bayer_extractor_1/clk
-		$mname/axis_reshaper_0/clk
-		$mname/axis_reshaper_1/clk
+		$mname/stream0/clk
+		$mname/stream1/clk
 		$mname/pblender/clk
 		$mname/push_motor/clk
 		$mname/align_motor/clk
@@ -324,8 +360,8 @@ proc create_fscore {
 		$mname/sys_timestamper/resetn
 		$mname/fsctl/o_resetn
 		$mname/pvdma_T/resetn
-		$mname/pvdma_0/resetn
-		$mname/pvdma_1/resetn
+		$mname/stream0/resetn
+		$mname/stream1/resetn
 		$mname/pblender/resetn
 		$mname/push_motor/resetn
 		$mname/align_motor/resetn
