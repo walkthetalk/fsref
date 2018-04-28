@@ -1,10 +1,7 @@
 # 1. cpu
-startgroup
 create_bd_cell -type ip -vlnv xilinx.com:ip:processing_system7:5.5 cpu
-endgroup
 
 # @note: if using hp as 32bit, you should set the cpu register in software
-startgroup
 set_property -dict [list \
     CONFIG.PCW_EN_CLK0_PORT {1} \
     CONFIG.PCW_EN_CLK1_PORT {1} \
@@ -45,32 +42,22 @@ set_property -dict [list \
     CONFIG.PCW_S_AXI_HP2_DATA_WIDTH {64} \
     CONFIG.PCW_USE_S_AXI_HP3 {1} \
     CONFIG.PCW_S_AXI_HP3_DATA_WIDTH {64}] [get_bd_cells cpu]
-endgroup
 
 # interconnection for control
-startgroup
 create_bd_cell -type ip -vlnv xilinx.com:ip:axi_interconnect:2.1 ic_ctl
 set_property -dict [list CONFIG.NUM_SI {1} CONFIG.NUM_MI {1}] [get_bd_cells ic_ctl]
-endgroup
 
 # 4. vid_out
-startgroup
 create_bd_cell -type ip -vlnv xilinx.com:ip:v_axi4s_vid_out:4.0 videoout
-endgroup
 # @note: use mast mode, don't allow auto adjust phase between in/out
-startgroup
 set_property -dict [list \
     CONFIG.C_S_AXIS_VIDEO_FORMAT.VALUE_SRC USER \
     CONFIG.C_S_AXIS_VIDEO_DATA_WIDTH.VALUE_SRC USER \
     CONFIG.C_HAS_ASYNC_CLK {1} \
     CONFIG.C_VTG_MASTER_SLAVE {1} \
 ] [get_bd_cells videoout]
-endgroup
 # 5. vtc
-startgroup
 create_bd_cell -type ip -vlnv xilinx.com:ip:v_tc:6.1 vtc
-endgroup
-startgroup
 set_property -dict [list \
     CONFIG.HAS_AXI4_LITE {false} \
     CONFIG.HAS_INTC_IF {false} \
@@ -90,67 +77,48 @@ set_property -dict [list \
     CONFIG.FSYNC_HSTART0 {320} \
     CONFIG.FSYNC_VSTART0 {240} \
     CONFIG.enable_detection {false}] [get_bd_cells vtc]
-endgroup
 # 6. lcd
-startgroup
 create_bd_cell -type ip -vlnv $VENDOR:$LIBRARY:fslcd:$VERSION fslcd
 set_property -dict [list \
     CONFIG.C_IN_COMP_WIDTH {8} \
     CONFIG.C_OUT_COMP_WIDTH {6} \
 ] [get_bd_cells fslcd]
-endgroup
 
 # 7. cmos
-startgroup
 create_bd_cell -type ip -vlnv $VENDOR:$LIBRARY:fscmos:$VERSION fscmos_0
-endgroup
 copy_bd_objs /  [get_bd_cells {fscmos_0}]
 
-startgroup
 create_bd_cell -type ip -vlnv xilinx.com:ip:v_vid_in_axi4s:4.0 videoin_0
-endgroup
-startgroup
 set_property -dict [list \
     CONFIG.C_PIXELS_PER_CLOCK {1} \
     CONFIG.C_M_AXIS_VIDEO_FORMAT {12} \
     CONFIG.C_M_AXIS_VIDEO_DATA_WIDTH {8} \
     CONFIG.C_NATIVE_COMPONENT_WIDTH {8} \
     CONFIG.C_HAS_ASYNC_CLK {1}] [get_bd_cells videoin_0]
-endgroup
 copy_bd_objs /  [get_bd_cells videoin_0]
 
 # 8. fsmotor
-startgroup
 create_bd_cell -type ip -vlnv $VENDOR:$LIBRARY:fsmotor:$VERSION fsmotor
-endgroup
 
 # X. fusion splicer core
 create_fscore /fscore
 
 # interconnection of data
-startgroup
 create_bd_cell -type ip -vlnv xilinx.com:ip:axi_interconnect:2.1 ic_data_0
 set_property -dict [list CONFIG.NUM_SI {1} CONFIG.NUM_MI {1}] [get_bd_cells ic_data_0]
-endgroup
 copy_bd_objs /  [get_bd_cells ic_data_0]
 copy_bd_objs /  [get_bd_cells ic_data_1]
 
 # 7. constant 1
-startgroup
 create_bd_cell -type ip -vlnv xilinx.com:ip:xlconstant:1.1 xlconstant_0
-endgroup
 # 8. reset for fclock
-startgroup
 create_bd_cell -type ip -vlnv xilinx.com:ip:proc_sys_reset:5.0 rst_cpu_fclk0
 create_bd_cell -type ip -vlnv xilinx.com:ip:proc_sys_reset:5.0 rst_cpu_fclk1
 create_bd_cell -type ip -vlnv xilinx.com:ip:proc_sys_reset:5.0 rst_cpu_fclk2
 # fclk3 is only used for output, do not need reset
-endgroup
 
 # auto connect
-startgroup
 apply_bd_automation -rule xilinx.com:bd_rule:processing_system7 -config {make_external "FIXED_IO, DDR" Master "Disable" Slave "Disable" }  [get_bd_cells cpu]
-endgroup
 
 # connect clocks
 #     fclk0
@@ -243,7 +211,6 @@ pip_connect_pin xlconstant_0/dout {
 }
 
 # connect from/to external cmos
-startgroup
 create_bd_port -type clk -dir O cmos0_xclk
 connect_bd_net [get_bd_pins cpu/FCLK_CLK3] [get_bd_ports cmos0_xclk]
 create_bd_port -dir I cmos0_pclk
@@ -255,8 +222,6 @@ create_bd_port -dir I cmos0_vsync
 connect_bd_net [get_bd_pins /fscmos_0/cmos_vsync] [get_bd_ports cmos0_vsync]
 create_bd_port -dir I -from 7 -to 0 cmos0_data
 connect_bd_net [get_bd_pins /fscmos_0/cmos_data] [get_bd_ports cmos0_data]
-endgroup
-startgroup
 create_bd_port -type clk -dir O cmos1_xclk
 connect_bd_net [get_bd_pins cpu/FCLK_CLK3] [get_bd_ports cmos1_xclk]
 create_bd_port -dir I cmos1_pclk
@@ -268,10 +233,8 @@ create_bd_port -dir I cmos1_vsync
 connect_bd_net [get_bd_pins /fscmos_1/cmos_vsync] [get_bd_ports cmos1_vsync]
 create_bd_port -dir I -from 7 -to 0 cmos1_data
 connect_bd_net [get_bd_pins /fscmos_1/cmos_data] [get_bd_ports cmos1_data]
-endgroup
 
 # connect from/to external lcd
-startgroup
 create_bd_port -dir O lcd_clk
 connect_bd_net [get_bd_pins cpu/FCLK_CLK2] [get_bd_ports lcd_clk]
 create_bd_port -dir O -from 5 -to 0 lcd_R
@@ -287,7 +250,6 @@ create_bd_port -dir O lcd_vsync
 connect_bd_net [get_bd_pins /fslcd/vsync_out] [get_bd_ports lcd_vsync]
 create_bd_port -dir O -from 3 -to 0 lcd_ctrl
 connect_bd_net [get_bd_pins /fslcd/ctrl_out] [get_bd_ports lcd_ctrl]
-endgroup
 
 # connect from/to external motor ic
 create_bd_port -dir O -from 2 -to 0 pm_ms

@@ -14,15 +14,10 @@ update_ip_catalog
 ################################## create board design: pvdma ##############################
 create_bd_design "pvdma"
 
-startgroup
 create_bd_cell -type ip -vlnv $VENDOR:$LIBRARY:mutex_buffer_ctl:$VERSION mutex_buffer_ctl_0
-endgroup
 set_property -dict [list CONFIG.C_ADDR_WIDTH {32}] [get_bd_cells mutex_buffer_ctl_0]
 
-startgroup
 create_bd_cell -type ip -vlnv $VENDOR:$LIBRARY:mm2s:$VERSION mm2s_0
-endgroup
-startgroup
 set_property -dict [list \
 	CONFIG.C_PIXEL_WIDTH {8} \
 	CONFIG.C_IMG_WBITS {12} \
@@ -30,12 +25,8 @@ set_property -dict [list \
 	CONFIG.C_M_AXI_BURST_LEN {8} \
 	CONFIG.C_M_AXI_DATA_WIDTH {64} \
 ] [get_bd_cells mm2s_0]
-endgroup
 
-startgroup
 create_bd_cell -type ip -vlnv $VENDOR:$LIBRARY:s2mm:$VERSION s2mm_0
-endgroup
-startgroup
 set_property -dict [list \
 	CONFIG.C_PIXEL_WIDTH {8} \
 	CONFIG.C_IMG_WBITS {12} \
@@ -43,22 +34,14 @@ set_property -dict [list \
 	CONFIG.C_M_AXI_BURST_LEN {8} \
 	CONFIG.C_M_AXI_DATA_WIDTH {64} \
 ] [get_bd_cells s2mm_0]
-endgroup
 
-startgroup
 create_bd_cell -type ip -vlnv $VENDOR:$LIBRARY:axi_combiner:$VERSION axi_combiner_0
-endgroup
-startgroup
 set_property -dict [list \
 	CONFIG.C_M_AXI_ADDR_WIDTH {32} \
 	CONFIG.C_M_AXI_DATA_WIDTH {64} \
 ] [get_bd_cells axi_combiner_0]
-endgroup
 
-startgroup
 create_bd_cell -type ip -vlnv xilinx.com:ip:fifo_generator:13.1 fifo_mm2s
-endgroup
-startgroup
 set_property -dict [list \
 	CONFIG.Fifo_Implementation {Common_Clock_Block_RAM} \
 	CONFIG.INTERFACE_TYPE {Native} \
@@ -69,12 +52,8 @@ set_property -dict [list \
 	CONFIG.Reset_Type {Asynchronous_Reset} \
 	CONFIG.Full_Flags_Reset_Value {1} \
 ] [get_bd_cells fifo_mm2s]
-endgroup
 
-startgroup
 create_bd_cell -type ip -vlnv xilinx.com:ip:fifo_generator:13.1 fifo_s2mm
-endgroup
-startgroup
 set_property -dict [list \
 	CONFIG.Fifo_Implementation {Common_Clock_Block_RAM} \
 	CONFIG.Input_Data_Width {10} \
@@ -84,19 +63,15 @@ set_property -dict [list \
 	CONFIG.Reset_Type {Asynchronous_Reset} \
 	CONFIG.Full_Flags_Reset_Value {1} \
 ] [get_bd_cells fifo_s2mm]
-endgroup
 
 # eternal interface
 # data
-startgroup
 make_bd_intf_pins_external \
  	[get_bd_intf_pins s2mm_0/S_AXIS] \
 	[get_bd_intf_pins mm2s_0/M_AXIS] \
 	[get_bd_intf_pins axi_combiner_0/M_AXI]
-endgroup
 
 # cfg
-startgroup
 make_bd_pins_external \
 	[get_bd_pins mm2s_0/img_height] \
 	[get_bd_pins mm2s_0/img_width] \
@@ -104,27 +79,20 @@ make_bd_pins_external \
 	[get_bd_pins mutex_buffer_ctl_0/buf1_addr] \
 	[get_bd_pins mutex_buffer_ctl_0/buf2_addr] \
 	[get_bd_pins mutex_buffer_ctl_0/buf3_addr]
-endgroup
 
 # signal
-startgroup
 make_bd_pins_external \
 	[get_bd_intf_pins mutex_buffer_ctl_0/MBUF_R0] \
 	[get_bd_pins mm2s_0/fsync]
-endgroup
 
 # interrupt
-startgroup
 make_bd_pins_external  [get_bd_pins mutex_buffer_ctl_0/intr]
-endgroup
 
 # clock & reset
-startgroup
 make_bd_pins_external \
 	[get_bd_pins mutex_buffer_ctl_0/clk] \
 	[get_bd_pins mutex_buffer_ctl_0/resetn] \
 	[get_bd_pins mm2s_0/soft_resetn]
-endgroup
 
 set_property CONFIG.ASSOCIATED_BUSIF {S_AXIS:M_AXIS:M_AXI} [get_bd_ports /clk]
 

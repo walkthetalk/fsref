@@ -228,12 +228,8 @@ proc create_fscore {
 
 	create_bd_cell -type hier $mname
 
-	startgroup
 	create_bd_cell -type ip -vlnv $VENDOR:$LIBRARY:timestamper:$VERSION $mname/sys_timestamper
-	endgroup
-	startgroup
 	set_property -dict [list CONFIG.C_TS_WIDTH $ts_width] [get_bd_cells $mname/sys_timestamper]
-	endgroup
 
 	create_pvdma $mname/pvdma_T mm2s 32 $img_w_width $img_h_width $addr_width $data_width $burst_length $fifo_aximm_depth
 	creat_stream $mname/stream0 1 $pixel_width $img_w_width $img_h_width $addr_width $data_width $burst_length $fifo_aximm_depth $ts_width
@@ -241,10 +237,7 @@ proc create_fscore {
 
 	create_pblender $mname/pblender $pixel_width 12 12
 
-	startgroup
 	create_bd_cell -type ip -vlnv $VENDOR:$LIBRARY:step_motor:$VERSION $mname/push_motor
-	endgroup
-	startgroup
 	set_property -dict [list \
 		CONFIG.C_CLK_DIV_NBR 32 \
 		CONFIG.C_MOTOR_NBR 2 \
@@ -256,12 +249,8 @@ proc create_fscore {
 		CONFIG.C_MICROSTEP_WIDTH $motor_ms_width \
 		CONFIG.C_OPT_BR_TIME {true} \
 	] [get_bd_cells $mname/push_motor]
-	endgroup
 
-	startgroup
 	create_bd_cell -type ip -vlnv $VENDOR:$LIBRARY:step_motor:$VERSION $mname/align_motor
-	endgroup
-	startgroup
 	set_property -dict [list \
 		CONFIG.C_CLK_DIV_NBR 32 \
 		CONFIG.C_MOTOR_NBR 2 \
@@ -273,30 +262,20 @@ proc create_fscore {
 		CONFIG.C_MICROSTEP_WIDTH $motor_ms_width \
 		CONFIG.C_OPT_BR_TIME {true} \
 	] [get_bd_cells $mname/align_motor]
-	endgroup
 
-	startgroup
 		create_bd_cell -type ip -vlnv ocfb:pvip:pwm:1.0.9 $mname/pwm0
 		set_property -dict [list \
 			CONFIG.C_PWM_CNT_WIDTH {16} \
 		] [get_bd_cells $mname/pwm0]
-	endgroup
 
-	startgroup
 		create_bd_cell -type ip -vlnv ocfb:pvip:pwm:1.0.9 $mname/pwm1
 		set_property -dict [list \
 			CONFIG.C_PWM_CNT_WIDTH {16} \
 		] [get_bd_cells $mname/pwm1]
-	endgroup
 
-	startgroup
 	create_bd_cell -type ip -vlnv $VENDOR:$LIBRARY:axilite2regctl:$VERSION $mname/axilite2regctl
-	endgroup
 
-	startgroup
 	create_bd_cell -type ip -vlnv $VENDOR:$LIBRARY:fsctl:$VERSION $mname/fsctl
-	endgroup
-	startgroup
 	set_property -dict [list \
 		CONFIG.C_CORE_VERSION $coreversion \
 		CONFIG.C_STREAM_NBR 2 \
@@ -314,7 +293,6 @@ proc create_fscore {
 		CONFIG.C_MICROSTEP_WIDTH $motor_ms_width \
 		CONFIG.C_PWM_NBR 2 \
 	] [get_bd_cells $mname/fsctl]
-	endgroup
 
 	pip_connect_intf_net [subst {
 		$mname/axilite2regctl/M_REG_CTL $mname/fsctl/S_REG_CTL

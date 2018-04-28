@@ -15,10 +15,7 @@ proc create_pblender {
 
 	create_bd_cell -type hier $mname
 
-	startgroup
 	create_bd_cell -type ip -vlnv $VENDOR:$LIBRARY:axis_generator:$VERSION $mname/background
-	endgroup
-	startgroup
 	set_property -dict [list \
 		CONFIG.C_WIN_NUM     2 \
 		CONFIG.C_PIXEL_WIDTH $pixel_width \
@@ -26,24 +23,16 @@ proc create_pblender {
 		CONFIG.C_IMG_HBITS   $img_h_width \
 		CONFIG.C_EXT_FSYNC   1 \
 	] [get_bd_cells $mname/background]
-	endgroup
 
-	startgroup
 	create_bd_cell -type ip -vlnv $VENDOR:$LIBRARY:axis_interconnector:$VERSION $mname/axis_interconnector
-	endgroup
-	startgroup
 	set_property -dict [list \
 		CONFIG.C_PIXEL_WIDTH  $pixel_width \
 		CONFIG.C_S_STREAM_NUM 2 \
 		CONFIG.C_M_STREAM_NUM 2 \
 		CONFIG.C_ONE2MANY     0 \
 	] [get_bd_cells $mname/axis_interconnector]
-	endgroup
 
-	startgroup
 	create_bd_cell -type ip -vlnv $VENDOR:$LIBRARY:axis_blender:$VERSION $mname/blender0
-	endgroup
-	startgroup
 	set_property -dict [list \
 		CONFIG.C_CHN_WIDTH        $channel_width \
 		CONFIG.C_S0_CHN_NUM       3 \
@@ -51,12 +40,8 @@ proc create_pblender {
 		CONFIG.C_ALPHA_WIDTH	  0 \
 		CONFIG.C_IN_NEED_WIDTH	  2 \
 	] [get_bd_cells $mname/blender0]
-	endgroup
 
-	startgroup
 	create_bd_cell -type ip -vlnv $VENDOR:$LIBRARY:axis_blender:$VERSION $mname/blender1
-	endgroup
-	startgroup
 	set_property -dict [list \
 		CONFIG.C_CHN_WIDTH        $channel_width \
 		CONFIG.C_S0_CHN_NUM       3 \
@@ -64,12 +49,8 @@ proc create_pblender {
 		CONFIG.C_ALPHA_WIDTH	  0 \
 		CONFIG.C_IN_NEED_WIDTH	  1 \
 	] [get_bd_cells $mname/blender1]
-	endgroup
 
-	startgroup
 	create_bd_cell -type ip -vlnv $VENDOR:$LIBRARY:axis_blender:$VERSION $mname/blender2
-	endgroup
-	startgroup
 	set_property -dict [list \
 		CONFIG.C_CHN_WIDTH        $channel_width \
 		CONFIG.C_S0_CHN_NUM       3 \
@@ -79,7 +60,6 @@ proc create_pblender {
 		CONFIG.C_S1_ENABLE        {true} \
 		CONFIG.C_IN_NEED_WIDTH	  0 \
 	] [get_bd_cells $mname/blender2]
-	endgroup
 
 	# external interface
 	create_bd_pin -dir I -type CLK $mname/clk

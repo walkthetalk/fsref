@@ -42,10 +42,7 @@ proc create_pvdma {
 	create_bd_cell -type hier $mname
 
 	if {$dir_mm2s == 1} {
-		startgroup
 		create_bd_cell -type ip -vlnv $VENDOR:$LIBRARY:mm2s:$VERSION $mname/mm2s
-		endgroup
-		startgroup
 		set_property -dict [list \
 			CONFIG.C_PIXEL_WIDTH $pixel_width \
 			CONFIG.C_IMG_WBITS $img_w_width \
@@ -55,17 +52,13 @@ proc create_pvdma {
 			CONFIG.C_M_AXI_DATA_WIDTH $data_width \
 			CONFIG.C_DATACOUNT_BITS $datacount_width \
 		] [get_bd_cells $mname/mm2s]
-		endgroup
 
 		set pixel_store_width [get_property CONFIG.C_PIXEL_STORE_WIDTH [get_bd_cells $mname/mm2s]]
 		set adata_pixels [expr {$data_width/$pixel_store_width}]
 		set fifo_axis_width [expr {$pixel_width+2}]
 		set fifo_aximm_width [expr {$fifo_axis_width*$adata_pixels}]
 
-		startgroup
 		create_bd_cell -type ip -vlnv xilinx.com:ip:fifo_generator:13.2 $mname/fifo_mm2s
-		endgroup
-		startgroup
 		set_property -dict [list \
 			CONFIG.Fifo_Implementation {Common_Clock_Block_RAM} \
 			CONFIG.INTERFACE_TYPE {Native} \
@@ -75,14 +68,9 @@ proc create_pvdma {
 			CONFIG.Write_Data_Count {true} \
 			CONFIG.Reset_Type {Synchronous_Reset} \
 		] [get_bd_cells $mname/fifo_mm2s]
-		endgroup
 
-		startgroup
 		create_bd_cell -type ip -vlnv $VENDOR:$LIBRARY:axis_relay:$VERSION $mname/mm2s_relay
-		endgroup
-		startgroup
 		set_property -dict [list CONFIG.C_PIXEL_WIDTH $pixel_width] [get_bd_cells $mname/mm2s_relay]
-		endgroup
 
 		create_bd_intf_pin -mode Master -vlnv xilinx.com:interface:axis_rtl:1.0 $mname/M_AXIS
 		connect_bd_intf_net [get_bd_intf_pins $mname/mm2s/M_AXIS] [get_bd_intf_pins $mname/mm2s_relay/S_AXIS]
@@ -98,10 +86,7 @@ proc create_pvdma {
 	}
 
 	if {$dir_s2mm == 1} {
-		startgroup
 		create_bd_cell -type ip -vlnv $VENDOR:$LIBRARY:s2mm:$VERSION $mname/s2mm
-		endgroup
-		startgroup
 		set_property -dict [list \
 			CONFIG.C_PIXEL_WIDTH $pixel_width \
 			CONFIG.C_IMG_WBITS $img_w_width \
@@ -111,17 +96,13 @@ proc create_pvdma {
 			CONFIG.C_M_AXI_DATA_WIDTH $data_width \
 			CONFIG.C_DATACOUNT_BITS $datacount_width \
 		] [get_bd_cells $mname/s2mm]
-		endgroup
 
 		set pixel_store_width [get_property CONFIG.C_PIXEL_STORE_WIDTH [get_bd_cells $mname/s2mm]]
 		set adata_pixels [expr {$data_width/$pixel_store_width}]
 		set fifo_axis_width [expr {$pixel_width+2}]
 		set fifo_aximm_width [expr {$fifo_axis_width*$adata_pixels}]
 
-		startgroup
 		create_bd_cell -type ip -vlnv xilinx.com:ip:fifo_generator:13.2 $mname/fifo_s2mm
-		endgroup
-		startgroup
 		set_property -dict [list \
 			CONFIG.Fifo_Implementation {Common_Clock_Block_RAM} \
 			CONFIG.Input_Data_Width $fifo_axis_width \
@@ -131,14 +112,9 @@ proc create_pvdma {
 			CONFIG.Reset_Type {Synchronous_Reset} \
 			CONFIG.Almost_Full_Flag {true} \
 		] [get_bd_cells $mname/fifo_s2mm]
-		endgroup
 
-		startgroup
 		create_bd_cell -type ip -vlnv $VENDOR:$LIBRARY:axis_relay:$VERSION $mname/s2mm_relay
-		endgroup
-		startgroup
 		set_property -dict [list CONFIG.C_PIXEL_WIDTH $pixel_width] [get_bd_cells $mname/s2mm_relay]
-		endgroup
 
 		create_bd_intf_pin -mode Slave -vlnv xilinx.com:interface:axis_rtl:1.0 $mname/S_AXIS
 		connect_bd_intf_net [get_bd_intf_pins $mname/s2mm/S_AXIS] [get_bd_intf_pins $mname/s2mm_relay/M_AXIS]
@@ -150,23 +126,17 @@ proc create_pvdma {
 	}
 
 	if {$bidirection == 1} {
-		startgroup
 		create_bd_cell -type ip -vlnv $VENDOR:$LIBRARY:mutex_buffer:$VERSION $mname/mutex_buffer
-		endgroup
 		set_property -dict [list \
 			CONFIG.C_ADDR_WIDTH $addr_width \
 			CONFIG.C_TS_WIDTH   $ts_width \
 		] [get_bd_cells $mname/mutex_buffer]
 
-		startgroup
 		create_bd_cell -type ip -vlnv $VENDOR:$LIBRARY:axi_combiner:$VERSION $mname/axi_combiner
-		endgroup
-		startgroup
 		set_property -dict [list \
 			CONFIG.C_M_AXI_ADDR_WIDTH $addr_width \
 			CONFIG.C_M_AXI_DATA_WIDTH $data_width \
 		] [get_bd_cells $mname/axi_combiner]
-		endgroup
 
 		# interrupt
 		create_bd_pin -dir O $mname/wr_done
@@ -186,17 +156,13 @@ proc create_pvdma {
 		connect_bd_intf_net [get_bd_intf_pins $mname/mutex_buffer/BUF_ADDR] [get_bd_intf_pins $mname/BUF_ADDR]
 		#     image size
 		create_bd_intf_pin -mode Slave -vlnv $VENDOR:interface:window_ctl_rtl:1.0 $mname/IMG_SIZE
-		startgroup
 		create_bd_cell -type ip -vlnv $VENDOR:$LIBRARY:window_broadcaster:1.0.9 $mname/window_broadcaster
-		endgroup
-		startgroup
 		set_property -dict [list \
 			CONFIG.C_WBITS $img_w_width \
 			CONFIG.C_HBITS $img_h_width \
 			CONFIG.C_MASTER_NUM {2} \
 			CONFIG.C_HAS_POSITION {false} \
 			] [get_bd_cells $mname/window_broadcaster]
-		endgroup
 		connect_bd_intf_net [get_bd_intf_pins $mname/s2mm/IMG_SIZE] [get_bd_intf_pins $mname/window_broadcaster/M0_WIN]
 		connect_bd_intf_net [get_bd_intf_pins $mname/mm2s/IMG_SIZE] [get_bd_intf_pins $mname/window_broadcaster/M1_WIN]
 		connect_bd_intf_net [get_bd_intf_pins $mname/window_broadcaster/S_WIN] [get_bd_intf_pins $mname/IMG_SIZE]
