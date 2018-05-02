@@ -350,13 +350,17 @@ proc create_fscore {
 		$mname/fsctl/S0_SIZE             $mname/stream0/IMG_SIZE
 		$mname/fsctl/S1_SIZE             $mname/stream1/IMG_SIZE
 		$mname/fsctl/BR0_INIT_CTL        $mname/push_motor/BR_INIT
-		$mname/fsctl/MOTOR0_CTL          $mname/push_motor/S0
-		$mname/fsctl/MOTOR1_CTL          $mname/push_motor/S1
+		$mname/fsctl/MOTOR0_CFG          $mname/push_motor/S0_CFG
+		$mname/fsctl/MOTOR0_REQ          $mname/push_motor/S0_REQ
+		$mname/fsctl/MOTOR1_CFG          $mname/push_motor/S1_CFG
+		$mname/fsctl/MOTOR1_REQ          $mname/push_motor/S1_REQ
 		$mname/push_motor/M0             $mname/PUSH_MOTOR0_IC_CTL
 		$mname/push_motor/M1             $mname/PUSH_MOTOR1_IC_CTL
 		$mname/fsctl/BR1_INIT_CTL        $mname/align_motor/BR_INIT
-		$mname/fsctl/MOTOR2_CTL          $mname/align_motor/S0
-		$mname/fsctl/MOTOR3_CTL          $mname/align_motor/S1
+		$mname/fsctl/MOTOR2_CFG          $mname/align_motor/S0_CFG
+		$mname/fsctl/MOTOR2_REQ          $mname/align_motor/S0_REQ
+		$mname/fsctl/MOTOR3_CFG          $mname/align_motor/S1_CFG
+		$mname/fsctl/MOTOR3_REQ          $mname/align_motor/S1_REQ
 		$mname/align_motor/M0            $mname/ALIGN_MOTOR0_IC_CTL
 		$mname/align_motor/M1            $mname/ALIGN_MOTOR1_IC_CTL
 		$mname/fsctl/PWM0_CTL            $mname/pwm0/S_CTL
