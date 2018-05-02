@@ -28,19 +28,29 @@ module step_motor #(
 	output wire                           m0_xen,
 	output wire                           m0_xrst,
 
-	output wire                           s0_zpsign,
-	output wire                           s0_tpsign,	/// terminal position detection
-	input  wire [C_STEP_NUMBER_WIDTH-1:0] s0_stroke,
-	input  wire [C_SPEED_DATA_WIDTH-1:0]  s0_speed,
-	input  wire [C_STEP_NUMBER_WIDTH-1:0] s0_step,
-	input  wire                           s0_start,
-	input  wire                           s0_stop,
-	input  wire                           s0_dir,
-	input  wire [C_MICROSTEP_WIDTH-1:0]   s0_ms,
-	output wire                           s0_state,
-	output wire [C_SPEED_DATA_WIDTH-1:0]  s0_rt_speed,
 	input  wire                           s0_xen,
 	input  wire                           s0_xrst,
+	input  wire [C_STEP_NUMBER_WIDTH-1:0] s0_stroke,
+	input  wire [C_MICROSTEP_WIDTH-1:0]   s0_ms,
+	output wire                           s0_zpsign,
+	output wire                           s0_tpsign,	/// terminal position detection
+	output wire                           s0_state,
+	output wire [C_SPEED_DATA_WIDTH-1:0]  s0_rt_speed,
+	input  wire                           s0_start,
+	input  wire                           s0_stop,
+	input  wire [C_SPEED_DATA_WIDTH-1:0]  s0_speed,
+	input  wire [C_STEP_NUMBER_WIDTH-1:0] s0_step,
+	input  wire                           s0_dir,
+	input  wire                           s0_ext_sel,
+	output wire                           s0_ext_zpsign,
+	output wire                           s0_ext_tpsign,	/// terminal position detection
+	output wire                           s0_ext_state,
+	output wire [C_SPEED_DATA_WIDTH-1:0]  s0_ext_rt_speed,
+	input  wire                           s0_ext_start,
+	input  wire                           s0_ext_stop,
+	input  wire [C_SPEED_DATA_WIDTH-1:0]  s0_ext_speed,
+	input  wire [C_STEP_NUMBER_WIDTH-1:0] s0_ext_step,
+	input  wire                           s0_ext_dir,
 
 	input  wire                           m1_zpd,	/// zero position detection
 	output wire                           m1_drive,
@@ -49,19 +59,29 @@ module step_motor #(
 	output wire                           m1_xen,
 	output wire                           m1_xrst,
 
-	output wire                           s1_zpsign,
-	output wire                           s1_tpsign,	/// terminal position detection
-	input  wire [C_STEP_NUMBER_WIDTH-1:0] s1_stroke,
-	input  wire [C_SPEED_DATA_WIDTH-1:0]  s1_speed,
-	input  wire [C_STEP_NUMBER_WIDTH-1:0] s1_step,
-	input  wire                           s1_start,
-	input  wire                           s1_stop,
-	input  wire                           s1_dir,
-	input  wire [C_MICROSTEP_WIDTH-1:0]   s1_ms,
-	output wire                           s1_state,
-	output wire [C_SPEED_DATA_WIDTH-1:0]  s1_rt_speed,
 	input  wire                           s1_xen,
 	input  wire                           s1_xrst,
+	input  wire [C_STEP_NUMBER_WIDTH-1:0] s1_stroke,
+	input  wire [C_MICROSTEP_WIDTH-1:0]   s1_ms,
+	output wire                           s1_zpsign,
+	output wire                           s1_tpsign,	/// terminal position detection
+	output wire                           s1_state,
+	output wire [C_SPEED_DATA_WIDTH-1:0]  s1_rt_speed,
+	input  wire                           s1_start,
+	input  wire                           s1_stop,
+	input  wire [C_SPEED_DATA_WIDTH-1:0]  s1_speed,
+	input  wire [C_STEP_NUMBER_WIDTH-1:0] s1_step,
+	input  wire                           s1_dir,
+	input  wire                           s1_ext_sel,
+	output wire                           s1_ext_zpsign,
+	output wire                           s1_ext_tpsign,	/// terminal position detection
+	output wire                           s1_ext_state,
+	output wire [C_SPEED_DATA_WIDTH-1:0]  s1_ext_rt_speed,
+	input  wire                           s1_ext_start,
+	input  wire                           s1_ext_stop,
+	input  wire [C_SPEED_DATA_WIDTH-1:0]  s1_ext_speed,
+	input  wire [C_STEP_NUMBER_WIDTH-1:0] s1_ext_step,
+	input  wire                           s1_ext_dir,
 
 	input  wire                           m2_zpd,	/// zero position detection
 	output wire                           m2_drive,
@@ -70,19 +90,29 @@ module step_motor #(
 	output wire                           m2_xen,
 	output wire                           m2_xrst,
 
-	output wire                           s2_zpsign,
-	output wire                           s2_tpsign,	/// terminal position detection
-	input  wire [C_STEP_NUMBER_WIDTH-1:0] s2_stroke,
-	input  wire [C_SPEED_DATA_WIDTH-1:0]  s2_speed,
-	input  wire [C_STEP_NUMBER_WIDTH-1:0] s2_step,
-	input  wire                           s2_start,
-	input  wire                           s2_stop,
-	input  wire                           s2_dir,
-	input  wire [C_MICROSTEP_WIDTH-1:0]   s2_ms,
-	output wire                           s2_state,
-	output wire [C_SPEED_DATA_WIDTH-1:0]  s2_rt_speed,
 	input  wire                           s2_xen,
 	input  wire                           s2_xrst,
+	input  wire [C_STEP_NUMBER_WIDTH-1:0] s2_stroke,
+	input  wire [C_MICROSTEP_WIDTH-1:0]   s2_ms,
+	output wire                           s2_zpsign,
+	output wire                           s2_tpsign,	/// terminal position detection
+	output wire                           s2_state,
+	output wire [C_SPEED_DATA_WIDTH-1:0]  s2_rt_speed,
+	input  wire                           s2_start,
+	input  wire                           s2_stop,
+	input  wire [C_SPEED_DATA_WIDTH-1:0]  s2_speed,
+	input  wire [C_STEP_NUMBER_WIDTH-1:0] s2_step,
+	input  wire                           s2_dir,
+	input  wire                           s2_ext_sel,
+	output wire                           s2_ext_zpsign,
+	output wire                           s2_ext_tpsign,	/// terminal position detection
+	output wire                           s2_ext_state,
+	output wire [C_SPEED_DATA_WIDTH-1:0]  s2_ext_rt_speed,
+	input  wire                           s2_ext_start,
+	input  wire                           s2_ext_stop,
+	input  wire [C_SPEED_DATA_WIDTH-1:0]  s2_ext_speed,
+	input  wire [C_STEP_NUMBER_WIDTH-1:0] s2_ext_step,
+	input  wire                           s2_ext_dir,
 
 	input  wire                           m3_zpd,	/// zero position detection
 	output wire                           m3_drive,
@@ -91,19 +121,29 @@ module step_motor #(
 	output wire                           m3_xen,
 	output wire                           m3_xrst,
 
-	output wire                           s3_zpsign,
-	output wire                           s3_tpsign,	/// terminal position detection
-	input  wire [C_STEP_NUMBER_WIDTH-1:0] s3_stroke,
-	input  wire [C_SPEED_DATA_WIDTH-1:0]  s3_speed,
-	input  wire [C_STEP_NUMBER_WIDTH-1:0] s3_step,
-	input  wire                           s3_start,
-	input  wire                           s3_stop,
-	input  wire                           s3_dir,
-	input  wire [C_MICROSTEP_WIDTH-1:0]   s3_ms,
-	output wire                           s3_state,
-	output wire [C_SPEED_DATA_WIDTH-1:0]  s3_rt_speed,
 	input  wire                           s3_xen,
 	input  wire                           s3_xrst,
+	input  wire [C_STEP_NUMBER_WIDTH-1:0] s3_stroke,
+	input  wire [C_MICROSTEP_WIDTH-1:0]   s3_ms,
+	output wire                           s3_zpsign,
+	output wire                           s3_tpsign,	/// terminal position detection
+	output wire                           s3_state,
+	output wire [C_SPEED_DATA_WIDTH-1:0]  s3_rt_speed,
+	input  wire                           s3_start,
+	input  wire                           s3_stop,
+	input  wire [C_SPEED_DATA_WIDTH-1:0]  s3_speed,
+	input  wire [C_STEP_NUMBER_WIDTH-1:0] s3_step,
+	input  wire                           s3_dir,
+	input  wire                           s3_ext_sel,
+	output wire                           s3_ext_zpsign,
+	output wire                           s3_ext_tpsign,	/// terminal position detection
+	output wire                           s3_ext_state,
+	output wire [C_SPEED_DATA_WIDTH-1:0]  s3_ext_rt_speed,
+	input  wire                           s3_ext_start,
+	input  wire                           s3_ext_stop,
+	input  wire [C_SPEED_DATA_WIDTH-1:0]  s3_ext_speed,
+	input  wire [C_STEP_NUMBER_WIDTH-1:0] s3_ext_step,
+	input  wire                           s3_ext_dir,
 
 	input  wire                           m4_zpd,	/// zero position detection
 	output wire                           m4_drive,
@@ -112,19 +152,29 @@ module step_motor #(
 	output wire                           m4_xen,
 	output wire                           m4_xrst,
 
-	output wire                           s4_zpsign,
-	output wire                           s4_tpsign,	/// terminal position detection
-	input  wire [C_STEP_NUMBER_WIDTH-1:0] s4_stroke,
-	input  wire [C_SPEED_DATA_WIDTH-1:0]  s4_speed,
-	input  wire [C_STEP_NUMBER_WIDTH-1:0] s4_step,
-	input  wire                           s4_start,
-	input  wire                           s4_stop,
-	input  wire                           s4_dir,
-	input  wire [C_MICROSTEP_WIDTH-1:0]   s4_ms,
-	output wire                           s4_state,
-	output wire [C_SPEED_DATA_WIDTH-1:0]  s4_rt_speed,
 	input  wire                           s4_xen,
 	input  wire                           s4_xrst,
+	input  wire [C_STEP_NUMBER_WIDTH-1:0] s4_stroke,
+	input  wire [C_MICROSTEP_WIDTH-1:0]   s4_ms,
+	output wire                           s4_zpsign,
+	output wire                           s4_tpsign,	/// terminal position detection
+	output wire                           s4_state,
+	output wire [C_SPEED_DATA_WIDTH-1:0]  s4_rt_speed,
+	input  wire                           s4_start,
+	input  wire                           s4_stop,
+	input  wire [C_SPEED_DATA_WIDTH-1:0]  s4_speed,
+	input  wire [C_STEP_NUMBER_WIDTH-1:0] s4_step,
+	input  wire                           s4_dir,
+	input  wire                           s4_ext_sel,
+	output wire                           s4_ext_zpsign,
+	output wire                           s4_ext_tpsign,	/// terminal position detection
+	output wire                           s4_ext_state,
+	output wire [C_SPEED_DATA_WIDTH-1:0]  s4_ext_rt_speed,
+	input  wire                           s4_ext_start,
+	input  wire                           s4_ext_stop,
+	input  wire [C_SPEED_DATA_WIDTH-1:0]  s4_ext_speed,
+	input  wire [C_STEP_NUMBER_WIDTH-1:0] s4_ext_step,
+	input  wire                           s4_ext_dir,
 
 	input  wire                           m5_zpd,	/// zero position detection
 	output wire                           m5_drive,
@@ -133,19 +183,29 @@ module step_motor #(
 	output wire                           m5_xen,
 	output wire                           m5_xrst,
 
-	output wire                           s5_zpsign,
-	output wire                           s5_tpsign,	/// terminal position detection
-	input  wire [C_STEP_NUMBER_WIDTH-1:0] s5_stroke,
-	input  wire [C_SPEED_DATA_WIDTH-1:0]  s5_speed,
-	input  wire [C_STEP_NUMBER_WIDTH-1:0] s5_step,
-	input  wire                           s5_start,
-	input  wire                           s5_stop,
-	input  wire                           s5_dir,
-	input  wire [C_MICROSTEP_WIDTH-1:0]   s5_ms,
-	output wire                           s5_state,
-	output wire [C_SPEED_DATA_WIDTH-1:0]  s5_rt_speed,
 	input  wire                           s5_xen,
 	input  wire                           s5_xrst,
+	input  wire [C_STEP_NUMBER_WIDTH-1:0] s5_stroke,
+	input  wire [C_MICROSTEP_WIDTH-1:0]   s5_ms,
+	output wire                           s5_zpsign,
+	output wire                           s5_tpsign,	/// terminal position detection
+	output wire                           s5_state,
+	output wire [C_SPEED_DATA_WIDTH-1:0]  s5_rt_speed,
+	input  wire                           s5_start,
+	input  wire                           s5_stop,
+	input  wire [C_SPEED_DATA_WIDTH-1:0]  s5_speed,
+	input  wire [C_STEP_NUMBER_WIDTH-1:0] s5_step,
+	input  wire                           s5_dir,
+	input  wire                           s5_ext_sel,
+	output wire                           s5_ext_zpsign,
+	output wire                           s5_ext_tpsign,	/// terminal position detection
+	output wire                           s5_ext_state,
+	output wire [C_SPEED_DATA_WIDTH-1:0]  s5_ext_rt_speed,
+	input  wire                           s5_ext_start,
+	input  wire                           s5_ext_stop,
+	input  wire [C_SPEED_DATA_WIDTH-1:0]  s5_ext_speed,
+	input  wire [C_STEP_NUMBER_WIDTH-1:0] s5_ext_step,
+	input  wire                           s5_ext_dir,
 
 	input  wire                           m6_zpd,	/// zero position detection
 	output wire                           m6_drive,
@@ -154,19 +214,29 @@ module step_motor #(
 	output wire                           m6_xen,
 	output wire                           m6_xrst,
 
-	output wire                           s6_zpsign,
-	output wire                           s6_tpsign,	/// terminal position detection
-	input  wire [C_STEP_NUMBER_WIDTH-1:0] s6_stroke,
-	input  wire [C_SPEED_DATA_WIDTH-1:0]  s6_speed,
-	input  wire [C_STEP_NUMBER_WIDTH-1:0] s6_step,
-	input  wire                           s6_start,
-	input  wire                           s6_stop,
-	input  wire                           s6_dir,
-	input  wire [C_MICROSTEP_WIDTH-1:0]   s6_ms,
-	output wire                           s6_state,
-	output wire [C_SPEED_DATA_WIDTH-1:0]  s6_rt_speed,
 	input  wire                           s6_xen,
 	input  wire                           s6_xrst,
+	input  wire [C_STEP_NUMBER_WIDTH-1:0] s6_stroke,
+	input  wire [C_MICROSTEP_WIDTH-1:0]   s6_ms,
+	output wire                           s6_zpsign,
+	output wire                           s6_tpsign,	/// terminal position detection
+	output wire                           s6_state,
+	output wire [C_SPEED_DATA_WIDTH-1:0]  s6_rt_speed,
+	input  wire                           s6_start,
+	input  wire                           s6_stop,
+	input  wire [C_SPEED_DATA_WIDTH-1:0]  s6_speed,
+	input  wire [C_STEP_NUMBER_WIDTH-1:0] s6_step,
+	input  wire                           s6_dir,
+	input  wire                           s6_ext_sel,
+	output wire                           s6_ext_zpsign,
+	output wire                           s6_ext_tpsign,	/// terminal position detection
+	output wire                           s6_ext_state,
+	output wire [C_SPEED_DATA_WIDTH-1:0]  s6_ext_rt_speed,
+	input  wire                           s6_ext_start,
+	input  wire                           s6_ext_stop,
+	input  wire [C_SPEED_DATA_WIDTH-1:0]  s6_ext_speed,
+	input  wire [C_STEP_NUMBER_WIDTH-1:0] s6_ext_step,
+	input  wire                           s6_ext_dir,
 
 	input  wire                           m7_zpd,	/// zero position detection
 	output wire                           m7_drive,
@@ -175,19 +245,29 @@ module step_motor #(
 	output wire                           m7_xen,
 	output wire                           m7_xrst,
 
+	input  wire                           s7_xen,
+	input  wire                           s7_xrst,
+	input  wire [C_STEP_NUMBER_WIDTH-1:0] s7_stroke,
+	input  wire [C_MICROSTEP_WIDTH-1:0]   s7_ms,
 	output wire                           s7_zpsign,
 	output wire                           s7_tpsign,	/// terminal position detection
-	input  wire [C_STEP_NUMBER_WIDTH-1:0] s7_stroke,
-	input  wire [C_SPEED_DATA_WIDTH-1:0]  s7_speed,
-	input  wire [C_STEP_NUMBER_WIDTH-1:0] s7_step,
-	input  wire                           s7_start,
-	input  wire                           s7_stop,
-	input  wire                           s7_dir,
-	input  wire [C_MICROSTEP_WIDTH-1:0]   s7_ms,
 	output wire                           s7_state,
 	output wire [C_SPEED_DATA_WIDTH-1:0]  s7_rt_speed,
-	input  wire                           s7_xen,
-	input  wire                           s7_xrst
+	input  wire                           s7_start,
+	input  wire                           s7_stop,
+	input  wire [C_SPEED_DATA_WIDTH-1:0]  s7_speed,
+	input  wire [C_STEP_NUMBER_WIDTH-1:0] s7_step,
+	input  wire                           s7_dir,
+	input  wire                           s7_ext_sel,
+	output wire                           s7_ext_zpsign,
+	output wire                           s7_ext_tpsign,	/// terminal position detection
+	output wire                           s7_ext_state,
+	output wire [C_SPEED_DATA_WIDTH-1:0]  s7_ext_rt_speed,
+	input  wire                           s7_ext_start,
+	input  wire                           s7_ext_stop,
+	input  wire [C_SPEED_DATA_WIDTH-1:0]  s7_ext_speed,
+	input  wire [C_STEP_NUMBER_WIDTH-1:0] s7_ext_step,
+	input  wire                           s7_ext_dir
 );
 	function integer clogb2(input integer bit_depth);
 		for(clogb2=0; bit_depth>0; clogb2=clogb2+1) begin
@@ -290,19 +370,32 @@ module step_motor #(
 	wire                           m_xen      [MAX_MOTOR_NBR-1:0];
 	wire                           m_xrst     [MAX_MOTOR_NBR-1:0];
 
-	wire                           s_zpsign   [MAX_MOTOR_NBR-1:0];
-	wire                           s_tpsign   [MAX_MOTOR_NBR-1:0];
-	wire [C_STEP_NUMBER_WIDTH-1:0] s_stroke   [MAX_MOTOR_NBR-1:0];
-	wire [C_SPEED_DATA_WIDTH-1:0]  s_speed    [MAX_MOTOR_NBR-1:0];
-	wire [C_STEP_NUMBER_WIDTH-1:0] s_step     [MAX_MOTOR_NBR-1:0];
-	wire                           s_start    [MAX_MOTOR_NBR-1:0];
-	wire                           s_stop     [MAX_MOTOR_NBR-1:0];
-	wire                           s_dir      [MAX_MOTOR_NBR-1:0];
-	wire [C_MICROSTEP_WIDTH-1:0]   s_ms       [MAX_MOTOR_NBR-1:0];
-	wire                           s_state    [MAX_MOTOR_NBR-1:0];
-	wire [C_SPEED_DATA_WIDTH-1:0]  s_rt_speed [MAX_MOTOR_NBR-1:0];
 	wire                           s_xen      [MAX_MOTOR_NBR-1:0];
 	wire                           s_xrst     [MAX_MOTOR_NBR-1:0];
+	wire [C_STEP_NUMBER_WIDTH-1:0] s_stroke   [MAX_MOTOR_NBR-1:0];
+	wire [C_MICROSTEP_WIDTH-1:0]   s_ms       [MAX_MOTOR_NBR-1:0];
+
+	wire                           s_zpsign   [MAX_MOTOR_NBR-1:0];
+	wire                           s_tpsign   [MAX_MOTOR_NBR-1:0];
+	wire                           s_state    [MAX_MOTOR_NBR-1:0];
+	wire [C_SPEED_DATA_WIDTH-1:0]  s_rt_speed [MAX_MOTOR_NBR-1:0];
+	wire                           s_start    [MAX_MOTOR_NBR-1:0];
+	wire                           s_stop     [MAX_MOTOR_NBR-1:0];
+	wire [C_SPEED_DATA_WIDTH-1:0]  s_speed    [MAX_MOTOR_NBR-1:0];
+	wire [C_STEP_NUMBER_WIDTH-1:0] s_step     [MAX_MOTOR_NBR-1:0];
+	wire                           s_dir      [MAX_MOTOR_NBR-1:0];
+
+	wire                           s_ext_sel  [MAX_MOTOR_NBR-1:0];
+
+	wire                           s_ext_zpsign   [MAX_MOTOR_NBR-1:0];
+	wire                           s_ext_tpsign   [MAX_MOTOR_NBR-1:0];
+	wire                           s_ext_state    [MAX_MOTOR_NBR-1:0];
+	wire [C_SPEED_DATA_WIDTH-1:0]  s_ext_rt_speed [MAX_MOTOR_NBR-1:0];
+	wire                           s_ext_start    [MAX_MOTOR_NBR-1:0];
+	wire                           s_ext_stop     [MAX_MOTOR_NBR-1:0];
+	wire [C_SPEED_DATA_WIDTH-1:0]  s_ext_speed    [MAX_MOTOR_NBR-1:0];
+	wire [C_STEP_NUMBER_WIDTH-1:0] s_ext_step     [MAX_MOTOR_NBR-1:0];
+	wire                           s_ext_dir      [MAX_MOTOR_NBR-1:0];
 `define ASSIGN_M_OUT(_i, _port) assign m``_i``_``_port = m_``_port[_i]
 `define ASSIGN_M_IN(_i, _port) assign m_``_port[_i] = m``_i``_``_port
 `define ASSIGN_S_OUT(_i, _port) assign s``_i``_``_port = s_``_port[_i]
@@ -314,19 +407,29 @@ module step_motor #(
 	`ASSIGN_M_OUT(_i, ms); \
 	`ASSIGN_M_OUT(_i, xen); \
 	`ASSIGN_M_OUT(_i, xrst); \
-	`ASSIGN_S_IN(_i, stroke); \
-	`ASSIGN_S_IN(_i, speed); \
-	`ASSIGN_S_IN(_i, step); \
-	`ASSIGN_S_IN(_i, start); \
-	`ASSIGN_S_IN(_i, stop); \
-	`ASSIGN_S_IN(_i, dir); \
-	`ASSIGN_S_IN(_i, ms); \
 	`ASSIGN_S_IN(_i, xen); \
 	`ASSIGN_S_IN(_i, xrst); \
+	`ASSIGN_S_IN(_i, stroke); \
+	`ASSIGN_S_IN(_i, ms); \
 	`ASSIGN_S_OUT(_i, zpsign); \
 	`ASSIGN_S_OUT(_i, tpsign); \
 	`ASSIGN_S_OUT(_i, state); \
-	`ASSIGN_S_OUT(_i, rt_speed)
+	`ASSIGN_S_OUT(_i, rt_speed); \
+	`ASSIGN_S_IN(_i,  start); \
+	`ASSIGN_S_IN(_i,  stop); \
+	`ASSIGN_S_IN(_i,  speed); \
+	`ASSIGN_S_IN(_i,  step); \
+	`ASSIGN_S_IN(_i,  dir); \
+	`ASSIGN_S_IN(_i,  ext_sel); \
+	`ASSIGN_S_OUT(_i, ext_zpsign); \
+	`ASSIGN_S_OUT(_i, ext_tpsign); \
+	`ASSIGN_S_OUT(_i, ext_state); \
+	`ASSIGN_S_OUT(_i, ext_rt_speed); \
+	`ASSIGN_S_IN(_i,  ext_start); \
+	`ASSIGN_S_IN(_i,  ext_stop); \
+	`ASSIGN_S_IN(_i,  ext_speed); \
+	`ASSIGN_S_IN(_i,  ext_step); \
+	`ASSIGN_S_IN(_i,  ext_dir)
 
 	`ASSIGN_SINGLE_MOTOR(0);
 	`ASSIGN_SINGLE_MOTOR(1);
@@ -369,20 +472,30 @@ module step_motor #(
 			.o_xen(m_xen[i]),
 			.o_xrst(m_xrst[i]),
 
-			/// valid when C_ZPD == 1
-			.zpsign(s_zpsign[i]),
-			.tpsign(s_tpsign[i]),	/// terminal position detection
+			.i_xen (s_xen[i]   ),
+			.i_xrst(s_xrst[i]  ),
 			.stroke(s_stroke[i]),
-			.i_speed(s_speed[i]),
-			.i_step(s_step[i]),
-			.i_start(s_start[i]),
-			.i_stop(s_stop[i]),
-			.i_dir(s_dir[i]),
-			.i_ms(s_ms[i]),
-			.o_state(s_state[i]),
-			.o_speed(s_rt_speed[i]),
-			.i_xen(s_xen[i]),
-			.i_xrst(s_xrst[i])
+			.i_ms  (s_ms[i]    ),
+			/// valid when C_ZPD == 1
+			.pri_zpsign  (s_zpsign  [i]),
+			.pri_tpsign  (s_tpsign  [i]),
+			.pri_state   (s_state   [i]),
+			.pri_rt_speed(s_rt_speed[i]),
+			.pri_start   (s_start   [i]),
+			.pri_stop    (s_stop    [i]),
+			.pri_speed   (s_speed   [i]),
+			.pri_step    (s_step    [i]),
+
+			.ext_sel     (s_ext_sel     [i]),
+
+			.ext_zpsign  (s_ext_zpsign  [i]),
+			.ext_tpsign  (s_ext_tpsign  [i]),
+			.ext_state   (s_ext_state   [i]),
+			.ext_rt_speed(s_ext_rt_speed[i]),
+			.ext_start   (s_ext_start   [i]),
+			.ext_stop    (s_ext_stop    [i]),
+			.ext_speed   (s_ext_speed   [i]),
+			.ext_step    (s_ext_step    [i])
 		);
 		end	/// for
 		for (i = C_MOTOR_NBR; i < MAX_MOTOR_NBR; i = i + 1) begin: disabled_motor

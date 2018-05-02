@@ -31,20 +31,33 @@ module single_step_motor #(
 	output wire o_xen,
 	output wire o_xrst,
 
-	/// valid when C_ZPD == 1
-	output wire                             zpsign ,
-	output wire                             tpsign ,	/// terminal position detection
-	input  wire [C_STEP_NUMBER_WIDTH-1:0]   stroke ,
-	input  wire [C_SPEED_DATA_WIDTH-1:0]	i_speed,
-	input  wire [C_STEP_NUMBER_WIDTH-1:0]	i_step ,
-	input  wire                             i_start,
-	input  wire                             i_stop ,
-	input  wire                             i_dir  ,
-	input  wire [C_MICROSTEP_WIDTH-1:0]     i_ms   ,
-	output wire                             o_state,
-	output wire [C_SPEED_DATA_WIDTH-1:0]    o_speed,
 	input  wire                             i_xen  ,
-	input  wire                             i_xrst
+	input  wire                             i_xrst ,
+	input  wire [C_STEP_NUMBER_WIDTH-1:0]   stroke ,
+	input  wire [C_MICROSTEP_WIDTH-1:0]     i_ms   ,
+
+	/// valid when C_ZPD == 1
+	output wire                             pri_zpsign ,
+	output wire                             pri_tpsign ,	/// terminal position detection
+	output wire                             pri_state,
+	output wire [C_SPEED_DATA_WIDTH-1:0]    pri_rt_speed,
+	input  wire                             pri_start,	/// pulse sync to clk
+	input  wire                             pri_stop ,	/// pulse sync to clk
+	input  wire [C_SPEED_DATA_WIDTH-1:0]	pri_speed,
+	input  wire [C_STEP_NUMBER_WIDTH-1:0]	pri_step ,
+	input  wire                             pri_dir  ,
+
+	input  wire                             ext_sel ,
+
+	output wire                             ext_zpsign ,
+	output wire                             ext_tpsign ,	/// terminal position detection
+	output wire                             ext_state,
+	output wire [C_SPEED_DATA_WIDTH-1:0]    ext_rt_speed,
+	input  wire                             ext_start,	/// pulse sync to clk
+	input  wire                             ext_stop ,	/// pulse sync to clk
+	input  wire [C_SPEED_DATA_WIDTH-1:0]	ext_speed,
+	input  wire [C_STEP_NUMBER_WIDTH-1:0]	ext_step ,
+	input  wire                             ext_dir
 );
 	/// state macro
 	localparam integer IDLE = 2'b00;
@@ -59,23 +72,21 @@ module single_step_motor #(
 	reg [C_STEP_NUMBER_WIDTH-1:0]	step_remain;
 	reg step_done;	/// keep one between final half step
 	reg[1:0] motor_state;
-	assign o_state = motor_state[1];
-	wire is_idle; assign is_idle = (o_state == 0);
-	wire is_running; assign is_running = (o_state);
+	assign pri_state = motor_state[1];
+	wire is_idle; assign is_idle = (pri_state == 0);
+	wire is_running; assign is_running = (pri_state);
 	reg rd_en;
 
 	/// for zpd
 	wire shouldStop;
 
+	/// control selection
+	reg [C_SPEED_DATA_WIDTH-1:0]    req_speed;
+	reg [C_STEP_NUMBER_WIDTH-1:0]   req_step ;
+	reg                             req_dir  ;
+
 	/// start_pulse
-	reg start_d1;
 	reg start_pulse;
-	always @ (posedge clk) begin
-		if (resetn == 0)
-			start_d1 <= 0;
-		else
-			start_d1 <= i_start;
-	end
 	always @ (posedge clk) begin
 		if (resetn == 1'b0)
 			start_pulse <= 0;
@@ -84,20 +95,29 @@ module single_step_motor #(
 				start_pulse <= 0;
 		end
 		else begin
-			if (i_start && ~start_d1 && is_idle)
-				start_pulse <= 1;
+			if (is_idle) begin
+				if (req_sel == 1'b0) begin
+					if (pri_start) begin
+						start_pulse <= 1'b1;
+						req_speed   <= pri_speed;
+						req_step    <= pri_step;
+						req_dir     <= pri_dir;
+					end
+				end
+				else begin
+					if (ext_start) begin
+						start_pulse <= 1'b1;
+						req_speed   <= ext_speed;
+						req_step    <= ext_step;
+						req_dir     <= ext_dir;
+					end
+				end
+			end
 		end
 	end
 
 	/// stop
-	reg stop_d1;
 	reg stop_pulse;
-	always @ (posedge clk) begin
-		if (resetn == 0)
-			stop_d1 <= 0;
-		else
-			stop_d1 <= i_stop;
-	end
 	always @ (posedge clk) begin
 		if (resetn == 1'b0)
 			stop_pulse <= 0;
@@ -106,8 +126,16 @@ module single_step_motor #(
 				stop_pulse <= 0;
 		end
 		else begin
-			if (i_stop && ~stop_d1 && is_running)
-				stop_pulse <= 1;
+			if (is_running) begin
+				if (req_sel == 1'b0) begin
+					if (pri_stop)
+						stop_pulse <= 1'b1;
+				end
+				else begin
+					if (ext_stop)
+						stop_pulse <= 1'b1;
+				end
+			end
 		end
 	end
 
@@ -159,8 +187,8 @@ module single_step_motor #(
 	/// store instruction
 	always @ (posedge clk) begin
 		if (should_start) begin
-			speed_max <= i_speed;
-			o_dir <= i_dir;
+			speed_max <= req_speed;
+			o_dir <= req_dir;
 		end
 	end
 
@@ -172,7 +200,7 @@ module single_step_motor #(
 			case (motor_state)
 			IDLE: begin
 				if (start_pulse) begin
-					if (o_dir == i_dir)
+					if (o_dir == req_dir)
 						motor_state <= RUNNING;
 					else
 						motor_state <= PREPARE;
@@ -224,7 +252,7 @@ module single_step_motor #(
 			IDLE: begin
 				if (start_pulse) begin
 					step_cnt    <= 0;
-					step_remain <= i_step - 1;
+					step_remain <= req_step - 1;
 				end
 			end
 			RUNNING: begin
@@ -287,7 +315,7 @@ if (C_OPT_BR_TIME == 0) begin
 		end
 	end
 
-	assign o_speed = speed_cur;
+	assign pri_rt_speed = speed_cur;
 	always @ (posedge clk) begin
 		if (rd_en_d5) begin
 			if (speed_var > speed_max)
@@ -327,7 +355,7 @@ else begin
 
 	reg rd_en_d7;
 	always @ (posedge clk) rd_en_d7 <= rd_en_d6;
-	assign o_speed = speed_cur;
+	assign pri_rt_speed = speed_cur;
 	always @ (posedge clk) begin
 		if (rd_en_d7) begin
 			speed_cur <= (varBmax ? speed_var_d1 : speed_max);
@@ -403,9 +431,9 @@ endgenerate
 		wire reach_zero_position;
 		assign reach_zero_position = (internal_zpd == 1'b1);
 		/// for shouldStop
-		assign zpsign = internal_zpd;
+		assign pri_zpsign = internal_zpd;
 		reg r_tpsign;
-		assign tpsign = r_tpsign;
+		assign pri_tpsign = r_tpsign;
 		assign shouldStop = ((step_done && (speed_cnt == 0))
 			|| (r_tpsign && forwarding)
 			|| (reach_zero_position && backwarding));
@@ -448,10 +476,15 @@ endgenerate
 		end
 	end
 	else begin
-		assign zpsign = 0;
-		assign tpsign = 0;
+		assign pri_zpsign = 0;
+		assign pri_tpsign = 0;
 		assign shouldStop = (step_done && (speed_cnt == 0));
 	end
 	endgenerate
+
+	assign ext_zpsign   = pri_zpsign;
+	assign ext_tpsign   = pri_tpsign;
+	assign ext_state    = pri_state;
+	assign ext_rt_speed = pri_rt_speed;
 
 endmodule

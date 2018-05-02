@@ -8,6 +8,8 @@ ipx::infer_core -vendor $VENDOR -library $LIBRARY -taxonomy $TAXONOMY $ip_dir
 ipx::edit_ip_in_project -upgrade true -name edit_ip_project -directory $tmp_dir $ip_dir/component.xml
 ipx::current_core $ip_dir/component.xml
 
+define_associate_busif clk_busif
+
 pip_set_prop [ipx::current_core] [subst {
 	display_name {Step Motor Controller}
 	description {Step Motor controller}
@@ -29,6 +31,7 @@ pip_add_bus_if [ipx::current_core] BR_INIT [subst {
 	DATA  br_data
 	SIZE  br_size
 }
+append_associate_busif clk_busif BR_INIT
 
 for {set i 0} {$i < 8} {incr i} {
 	pip_add_bus_if [ipx::current_core] M[set i] [subst {
@@ -44,27 +47,66 @@ for {set i 0} {$i < 8} {incr i} {
 		XEN       m[set i]_xen
 		XRST      m[set i]_xrst
 	}]
+	append_associate_busif clk_busif M[set i]
 
-	pip_add_bus_if [ipx::current_core] S[set i] [subst {
-		abstraction_type_vlnv $VENDOR:interface:step_motor_ctl_rtl:1.0
-		bus_type_vlnv $VENDOR:interface:step_motor_ctl:1.0
+	pip_add_bus_if [ipx::current_core] S[set i]_CFG [subst {
+		abstraction_type_vlnv $VENDOR:interface:step_motor_cfg_ctl_rtl:1.0
+		bus_type_vlnv $VENDOR:interface:step_motor_cfg_ctl:1.0
 		interface_mode slave
 		enablement_dependency {spirit:decode(id('MODELPARAM_VALUE.C_MOTOR_NBR')) > $i}
 	}] [subst {
 		XEN       s[set i]_xen
 		XRST      s[set i]_xrst
+		STROKE    s[set i]_stroke
+		MICROSTEP s[set i]_ms
+	}]
+	append_associate_busif clk_busif S[set i]_CFG
+
+	pip_add_bus_if [ipx::current_core] S[set i]_REQ [subst {
+		abstraction_type_vlnv $VENDOR:interface:step_motor_req_ctl_rtl:1.0
+		bus_type_vlnv $VENDOR:interface:step_motor_req_ctl:1.0
+		interface_mode slave
+		enablement_dependency {spirit:decode(id('MODELPARAM_VALUE.C_MOTOR_NBR')) > $i}
+	}] [subst {
 		ZPSIGN    s[set i]_zpsign
 		TPSIGN    s[set i]_tpsign
 		STATE     s[set i]_state
 		RT_SPEED  s[set i]_rt_speed
-		STROKE    s[set i]_stroke
 		START     s[set i]_start
 		STOP      s[set i]_stop
-		MICROSTEP s[set i]_ms
 		SPEED     s[set i]_speed
 		STEP      s[set i]_step
 		DIRECTION s[set i]_dir
 	}]
+	append_associate_busif clk_busif S[set i]_REQ
+
+	pip_add_bus_if [ipx::current_core] S[set i]_EXT_REQ [subst {
+		abstraction_type_vlnv $VENDOR:interface:step_motor_req_ctl_rtl:1.0
+		bus_type_vlnv $VENDOR:interface:step_motor_req_ctl:1.0
+		interface_mode slave
+		enablement_dependency {spirit:decode(id('MODELPARAM_VALUE.C_MOTOR_NBR')) > $i}
+	}] [subst {
+		ZPSIGN    s[set i]_ext_zpsign
+		TPSIGN    s[set i]_ext_tpsign
+		STATE     s[set i]_ext_state
+		RT_SPEED  s[set i]_ext_rt_speed
+		START     s[set i]_ext_start
+		STOP      s[set i]_ext_stop
+		SPEED     s[set i]_ext_speed
+		STEP      s[set i]_ext_step
+		DIRECTION s[set i]_ext_dir
+	}]
+	append_associate_busif clk_busif S[set i]_EXT_REQ
+
+	pip_add_bus_if [ipx::current_core] s[set i]_ext_sel [subst {
+		abstraction_type_vlnv xilinx.com:signal:data_rtl:1.0
+		bus_type_vlnv xilinx.com:signal:data:1.0
+		interface_mode slave
+		enablement_dependency {spirit:decode(id('MODELPARAM_VALUE.C_MOTOR_NBR')) > $i}
+	}] [subst {
+		DATA s[set i]_ext_sel
+	}]
+	append_associate_busif clk_busif s[set i]_ext_sel
 }
 
 pip_add_bus_if [ipx::current_core] resetn {
@@ -83,14 +125,10 @@ pip_add_bus_if [ipx::current_core] clk {
 	interface_mode slave
 } {
 	CLK clk
-} {
-	ASSOCIATED_BUSIF {BR_INIT:
-		M0_MOTOR_IC_CTL:M1_MOTOR_IC_CTL:M2_MOTOR_IC_CTL:M3_MOTOR_IC_CTL:
-		M4_MOTOR_IC_CTL:M5_MOTOR_IC_CTL:M6_MOTOR_IC_CTL:M7_MOTOR_IC_CTL:
-		S0_STEP_MOTOR_CTL:S1_STEP_MOTOR_CTL:S2_STEP_MOTOR_CTL:S3_STEP_MOTOR_CTL:
-		S4_STEP_MOTOR_CTL:S5_STEP_MOTOR_CTL:S6_STEP_MOTOR_CTL:S7_STEP_MOTOR_CTL}
+} [subst {
+	ASSOCIATED_BUSIF [get_associate_busif clk_busif]
 	ASSOCIATED_RESET {resetn}
-}
+}]
 
 pip_add_usr_par [ipx::current_core] {C_CLK_DIV_NBR} {
 	display_name {Clock Division Number}
