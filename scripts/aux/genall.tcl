@@ -3,7 +3,8 @@ set ip_list [list \
 	addr_array \
 	window_ctl \
 	mutex_buffer_ctl \
-	step_motor_ctl \
+	step_motor_cfg_ctl \
+	step_motor_req_ctl \
 	motor_ic_ctl \
 	blockram_init_ctl \
 	pwm_ctl \
