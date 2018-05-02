@@ -245,27 +245,36 @@ for {set i 0} {$i < 8} {incr i} {
 }
 
 for {set i 0} {$i < 8} {incr i} {
-	pip_add_bus_if [ipx::current_core] MOTOR[set i]_CTL [subst {
-		abstraction_type_vlnv {$VENDOR:interface:step_motor_ctl_rtl:1.0}
-		bus_type_vlnv {$VENDOR:interface:step_motor_ctl:1.0}
+	pip_add_bus_if [ipx::current_core] MOTOR[set i]_CFG [subst {
+		abstraction_type_vlnv {$VENDOR:interface:step_motor_cfg_ctl_rtl:1.0}
+		bus_type_vlnv {$VENDOR:interface:step_motor_cfg_ctl:1.0}
 		interface_mode {master}
 		enablement_dependency {spirit:decode(id('MODELPARAM_VALUE.C_MOTOR_NBR')) > $i}
 	}] [subst {
 		XEN       motor[set i]_xen
 		XRST      motor[set i]_xrst
+		STROKE    motor[set i]_stroke
+		MICROSTEP motor[set i]_ms
+	}]
+	append_associate_busif o_clk_busif MOTOR[set i]_CFG
+
+	pip_add_bus_if [ipx::current_core] MOTOR[set i]_REQ [subst {
+		abstraction_type_vlnv {$VENDOR:interface:step_motor_req_ctl_rtl:1.0}
+		bus_type_vlnv {$VENDOR:interface:step_motor_req_ctl:1.0}
+		interface_mode {master}
+		enablement_dependency {spirit:decode(id('MODELPARAM_VALUE.C_MOTOR_NBR')) > $i}
+	}] [subst {
 		ZPSIGN    motor[set i]_zpsign
 		TPSIGN    motor[set i]_tpsign
 		STATE     motor[set i]_state
 		RT_SPEED  motor[set i]_rt_speed
-		STROKE    motor[set i]_stroke
 		START     motor[set i]_start
 		STOP      motor[set i]_stop
-		MICROSTEP motor[set i]_ms
 		SPEED     motor[set i]_speed
 		STEP      motor[set i]_step
 		DIRECTION motor[set i]_dir
 	}]
-	append_associate_busif o_clk_busif MOTOR[set i]_CTL
+	append_associate_busif o_clk_busif MOTOR[set i]_REQ
 }
 
 for {set i 0} {$i < 8} {incr i} {

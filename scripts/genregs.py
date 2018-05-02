@@ -766,15 +766,17 @@ class VIfMotorCtl(VIntface):
 
 		self._addPort({'ftype': 'cfg',     'iotype': 'output', 'name': 'xen'})
 		self._addPort({'ftype': 'cfg',     'iotype': 'output', 'name': 'xrst'})
+		self._addPort({'ftype': 'cfg',     'iotype': 'output', 'name': 'stroke',   'width': dictData["stepwidth"] })
+		self._addPort({'ftype': 'cfg',     'iotype': 'output', 'name': 'ms',       'width': dictData["mswidth"] })
+
 		self._addPort({'ftype': 'intsrc', "trigint": "posedge",  'iotype': 'input',  'name': 'zpsign'})
 		self._addPort({'ftype': 'intsrc', "trigint": "posedge",  'iotype': 'input',  'name': 'tpsign'})
 
 		self._addPort({'ftype': 'intsrc', "trigint": "negedge", 'iotype': 'input',  'name': 'state'})
 		self._addPort({'ftype': 'inro',    'iotype': 'input',  'name': 'rt_speed', 'width': dictData["speedwidth"] })
-		self._addPort({'ftype': 'cfg',     'iotype': 'output', 'name': 'stroke',   'width': dictData["stepwidth"] })
+
 		self._addPort({'ftype': 'cfg',     'iotype': 'output', 'name': 'start'})
 		self._addPort({'ftype': 'cfg',     'iotype': 'output', 'name': 'stop'})
-		self._addPort({'ftype': 'cfg',     'iotype': 'output', 'name': 'ms',       'width': dictData["mswidth"] })
 		self._addPort({'ftype': 'cfg',     'iotype': 'output', 'name': 'speed',    'width': dictData["speedwidth"] })
 		self._addPort({'ftype': 'cfg',     'iotype': 'output', 'name': 'step',     'width': dictData["stepwidth"] })
 		self._addPort({'ftype': 'cfg',     'iotype': 'output', 'name': 'dir'})
