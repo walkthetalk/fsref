@@ -96,7 +96,7 @@ module single_step_motor #(
 		end
 		else begin
 			if (is_idle) begin
-				if (req_sel == 1'b0) begin
+				if (ext_sel == 1'b0) begin
 					if (pri_start) begin
 						start_pulse <= 1'b1;
 						req_speed   <= pri_speed;
@@ -127,7 +127,7 @@ module single_step_motor #(
 		end
 		else begin
 			if (is_running) begin
-				if (req_sel == 1'b0) begin
+				if (ext_sel == 1'b0) begin
 					if (pri_stop)
 						stop_pulse <= 1'b1;
 				end

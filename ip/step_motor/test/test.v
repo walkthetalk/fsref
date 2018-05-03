@@ -1,3 +1,5 @@
+`include "../src/include/single_step_motor.v"
+`include "../src/include/block_ram.v"
 `include "../src/step_motor.v"
 
 module test_step_motor();
@@ -6,7 +8,7 @@ parameter integer C_STEP_NUMBER_WIDTH = 16;
 parameter integer C_SPEED_DATA_WIDTH = 16;
 parameter integer C_SPEED_ADDRESS_WIDTH = 4;
 parameter integer C_MICROSTEP_WIDTH = 3;
-parameter integer C_CLK_DIV_NBR = 8;
+parameter integer C_CLK_DIV_NBR = 16;
 parameter integer C_MOTOR_NBR = 2;
 parameter integer C_ZPD_SEQ = 8'b01;
 
@@ -19,7 +21,7 @@ reg			       br_init;
 reg			       br_wr_en;
 reg [C_SPEED_DATA_WIDTH-1:0]   br_data;
 
-reg			       m0_zpd = 0;
+reg			       m0_zpd;
 wire			       m0_drive;
 wire			       m0_dir;
 wire [C_MICROSTEP_WIDTH-1:0]   m0_ms;
@@ -93,6 +95,7 @@ step_motor # (
 	.s0_state (s0_state ),
 	.s0_xen   (s0_xen   ),
 	.s0_xrst  (s0_xrst  ),
+	.s0_ext_sel(1'b0),
 
 	.m1_zpd   (m1_zpd   ),
 	.m1_drive (m1_drive ),
@@ -111,7 +114,8 @@ step_motor # (
 	.s1_ms    (s1_ms    ),
 	.s1_state (s1_state ),
 	.s1_xen   (s1_xen   ),
-	.s1_xrst  (s1_xrst  )
+	.s1_xrst  (s1_xrst  ),
+	.s1_ext_sel(1'b0)
 );
 
 initial begin
@@ -158,14 +162,29 @@ always @ (posedge ctl_clk) begin
 	end
 	else if (s0_state == 1'b0 && ~s0_start && ({$random}%1000 == 0) && ~br_init) begin
 		s0_speed <= 10;
-		s0_step  <= 30;
-		s0_dir   <= 0;
+		s0_step  <= 0;
+		s0_dir   <= 1;
 		s0_start <= 1;
 		s0_ms    <= C_MS;
 	end
 	else begin
 		s0_start <= 0;
 	end
+end
+
+reg [31:0] clk_cnt = 0;
+always @ (posedge ctl_clk) begin
+	if (resetn == 1'b0)
+		clk_cnt <= 0;
+	else
+		clk_cnt <= clk_cnt + 1;
+end
+
+always @ (posedge ctl_clk) begin
+	if (resetn == 1'b0)
+		m0_zpd <= 0;
+	else if (clk_cnt == 1000)
+		m0_zpd <= 1;
 end
 
 reg [31:0] s1_cnt = 1000;

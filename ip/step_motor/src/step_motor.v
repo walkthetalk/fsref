@@ -484,6 +484,7 @@ module step_motor #(
 			.pri_stop    (s_stop    [i]),
 			.pri_speed   (s_speed   [i]),
 			.pri_step    (s_step    [i]),
+			.pri_dir     (s_dir     [i]),
 
 			.ext_sel     (s_ext_sel     [i]),
 
@@ -494,7 +495,8 @@ module step_motor #(
 			.ext_start   (s_ext_start   [i]),
 			.ext_stop    (s_ext_stop    [i]),
 			.ext_speed   (s_ext_speed   [i]),
-			.ext_step    (s_ext_step    [i])
+			.ext_step    (s_ext_step    [i]),
+			.ext_dir     (s_ext_dir     [i])
 		);
 		end	/// for
 		for (i = C_MOTOR_NBR; i < MAX_MOTOR_NBR; i = i + 1) begin: disabled_motor
