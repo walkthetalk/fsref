@@ -1,9 +1,3 @@
-`include "./scaler_core.v"
-`include "./scaler_spliter.v"
-`include "./scaler_relay.v"
-/**
- * scaler for single dimension
- */
 module scaler_1d # (
 	parameter integer C_S_WIDTH  = 12,
 	parameter integer C_M_WIDTH  = 12,

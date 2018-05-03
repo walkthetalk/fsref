@@ -1,5 +1,3 @@
-`include "./simple_fifo.v"
-
 module fsa_stream #(
 	parameter integer C_TEST = 0,
 	parameter integer C_OUT_DW = 1,

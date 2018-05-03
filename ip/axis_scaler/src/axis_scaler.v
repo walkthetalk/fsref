@@ -1,8 +1,5 @@
 `timescale 1ns / 1ps
 
-`include "./linebuffer.v"
-`include "./scaler_2d.v"
-
 module axis_scaler #
 (
 	parameter integer C_PIXEL_WIDTH = 8,

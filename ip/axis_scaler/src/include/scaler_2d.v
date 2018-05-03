@@ -1,7 +1,3 @@
-`include "./scaler_1d.v"
-/**
- * scaler for single dimension
- */
 module scaler_2d # (
 	parameter integer C_SH_WIDTH    = 10,
 	parameter integer C_SW_WIDTH    = 10,

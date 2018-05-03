@@ -4,7 +4,7 @@ set tmp_dir $ip_dir/tmp
 
 source $origin_dir/scripts/aux/util.tcl
 
-ipx::infer_core -vendor $VENDOR -library $LIBRARY -taxonomy $TAXONOMY $ip_dir
+ipx::infer_core -vendor $VENDOR -library $LIBRARY -taxonomy $TAXONOMY -root_dir $ip_dir $ip_dir/src
 ipx::edit_ip_in_project -upgrade true -name edit_ip_project -directory $tmp_dir $ip_dir/component.xml
 ipx::current_core $ip_dir/component.xml
 

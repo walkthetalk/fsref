@@ -1,5 +1,4 @@
-`include "./block_ram.v"
-`include "./single_step_motor.v"
+`timescale 1ns / 1ps
 
 module step_motor #(
 	parameter integer C_OPT_BR_TIME = 0,

@@ -1,10 +1,5 @@
 `timescale 1ns / 1ps
 
-`include "./block_ram.v"
-`include "./mutex_buffer.v"
-`include "./fsa_core.v"
-`include "./fsa_stream.v"
-
 module fsa #(
 	parameter integer C_TEST = 0,
 	parameter integer C_OUT_DW = 1,

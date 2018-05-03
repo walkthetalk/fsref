@@ -1,23 +1,5 @@
 `timescale 1 ns / 1 ps
-//////////////////////////////////////////////////////////////////////////////////
-// Company:
-// Engineer:
-//
-// Create Date: 11/18/2016 01:33:37 PM
-// Design Name:
-// Module Name: s2mm
-// Project Name:
-// Target Devices:
-// Tool Versions:
-// Description:
-//
-// Dependencies:
-//
-// Revision:
-// Revision 0.01 - File Created
-// Additional Comments:
-//
-//////////////////////////////////////////////////////////////////////////////////
+
 module s2mm #
 (
 	// Users to add parameters here

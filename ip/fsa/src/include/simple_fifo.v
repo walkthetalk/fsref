@@ -1,5 +1,3 @@
-`include "./simple_dpram_sclk.v"
-
 module simple_fifo # (
 	parameter DEPTH_WIDTH     = 1,
 	parameter DATA_WIDTH      = 1,
