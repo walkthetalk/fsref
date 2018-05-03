@@ -132,7 +132,7 @@ pip_add_bus_if [ipx::current_core] clk {
 
 pip_add_usr_par [ipx::current_core] {C_CLK_DIV_NBR} {
 	display_name {Clock Division Number}
-	tooltip {Clock Division Number, must bigger than 7 for block ram reading delay, I don't know if it can be 8 when enable OPT_BR_TIME.}
+	tooltip {Clock Division Number, must bigger than 9 for block ram reading delay, I don't know if it can be 8 when enable OPT_BR_TIME.}
 	widget {comboBox}
 } {
 	value_resolve_type user

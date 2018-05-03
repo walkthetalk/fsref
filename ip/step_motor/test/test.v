@@ -32,6 +32,7 @@ wire			       s0_zpsign;
 wire			       s0_tpsign;
 wire			       s0_state;
 reg  [C_STEP_NUMBER_WIDTH-1:0] s0_stroke = 100;
+wire [C_SPEED_DATA_WIDTH-1:0]  s0_rt_speed;
 reg  [C_SPEED_DATA_WIDTH-1:0]  s0_speed;
 reg  [C_STEP_NUMBER_WIDTH-1:0] s0_step;
 reg			       s0_start;
@@ -52,6 +53,7 @@ wire			       s1_zpsign;
 wire			       s1_tpsign;
 wire			       s1_state;
 reg  [C_STEP_NUMBER_WIDTH-1:0] s1_stroke = 100;
+wire [C_SPEED_DATA_WIDTH-1:0]  s1_rt_speed;
 reg  [C_SPEED_DATA_WIDTH-1:0]  s1_speed;
 reg  [C_STEP_NUMBER_WIDTH-1:0] s1_step;
 reg			       s1_start;
@@ -87,6 +89,7 @@ step_motor # (
 	.s0_tpsign(s0_tpsign),
 	.s0_stroke(s0_stroke),
 	.s0_speed (s0_speed ),
+	.s0_rt_speed(s0_rt_speed),
 	.s0_step  (s0_step  ),
 	.s0_start (s0_start ),
 	.s0_stop  (s0_stop  ),
@@ -107,6 +110,7 @@ step_motor # (
 	.s1_tpsign(s1_tpsign),
 	.s1_stroke(s1_stroke),
 	.s1_speed (s1_speed ),
+	.s1_rt_speed(s1_rt_speed),
 	.s1_step  (s1_step  ),
 	.s1_start (s1_start ),
 	.s1_stop  (s1_stop  ),
@@ -161,8 +165,8 @@ always @ (posedge ctl_clk) begin
 		s0_start <= 0;
 	end
 	else if (s0_state == 1'b0 && ~s0_start && ({$random}%1000 == 0) && ~br_init) begin
-		s0_speed <= 10;
-		s0_step  <= 0;
+		s0_speed <= 15;
+		s0_step  <= 30;
 		s0_dir   <= 1;
 		s0_start <= 1;
 		s0_ms    <= C_MS;
@@ -184,7 +188,7 @@ always @ (posedge ctl_clk) begin
 	if (resetn == 1'b0)
 		m0_zpd <= 0;
 	else if (clk_cnt == 1000)
-		m0_zpd <= 1;
+		m0_zpd <= 0;
 end
 
 reg [31:0] s1_cnt = 1000;
