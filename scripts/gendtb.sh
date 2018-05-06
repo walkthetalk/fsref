@@ -14,11 +14,13 @@ if [ ! -d "${tmp_dir}" ]; then
 	mkdir ${tmp_dir}
 fi
 
-repo_dt="`readlink -fe "${dir_main}/../device-tree-xlnx/"`"
-if [ ! -d "${repo_dt}" ]; then
+dtxdir="${dir_main}/../device-tree-xlnx/"
+if [ ! -d "${dtxdir}" ]; then
 	echo "ERROR: please clone device-tree-xlnx first!"
 	exit 1
 fi
+
+repo_dt="`readlink -fe "${dtxdir}"`"
 
 source ${dir_main}/scripts/setenv
 
