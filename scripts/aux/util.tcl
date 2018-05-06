@@ -26,6 +26,16 @@ proc log2 {
 	return $ret
 }
 
+proc rglobf {{dir ./} {pattern *}} {
+	set result {}
+	lappend result {*}[glob -nocomplain -directory $dir -type f -- $pattern]
+	foreach subdir [glob -nocomplain -directory $dir -type d -- *] {
+		lappend result {*}[rglobf $subdir $pattern]
+	}
+
+	return $result
+}
+
 proc pip_clr_def_if_par_memmap {
 	core_inst
 } {
@@ -241,4 +251,101 @@ proc get_associate_busif {
 } {
 	upvar [set clk_name]_ASSOCIATED_BUSIF locvar
 	return $locvar
+}
+
+proc NEW_CORE {
+	root_dir
+	{disp_name ""}
+	{desc_str ""}
+} {
+	global VENDOR
+	global LIBRARY
+	global TAXONOMY
+	global VENDORDISPNAME
+	global VERSION
+	global COMPANYURL
+
+	set core_name [file tail $root_dir]
+
+	if {$disp_name eq ""} {
+		set disp_name $core_name
+	}
+
+	if {$desc_str eq ""} {
+		set desc_str $disp_name
+	}
+
+	set core [ipx::create_core $VENDOR $LIBRARY $core_name $VERSION]
+	#set_property core_revision $Revision $core
+
+	pip_set_prop $core [subst {
+		root_directory $root_dir
+		display_name {$disp_name}
+		description {$desc_str}
+		taxonomy $TAXONOMY
+		vendor_display_name $VENDORDISPNAME
+		version $VERSION
+		company_url $COMPANYURL
+		supported_families {zynq Production}
+	}]
+
+	set fg_syn [ipx::add_file_group -type verilog:synthesis {} $core]
+	#set fg_sim [ipx::add_file_group -type verilog:simulation {} $core]
+
+	cd $root_dir
+	foreach src_file [rglobf src] {
+		ipx::add_file $src_file $fg_syn
+	}
+	set_property model_name $core_name $fg_syn
+
+	ipx::import_top_level_hdl \
+		-top_level_hdl_file src/$core_name.v \
+		-include_dirs src/include \
+		$core
+
+	return $core
+}
+
+proc SAVE_CORE {
+	core_inst
+} {
+	ipx::create_xgui_files $core_inst
+	#ipx::check_integrity $core_inst
+	ipx::update_checksums $core_inst
+	ipx::save_core $core_inst
+
+	set core_root_dir [get_property root_directory $core_inst]
+	pip_clr_dir $core_root_dir/.Xil
+}
+
+proc NEW_BUS {
+	root_dir
+} {
+	global VENDOR
+
+	set bus_name [file tail $root_dir]
+
+	cd $root_dir
+	set bus_def [ipx::create_bus_definition $VENDOR interface ${bus_name} 1.0]
+	pip_set_prop $bus_def [subst {
+		xml_file_name ${bus_name}.xml
+	}]
+	ipx::save_bus_definition $bus_def
+
+	set bus_abs [ipx::create_abstraction_definition $VENDOR interface ${bus_name}_rtl 1.0]
+
+	pip_set_prop $bus_abs [subst {
+		xml_file_name ${bus_name}_rtl.xml
+		bus_type_vlnv $VENDOR:interface:$bus_name:1.0
+	}]
+
+	return $bus_abs
+}
+
+proc SAVE_BUS {
+	bus_abs
+} {
+	ipx::save_abstraction_definition $bus_abs
+
+	pip_clr_dir ./.Xil
 }

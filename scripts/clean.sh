@@ -40,6 +40,7 @@ cd ip
 for i in `find -maxdepth 1 -mindepth 1 -type d | cut -d '/' -f 2`; do
 	if [ $clr_allip == true ] || [ "$i" == "$ip_name" ]; then
 		echo "clearing ip: $i"
+		rm -rf $i/.Xil
 		rm -rf $i/xgui
 		rm -rf $i/*.xml
 		rm -rf $i/tmp
