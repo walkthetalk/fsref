@@ -17,6 +17,7 @@ fi
 dtxdir="${dir_main}/../device-tree-xlnx/"
 if [ ! -d "${dtxdir}" ]; then
 	echo "ERROR: please clone device-tree-xlnx first!"
+	echo "HINT:  git cloen https://github.com/Xilinx/device-tree-xlnx.git"
 	exit 1
 fi
 
@@ -30,6 +31,7 @@ ${HSI_BIN} \
 	-source ${dir_main}/scripts/aux/gendts.tcl \
 	-tclargs "${dir_main}" "${repo_dt}" "${tmp_dir}"
 
+command -v dtc >/dev/null 2>&1 || { echo >&2 "ERROR: require dtc but not installed."; exit 1; }
 dtc -I dts -O dtb -R 8 -p 0x3000 \
 	-i ${tmp_dir} \
 	-o ${out_dir}/devicetree.dtb \
