@@ -23,6 +23,7 @@ module fsa #(
 	output wire [BR_DW-1:0] r_data ,
 
 	input  wire [C_PIXEL_WIDTH-1:0] ref_data,
+	output wire                     ana_done,
 	output wire [C_IMG_WW-1:0]      lft_v   ,
 	output wire [C_IMG_WW-1:0]      rt_v    ,
 
@@ -204,6 +205,7 @@ endgenerate
 		.rd_data(wr_rdata),
 
 		.ref_data(ref_data),
+		.ana_done(ana_done),
 		.lft_v   (lft_v   ),
 		.rt_v    (rt_v    ),
 

@@ -25,6 +25,7 @@ module fsa_core #(
 	input  wire [BR_DW-1:0]         rd_data ,
 
 	input  wire [C_PIXEL_WIDTH-1:0] ref_data,
+	output wire                     ana_done,
 	output reg  [C_IMG_WW-1:0]      lft_v   ,
 	output reg  [C_IMG_WW-1:0]      rt_v    ,
 
@@ -239,6 +240,7 @@ module fsa_core #(
 		else
 			wr_sof_d5 <= wr_sof_d4;
 	end
+	assign ana_done = wr_sof_d5;
 
 	/// detect edge
 	reg lft_val;
