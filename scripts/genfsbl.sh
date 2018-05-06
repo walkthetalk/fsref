@@ -16,6 +16,12 @@ fi
 
 source ${dir_main}/scripts/setenv
 
+command -v gmake >/dev/null 2>&1 || {
+	echo >&2 "ERROR: require gmake but not installed."
+	echo >&2 "HINT:  sudo ln -s make /usr/bin/gmake"
+	exit 1
+}
+
 ${HSI_BIN} \
 	-nojournal -nolog \
 	-mode batch \
