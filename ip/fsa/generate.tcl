@@ -1,28 +1,6 @@
-set origin_dir [lindex $argv 0]
-set ip_dir [file dirname $argv0]
-set tmp_dir $ip_dir/tmp
-
-source $origin_dir/scripts/aux/util.tcl
-
-ipx::infer_core -vendor $VENDOR -library $LIBRARY -taxonomy $TAXONOMY $ip_dir
-ipx::edit_ip_in_project -upgrade true -name edit_ip_project -directory $tmp_dir $ip_dir/component.xml
-ipx::current_core $ip_dir/component.xml
-
-pip_set_prop [ipx::current_core] [subst {
-	display_name {Fusion Splicer PreProcessor}
-	description {Fusion Splicer PreProcessor}
-	vendor_display_name $VENDORDISPNAME
-	version $VERSION
-	company_url $COMPANYURL
-	supported_families {zynq Production}
-}]
-
-pip_clr_def_if_par_memmap [ipx::current_core]
-
-# start
 define_associate_busif clk
 
-pip_add_bus_if [ipx::current_core] IMG_SIZE [subst {
+pip_add_bus_if $core IMG_SIZE [subst {
 	abstraction_type_vlnv {$VENDOR:interface:window_ctl_rtl:1.0}
 	bus_type_vlnv {$VENDOR:interface:window_ctl:1.0}
 	interface_mode {slave}
@@ -32,7 +10,7 @@ pip_add_bus_if [ipx::current_core] IMG_SIZE [subst {
 }
 append_associate_busif clk IMG_SIZE
 
-pip_add_bus_if [ipx::current_core] S_AXIS {
+pip_add_bus_if $core S_AXIS {
 	abstraction_type_vlnv {xilinx.com:interface:axis_rtl:1.0}
 	bus_type_vlnv {xilinx.com:interface:axis:1.0}
 	interface_mode {slave}
@@ -45,7 +23,7 @@ pip_add_bus_if [ipx::current_core] S_AXIS {
 }
 append_associate_busif clk S_AXIS
 
-pip_add_bus_if [ipx::current_core] MBR_RD [subst {
+pip_add_bus_if $core MBR_RD [subst {
 	abstraction_type_vlnv $VENDOR:interface:mbr_rd_ctl_rtl:1.0
 	bus_type_vlnv $VENDOR:interface:mbr_rd_ctl:1.0
 	interface_mode slave
@@ -58,17 +36,18 @@ pip_add_bus_if [ipx::current_core] MBR_RD [subst {
 
 append_associate_busif clk MBR_RD
 
-pip_add_bus_if [ipx::current_core] FSA_CTL [subst {
+pip_add_bus_if $core FSA_CTL [subst {
 	abstraction_type_vlnv $VENDOR:interface:fsa_ctl_rtl:1.0
 	bus_type_vlnv $VENDOR:interface:fsa_ctl:1.0
 	interface_mode slave
 }] {
 	REF_DATA    ref_data
+	DONE        ana_done
 	LEFT_VERTEX lft_v
 	RIGHT_VERTEX rt_v
 }
 
-pip_add_bus_if [ipx::current_core] m_axis_fsync {
+pip_add_bus_if $core m_axis_fsync {
 	abstraction_type_vlnv xilinx.com:signal:video_frame_sync_rtl:1.0
 	bus_type_vlnv xilinx.com:signal:video_frame_sync:1.0
 	interface_mode slave
@@ -78,7 +57,7 @@ pip_add_bus_if [ipx::current_core] m_axis_fsync {
 }
 append_associate_busif clk m_axis_fsync
 
-pip_add_bus_if [ipx::current_core] M_AXIS {
+pip_add_bus_if $core M_AXIS {
 	abstraction_type_vlnv {xilinx.com:interface:axis_rtl:1.0}
 	bus_type_vlnv {xilinx.com:interface:axis:1.0}
 	interface_mode {master}
@@ -94,7 +73,7 @@ append_associate_busif clk M_AXIS
 
 # clock & reset
 
-pip_add_bus_if [ipx::current_core] resetn {
+pip_add_bus_if $core resetn {
 	abstraction_type_vlnv xilinx.com:signal:reset_rtl:1.0
 	bus_type_vlnv xilinx.com:signal:reset:1.0
 	interface_mode slave
@@ -104,7 +83,7 @@ pip_add_bus_if [ipx::current_core] resetn {
 	POLARITY {ACTIVE_LOW}
 }
 
-pip_add_bus_if [ipx::current_core] m_axis_resetn {
+pip_add_bus_if $core m_axis_resetn {
 	abstraction_type_vlnv xilinx.com:signal:reset_rtl:1.0
 	bus_type_vlnv xilinx.com:signal:reset:1.0
 	interface_mode slave
@@ -115,7 +94,7 @@ pip_add_bus_if [ipx::current_core] m_axis_resetn {
 	POLARITY {ACTIVE_LOW}
 }
 
-pip_add_bus_if [ipx::current_core] clk {
+pip_add_bus_if $core clk {
 	abstraction_type_vlnv xilinx.com:signal:clock_rtl:1.0
 	bus_type_vlnv xilinx.com:signal:clock:1.0
 	interface_mode slave
@@ -128,7 +107,7 @@ pip_add_bus_if [ipx::current_core] clk {
 
 # parameters
 
-pip_add_usr_par [ipx::current_core] {C_PIXEL_WIDTH} {
+pip_add_usr_par $core {C_PIXEL_WIDTH} {
 	display_name {Stream Data Width}
 	tooltip {Stream Data Width}
 	widget {comboBox}
@@ -143,7 +122,7 @@ pip_add_usr_par [ipx::current_core] {C_PIXEL_WIDTH} {
 	value_format long
 }
 
-pip_add_usr_par [ipx::current_core] {C_IMG_WW} {
+pip_add_usr_par $core {C_IMG_WW} {
 	display_name {Image Width (PIXEL) Bit Width}
 	tooltip {IMAGE WIDTH BIT WIDTH}
 	widget {comboBox}
@@ -158,7 +137,7 @@ pip_add_usr_par [ipx::current_core] {C_IMG_WW} {
 	value_format long
 }
 
-pip_add_usr_par [ipx::current_core] {C_IMG_HW} {
+pip_add_usr_par $core {C_IMG_HW} {
 	display_name {Image Height (PIXEL) Bit Width}
 	tooltip {IMAGE HEIGHT BIT WIDTH}
 	widget {comboBox}
@@ -173,7 +152,7 @@ pip_add_usr_par [ipx::current_core] {C_IMG_HW} {
 	value_format long
 }
 
-pip_add_usr_par [ipx::current_core] {BR_AW} {
+pip_add_usr_par $core {BR_AW} {
 	display_name {Blockram Address Width}
 	tooltip {Blockram Address Width}
 	widget {textEdit}
@@ -188,7 +167,7 @@ pip_add_usr_par [ipx::current_core] {BR_AW} {
 	value_format long
 }
 
-pip_add_usr_par [ipx::current_core] {BR_DW} {
+pip_add_usr_par $core {BR_DW} {
 	display_name {Blockram Data Width}
 	tooltip {Blockram Data Width}
 	widget {comboBox}
@@ -203,7 +182,7 @@ pip_add_usr_par [ipx::current_core] {BR_DW} {
 	value_format long
 }
 
-pip_add_usr_par [ipx::current_core] {C_OUT_DW} {
+pip_add_usr_par $core {C_OUT_DW} {
 	display_name {MAXIS Data Width}
 	tooltip {MAXIS Data Width}
 	widget {comboBox}
@@ -218,7 +197,7 @@ pip_add_usr_par [ipx::current_core] {C_OUT_DW} {
 	value_format long
 }
 
-pip_add_usr_par [ipx::current_core] {C_OUT_DV} {
+pip_add_usr_par $core {C_OUT_DV} {
 	display_name {MAXIS Data Value}
 	tooltip {MAXIS Data Value}
 	widget {hexEdit}
@@ -234,10 +213,3 @@ pip_add_usr_par [ipx::current_core] {C_OUT_DV} {
 	value {0x1}
 	value_format bitString
 }
-
-ipx::create_xgui_files [ipx::current_core]
-ipx::update_checksums [ipx::current_core]
-ipx::save_core [ipx::current_core]
-close_project -delete
-
-pip_clr_dir $tmp_dir

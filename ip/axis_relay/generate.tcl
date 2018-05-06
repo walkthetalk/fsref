@@ -1,25 +1,4 @@
-set origin_dir [lindex $argv 0]
-set ip_dir [file dirname $argv0]
-set tmp_dir $ip_dir/tmp
-
-source $origin_dir/scripts/aux/util.tcl
-
-ipx::infer_core -vendor $VENDOR -library $LIBRARY -taxonomy $TAXONOMY $ip_dir
-ipx::edit_ip_in_project -upgrade true -name edit_ip_project -directory $tmp_dir $ip_dir/component.xml
-ipx::current_core $ip_dir/component.xml
-
-pip_set_prop [ipx::current_core] [subst {
-	display_name {Video Relay}
-	description {Video Relay}
-	vendor_display_name $VENDORDISPNAME
-	version $VERSION
-	company_url $COMPANYURL
-	supported_families {zynq Production}
-}]
-
-pip_clr_def_if_par_memmap [ipx::current_core]
-
-pip_add_bus_if [ipx::current_core] S_AXIS {
+pip_add_bus_if $core S_AXIS {
 	abstraction_type_vlnv {xilinx.com:interface:axis_rtl:1.0}
 	bus_type_vlnv {xilinx.com:interface:axis:1.0}
 	interface_mode {slave}
@@ -31,7 +10,7 @@ pip_add_bus_if [ipx::current_core] S_AXIS {
 	TREADY	s_axis_tready
 }
 
-pip_add_bus_if [ipx::current_core] M_AXIS {
+pip_add_bus_if $core M_AXIS {
 	abstraction_type_vlnv {xilinx.com:interface:axis_rtl:1.0}
 	bus_type_vlnv {xilinx.com:interface:axis:1.0}
 	interface_mode {master}
@@ -43,7 +22,7 @@ pip_add_bus_if [ipx::current_core] M_AXIS {
 	TREADY	m_axis_tready
 }
 
-pip_add_bus_if [ipx::current_core] resetn {
+pip_add_bus_if $core resetn {
 	abstraction_type_vlnv xilinx.com:signal:reset_rtl:1.0
 	bus_type_vlnv xilinx.com:signal:reset:1.0
 	interface_mode slave
@@ -53,7 +32,7 @@ pip_add_bus_if [ipx::current_core] resetn {
 	POLARITY {ACTIVE_LOW}
 }
 
-pip_add_bus_if [ipx::current_core] clk {
+pip_add_bus_if $core clk {
 	abstraction_type_vlnv xilinx.com:signal:clock_rtl:1.0
 	bus_type_vlnv xilinx.com:signal:clock:1.0
 	interface_mode slave
@@ -65,7 +44,7 @@ pip_add_bus_if [ipx::current_core] clk {
 }
 
 # parameters
-pip_add_usr_par [ipx::current_core] {C_PIXEL_WIDTH} {
+pip_add_usr_par $core {C_PIXEL_WIDTH} {
 	display_name {Pixel Width}
 	tooltip {PIXEL WIDTH}
 	widget {comboBox}
@@ -79,7 +58,7 @@ pip_add_usr_par [ipx::current_core] {C_PIXEL_WIDTH} {
 	value 8
 	value_format long
 }
-pip_add_usr_par [ipx::current_core] {C_TEST} {
+pip_add_usr_par $core {C_TEST} {
 	display_name {Enable Test}
 	tooltip {Enable Test}
 	widget {checkBox}
@@ -91,10 +70,3 @@ pip_add_usr_par [ipx::current_core] {C_TEST} {
 	value false
 	value_format bool
 }
-
-ipx::create_xgui_files [ipx::current_core]
-ipx::update_checksums [ipx::current_core]
-ipx::save_core [ipx::current_core]
-close_project -delete
-
-pip_clr_dir $tmp_dir

@@ -1,30 +1,10 @@
-set origin_dir [lindex $argv 0]
-set ip_dir [file dirname $argv0]
-set tmp_dir $ip_dir/tmp
-
-source $origin_dir/scripts/aux/util.tcl
-
-ipx::infer_core -vendor $VENDOR -library $LIBRARY -name fsctl -taxonomy $TAXONOMY -root_dir $ip_dir $ip_dir/src
-ipx::edit_ip_in_project -upgrade true -name edit_ip_project -directory $tmp_dir $ip_dir/component.xml
-ipx::current_core $ip_dir/component.xml
 
 define_associate_busif clk_busif
 define_associate_busif clk_reset
 define_associate_busif o_clk_busif
 define_associate_busif o_clk_reset
 
-pip_set_prop [ipx::current_core] [subst {
-	display_name {Fusion Splicer Controller}
-	description {Fusion Splicer Controller}
-	vendor_display_name $VENDORDISPNAME
-	version $VERSION
-	company_url $COMPANYURL
-	supported_families {zynq Production}
-}]
-
-pip_clr_def_if_par_memmap [ipx::current_core]
-
-pip_add_bus_if [ipx::current_core] S_REG_CTL [subst {
+pip_add_bus_if $core S_REG_CTL [subst {
 	abstraction_type_vlnv {$VENDOR:interface:reg_ctl_rtl:1.0}
 	bus_type_vlnv {$VENDOR:interface:reg_ctl:1.0}
 	interface_mode {slave}
@@ -38,7 +18,7 @@ pip_add_bus_if [ipx::current_core] S_REG_CTL [subst {
 }
 append_associate_busif clk_busif S_REG_CTL
 
-pip_add_bus_if [ipx::current_core] fsync {
+pip_add_bus_if $core fsync {
 	abstraction_type_vlnv xilinx.com:signal:video_frame_sync_rtl:1.0
 	bus_type_vlnv xilinx.com:signal:video_frame_sync:1.0
 	interface_mode slave
@@ -46,7 +26,7 @@ pip_add_bus_if [ipx::current_core] fsync {
 	FRAME_SYNC fsync
 }
 
-pip_add_bus_if [ipx::current_core] o_fsync {
+pip_add_bus_if $core o_fsync {
 	abstraction_type_vlnv xilinx.com:signal:video_frame_sync_rtl:1.0
 	bus_type_vlnv xilinx.com:signal:video_frame_sync:1.0
 	interface_mode master
@@ -55,7 +35,7 @@ pip_add_bus_if [ipx::current_core] o_fsync {
 }
 append_associate_busif o_clk_busif o_fsync
 
-pip_add_bus_if [ipx::current_core] OUT_SIZE [subst {
+pip_add_bus_if $core OUT_SIZE [subst {
 	abstraction_type_vlnv {$VENDOR:interface:window_ctl_rtl:1.0}
 	bus_type_vlnv {$VENDOR:interface:window_ctl:1.0}
 	interface_mode {master}
@@ -65,7 +45,7 @@ pip_add_bus_if [ipx::current_core] OUT_SIZE [subst {
 }
 append_associate_busif o_clk_busif OUT_SIZE
 
-pip_add_bus_if [ipx::current_core] ST_ADDR [subst {
+pip_add_bus_if $core ST_ADDR [subst {
 	abstraction_type_vlnv $VENDOR:interface:addr_array_rtl:1.0
 	bus_type_vlnv $VENDOR:interface:addr_array:1.0
 	interface_mode master
@@ -74,7 +54,7 @@ pip_add_bus_if [ipx::current_core] ST_ADDR [subst {
 }
 append_associate_busif o_clk_busif ST_ADDR
 
-pip_add_bus_if [ipx::current_core] ST_SIZE [subst {
+pip_add_bus_if $core ST_SIZE [subst {
 	abstraction_type_vlnv {$VENDOR:interface:window_ctl_rtl:1.0}
 	bus_type_vlnv {$VENDOR:interface:window_ctl:1.0}
 	interface_mode {master}
@@ -85,7 +65,7 @@ pip_add_bus_if [ipx::current_core] ST_SIZE [subst {
 append_associate_busif o_clk_busif ST_SIZE
 
 for {set i 0} {$i < 8} {incr i} {
-	pip_add_bus_if [ipx::current_core] S[set i]_READ [subst {
+	pip_add_bus_if $core S[set i]_READ [subst {
 		abstraction_type_vlnv $VENDOR:interface:mutex_buffer_ctl_rtl:1.0
 		bus_type_vlnv $VENDOR:interface:mutex_buffer_ctl:1.0
 		interface_mode master
@@ -97,7 +77,7 @@ for {set i 0} {$i < 8} {incr i} {
 	}]
 	append_associate_busif o_clk_busif S[set i]_READ
 
-	pip_add_bus_if [ipx::current_core] s[set i]_wr_done [subst {
+	pip_add_bus_if $core s[set i]_wr_done [subst {
 		abstraction_type_vlnv xilinx.com:signal:data_rtl:1.0
 		bus_type_vlnv xilinx.com:signal:data:1.0
 		interface_mode slave
@@ -107,7 +87,7 @@ for {set i 0} {$i < 8} {incr i} {
 	}]
 	append_associate_busif o_clk_busif s[set i]_wr_done
 
-	pip_add_bus_if [ipx::current_core] s[set i]_dst_bmp [subst {
+	pip_add_bus_if $core s[set i]_dst_bmp [subst {
 		abstraction_type_vlnv xilinx.com:signal:data_rtl:1.0
 		bus_type_vlnv xilinx.com:signal:data:1.0
 		interface_mode master
@@ -117,7 +97,7 @@ for {set i 0} {$i < 8} {incr i} {
 	}]
 	append_associate_busif o_clk_busif s[set i]_dst_bmp
 
-	pip_add_bus_if [ipx::current_core] S[set i]_ADDR [subst {
+	pip_add_bus_if $core S[set i]_ADDR [subst {
 		abstraction_type_vlnv $VENDOR:interface:addr_array_rtl:1.0
 		bus_type_vlnv $VENDOR:interface:addr_array:1.0
 		interface_mode master
@@ -130,7 +110,7 @@ for {set i 0} {$i < 8} {incr i} {
 	}]
 	append_associate_busif o_clk_busif S[set i]_ADDR
 
-	pip_add_bus_if [ipx::current_core] S[set i]_SIZE [subst {
+	pip_add_bus_if $core S[set i]_SIZE [subst {
 		abstraction_type_vlnv {$VENDOR:interface:window_ctl_rtl:1.0}
 		bus_type_vlnv {$VENDOR:interface:window_ctl:1.0}
 		interface_mode {master}
@@ -141,7 +121,7 @@ for {set i 0} {$i < 8} {incr i} {
 	}]
 	append_associate_busif o_clk_busif S[set i]_SIZE
 
-	pip_add_bus_if [ipx::current_core] S[set i]_WIN [subst {
+	pip_add_bus_if $core S[set i]_WIN [subst {
 		abstraction_type_vlnv {$VENDOR:interface:window_ctl_rtl:1.0}
 		bus_type_vlnv {$VENDOR:interface:window_ctl:1.0}
 		interface_mode {master}
@@ -154,7 +134,7 @@ for {set i 0} {$i < 8} {incr i} {
 	}]
 	append_associate_busif o_clk_busif S[set i]_WIN
 
-	pip_add_bus_if [ipx::current_core] S[set i]_SCALE [subst {
+	pip_add_bus_if $core S[set i]_SCALE [subst {
 		abstraction_type_vlnv {$VENDOR:interface:scale_ctl_rtl:1.0}
 		bus_type_vlnv {$VENDOR:interface:scale_ctl:1.0}
 		interface_mode {master}
@@ -167,7 +147,7 @@ for {set i 0} {$i < 8} {incr i} {
 	}]
 	append_associate_busif o_clk_busif S[set i]_SCALE
 
-	pip_add_bus_if [ipx::current_core] S[set i]_DST [subst {
+	pip_add_bus_if $core S[set i]_DST [subst {
 		abstraction_type_vlnv {$VENDOR:interface:window_ctl_rtl:1.0}
 		bus_type_vlnv {$VENDOR:interface:window_ctl:1.0}
 		interface_mode {master}
@@ -180,7 +160,7 @@ for {set i 0} {$i < 8} {incr i} {
 	}]
 	append_associate_busif o_clk_busif S[set i]_DST
 
-	pip_add_bus_if [ipx::current_core] s[set i]_in_resetn [subst {
+	pip_add_bus_if $core s[set i]_in_resetn [subst {
 		abstraction_type_vlnv xilinx.com:signal:reset_rtl:1.0
 		bus_type_vlnv xilinx.com:signal:reset:1.0
 		interface_mode master
@@ -192,7 +172,7 @@ for {set i 0} {$i < 8} {incr i} {
 	}
 	append_associate_busif o_clk_reset s[set i]_in_resetn
 
-	pip_add_bus_if [ipx::current_core] s[set i]_fsa_disp_resetn [subst {
+	pip_add_bus_if $core s[set i]_fsa_disp_resetn [subst {
 		abstraction_type_vlnv xilinx.com:signal:reset_rtl:1.0
 		bus_type_vlnv xilinx.com:signal:reset:1.0
 		interface_mode master
@@ -204,7 +184,7 @@ for {set i 0} {$i < 8} {incr i} {
 	}
 	append_associate_busif o_clk_reset s[set i]_fsa_disp_resetn
 
-	pip_add_bus_if [ipx::current_core] s[set i]_out_resetn [subst {
+	pip_add_bus_if $core s[set i]_out_resetn [subst {
 		abstraction_type_vlnv xilinx.com:signal:reset_rtl:1.0
 		bus_type_vlnv xilinx.com:signal:reset:1.0
 		interface_mode master
@@ -216,7 +196,7 @@ for {set i 0} {$i < 8} {incr i} {
 	}
 	append_associate_busif o_clk_reset s[set i]_out_resetn
 
-	pip_add_bus_if [ipx::current_core] S[set i]_FSA_CTL [subst {
+	pip_add_bus_if $core S[set i]_FSA_CTL [subst {
 		abstraction_type_vlnv {$VENDOR:interface:fsa_ctl_rtl:1.0}
 		bus_type_vlnv {$VENDOR:interface:fsa_ctl:1.0}
 		interface_mode {master}
@@ -230,7 +210,7 @@ for {set i 0} {$i < 8} {incr i} {
 }
 
 for {set i 0} {$i < 8} {incr i} {
-	pip_add_bus_if [ipx::current_core] BR[set i]_INIT_CTL [subst {
+	pip_add_bus_if $core BR[set i]_INIT_CTL [subst {
 		abstraction_type_vlnv {$VENDOR:interface:blockram_init_ctl_rtl:1.0}
 		bus_type_vlnv {$VENDOR:interface:blockram_init_ctl:1.0}
 		interface_mode {master}
@@ -245,7 +225,7 @@ for {set i 0} {$i < 8} {incr i} {
 }
 
 for {set i 0} {$i < 8} {incr i} {
-	pip_add_bus_if [ipx::current_core] MOTOR[set i]_CFG [subst {
+	pip_add_bus_if $core MOTOR[set i]_CFG [subst {
 		abstraction_type_vlnv {$VENDOR:interface:step_motor_cfg_ctl_rtl:1.0}
 		bus_type_vlnv {$VENDOR:interface:step_motor_cfg_ctl:1.0}
 		interface_mode {master}
@@ -258,7 +238,7 @@ for {set i 0} {$i < 8} {incr i} {
 	}]
 	append_associate_busif o_clk_busif MOTOR[set i]_CFG
 
-	pip_add_bus_if [ipx::current_core] MOTOR[set i]_REQ [subst {
+	pip_add_bus_if $core MOTOR[set i]_REQ [subst {
 		abstraction_type_vlnv {$VENDOR:interface:step_motor_req_ctl_rtl:1.0}
 		bus_type_vlnv {$VENDOR:interface:step_motor_req_ctl:1.0}
 		interface_mode {master}
@@ -278,7 +258,7 @@ for {set i 0} {$i < 8} {incr i} {
 }
 
 for {set i 0} {$i < 8} {incr i} {
-	pip_add_bus_if [ipx::current_core] PWM[set i]_CTL [subst {
+	pip_add_bus_if $core PWM[set i]_CTL [subst {
 		abstraction_type_vlnv $VENDOR:interface:pwm_ctl_rtl:1.0
 		bus_type_vlnv $VENDOR:interface:pwm_ctl:1.0
 		interface_mode master
@@ -293,7 +273,7 @@ for {set i 0} {$i < 8} {incr i} {
 }
 
 # clock & reset
-pip_add_bus_if [ipx::current_core] resetn {
+pip_add_bus_if $core resetn {
 	abstraction_type_vlnv xilinx.com:signal:reset_rtl:1.0
 	bus_type_vlnv xilinx.com:signal:reset:1.0
 	interface_mode slave
@@ -304,7 +284,7 @@ pip_add_bus_if [ipx::current_core] resetn {
 }
 append_associate_busif clk_reset resetn
 
-pip_add_bus_if [ipx::current_core] clk {
+pip_add_bus_if $core clk {
 	abstraction_type_vlnv xilinx.com:signal:clock_rtl:1.0
 	bus_type_vlnv xilinx.com:signal:clock:1.0
 	interface_mode slave
@@ -315,7 +295,7 @@ pip_add_bus_if [ipx::current_core] clk {
 	ASSOCIATED_RESET [get_associate_busif clk_reset]
 }]
 
-pip_add_bus_if [ipx::current_core] o_resetn {
+pip_add_bus_if $core o_resetn {
 	abstraction_type_vlnv xilinx.com:signal:reset_rtl:1.0
 	bus_type_vlnv xilinx.com:signal:reset:1.0
 	interface_mode slave
@@ -327,7 +307,7 @@ pip_add_bus_if [ipx::current_core] o_resetn {
 append_associate_busif o_clk_reset o_resetn
 
 # stream resetn
-pip_add_bus_if [ipx::current_core] st_out_resetn {
+pip_add_bus_if $core st_out_resetn {
 	abstraction_type_vlnv xilinx.com:signal:reset_rtl:1.0
 	bus_type_vlnv xilinx.com:signal:reset:1.0
 	interface_mode master
@@ -338,7 +318,7 @@ pip_add_bus_if [ipx::current_core] st_out_resetn {
 }
 append_associate_busif o_clk_reset st_out_resetn
 
-pip_add_bus_if [ipx::current_core] o_clk {
+pip_add_bus_if $core o_clk {
 	abstraction_type_vlnv xilinx.com:signal:clock_rtl:1.0
 	bus_type_vlnv xilinx.com:signal:clock:1.0
 	interface_mode slave
@@ -350,7 +330,7 @@ pip_add_bus_if [ipx::current_core] o_clk {
 }]
 
 # interrupt
-pip_add_bus_if [ipx::current_core] intr {
+pip_add_bus_if $core intr {
 	abstraction_type_vlnv xilinx.com:signal:interrupt_rtl:1.0
 	bus_type_vlnv xilinx.com:signal:interrupt:1.0
 	interface_mode master
@@ -359,7 +339,7 @@ pip_add_bus_if [ipx::current_core] intr {
 }
 
 # parameters
-pip_add_usr_par [ipx::current_core] C_CORE_VERSION {
+pip_add_usr_par $core C_CORE_VERSION {
 	display_name {Version Of IMPLEMENTATION}
 	tooltip {Version Of IMPLEMENTATION}
 	widget {hexEdit}
@@ -375,7 +355,7 @@ pip_add_usr_par [ipx::current_core] C_CORE_VERSION {
 	value_format bitString
 }
 
-pip_add_usr_par [ipx::current_core] {C_TS_WIDTH} {
+pip_add_usr_par $core {C_TS_WIDTH} {
 	display_name {Timestamp Width}
 	tooltip {Timestamp WIDTH}
 	widget {comboBox}
@@ -390,7 +370,7 @@ pip_add_usr_par [ipx::current_core] {C_TS_WIDTH} {
 	value_format long
 }
 
-pip_add_usr_par [ipx::current_core] {C_DATA_WIDTH} {
+pip_add_usr_par $core {C_DATA_WIDTH} {
 	display_name {Register Width}
 	tooltip {Register WIDTH}
 	widget {comboBox}
@@ -405,7 +385,7 @@ pip_add_usr_par [ipx::current_core] {C_DATA_WIDTH} {
 	value_format long
 }
 
-pip_add_usr_par [ipx::current_core] {C_REG_IDX_WIDTH} {
+pip_add_usr_par $core {C_REG_IDX_WIDTH} {
 	display_name {Register Index Width}
 	tooltip {REG INDEX WIDTH}
 	widget {comboBox}
@@ -419,7 +399,7 @@ pip_add_usr_par [ipx::current_core] {C_REG_IDX_WIDTH} {
 	value 8
 	value_format long
 }
-pip_add_usr_par [ipx::current_core] {C_IMG_PBITS} {
+pip_add_usr_par $core {C_IMG_PBITS} {
 	display_name {Image PIXEL Bit Width}
 	tooltip {IMAGE PIXEL BIT WIDTH}
 	widget {comboBox}
@@ -434,7 +414,7 @@ pip_add_usr_par [ipx::current_core] {C_IMG_PBITS} {
 	value_format long
 }
 
-pip_add_usr_par [ipx::current_core] {C_IMG_WBITS} {
+pip_add_usr_par $core {C_IMG_WBITS} {
 	display_name {Image Width (PIXEL) Bit Width}
 	tooltip {IMAGE WIDTH BIT WIDTH}
 	widget {comboBox}
@@ -449,7 +429,7 @@ pip_add_usr_par [ipx::current_core] {C_IMG_WBITS} {
 	value_format long
 }
 
-pip_add_usr_par [ipx::current_core] {C_IMG_HBITS} {
+pip_add_usr_par $core {C_IMG_HBITS} {
 	display_name {Image Height (PIXEL) Bit Width}
 	tooltip {IMAGE HEIGHT BIT WIDTH}
 	widget {comboBox}
@@ -463,7 +443,7 @@ pip_add_usr_par [ipx::current_core] {C_IMG_HBITS} {
 	value 12
 	value_format long
 }
-pip_add_usr_par [ipx::current_core] {C_IMG_WDEF} {
+pip_add_usr_par $core {C_IMG_WDEF} {
 	display_name {Default Image Width}
 	tooltip {Default Image Width}
 	widget {textEdit}
@@ -476,7 +456,7 @@ pip_add_usr_par [ipx::current_core] {C_IMG_WDEF} {
 	value_format long
 }
 
-pip_add_usr_par [ipx::current_core] {C_IMG_HDEF} {
+pip_add_usr_par $core {C_IMG_HDEF} {
 	display_name {Default Image Height}
 	tooltip {Default Image Height}
 	widget {textEdit}
@@ -489,7 +469,7 @@ pip_add_usr_par [ipx::current_core] {C_IMG_HDEF} {
 	value_format long
 }
 
-pip_add_usr_par [ipx::current_core] {C_BUF_ADDR_WIDTH} {
+pip_add_usr_par $core {C_BUF_ADDR_WIDTH} {
 	display_name {Buffer Address Width}
 	tooltip {Buffer Address Width}
 	widget {comboBox}
@@ -504,7 +484,7 @@ pip_add_usr_par [ipx::current_core] {C_BUF_ADDR_WIDTH} {
 	value_format long
 }
 
-pip_add_usr_par [ipx::current_core] {C_STREAM_NBR} {
+pip_add_usr_par $core {C_STREAM_NBR} {
 	display_name {Stream Number}
 	tooltip {Stream Number}
 	widget {comboBox}
@@ -519,7 +499,7 @@ pip_add_usr_par [ipx::current_core] {C_STREAM_NBR} {
 	value_format long
 }
 
-pip_add_usr_par [ipx::current_core] C_ST_ADDR {
+pip_add_usr_par $core C_ST_ADDR {
 	display_name {Stream Top Address}
 	tooltip {Stream Top Address}
 	widget {hexEdit}
@@ -536,7 +516,7 @@ pip_add_usr_par [ipx::current_core] C_ST_ADDR {
 }
 
 for {set i 0} {$i < 8} {incr i} {
-	pip_add_usr_par [ipx::current_core] C_S[set i]_ADDR [subst {
+	pip_add_usr_par $core C_S[set i]_ADDR [subst {
 		display_name {stream $i address}
 		tooltip {first buffer address of stream $i}
 		widget {hexEdit}
@@ -553,7 +533,7 @@ for {set i 0} {$i < 8} {incr i} {
 		value_format bitString
 	}]
 
-	pip_add_usr_par [ipx::current_core] C_S[set i]_SIZE [subst {
+	pip_add_usr_par $core C_S[set i]_SIZE [subst {
 		display_name {stream $i size}
 		tooltip {single buffer size of stream $i}
 		widget {hexEdit}
@@ -571,7 +551,7 @@ for {set i 0} {$i < 8} {incr i} {
 	}]
 }
 
-pip_add_usr_par [ipx::current_core] {C_BR_INITOR_NBR} {
+pip_add_usr_par $core {C_BR_INITOR_NBR} {
 	display_name {Blockram Initor Number}
 	tooltip {Blockram Initor Number}
 	widget {comboBox}
@@ -586,7 +566,7 @@ pip_add_usr_par [ipx::current_core] {C_BR_INITOR_NBR} {
 	value_format long
 }
 
-pip_add_usr_par [ipx::current_core] {C_BR_ADDR_WIDTH} {
+pip_add_usr_par $core {C_BR_ADDR_WIDTH} {
 	display_name {Blockram Address Width}
 	tooltip {Blockram Address Width}
 	widget {comboBox}
@@ -601,7 +581,7 @@ pip_add_usr_par [ipx::current_core] {C_BR_ADDR_WIDTH} {
 	value_format long
 }
 
-pip_add_usr_par [ipx::current_core] {C_MOTOR_NBR} {
+pip_add_usr_par $core {C_MOTOR_NBR} {
 	display_name {Motor Number}
 	tooltip {Motor Number, must smaller than clock division number}
 	widget {comboBox}
@@ -615,7 +595,7 @@ pip_add_usr_par [ipx::current_core] {C_MOTOR_NBR} {
 	value 4
 	value_format long
 }
-pip_add_usr_par [ipx::current_core] {C_PWM_NBR} {
+pip_add_usr_par $core {C_PWM_NBR} {
 	display_name {PWM Number}
 	tooltip {PWM Number}
 	widget {comboBox}
@@ -629,7 +609,7 @@ pip_add_usr_par [ipx::current_core] {C_PWM_NBR} {
 	value 4
 	value_format long
 }
-pip_add_usr_par [ipx::current_core] {C_PWM_CNT_WIDTH} {
+pip_add_usr_par $core {C_PWM_CNT_WIDTH} {
 	display_name {PWM Counter Width}
 	tooltip {PWM Counter Width}
 	widget {comboBox}
@@ -643,7 +623,7 @@ pip_add_usr_par [ipx::current_core] {C_PWM_CNT_WIDTH} {
 	value 16
 	value_format long
 }
-pip_add_usr_par [ipx::current_core] {C_ZPD_SEQ} {
+pip_add_usr_par $core {C_ZPD_SEQ} {
 	display_name {Zero Position Detection}
 	tooltip {when specific bit is 1, then enable zero position detection for corresponding motor.}
 	widget {hexEdit}
@@ -658,7 +638,7 @@ pip_add_usr_par [ipx::current_core] {C_ZPD_SEQ} {
 	value {"00000000"}
 	value_format bitString
 }
-pip_add_usr_par [ipx::current_core] {C_STEP_NUMBER_WIDTH} {
+pip_add_usr_par $core {C_STEP_NUMBER_WIDTH} {
 	display_name {Step Number Width}
 	tooltip {Step Number WIDTH}
 	widget {comboBox}
@@ -672,7 +652,7 @@ pip_add_usr_par [ipx::current_core] {C_STEP_NUMBER_WIDTH} {
 	value 16
 	value_format long
 }
-pip_add_usr_par [ipx::current_core] {C_SPEED_DATA_WIDTH} {
+pip_add_usr_par $core {C_SPEED_DATA_WIDTH} {
 	display_name {Speed Data Width}
 	tooltip {Speed Data WIDTH}
 	widget {comboBox}
@@ -687,7 +667,7 @@ pip_add_usr_par [ipx::current_core] {C_SPEED_DATA_WIDTH} {
 	value_format long
 }
 
-pip_add_usr_par [ipx::current_core] {C_MICROSTEP_WIDTH} {
+pip_add_usr_par $core {C_MICROSTEP_WIDTH} {
 	display_name {Microstep Width}
 	tooltip {microstep WIDTH}
 	widget {comboBox}
@@ -702,7 +682,7 @@ pip_add_usr_par [ipx::current_core] {C_MICROSTEP_WIDTH} {
 	value_format long
 }
 
-pip_add_usr_par [ipx::current_core] {C_TEST} {
+pip_add_usr_par $core {C_TEST} {
 	display_name {Enable Test}
 	tooltip {Enable Test}
 	widget {checkBox}
@@ -714,10 +694,3 @@ pip_add_usr_par [ipx::current_core] {C_TEST} {
 	value false
 	value_format bool
 }
-
-ipx::create_xgui_files [ipx::current_core]
-ipx::update_checksums [ipx::current_core]
-ipx::save_core [ipx::current_core]
-close_project -delete
-
-pip_clr_dir $tmp_dir

@@ -1,25 +1,4 @@
-set origin_dir [lindex $argv 0]
-set ip_dir [file dirname $argv0]
-set tmp_dir $ip_dir/tmp
-
-source $origin_dir/scripts/aux/util.tcl
-
-ipx::infer_core -vendor $VENDOR -library $LIBRARY -taxonomy $TAXONOMY $ip_dir
-ipx::edit_ip_in_project -upgrade true -name edit_ip_project -directory $tmp_dir $ip_dir/component.xml
-ipx::current_core $ip_dir/component.xml
-
-pip_set_prop [ipx::current_core] [subst {
-	display_name {Mutex Buffer Controller}
-	description {1W2R buffer controller}
-	vendor_display_name $VENDORDISPNAME
-	version $VERSION
-	company_url $COMPANYURL
-	supported_families {zynq Production}
-}]
-
-pip_clr_def_if_par_memmap [ipx::current_core]
-
-pip_add_bus_if [ipx::current_core] MBUF_R0 [subst {
+pip_add_bus_if $core MBUF_R0 [subst {
 	abstraction_type_vlnv $VENDOR:interface:mutex_buffer_ctl_rtl:1.0
 	bus_type_vlnv $VENDOR:interface:mutex_buffer_ctl:1.0
 	interface_mode slave
@@ -30,7 +9,7 @@ pip_add_bus_if [ipx::current_core] MBUF_R0 [subst {
 	TS   r0_ts
 }
 
-pip_add_bus_if [ipx::current_core] MBUF_R1 [subst {
+pip_add_bus_if $core MBUF_R1 [subst {
 	abstraction_type_vlnv $VENDOR:interface:mutex_buffer_ctl_rtl:1.0
 	bus_type_vlnv $VENDOR:interface:mutex_buffer_ctl:1.0
 	interface_mode slave
@@ -41,7 +20,7 @@ pip_add_bus_if [ipx::current_core] MBUF_R1 [subst {
 	TS   r1_ts
 }
 
-pip_add_bus_if [ipx::current_core] MBUF_W [subst {
+pip_add_bus_if $core MBUF_W [subst {
 	abstraction_type_vlnv $VENDOR:interface:mutex_buffer_ctl_rtl:1.0
 	bus_type_vlnv $VENDOR:interface:mutex_buffer_ctl:1.0
 	interface_mode slave
@@ -51,7 +30,7 @@ pip_add_bus_if [ipx::current_core] MBUF_W [subst {
 	IDX w_idx
 }
 
-pip_add_bus_if [ipx::current_core] BUF_ADDR [subst {
+pip_add_bus_if $core BUF_ADDR [subst {
 	abstraction_type_vlnv $VENDOR:interface:addr_array_rtl:1.0
 	bus_type_vlnv $VENDOR:interface:addr_array:1.0
 	interface_mode slave
@@ -62,7 +41,7 @@ pip_add_bus_if [ipx::current_core] BUF_ADDR [subst {
 	ADDR3 buf3_addr
 }
 
-pip_add_bus_if [ipx::current_core] sys_ts {
+pip_add_bus_if $core sys_ts {
 	abstraction_type_vlnv {xilinx.com:signal:data_rtl:1.0}
 	bus_type_vlnv {xilinx.com:signal:data:1.0}
 	interface_mode {slave}
@@ -70,7 +49,7 @@ pip_add_bus_if [ipx::current_core] sys_ts {
 	DATA sys_ts
 }
 
-#pip_add_bus_if [ipx::current_core] intr {
+#pip_add_bus_if $core intr {
 #	abstraction_type_vlnv xilinx.com:signal:interrupt_rtl:1.0
 #	bus_type_vlnv xilinx.com:signal:interrupt:1.0
 #	interface_mode master
@@ -78,7 +57,7 @@ pip_add_bus_if [ipx::current_core] sys_ts {
 #	INTERRUPT intr
 #}
 
-pip_add_bus_if [ipx::current_core] resetn {
+pip_add_bus_if $core resetn {
 	abstraction_type_vlnv xilinx.com:signal:reset_rtl:1.0
 	bus_type_vlnv xilinx.com:signal:reset:1.0
 	interface_mode slave
@@ -88,7 +67,7 @@ pip_add_bus_if [ipx::current_core] resetn {
 	POLARITY {ACTIVE_LOW}
 }
 
-pip_add_bus_if [ipx::current_core] clk {
+pip_add_bus_if $core clk {
 	abstraction_type_vlnv xilinx.com:signal:clock_rtl:1.0
 	bus_type_vlnv xilinx.com:signal:clock:1.0
 	interface_mode slave
@@ -99,7 +78,7 @@ pip_add_bus_if [ipx::current_core] clk {
 	ASSOCIATED_RESET {resetn}
 }
 
-pip_add_usr_par [ipx::current_core] {C_ADDR_WIDTH} {
+pip_add_usr_par $core {C_ADDR_WIDTH} {
 	display_name {Address Width}
 	tooltip {ADDRESS WIDTH}
 	widget {comboBox}
@@ -114,7 +93,7 @@ pip_add_usr_par [ipx::current_core] {C_ADDR_WIDTH} {
 	value_format long
 }
 
-pip_add_usr_par [ipx::current_core] {C_TS_WIDTH} {
+pip_add_usr_par $core {C_TS_WIDTH} {
 	display_name {Timestamp Width}
 	tooltip {TIMESTAMP WIDTH}
 	widget {comboBox}
@@ -128,10 +107,3 @@ pip_add_usr_par [ipx::current_core] {C_TS_WIDTH} {
 	value 64
 	value_format long
 }
-
-ipx::create_xgui_files [ipx::current_core]
-ipx::update_checksums [ipx::current_core]
-ipx::save_core [ipx::current_core]
-close_project -delete
-
-pip_clr_dir $tmp_dir

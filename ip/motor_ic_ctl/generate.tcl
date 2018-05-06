@@ -1,24 +1,4 @@
-set origin_dir [lindex $argv 0]
-set ip_dir [file dirname $argv0]
-
-source $origin_dir/scripts/aux/util.tcl
-
-set bus_name motor_ic_ctl
-set abs_name motor_ic_ctl_rtl
-
-set abs_file ${ip_dir}/${abs_name}.xml
-set bus_file ${ip_dir}/${bus_name}.xml
-
-ipx::create_abstraction_definition $VENDOR interface ${abs_name} 1.0
-ipx::create_bus_definition $VENDOR interface ${bus_name} 1.0
-
-pip_set_prop [ipx::current_busabs] [subst {
-	xml_file_name $abs_file
-	bus_type_vlnv $VENDOR:interface:$bus_name:1.0
-}]
-
-# zero position detector
-pip_add_bus_abstraction_port [ipx::current_busabs] ZPD {
+pip_add_bus_abstraction_port $busabs ZPD {
 	default_value 0
 	master_direction in
 	master_width 1
@@ -26,7 +6,7 @@ pip_add_bus_abstraction_port [ipx::current_busabs] ZPD {
 	is_data true
 }
 
-pip_add_bus_abstraction_port [ipx::current_busabs] DRIVE {
+pip_add_bus_abstraction_port $busabs DRIVE {
 	default_value 0
 	master_direction out
 	master_presence required
@@ -36,7 +16,7 @@ pip_add_bus_abstraction_port [ipx::current_busabs] DRIVE {
 	is_data true
 }
 
-pip_add_bus_abstraction_port [ipx::current_busabs] DIRECTION {
+pip_add_bus_abstraction_port $busabs DIRECTION {
 	default_value 0
 	master_direction out
 	master_presence required
@@ -46,13 +26,13 @@ pip_add_bus_abstraction_port [ipx::current_busabs] DIRECTION {
 	is_data true
 }
 
-pip_add_bus_abstraction_port [ipx::current_busabs] MICROSTEP {
+pip_add_bus_abstraction_port $busabs MICROSTEP {
 	default_value 0
 	master_direction out
 	is_data true
 }
 
-pip_add_bus_abstraction_port [ipx::current_busabs] XEN {
+pip_add_bus_abstraction_port $busabs XEN {
 	default_value 1
 	master_direction out
 	master_width 1
@@ -60,18 +40,10 @@ pip_add_bus_abstraction_port [ipx::current_busabs] XEN {
 	is_data true
 }
 
-pip_add_bus_abstraction_port [ipx::current_busabs] XRST {
+pip_add_bus_abstraction_port $busabs XRST {
 	default_value 1
 	master_direction out
 	master_width 1
 	slave_width 1
 	is_data true
 }
-
-ipx::save_abstraction_definition [ipx::current_busabs]
-
-pip_set_prop [ipx::current_busdef] [subst {
-	xml_file_name $bus_file
-}]
-
-ipx::save_bus_definition [ipx::current_busdef]

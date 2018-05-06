@@ -1,6 +1,3 @@
-
-source $origin_dir/scripts/aux/util.tcl
-
 proc create_pvdma {
 	mname
 	{direction {bidirection}}

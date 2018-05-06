@@ -1,25 +1,4 @@
-set origin_dir [lindex $argv 0]
-set ip_dir [file dirname $argv0]
-set tmp_dir $ip_dir/tmp
-
-source $origin_dir/scripts/aux/util.tcl
-
-ipx::infer_core -vendor $VENDOR -library $LIBRARY -taxonomy $TAXONOMY -root_dir $ip_dir $ip_dir/src
-ipx::edit_ip_in_project -upgrade true -name edit_ip_project -directory $tmp_dir $ip_dir/component.xml
-ipx::current_core $ip_dir/component.xml
-
-pip_set_prop [ipx::current_core] [subst {
-	display_name {Video Scaler}
-	description {Video Scaler}
-	vendor_display_name $VENDORDISPNAME
-	version $VERSION
-	company_url $COMPANYURL
-	supported_families {zynq Production}
-}]
-
-pip_clr_def_if_par_memmap [ipx::current_core]
-
-pip_add_bus_if [ipx::current_core] S_AXIS {
+pip_add_bus_if $core S_AXIS {
 	abstraction_type_vlnv {xilinx.com:interface:axis_rtl:1.0}
 	bus_type_vlnv {xilinx.com:interface:axis:1.0}
 	interface_mode {slave}
@@ -31,7 +10,7 @@ pip_add_bus_if [ipx::current_core] S_AXIS {
 	TREADY	s_axis_tready
 }
 
-pip_add_bus_if [ipx::current_core] M_AXIS {
+pip_add_bus_if $core M_AXIS {
 	abstraction_type_vlnv {xilinx.com:interface:axis_rtl:1.0}
 	bus_type_vlnv {xilinx.com:interface:axis:1.0}
 	interface_mode {master}
@@ -43,7 +22,7 @@ pip_add_bus_if [ipx::current_core] M_AXIS {
 	TREADY	m_axis_tready
 }
 
-pip_add_bus_if [ipx::current_core] SCALE_CTL [subst {
+pip_add_bus_if $core SCALE_CTL [subst {
 	abstraction_type_vlnv {$VENDOR:interface:scale_ctl_rtl:1.0}
 	bus_type_vlnv {$VENDOR:interface:scale_ctl:1.0}
 	interface_mode {slave}
@@ -54,7 +33,7 @@ pip_add_bus_if [ipx::current_core] SCALE_CTL [subst {
 	DST_HEIGHT  m_height
 }
 
-pip_add_bus_if [ipx::current_core] resetn {
+pip_add_bus_if $core resetn {
 	abstraction_type_vlnv xilinx.com:signal:reset_rtl:1.0
 	bus_type_vlnv xilinx.com:signal:reset:1.0
 	interface_mode slave
@@ -64,7 +43,7 @@ pip_add_bus_if [ipx::current_core] resetn {
 	POLARITY {ACTIVE_LOW}
 }
 
-pip_add_bus_if [ipx::current_core] clk {
+pip_add_bus_if $core clk {
 	abstraction_type_vlnv xilinx.com:signal:clock_rtl:1.0
 	bus_type_vlnv xilinx.com:signal:clock:1.0
 	interface_mode slave
@@ -76,7 +55,7 @@ pip_add_bus_if [ipx::current_core] clk {
 }
 
 # parameters
-pip_add_usr_par [ipx::current_core] {C_CH0_WIDTH} {
+pip_add_usr_par $core {C_CH0_WIDTH} {
 	display_name {Pixel Channel 0 Width}
 	tooltip {PIXEL Channel 0 WIDTH}
 	widget {comboBox}
@@ -90,7 +69,7 @@ pip_add_usr_par [ipx::current_core] {C_CH0_WIDTH} {
 	value 8
 	value_format long
 }
-pip_add_usr_par [ipx::current_core] {C_CH1_WIDTH} {
+pip_add_usr_par $core {C_CH1_WIDTH} {
 	display_name {Pixel Channel 1 Width}
 	tooltip {PIXEL Channel 1 WIDTH}
 	widget {comboBox}
@@ -104,7 +83,7 @@ pip_add_usr_par [ipx::current_core] {C_CH1_WIDTH} {
 	value 0
 	value_format long
 }
-pip_add_usr_par [ipx::current_core] {C_CH2_WIDTH} {
+pip_add_usr_par $core {C_CH2_WIDTH} {
 	display_name {Pixel Channel 2 Width}
 	tooltip {PIXEL Channel 2 WIDTH}
 	widget {comboBox}
@@ -119,7 +98,7 @@ pip_add_usr_par [ipx::current_core] {C_CH2_WIDTH} {
 	value_format long
 }
 
-pip_add_usr_par [ipx::current_core] {C_PIXEL_WIDTH} {
+pip_add_usr_par $core {C_PIXEL_WIDTH} {
 	display_name {Pixel Width}
 	tooltip {PIXEL WIDTH}
 	widget {textEdit}
@@ -134,7 +113,7 @@ pip_add_usr_par [ipx::current_core] {C_PIXEL_WIDTH} {
 	value_format long
 }
 
-pip_add_usr_par [ipx::current_core] {C_SH_WIDTH} {
+pip_add_usr_par $core {C_SH_WIDTH} {
 	display_name {SAXIS Height Width}
 	tooltip {SAXIS Height Width}
 	widget {comboBox}
@@ -149,7 +128,7 @@ pip_add_usr_par [ipx::current_core] {C_SH_WIDTH} {
 	value_format long
 }
 
-pip_add_usr_par [ipx::current_core] {C_SW_WIDTH} {
+pip_add_usr_par $core {C_SW_WIDTH} {
 	display_name {SAXIS Width Width}
 	tooltip {SAXIS Width Width}
 	widget {comboBox}
@@ -164,7 +143,7 @@ pip_add_usr_par [ipx::current_core] {C_SW_WIDTH} {
 	value_format long
 }
 
-pip_add_usr_par [ipx::current_core] {C_MH_WIDTH} {
+pip_add_usr_par $core {C_MH_WIDTH} {
 	display_name {MAXIS Height Width}
 	tooltip {MAXIS Height Width}
 	widget {comboBox}
@@ -179,7 +158,7 @@ pip_add_usr_par [ipx::current_core] {C_MH_WIDTH} {
 	value_format long
 }
 
-pip_add_usr_par [ipx::current_core] {C_MW_WIDTH} {
+pip_add_usr_par $core {C_MW_WIDTH} {
 	display_name {MAXIS Width Width}
 	tooltip {MAXIS Width Width}
 	widget {comboBox}
@@ -194,7 +173,7 @@ pip_add_usr_par [ipx::current_core] {C_MW_WIDTH} {
 	value_format long
 }
 
-pip_add_usr_par [ipx::current_core] {C_OUT_RELAY} {
+pip_add_usr_par $core {C_OUT_RELAY} {
 	display_name {Enable out relay}
 	tooltip {Enable out relay}
 	widget {checkBox}
@@ -206,10 +185,3 @@ pip_add_usr_par [ipx::current_core] {C_OUT_RELAY} {
 	value true
 	value_format bool
 }
-
-ipx::create_xgui_files [ipx::current_core]
-ipx::update_checksums [ipx::current_core]
-ipx::save_core [ipx::current_core]
-close_project -delete
-
-pip_clr_dir $tmp_dir

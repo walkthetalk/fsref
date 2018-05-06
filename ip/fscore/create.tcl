@@ -1,5 +1,4 @@
 
-source $origin_dir/scripts/aux/util.tcl
 source $origin_dir/ip/pvdma/create.tcl
 source $origin_dir/ip/pblender/create.tcl
 

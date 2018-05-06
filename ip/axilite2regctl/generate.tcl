@@ -1,25 +1,4 @@
-set origin_dir [lindex $argv 0]
-set ip_dir [file dirname $argv0]
-set tmp_dir $ip_dir/tmp
-
-source $origin_dir/scripts/aux/util.tcl
-
-ipx::infer_core -vendor $VENDOR -library $LIBRARY -name axilite2regctl -taxonomy $TAXONOMY $ip_dir
-ipx::edit_ip_in_project -upgrade true -name edit_ip_project -directory $tmp_dir $ip_dir/component.xml
-ipx::current_core $ip_dir/component.xml
-
-pip_set_prop [ipx::current_core] [subst {
-	display_name {AxiLite to Reg control}
-	description {AxiLite to Reg Control}
-	vendor_display_name $VENDORDISPNAME
-	version $VERSION
-	company_url $COMPANYURL
-	supported_families {zynq Production}
-}]
-
-pip_clr_def_if_par_memmap [ipx::current_core]
-
-pip_add_bus_if [ipx::current_core] S_AXI_LITE {
+pip_add_bus_if $core S_AXI_LITE {
 	abstraction_type_vlnv {xilinx.com:interface:aximm_rtl:1.0}
 	bus_type_vlnv {xilinx.com:interface:aximm:1.0}
 	interface_mode {slave}
@@ -43,7 +22,7 @@ pip_add_bus_if [ipx::current_core] S_AXI_LITE {
 	RREADY	s_axi_rready
 }
 
-pip_add_bus_if [ipx::current_core] M_REG_CTL [subst {
+pip_add_bus_if $core M_REG_CTL [subst {
 	abstraction_type_vlnv {$VENDOR:interface:reg_ctl_rtl:1.0}
 	bus_type_vlnv {$VENDOR:interface:reg_ctl:1.0}
 	interface_mode {master}
@@ -57,7 +36,7 @@ pip_add_bus_if [ipx::current_core] M_REG_CTL [subst {
 }
 
 # clock & reset
-pip_add_bus_if [ipx::current_core] resetn {
+pip_add_bus_if $core resetn {
 	abstraction_type_vlnv xilinx.com:signal:reset_rtl:1.0
 	bus_type_vlnv xilinx.com:signal:reset:1.0
 	interface_mode slave
@@ -67,7 +46,7 @@ pip_add_bus_if [ipx::current_core] resetn {
 	POLARITY {ACTIVE_LOW}
 }
 
-pip_add_bus_if [ipx::current_core] clk {
+pip_add_bus_if $core clk {
 	abstraction_type_vlnv xilinx.com:signal:clock_rtl:1.0
 	bus_type_vlnv xilinx.com:signal:clock:1.0
 	interface_mode slave
@@ -79,7 +58,7 @@ pip_add_bus_if [ipx::current_core] clk {
 }
 
 # parameters
-pip_add_usr_par [ipx::current_core] {C_DATA_WIDTH} {
+pip_add_usr_par $core {C_DATA_WIDTH} {
 	display_name {Data Width}
 	tooltip {DATA WIDTH}
 	widget {comboBox}
@@ -94,7 +73,7 @@ pip_add_usr_par [ipx::current_core] {C_DATA_WIDTH} {
 	value_format long
 }
 
-pip_add_usr_par [ipx::current_core] {C_ADDR_WIDTH} {
+pip_add_usr_par $core {C_ADDR_WIDTH} {
 	display_name {Address Width}
 	tooltip {ADDRESS WIDTH}
 	widget {comboBox}
@@ -109,7 +88,7 @@ pip_add_usr_par [ipx::current_core] {C_ADDR_WIDTH} {
 	value_format long
 }
 
-pip_add_usr_par [ipx::current_core] {C_REG_IDX_WIDTH} {
+pip_add_usr_par $core {C_REG_IDX_WIDTH} {
 	display_name {Register Index Width}
 	tooltip {REG INDEX WIDTH}
 	widget {comboBox}
@@ -125,15 +104,8 @@ pip_add_usr_par [ipx::current_core] {C_REG_IDX_WIDTH} {
 }
 
 # address space
-pip_add_memory_map [ipx::current_core] S_AXI_LITE S_AXI_LITE_reg S_AXI_LITE {
+pip_add_memory_map $core S_AXI_LITE S_AXI_LITE_reg S_AXI_LITE {
 	width 32
 	range 4096
 	usage register
 }
-
-ipx::create_xgui_files [ipx::current_core]
-ipx::update_checksums [ipx::current_core]
-ipx::save_core [ipx::current_core]
-close_project -delete
-
-pip_clr_dir $tmp_dir

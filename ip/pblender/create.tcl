@@ -1,6 +1,4 @@
 
-source $origin_dir/scripts/aux/util.tcl
-
 proc create_pblender {
 	mname
 	{channel_width  8}
