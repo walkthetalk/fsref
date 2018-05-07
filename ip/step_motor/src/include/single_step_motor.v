@@ -41,6 +41,7 @@ module single_step_motor #(
 	output wire                             pri_tpsign ,	/// terminal position detection
 	output wire                             pri_state,
 	output wire [C_SPEED_DATA_WIDTH-1:0]    pri_rt_speed,
+	output wire [C_STEP_NUMBER_WIDTH-1:0]   pri_position,
 	input  wire                             pri_start,	/// pulse sync to clk
 	input  wire                             pri_stop ,	/// pulse sync to clk
 	input  wire [C_SPEED_DATA_WIDTH-1:0]	pri_speed,
@@ -53,6 +54,7 @@ module single_step_motor #(
 	output wire                             ext_tpsign ,	/// terminal position detection
 	output wire                             ext_state,
 	output wire [C_SPEED_DATA_WIDTH-1:0]    ext_rt_speed,
+	output wire [C_STEP_NUMBER_WIDTH-1:0]   ext_position,
 	input  wire                             ext_start,	/// pulse sync to clk
 	input  wire                             ext_stop ,	/// pulse sync to clk
 	input  wire [C_SPEED_DATA_WIDTH-1:0]	ext_speed,
@@ -440,6 +442,7 @@ endgenerate
 
 		localparam integer C_INIT_POSITION = 1;
 		reg [C_STEP_NUMBER_WIDTH-1:0] cur_position;//stroke,
+		assign pri_position = cur_position;
 		wire reached_terminal_position;
 		assign reached_terminal_position = (cur_position == stroke);
 
@@ -478,6 +481,7 @@ endgenerate
 	else begin
 		assign pri_zpsign = 0;
 		assign pri_tpsign = 0;
+		assign pri_position = 0;
 		assign shouldStop = (step_done && (speed_cnt == 0));
 	end
 	endgenerate
@@ -486,5 +490,6 @@ endgenerate
 	assign ext_tpsign   = pri_tpsign;
 	assign ext_state    = pri_state;
 	assign ext_rt_speed = pri_rt_speed;
+	assign ext_position = pri_position;
 
 endmodule

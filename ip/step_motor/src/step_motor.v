@@ -35,6 +35,7 @@ module step_motor #(
 	output wire                           s0_tpsign,	/// terminal position detection
 	output wire                           s0_state,
 	output wire [C_SPEED_DATA_WIDTH-1:0]  s0_rt_speed,
+	output wire [C_STEP_NUMBER_WIDTH-1:0] s0_position,
 	input  wire                           s0_start,
 	input  wire                           s0_stop,
 	input  wire [C_SPEED_DATA_WIDTH-1:0]  s0_speed,
@@ -45,6 +46,7 @@ module step_motor #(
 	output wire                           s0_ext_tpsign,	/// terminal position detection
 	output wire                           s0_ext_state,
 	output wire [C_SPEED_DATA_WIDTH-1:0]  s0_ext_rt_speed,
+	output wire [C_STEP_NUMBER_WIDTH-1:0] s0_ext_position,
 	input  wire                           s0_ext_start,
 	input  wire                           s0_ext_stop,
 	input  wire [C_SPEED_DATA_WIDTH-1:0]  s0_ext_speed,
@@ -66,6 +68,7 @@ module step_motor #(
 	output wire                           s1_tpsign,	/// terminal position detection
 	output wire                           s1_state,
 	output wire [C_SPEED_DATA_WIDTH-1:0]  s1_rt_speed,
+	output wire [C_STEP_NUMBER_WIDTH-1:0] s1_position,
 	input  wire                           s1_start,
 	input  wire                           s1_stop,
 	input  wire [C_SPEED_DATA_WIDTH-1:0]  s1_speed,
@@ -76,6 +79,7 @@ module step_motor #(
 	output wire                           s1_ext_tpsign,	/// terminal position detection
 	output wire                           s1_ext_state,
 	output wire [C_SPEED_DATA_WIDTH-1:0]  s1_ext_rt_speed,
+	output wire [C_STEP_NUMBER_WIDTH-1:0] s1_ext_position,
 	input  wire                           s1_ext_start,
 	input  wire                           s1_ext_stop,
 	input  wire [C_SPEED_DATA_WIDTH-1:0]  s1_ext_speed,
@@ -97,6 +101,7 @@ module step_motor #(
 	output wire                           s2_tpsign,	/// terminal position detection
 	output wire                           s2_state,
 	output wire [C_SPEED_DATA_WIDTH-1:0]  s2_rt_speed,
+	output wire [C_STEP_NUMBER_WIDTH-1:0] s2_position,
 	input  wire                           s2_start,
 	input  wire                           s2_stop,
 	input  wire [C_SPEED_DATA_WIDTH-1:0]  s2_speed,
@@ -107,6 +112,7 @@ module step_motor #(
 	output wire                           s2_ext_tpsign,	/// terminal position detection
 	output wire                           s2_ext_state,
 	output wire [C_SPEED_DATA_WIDTH-1:0]  s2_ext_rt_speed,
+	output wire [C_STEP_NUMBER_WIDTH-1:0] s2_ext_position,
 	input  wire                           s2_ext_start,
 	input  wire                           s2_ext_stop,
 	input  wire [C_SPEED_DATA_WIDTH-1:0]  s2_ext_speed,
@@ -128,6 +134,7 @@ module step_motor #(
 	output wire                           s3_tpsign,	/// terminal position detection
 	output wire                           s3_state,
 	output wire [C_SPEED_DATA_WIDTH-1:0]  s3_rt_speed,
+	output wire [C_STEP_NUMBER_WIDTH-1:0] s3_position,
 	input  wire                           s3_start,
 	input  wire                           s3_stop,
 	input  wire [C_SPEED_DATA_WIDTH-1:0]  s3_speed,
@@ -138,6 +145,7 @@ module step_motor #(
 	output wire                           s3_ext_tpsign,	/// terminal position detection
 	output wire                           s3_ext_state,
 	output wire [C_SPEED_DATA_WIDTH-1:0]  s3_ext_rt_speed,
+	output wire [C_STEP_NUMBER_WIDTH-1:0] s3_ext_position,
 	input  wire                           s3_ext_start,
 	input  wire                           s3_ext_stop,
 	input  wire [C_SPEED_DATA_WIDTH-1:0]  s3_ext_speed,
@@ -159,6 +167,7 @@ module step_motor #(
 	output wire                           s4_tpsign,	/// terminal position detection
 	output wire                           s4_state,
 	output wire [C_SPEED_DATA_WIDTH-1:0]  s4_rt_speed,
+	output wire [C_STEP_NUMBER_WIDTH-1:0] s4_position,
 	input  wire                           s4_start,
 	input  wire                           s4_stop,
 	input  wire [C_SPEED_DATA_WIDTH-1:0]  s4_speed,
@@ -169,6 +178,7 @@ module step_motor #(
 	output wire                           s4_ext_tpsign,	/// terminal position detection
 	output wire                           s4_ext_state,
 	output wire [C_SPEED_DATA_WIDTH-1:0]  s4_ext_rt_speed,
+	output wire [C_STEP_NUMBER_WIDTH-1:0] s4_ext_position,
 	input  wire                           s4_ext_start,
 	input  wire                           s4_ext_stop,
 	input  wire [C_SPEED_DATA_WIDTH-1:0]  s4_ext_speed,
@@ -190,6 +200,7 @@ module step_motor #(
 	output wire                           s5_tpsign,	/// terminal position detection
 	output wire                           s5_state,
 	output wire [C_SPEED_DATA_WIDTH-1:0]  s5_rt_speed,
+	output wire [C_STEP_NUMBER_WIDTH-1:0] s5_position,
 	input  wire                           s5_start,
 	input  wire                           s5_stop,
 	input  wire [C_SPEED_DATA_WIDTH-1:0]  s5_speed,
@@ -200,6 +211,7 @@ module step_motor #(
 	output wire                           s5_ext_tpsign,	/// terminal position detection
 	output wire                           s5_ext_state,
 	output wire [C_SPEED_DATA_WIDTH-1:0]  s5_ext_rt_speed,
+	output wire [C_STEP_NUMBER_WIDTH-1:0] s5_ext_position,
 	input  wire                           s5_ext_start,
 	input  wire                           s5_ext_stop,
 	input  wire [C_SPEED_DATA_WIDTH-1:0]  s5_ext_speed,
@@ -221,6 +233,7 @@ module step_motor #(
 	output wire                           s6_tpsign,	/// terminal position detection
 	output wire                           s6_state,
 	output wire [C_SPEED_DATA_WIDTH-1:0]  s6_rt_speed,
+	output wire [C_STEP_NUMBER_WIDTH-1:0] s6_position,
 	input  wire                           s6_start,
 	input  wire                           s6_stop,
 	input  wire [C_SPEED_DATA_WIDTH-1:0]  s6_speed,
@@ -231,6 +244,7 @@ module step_motor #(
 	output wire                           s6_ext_tpsign,	/// terminal position detection
 	output wire                           s6_ext_state,
 	output wire [C_SPEED_DATA_WIDTH-1:0]  s6_ext_rt_speed,
+	output wire [C_STEP_NUMBER_WIDTH-1:0] s6_ext_position,
 	input  wire                           s6_ext_start,
 	input  wire                           s6_ext_stop,
 	input  wire [C_SPEED_DATA_WIDTH-1:0]  s6_ext_speed,
@@ -252,6 +266,7 @@ module step_motor #(
 	output wire                           s7_tpsign,	/// terminal position detection
 	output wire                           s7_state,
 	output wire [C_SPEED_DATA_WIDTH-1:0]  s7_rt_speed,
+	output wire [C_STEP_NUMBER_WIDTH-1:0] s7_position,
 	input  wire                           s7_start,
 	input  wire                           s7_stop,
 	input  wire [C_SPEED_DATA_WIDTH-1:0]  s7_speed,
@@ -262,6 +277,7 @@ module step_motor #(
 	output wire                           s7_ext_tpsign,	/// terminal position detection
 	output wire                           s7_ext_state,
 	output wire [C_SPEED_DATA_WIDTH-1:0]  s7_ext_rt_speed,
+	output wire [C_STEP_NUMBER_WIDTH-1:0] s7_ext_position,
 	input  wire                           s7_ext_start,
 	input  wire                           s7_ext_stop,
 	input  wire [C_SPEED_DATA_WIDTH-1:0]  s7_ext_speed,
@@ -378,6 +394,7 @@ module step_motor #(
 	wire                           s_tpsign   [MAX_MOTOR_NBR-1:0];
 	wire                           s_state    [MAX_MOTOR_NBR-1:0];
 	wire [C_SPEED_DATA_WIDTH-1:0]  s_rt_speed [MAX_MOTOR_NBR-1:0];
+	wire [C_STEP_NUMBER_WIDTH-1:0] s_position [MAX_MOTOR_NBR-1:0];
 	wire                           s_start    [MAX_MOTOR_NBR-1:0];
 	wire                           s_stop     [MAX_MOTOR_NBR-1:0];
 	wire [C_SPEED_DATA_WIDTH-1:0]  s_speed    [MAX_MOTOR_NBR-1:0];
@@ -390,6 +407,7 @@ module step_motor #(
 	wire                           s_ext_tpsign   [MAX_MOTOR_NBR-1:0];
 	wire                           s_ext_state    [MAX_MOTOR_NBR-1:0];
 	wire [C_SPEED_DATA_WIDTH-1:0]  s_ext_rt_speed [MAX_MOTOR_NBR-1:0];
+	wire [C_STEP_NUMBER_WIDTH-1:0] s_ext_position [MAX_MOTOR_NBR-1:0];
 	wire                           s_ext_start    [MAX_MOTOR_NBR-1:0];
 	wire                           s_ext_stop     [MAX_MOTOR_NBR-1:0];
 	wire [C_SPEED_DATA_WIDTH-1:0]  s_ext_speed    [MAX_MOTOR_NBR-1:0];
@@ -414,6 +432,7 @@ module step_motor #(
 	`ASSIGN_S_OUT(_i, tpsign); \
 	`ASSIGN_S_OUT(_i, state); \
 	`ASSIGN_S_OUT(_i, rt_speed); \
+	`ASSIGN_S_OUT(_i, position); \
 	`ASSIGN_S_IN(_i,  start); \
 	`ASSIGN_S_IN(_i,  stop); \
 	`ASSIGN_S_IN(_i,  speed); \
@@ -424,6 +443,7 @@ module step_motor #(
 	`ASSIGN_S_OUT(_i, ext_tpsign); \
 	`ASSIGN_S_OUT(_i, ext_state); \
 	`ASSIGN_S_OUT(_i, ext_rt_speed); \
+	`ASSIGN_S_OUT(_i, ext_position); \
 	`ASSIGN_S_IN(_i,  ext_start); \
 	`ASSIGN_S_IN(_i,  ext_stop); \
 	`ASSIGN_S_IN(_i,  ext_speed); \
@@ -480,6 +500,7 @@ module step_motor #(
 			.pri_tpsign  (s_tpsign  [i]),
 			.pri_state   (s_state   [i]),
 			.pri_rt_speed(s_rt_speed[i]),
+			.pri_position(s_position[i]),
 			.pri_start   (s_start   [i]),
 			.pri_stop    (s_stop    [i]),
 			.pri_speed   (s_speed   [i]),
@@ -492,6 +513,7 @@ module step_motor #(
 			.ext_tpsign  (s_ext_tpsign  [i]),
 			.ext_state   (s_ext_state   [i]),
 			.ext_rt_speed(s_ext_rt_speed[i]),
+			.ext_position(s_ext_position[i]),
 			.ext_start   (s_ext_start   [i]),
 			.ext_stop    (s_ext_stop    [i]),
 			.ext_speed   (s_ext_speed   [i]),
