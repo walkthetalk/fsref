@@ -73,9 +73,9 @@ module fsa_stream #(
 		.rd_en  (fr_en  ),
 
 		.full(),
-		.empty(),
+		.empty(fr_empty),
 		.almost_full(fw_af),
-		.almost_empty(fr_empty)
+		.almost_empty()
 	);
 
 	reg               working;
@@ -129,7 +129,8 @@ module fsa_stream #(
 	always @ (posedge clk) begin
 		if (resetn == 1'b0)
 			rd_en <= 0;
-		else if (working && ~fw_af && ~plast)
+		else if ((working && ~fw_af)
+			&& ~(plast && rd_en))
 			rd_en <= 1;
 		else
 			rd_en <= 0;
