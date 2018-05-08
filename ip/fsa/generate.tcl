@@ -49,9 +49,21 @@ pip_add_bus_if $core FSA_RESULT [subst {
 	bus_type_vlnv $VENDOR:interface:fsa_result:1.0
 	interface_mode master
 }] {
-	DONE        ana_done
-	LEFT_VERTEX lft_v
-	RIGHT_VERTEX rt_v
+	DONE         ana_done
+	LEFT_VERTEX  lft_edge
+	RIGHT_VERTEX rt_edge
+}
+
+pip_add_bus_if $core FSA_RESULT_EXT [subst {
+	abstraction_type_vlnv $VENDOR:interface:fsa_result_rtl:1.0
+	bus_type_vlnv $VENDOR:interface:fsa_result:1.0
+	interface_mode master
+}] {
+	DONE         ana_done
+	LEFT_VALID   lft_valid
+	LEFT_VERTEX  lft_edge
+	RIGHT_VALID  rt_valid
+	RIGHT_VERTEX rt_edge
 }
 
 pip_add_bus_if $core m_axis_fsync {

@@ -24,8 +24,10 @@ module fsa #(
 
 	input  wire [C_PIXEL_WIDTH-1:0] ref_data,
 	output wire                     ana_done,
-	output wire [C_IMG_WW-1:0]      lft_v   ,
-	output wire [C_IMG_WW-1:0]      rt_v    ,
+	output wire                     lft_valid,
+	output wire [C_IMG_WW-1:0]      lft_edge ,
+	output wire                     rt_valid ,
+	output wire [C_IMG_WW-1:0]      rt_edge  ,
 
 	input  wire                     s_axis_tvalid,
 	input  wire [C_PIXEL_WIDTH-1:0] s_axis_tdata,
@@ -166,8 +168,8 @@ generate
 			.rd_en(rd_en_p1[RD_NUM-2]),
 			.rd_addr(rd_addr_p1[RD_NUM-2]),
 			.rd_data(rd_data_f[RD_NUM-2]),
-			.lft_v(lft_v),
-			.rt_v(rt_v),
+			.lft_v(lft_edge),
+			.rt_v (rt_edge ),
 
 			.fsync(m_axis_fsync),
 			.m_axis_tvalid(m_axis_tvalid),
@@ -206,8 +208,10 @@ endgenerate
 
 		.ref_data(ref_data),
 		.ana_done(ana_done),
-		.lft_v   (lft_v   ),
-		.rt_v    (rt_v    ),
+		.res_lft_valid(lft_valid),
+		.res_lft_edge (lft_edge ),
+		.res_rt_valid (rt_valid ),
+		.res_rt_edge  (rt_edge  ),
 
 		.s_axis_tvalid(s_axis_tvalid),
 		.s_axis_tdata (s_axis_tdata ),

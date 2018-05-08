@@ -26,8 +26,10 @@ module fsa_core #(
 
 	input  wire [C_PIXEL_WIDTH-1:0] ref_data,
 	output wire                     ana_done,
-	output reg  [C_IMG_WW-1:0]      lft_v   ,
-	output reg  [C_IMG_WW-1:0]      rt_v    ,
+	output reg                      res_lft_valid,
+	output reg  [C_IMG_WW-1:0]      res_lft_edge ,
+	output reg                      res_rt_valid ,
+	output reg  [C_IMG_WW-1:0]      res_rt_edge  ,
 
 	input  wire                     s_axis_tvalid,
 	input  wire [C_PIXEL_WIDTH-1:0] s_axis_tdata,
@@ -63,6 +65,7 @@ module fsa_core #(
 	assign snext = s_axis_tvalid & s_axis_tready;
 
 	reg [C_PIXEL_WIDTH-1:0] tdata_p0;
+	reg wfirst_p0;
 	reg wlast_p0;
 	reg hfirst_p0;
 	reg [C_IMG_HW-1:0] y_p0;
@@ -77,10 +80,14 @@ module fsa_core #(
 		end
 		else if (snext) begin
 			rd_en       <= 1;
-			if (s_axis_tuser || wlast_p0)
+			if (s_axis_tuser || wlast_p0) begin
+				wfirst_p0 <= 1;
 				rd_addr <= 0;
-			else
+			end
+			else begin
+				wfirst_p0 <= 0;
 				rd_addr <= rd_addr + 1;
+			end
 			tdata_p0    <= s_axis_tdata;
 			wlast_p0    <= s_axis_tlast;
 			if (s_axis_tuser) begin
@@ -100,6 +107,7 @@ module fsa_core #(
 	reg rd_en_d1;
 	reg [BR_AW-1:0] x_d1;
 	reg [C_PIXEL_WIDTH-1:0] tdata_p1;
+	reg wfirst_p1;
 	reg wlast_p1;
 	reg hfirst_p1;
 	reg hlast_p1;
@@ -118,6 +126,7 @@ module fsa_core #(
 			rd_en_d1    <= rd_en;
 			x_d1        <= rd_addr;
 			tdata_p1    <= tdata_p0;
+			wfirst_p1   <= wfirst_p0;
 			wlast_p1    <= wlast_p0;
 			hfirst_p1   <= hfirst_p0;
 			hlast_p1    <= (y_p0 == height-1);
@@ -128,6 +137,8 @@ module fsa_core #(
 	reg rd_en_d2;
 	reg [BR_AW-1:0] x_d2;
 	reg [C_PIXEL_WIDTH-1:0] tdata_p2;
+	reg wfirst_p2;
+	reg wlast_p2;
 	reg plast_p2;
 	reg hfirst_p2;
 	reg hlast_p2;
@@ -137,6 +148,8 @@ module fsa_core #(
 			rd_en_d2    <= 0;
 			x_d2        <= 0;
 			tdata_p2    <= 0;
+			wfirst_p2   <= 0;
+			wlast_p2    <= 0;
 			plast_p2    <= 0;
 			hfirst_p2   <= 0;
 			hlast_p2    <= 0;
@@ -146,6 +159,8 @@ module fsa_core #(
 			rd_en_d2    <= rd_en_d1;
 			x_d2        <= x_d1;
 			tdata_p2    <= tdata_p1;
+			wfirst_p2   <= wfirst_p1;
+			wlast_p2    <= wlast_p1;
 			plast_p2    <= (wlast_p1 && hlast_p1);
 			hfirst_p2   <= hfirst_p1;
 			hlast_p2    <= hlast_p1;
@@ -157,6 +172,8 @@ module fsa_core #(
 	reg rd_en_d3;
 	reg [BR_AW-1:0] x_d3;
 	reg [C_PIXEL_WIDTH-1:0] tdata_p3;
+	reg wfirst_p3;
+	reg wlast_p3;
 	reg plast_p3;
 	reg hfirst_p3;
 	reg hlast_p3;
@@ -167,6 +184,8 @@ module fsa_core #(
 			rd_en_d3    <= 0;
 			x_d3        <= 0;
 			tdata_p3    <= 0;
+			wfirst_p3   <= 0;
+			wlast_p3    <= 0;
 			plast_p3    <= 0;
 			hfirst_p3   <= 0;
 			hlast_p3    <= 0;
@@ -178,6 +197,8 @@ module fsa_core #(
 			x_d3        <= x_d2;
 			tdata_p3    <= tdata_p2;
 			plast_p3    <= plast_p2 ;
+			wfirst_p3   <= wfirst_p2;
+			wlast_p3    <= wlast_p2;
 			hfirst_p3   <= hfirst_p2;
 			hlast_p3    <= hlast_p2;
 			y_p3        <= y_p2;
@@ -243,42 +264,54 @@ module fsa_core #(
 	assign ana_done = wr_sof_d5;
 
 	/// detect edge
-	reg lft_val;
+	reg lft_found;
+	reg lft_valid;
 	reg[C_IMG_WW-1:0] lft_edge;
-	reg rt_val;
+	reg rt_found;
+	reg rt_valid;
 	reg[C_IMG_WW-1:0] rt_edge;
 	always @ (posedge clk) begin
 		if (resetn == 1'b0 || ~hlast_p3) begin
-			lft_val  <= 0;
-			lft_edge <= 0;
+			lft_found  <= 0;
+			lft_valid  <= 0;
+			lft_edge   <= 0;
 		end
 		else if (rd_en_d3) begin
-			if (~lft_val && rd_val)
+			if (~lft_found && rd_val)
 				lft_edge <= x_d3;
 			if (~rd_val)
-				lft_val <= 1;
+				lft_found <= 1;
+			if (wfirst_p3 && rd_val)
+				lft_valid <= 1;
 		end
 	end
 	always @ (posedge clk) begin
 		if (resetn == 1'b0 || ~hlast_p3) begin
-			rt_val  <= 0;
-			rt_edge <= 0;
+			rt_found  <= 0;
+			rt_valid  <= 0;
+			rt_edge   <= 0;
 		end
 		else if (rd_en_d3) begin
-			rt_val <= rd_val;
-			if (~rt_val || ~rd_val)
+			rt_found <= rd_val;
+			if (~rt_found || ~rd_val)
 				rt_edge <= x_d3;
+			if (wlast_p3 && rd_val)
+				rt_valid <= 1'b1;
 		end
 	end
 
 	always @ (posedge clk) begin
 		if (resetn == 1'b0) begin
-			lft_v <= 0;
-			rt_v  <= 0;
+			res_lft_edge  <= 0;
+			res_lft_valid <= 0;
+			res_rt_edge   <= 0;
+			res_rt_valid  <= 0;
 		end
 		else if (wr_sof_d4) begin
-			lft_v <= lft_edge;
-			rt_v  <= rt_edge ;
+			res_lft_edge  <= lft_edge;
+			res_lft_valid <= lft_valid;
+			res_rt_edge   <= rt_edge;
+			res_rt_valid  <= rt_valid;
 		end
 	end
 endmodule

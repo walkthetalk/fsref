@@ -205,6 +205,11 @@ proc creat_stream {
 		pip_connect_intf_net [subst {
 			$mname/FSA_RESULT  $mname/fsa/FSA_RESULT
 		}]
+
+		create_bd_intf_pin -mode Master -vlnv $VENDOR:interface:fsa_result_rtl:1.0 $mname/FSA_RESULT_EXT
+		pip_connect_intf_net [subst {
+			$mname/FSA_RESULT_EXT  $mname/fsa/FSA_RESULT_EXT
+		}]
 	}
 }
 
