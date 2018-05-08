@@ -66,16 +66,18 @@ for {set i 0} {$i < 8} {incr i} {
 		interface_mode slave
 		enablement_dependency {spirit:decode(id('MODELPARAM_VALUE.C_MOTOR_NBR')) > $i}
 	}] [subst {
-		ZPSIGN    s[set i]_ext_zpsign
-		TPSIGN    s[set i]_ext_tpsign
-		STATE     s[set i]_ext_state
-		RT_SPEED  s[set i]_ext_rt_speed
-		POSITION  s[set i]_ext_position
-		START     s[set i]_ext_start
-		STOP      s[set i]_ext_stop
-		SPEED     s[set i]_ext_speed
-		STEP      s[set i]_ext_step
-		DIRECTION s[set i]_ext_dir
+		ZPSIGN     s[set i]_ext_zpsign
+		TPSIGN     s[set i]_ext_tpsign
+		STATE      s[set i]_ext_state
+		RT_SPEED   s[set i]_ext_rt_speed
+		POSITION   s[set i]_ext_position
+		START      s[set i]_ext_start
+		STOP       s[set i]_ext_stop
+		SPEED      s[set i]_ext_speed
+		STEP       s[set i]_ext_step
+		DIRECTION  s[set i]_ext_dir
+		MOD_REMAIN s[set i]_ext_mod_remain
+		NEW_REMAIN s[set i]_ext_new_remain
 	}]
 	append_associate_busif clk_busif S[set i]_EXT_REQ
 

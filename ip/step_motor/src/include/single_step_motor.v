@@ -60,6 +60,8 @@ module single_step_motor #(
 	input  wire [C_SPEED_DATA_WIDTH-1:0]	ext_speed,
 	input  wire [C_STEP_NUMBER_WIDTH-1:0]	ext_step ,
 	input  wire                             ext_dir
+	input  wire                             ext_mod_remain,
+	input  wire [C_STEP_NUMBER_WIDTH-1:0]   ext_new_remain
 );
 	/// state macro
 	localparam integer IDLE = 2'b00;
@@ -245,23 +247,35 @@ module single_step_motor #(
 
 	/// step counter (i.e. block ram address)
 	always @ (posedge clk) begin
-		if (resetn == 1'b0) begin
+		if (resetn == 1'b0)
 			step_cnt    <= 0;
-			step_remain <= 0;
-		end
 		else if (clk_en) begin
 			case (motor_state)
 			IDLE: begin
-				if (start_pulse) begin
+				if (start_pulse)
 					step_cnt    <= 0;
-					step_remain <= req_step - 1;
-				end
 			end
 			RUNNING: begin
-				if (speed_cnt == 0 && o_drive == 1) begin
+				if (speed_cnt == 0 && o_drive == 1)
 					step_cnt <= step_cnt + 1;
+			end
+			endcase
+		end
+	end
+	always @ (posedge clk) begin
+		if (resetn == 1'b0)
+			step_remain <= 0;
+		else if (ext_mod_remain)
+			step_remain <= ext_new_remain;
+		else if (clk_en) begin
+			case (motor_state)
+			IDLE: begin
+				if (start_pulse)
+					step_remain <= req_step - 1;
+			end
+			RUNNING: begin
+				if (speed_cnt == 0 && o_drive == 1)
 					step_remain <= step_remain - 1;
-				end
 			end
 			endcase
 		end
@@ -486,9 +500,9 @@ endgenerate
 	end
 	endgenerate
 
-	assign ext_zpsign   = pri_zpsign;
-	assign ext_tpsign   = pri_tpsign;
-	assign ext_state    = pri_state;
+	assign ext_zpsign   = pri_zpsign  ;
+	assign ext_tpsign   = pri_tpsign  ;
+	assign ext_state    = pri_state   ;
 	assign ext_rt_speed = pri_rt_speed;
 	assign ext_position = pri_position;
 

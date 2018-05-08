@@ -81,3 +81,19 @@ pip_add_bus_abstraction_port $busabs DIRECTION {
 	slave_width 1
 	is_data true
 }
+
+# modify remain step
+pip_add_bus_abstraction_port $busabs MOD_REMAIN {
+	default_value 0
+	master_direction out
+	master_width 1
+	slave_width 1
+	is_data true
+}
+
+# new remain step (reference MOD_REMAIN)
+pip_add_bus_abstraction_port $busabs NEW_REMAIN {
+	default_value 0
+	master_direction out
+	is_data true
+}

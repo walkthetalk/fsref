@@ -52,6 +52,8 @@ module step_motor #(
 	input  wire [C_SPEED_DATA_WIDTH-1:0]  s0_ext_speed,
 	input  wire [C_STEP_NUMBER_WIDTH-1:0] s0_ext_step,
 	input  wire                           s0_ext_dir,
+	input  wire                           s0_ext_mod_remain,
+	input  wire [C_STEP_NUMBER_WIDTH-1:0] s0_ext_new_remain,
 
 	input  wire                           m1_zpd,	/// zero position detection
 	output wire                           m1_drive,
@@ -85,6 +87,8 @@ module step_motor #(
 	input  wire [C_SPEED_DATA_WIDTH-1:0]  s1_ext_speed,
 	input  wire [C_STEP_NUMBER_WIDTH-1:0] s1_ext_step,
 	input  wire                           s1_ext_dir,
+	input  wire                           s1_ext_mod_remain,
+	input  wire [C_STEP_NUMBER_WIDTH-1:0] s1_ext_new_remain,
 
 	input  wire                           m2_zpd,	/// zero position detection
 	output wire                           m2_drive,
@@ -118,6 +122,8 @@ module step_motor #(
 	input  wire [C_SPEED_DATA_WIDTH-1:0]  s2_ext_speed,
 	input  wire [C_STEP_NUMBER_WIDTH-1:0] s2_ext_step,
 	input  wire                           s2_ext_dir,
+	input  wire                           s2_ext_mod_remain,
+	input  wire [C_STEP_NUMBER_WIDTH-1:0] s2_ext_new_remain,
 
 	input  wire                           m3_zpd,	/// zero position detection
 	output wire                           m3_drive,
@@ -151,6 +157,8 @@ module step_motor #(
 	input  wire [C_SPEED_DATA_WIDTH-1:0]  s3_ext_speed,
 	input  wire [C_STEP_NUMBER_WIDTH-1:0] s3_ext_step,
 	input  wire                           s3_ext_dir,
+	input  wire                           s3_ext_mod_remain,
+	input  wire [C_STEP_NUMBER_WIDTH-1:0] s3_ext_new_remain,
 
 	input  wire                           m4_zpd,	/// zero position detection
 	output wire                           m4_drive,
@@ -184,6 +192,8 @@ module step_motor #(
 	input  wire [C_SPEED_DATA_WIDTH-1:0]  s4_ext_speed,
 	input  wire [C_STEP_NUMBER_WIDTH-1:0] s4_ext_step,
 	input  wire                           s4_ext_dir,
+	input  wire                           s4_ext_mod_remain,
+	input  wire [C_STEP_NUMBER_WIDTH-1:0] s4_ext_new_remain,
 
 	input  wire                           m5_zpd,	/// zero position detection
 	output wire                           m5_drive,
@@ -217,6 +227,8 @@ module step_motor #(
 	input  wire [C_SPEED_DATA_WIDTH-1:0]  s5_ext_speed,
 	input  wire [C_STEP_NUMBER_WIDTH-1:0] s5_ext_step,
 	input  wire                           s5_ext_dir,
+	input  wire                           s5_ext_mod_remain,
+	input  wire [C_STEP_NUMBER_WIDTH-1:0] s5_ext_new_remain,
 
 	input  wire                           m6_zpd,	/// zero position detection
 	output wire                           m6_drive,
@@ -250,6 +262,8 @@ module step_motor #(
 	input  wire [C_SPEED_DATA_WIDTH-1:0]  s6_ext_speed,
 	input  wire [C_STEP_NUMBER_WIDTH-1:0] s6_ext_step,
 	input  wire                           s6_ext_dir,
+	input  wire                           s6_ext_mod_remain,
+	input  wire [C_STEP_NUMBER_WIDTH-1:0] s6_ext_new_remain,
 
 	input  wire                           m7_zpd,	/// zero position detection
 	output wire                           m7_drive,
@@ -282,7 +296,9 @@ module step_motor #(
 	input  wire                           s7_ext_stop,
 	input  wire [C_SPEED_DATA_WIDTH-1:0]  s7_ext_speed,
 	input  wire [C_STEP_NUMBER_WIDTH-1:0] s7_ext_step,
-	input  wire                           s7_ext_dir
+	input  wire                           s7_ext_dir,
+	input  wire                           s7_ext_mod_remain,
+	input  wire [C_STEP_NUMBER_WIDTH-1:0] s7_ext_new_remain
 );
 	function integer clogb2(input integer bit_depth);
 		for(clogb2=0; bit_depth>0; clogb2=clogb2+1) begin
@@ -377,47 +393,49 @@ module step_motor #(
 	endgenerate
 
 	/// motor logic
-	localparam  MAX_MOTOR_NBR = 8;
-	wire                           m_zpd      [MAX_MOTOR_NBR-1:0];
-	wire                           m_drive    [MAX_MOTOR_NBR-1:0];
-	wire                           m_dir      [MAX_MOTOR_NBR-1:0];
-	wire [C_MICROSTEP_WIDTH-1:0]   m_ms       [MAX_MOTOR_NBR-1:0];
-	wire                           m_xen      [MAX_MOTOR_NBR-1:0];
-	wire                           m_xrst     [MAX_MOTOR_NBR-1:0];
+	wire                           m_zpd      [C_MOTOR_NBR-1:0];
+	wire                           m_drive    [C_MOTOR_NBR-1:0];
+	wire                           m_dir      [C_MOTOR_NBR-1:0];
+	wire [C_MICROSTEP_WIDTH-1:0]   m_ms       [C_MOTOR_NBR-1:0];
+	wire                           m_xen      [C_MOTOR_NBR-1:0];
+	wire                           m_xrst     [C_MOTOR_NBR-1:0];
 
-	wire                           s_xen      [MAX_MOTOR_NBR-1:0];
-	wire                           s_xrst     [MAX_MOTOR_NBR-1:0];
-	wire [C_STEP_NUMBER_WIDTH-1:0] s_stroke   [MAX_MOTOR_NBR-1:0];
-	wire [C_MICROSTEP_WIDTH-1:0]   s_ms       [MAX_MOTOR_NBR-1:0];
+	wire                           s_xen      [C_MOTOR_NBR-1:0];
+	wire                           s_xrst     [C_MOTOR_NBR-1:0];
+	wire [C_STEP_NUMBER_WIDTH-1:0] s_stroke   [C_MOTOR_NBR-1:0];
+	wire [C_MICROSTEP_WIDTH-1:0]   s_ms       [C_MOTOR_NBR-1:0];
 
-	wire                           s_zpsign   [MAX_MOTOR_NBR-1:0];
-	wire                           s_tpsign   [MAX_MOTOR_NBR-1:0];
-	wire                           s_state    [MAX_MOTOR_NBR-1:0];
-	wire [C_SPEED_DATA_WIDTH-1:0]  s_rt_speed [MAX_MOTOR_NBR-1:0];
-	wire [C_STEP_NUMBER_WIDTH-1:0] s_position [MAX_MOTOR_NBR-1:0];
-	wire                           s_start    [MAX_MOTOR_NBR-1:0];
-	wire                           s_stop     [MAX_MOTOR_NBR-1:0];
-	wire [C_SPEED_DATA_WIDTH-1:0]  s_speed    [MAX_MOTOR_NBR-1:0];
-	wire [C_STEP_NUMBER_WIDTH-1:0] s_step     [MAX_MOTOR_NBR-1:0];
-	wire                           s_dir      [MAX_MOTOR_NBR-1:0];
+	wire                           s_zpsign   [C_MOTOR_NBR-1:0];
+	wire                           s_tpsign   [C_MOTOR_NBR-1:0];
+	wire                           s_state    [C_MOTOR_NBR-1:0];
+	wire [C_SPEED_DATA_WIDTH-1:0]  s_rt_speed [C_MOTOR_NBR-1:0];
+	wire [C_STEP_NUMBER_WIDTH-1:0] s_position [C_MOTOR_NBR-1:0];
+	wire                           s_start    [C_MOTOR_NBR-1:0];
+	wire                           s_stop     [C_MOTOR_NBR-1:0];
+	wire [C_SPEED_DATA_WIDTH-1:0]  s_speed    [C_MOTOR_NBR-1:0];
+	wire [C_STEP_NUMBER_WIDTH-1:0] s_step     [C_MOTOR_NBR-1:0];
+	wire                           s_dir      [C_MOTOR_NBR-1:0];
 
-	wire                           s_ext_sel  [MAX_MOTOR_NBR-1:0];
+	wire                           s_ext_sel  [C_MOTOR_NBR-1:0];
 
-	wire                           s_ext_zpsign   [MAX_MOTOR_NBR-1:0];
-	wire                           s_ext_tpsign   [MAX_MOTOR_NBR-1:0];
-	wire                           s_ext_state    [MAX_MOTOR_NBR-1:0];
-	wire [C_SPEED_DATA_WIDTH-1:0]  s_ext_rt_speed [MAX_MOTOR_NBR-1:0];
-	wire [C_STEP_NUMBER_WIDTH-1:0] s_ext_position [MAX_MOTOR_NBR-1:0];
-	wire                           s_ext_start    [MAX_MOTOR_NBR-1:0];
-	wire                           s_ext_stop     [MAX_MOTOR_NBR-1:0];
-	wire [C_SPEED_DATA_WIDTH-1:0]  s_ext_speed    [MAX_MOTOR_NBR-1:0];
-	wire [C_STEP_NUMBER_WIDTH-1:0] s_ext_step     [MAX_MOTOR_NBR-1:0];
-	wire                           s_ext_dir      [MAX_MOTOR_NBR-1:0];
+	wire                           s_ext_zpsign   [C_MOTOR_NBR-1:0];
+	wire                           s_ext_tpsign   [C_MOTOR_NBR-1:0];
+	wire                           s_ext_state    [C_MOTOR_NBR-1:0];
+	wire [C_SPEED_DATA_WIDTH-1:0]  s_ext_rt_speed [C_MOTOR_NBR-1:0];
+	wire [C_STEP_NUMBER_WIDTH-1:0] s_ext_position [C_MOTOR_NBR-1:0];
+	wire                           s_ext_start    [C_MOTOR_NBR-1:0];
+	wire                           s_ext_stop     [C_MOTOR_NBR-1:0];
+	wire [C_SPEED_DATA_WIDTH-1:0]  s_ext_speed    [C_MOTOR_NBR-1:0];
+	wire [C_STEP_NUMBER_WIDTH-1:0] s_ext_step     [C_MOTOR_NBR-1:0];
+	wire                           s_ext_dir      [C_MOTOR_NBR-1:0];
+	wire                           s_ext_mod_remain[C_MOTOR_NBR-1:0];
+	wire [C_STEP_NUMBER_WIDTH-1:0] s_ext_new_remain[C_MOTOR_NBR-1:0];
 `define ASSIGN_M_OUT(_i, _port) assign m``_i``_``_port = m_``_port[_i]
 `define ASSIGN_M_IN(_i, _port) assign m_``_port[_i] = m``_i``_``_port
 `define ASSIGN_S_OUT(_i, _port) assign s``_i``_``_port = s_``_port[_i]
 `define ASSIGN_S_IN(_i, _port) assign s_``_port[_i] = s``_i``_``_port
 `define ASSIGN_SINGLE_MOTOR(_i) \
+	if (C_MOTOR_NBR > _i) begin \
 	`ASSIGN_M_IN(_i, zpd); \
 	`ASSIGN_M_OUT(_i, drive); \
 	`ASSIGN_M_OUT(_i, dir); \
@@ -448,16 +466,20 @@ module step_motor #(
 	`ASSIGN_S_IN(_i,  ext_stop); \
 	`ASSIGN_S_IN(_i,  ext_speed); \
 	`ASSIGN_S_IN(_i,  ext_step); \
-	`ASSIGN_S_IN(_i,  ext_dir)
-
-	`ASSIGN_SINGLE_MOTOR(0);
-	`ASSIGN_SINGLE_MOTOR(1);
-	`ASSIGN_SINGLE_MOTOR(2);
-	`ASSIGN_SINGLE_MOTOR(3);
-	`ASSIGN_SINGLE_MOTOR(4);
-	`ASSIGN_SINGLE_MOTOR(5);
-	`ASSIGN_SINGLE_MOTOR(6);
-	`ASSIGN_SINGLE_MOTOR(7);
+	`ASSIGN_S_IN(_i,  ext_dir); \
+	`ASSIGN_S_IN(_i,  ext_mod_remain); \
+	`ASSIGN_S_IN(_i,  ext_new_remain); \
+	end
+generate
+	`ASSIGN_SINGLE_MOTOR(0)
+	`ASSIGN_SINGLE_MOTOR(1)
+	`ASSIGN_SINGLE_MOTOR(2)
+	`ASSIGN_SINGLE_MOTOR(3)
+	`ASSIGN_SINGLE_MOTOR(4)
+	`ASSIGN_SINGLE_MOTOR(5)
+	`ASSIGN_SINGLE_MOTOR(6)
+	`ASSIGN_SINGLE_MOTOR(7)
+endgenerate
 
 	generate
 		for (i = 0; i < C_MOTOR_NBR; i = i+1) begin: single_motor_logic
@@ -518,22 +540,11 @@ module step_motor #(
 			.ext_stop    (s_ext_stop    [i]),
 			.ext_speed   (s_ext_speed   [i]),
 			.ext_step    (s_ext_step    [i]),
-			.ext_dir     (s_ext_dir     [i])
+			.ext_dir     (s_ext_dir     [i]),
+			.ext_mod_remain(s_ext_mod_remain[i]),
+			.ext_new_remain(s_ext_new_remain[i])
 		);
 		end	/// for
-		for (i = C_MOTOR_NBR; i < MAX_MOTOR_NBR; i = i + 1) begin: disabled_motor
-			assign m_drive   [i] = 0;
-			assign m_dir     [i] = 0;
-			assign m_ms      [i] = 0;
-			assign m_xen     [i] = 0;
-			assign m_xrst    [i] = 0;
-			assign s_zpsign  [i] = 0;
-			assign s_tpsign  [i] = 0;
-			assign s_state   [i] = 0;
-			assign s_rt_speed[i] = 0;
-			assign s_xen     [i] = 0;
-			assign s_xrst    [i] = 0;
-		end
 	endgenerate
 
 endmodule
