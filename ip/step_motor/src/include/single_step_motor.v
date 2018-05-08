@@ -59,7 +59,7 @@ module single_step_motor #(
 	input  wire                             ext_stop ,	/// pulse sync to clk
 	input  wire [C_SPEED_DATA_WIDTH-1:0]	ext_speed,
 	input  wire [C_STEP_NUMBER_WIDTH-1:0]	ext_step ,
-	input  wire                             ext_dir
+	input  wire                             ext_dir,
 	input  wire                             ext_mod_remain,
 	input  wire [C_STEP_NUMBER_WIDTH-1:0]   ext_new_remain
 );
