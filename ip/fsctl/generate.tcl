@@ -203,10 +203,19 @@ for {set i 0} {$i < 8} {incr i} {
 		enablement_dependency {spirit:decode(id('MODELPARAM_VALUE.C_STREAM_NBR')) > $i}
 	}] [subst {
 		REF_DATA     s[set i]_ref_data
+	}]
+	append_associate_busif o_clk_busif S[set i]_FSA_CTL
+
+	pip_add_bus_if $core S[set i]_FSA_RESULT [subst {
+		abstraction_type_vlnv {$VENDOR:interface:fsa_result_rtl:1.0}
+		bus_type_vlnv {$VENDOR:interface:fsa_result:1.0}
+		interface_mode {slave}
+		enablement_dependency {spirit:decode(id('MODELPARAM_VALUE.C_STREAM_NBR')) > $i}
+	}] [subst {
 		LEFT_VERTEX  s[set i]_lft_v
 		RIGHT_VERTEX s[set i]_rt_v
 	}]
-	append_associate_busif o_clk_busif S[set i]_FSA_CTL
+	append_associate_busif o_clk_busif S[set i]_FSA_RESULT
 }
 
 for {set i 0} {$i < 8} {incr i} {

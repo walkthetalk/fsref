@@ -200,6 +200,11 @@ proc creat_stream {
 		pip_connect_intf_net [subst {
 			$mname/FSA_CTL  $mname/fsa/FSA_CTL
 		}]
+
+		create_bd_intf_pin -mode Master -vlnv $VENDOR:interface:fsa_result_rtl:1.0 $mname/FSA_RESULT
+		pip_connect_intf_net [subst {
+			$mname/FSA_RESULT  $mname/fsa/FSA_RESULT
+		}]
 	}
 }
 
@@ -304,11 +309,13 @@ proc create_fscore {
 		$mname/fsctl/S0_WIN             $mname/stream0/M_WIN
 		$mname/fsctl/S0_SCALE           $mname/stream0/M_SCALE
 		$mname/fsctl/S0_FSA_CTL         $mname/stream0/FSA_CTL
+		$mname/fsctl/S0_FSA_RESULT      $mname/stream0/FSA_RESULT
 		$mname/fsctl/S1_ADDR            $mname/stream1/BUF_ADDR
 		$mname/fsctl/S1_READ            $mname/stream1/MBUF_R
 		$mname/fsctl/S1_WIN             $mname/stream1/M_WIN
 		$mname/fsctl/S1_SCALE           $mname/stream1/M_SCALE
 		$mname/fsctl/S1_FSA_CTL         $mname/stream1/FSA_CTL
+		$mname/fsctl/S1_FSA_RESULT      $mname/stream1/FSA_RESULT
 		$mname/fsctl/S0_DST             $mname/pblender/S0_POS
 		$mname/fsctl/S1_DST             $mname/pblender/S1_POS
 	}]

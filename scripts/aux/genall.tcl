@@ -13,6 +13,7 @@ set if_list [list \
 	scale_ctl \
 	mbr_rd_ctl \
 	fsa_ctl \
+	fsa_result \
 ]
 
 set ip_list [list \

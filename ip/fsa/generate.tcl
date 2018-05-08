@@ -42,6 +42,13 @@ pip_add_bus_if $core FSA_CTL [subst {
 	interface_mode slave
 }] {
 	REF_DATA    ref_data
+}
+
+pip_add_bus_if $core FSA_RESULT [subst {
+	abstraction_type_vlnv $VENDOR:interface:fsa_result_rtl:1.0
+	bus_type_vlnv $VENDOR:interface:fsa_result:1.0
+	interface_mode master
+}] {
 	DONE        ana_done
 	LEFT_VERTEX lft_v
 	RIGHT_VERTEX rt_v
