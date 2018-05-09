@@ -69,7 +69,7 @@ for {set i 0} {$i < 8} {incr i} {
 		abstraction_type_vlnv $VENDOR:interface:mutex_buffer_ctl_rtl:1.0
 		bus_type_vlnv $VENDOR:interface:mutex_buffer_ctl:1.0
 		interface_mode master
-		enablement_dependency {spirit:decode(id('MODELPARAM_VALUE.C_STREAM_NBR')) > $i}
+		enablement_dependency {\$C_STREAM_NBR > $i}
 	}] [subst {
 		SOF s[set i]_rd_en
 		IDX s[set i]_rd_buf_idx
@@ -81,7 +81,7 @@ for {set i 0} {$i < 8} {incr i} {
 		abstraction_type_vlnv xilinx.com:signal:data_rtl:1.0
 		bus_type_vlnv xilinx.com:signal:data:1.0
 		interface_mode slave
-		enablement_dependency {spirit:decode(id('MODELPARAM_VALUE.C_STREAM_NBR')) > $i}
+		enablement_dependency {\$C_STREAM_NBR > $i}
 	}] [subst {
 		DATA s[set i]_wr_done
 	}]
@@ -91,7 +91,7 @@ for {set i 0} {$i < 8} {incr i} {
 		abstraction_type_vlnv xilinx.com:signal:data_rtl:1.0
 		bus_type_vlnv xilinx.com:signal:data:1.0
 		interface_mode master
-		enablement_dependency {spirit:decode(id('MODELPARAM_VALUE.C_STREAM_NBR')) > $i}
+		enablement_dependency {\$C_STREAM_NBR > $i}
 	}] [subst {
 		DATA s[set i]_dst_bmp
 	}]
@@ -101,7 +101,7 @@ for {set i 0} {$i < 8} {incr i} {
 		abstraction_type_vlnv $VENDOR:interface:addr_array_rtl:1.0
 		bus_type_vlnv $VENDOR:interface:addr_array:1.0
 		interface_mode master
-		enablement_dependency {spirit:decode(id('MODELPARAM_VALUE.C_STREAM_NBR')) > $i}
+		enablement_dependency {\$C_STREAM_NBR > $i}
 	}] [subst {
 		ADDR0 s[set i]_buf0_addr
 		ADDR1 s[set i]_buf1_addr
@@ -114,7 +114,7 @@ for {set i 0} {$i < 8} {incr i} {
 		abstraction_type_vlnv {$VENDOR:interface:window_ctl_rtl:1.0}
 		bus_type_vlnv {$VENDOR:interface:window_ctl:1.0}
 		interface_mode {master}
-		enablement_dependency {spirit:decode(id('MODELPARAM_VALUE.C_STREAM_NBR')) > $i}
+		enablement_dependency {\$C_STREAM_NBR > $i}
 	}] [subst {
 		WIDTH  s[set i]_width
 		HEIGHT s[set i]_height
@@ -125,7 +125,7 @@ for {set i 0} {$i < 8} {incr i} {
 		abstraction_type_vlnv {$VENDOR:interface:window_ctl_rtl:1.0}
 		bus_type_vlnv {$VENDOR:interface:window_ctl:1.0}
 		interface_mode {master}
-		enablement_dependency {spirit:decode(id('MODELPARAM_VALUE.C_STREAM_NBR')) > $i}
+		enablement_dependency {\$C_STREAM_NBR > $i}
 	}] [subst {
 		LEFT    s[set i]_win_left
 		WIDTH   s[set i]_win_width
@@ -138,7 +138,7 @@ for {set i 0} {$i < 8} {incr i} {
 		abstraction_type_vlnv {$VENDOR:interface:scale_ctl_rtl:1.0}
 		bus_type_vlnv {$VENDOR:interface:scale_ctl:1.0}
 		interface_mode {master}
-		enablement_dependency {spirit:decode(id('MODELPARAM_VALUE.C_STREAM_NBR')) > $i}
+		enablement_dependency {\$C_STREAM_NBR > $i}
 	}] [subst {
 		SRC_WIDTH  s[set i]_scale_src_width
 		SRC_HEIGHT s[set i]_scale_src_height
@@ -151,7 +151,7 @@ for {set i 0} {$i < 8} {incr i} {
 		abstraction_type_vlnv {$VENDOR:interface:window_ctl_rtl:1.0}
 		bus_type_vlnv {$VENDOR:interface:window_ctl:1.0}
 		interface_mode {master}
-		enablement_dependency {spirit:decode(id('MODELPARAM_VALUE.C_STREAM_NBR')) > $i}
+		enablement_dependency {\$C_STREAM_NBR > $i}
 	}] [subst {
 		LEFT    s[set i]_dst_left
 		WIDTH   s[set i]_dst_width
@@ -164,7 +164,7 @@ for {set i 0} {$i < 8} {incr i} {
 		abstraction_type_vlnv xilinx.com:signal:reset_rtl:1.0
 		bus_type_vlnv xilinx.com:signal:reset:1.0
 		interface_mode master
-		enablement_dependency {spirit:decode(id('MODELPARAM_VALUE.C_STREAM_NBR')) > $i}
+		enablement_dependency {\$C_STREAM_NBR > $i}
 	}] [subst {
 		RST s[set i]_in_resetn
 	}] {
@@ -176,7 +176,7 @@ for {set i 0} {$i < 8} {incr i} {
 		abstraction_type_vlnv xilinx.com:signal:reset_rtl:1.0
 		bus_type_vlnv xilinx.com:signal:reset:1.0
 		interface_mode master
-		enablement_dependency {spirit:decode(id('MODELPARAM_VALUE.C_STREAM_NBR')) > $i}
+		enablement_dependency {\$C_STREAM_NBR > $i}
 	}] [subst {
 		RST s[set i]_fsa_disp_resetn
 	}] {
@@ -188,7 +188,7 @@ for {set i 0} {$i < 8} {incr i} {
 		abstraction_type_vlnv xilinx.com:signal:reset_rtl:1.0
 		bus_type_vlnv xilinx.com:signal:reset:1.0
 		interface_mode master
-		enablement_dependency {spirit:decode(id('MODELPARAM_VALUE.C_STREAM_NBR')) > $i}
+		enablement_dependency {\$C_STREAM_NBR > $i}
 	}] [subst {
 		RST s[set i]_out_resetn
 	}] {
@@ -200,7 +200,7 @@ for {set i 0} {$i < 8} {incr i} {
 		abstraction_type_vlnv {$VENDOR:interface:fsa_ctl_rtl:1.0}
 		bus_type_vlnv {$VENDOR:interface:fsa_ctl:1.0}
 		interface_mode {master}
-		enablement_dependency {spirit:decode(id('MODELPARAM_VALUE.C_STREAM_NBR')) > $i}
+		enablement_dependency {\$C_STREAM_NBR > $i}
 	}] [subst {
 		REF_DATA     s[set i]_ref_data
 	}]
@@ -210,7 +210,7 @@ for {set i 0} {$i < 8} {incr i} {
 		abstraction_type_vlnv {$VENDOR:interface:fsa_result_rtl:1.0}
 		bus_type_vlnv {$VENDOR:interface:fsa_result:1.0}
 		interface_mode {slave}
-		enablement_dependency {spirit:decode(id('MODELPARAM_VALUE.C_STREAM_NBR')) > $i}
+		enablement_dependency {\$C_STREAM_NBR > $i}
 	}] [subst {
 		LEFT_VERTEX  s[set i]_lft_v
 		RIGHT_VERTEX s[set i]_rt_v
@@ -223,7 +223,7 @@ for {set i 0} {$i < 8} {incr i} {
 		abstraction_type_vlnv {$VENDOR:interface:blockram_init_ctl_rtl:1.0}
 		bus_type_vlnv {$VENDOR:interface:blockram_init_ctl:1.0}
 		interface_mode {master}
-		enablement_dependency {spirit:decode(id('MODELPARAM_VALUE.C_BR_INITOR_NBR')) > $i}
+		enablement_dependency {\$C_BR_INITOR_NBR > $i}
 	}] [subst {
 		INIT  br[set i]_init
 		WR_EN br[set i]_wr_en
@@ -238,7 +238,7 @@ for {set i 0} {$i < 8} {incr i} {
 		abstraction_type_vlnv {$VENDOR:interface:step_motor_cfg_ctl_rtl:1.0}
 		bus_type_vlnv {$VENDOR:interface:step_motor_cfg_ctl:1.0}
 		interface_mode {master}
-		enablement_dependency {spirit:decode(id('MODELPARAM_VALUE.C_MOTOR_NBR')) > $i}
+		enablement_dependency {\$C_MOTOR_NBR > $i}
 	}] [subst {
 		XEN       motor[set i]_xen
 		XRST      motor[set i]_xrst
@@ -251,7 +251,7 @@ for {set i 0} {$i < 8} {incr i} {
 		abstraction_type_vlnv {$VENDOR:interface:step_motor_req_ctl_rtl:1.0}
 		bus_type_vlnv {$VENDOR:interface:step_motor_req_ctl:1.0}
 		interface_mode {master}
-		enablement_dependency {spirit:decode(id('MODELPARAM_VALUE.C_MOTOR_NBR')) > $i}
+		enablement_dependency {\$C_MOTOR_NBR > $i}
 	}] [subst {
 		ZPSIGN    motor[set i]_zpsign
 		TPSIGN    motor[set i]_tpsign
@@ -271,7 +271,7 @@ for {set i 0} {$i < 8} {incr i} {
 		abstraction_type_vlnv $VENDOR:interface:pwm_ctl_rtl:1.0
 		bus_type_vlnv $VENDOR:interface:pwm_ctl:1.0
 		interface_mode master
-		enablement_dependency {spirit:decode(id('MODELPARAM_VALUE.C_PWM_NBR')) > $i}
+		enablement_dependency {\$C_PWM_NBR > $i}
 	}] [subst {
 		DEF_VAL      pwm[set i]_def
 		EN           pwm[set i]_en
@@ -347,7 +347,8 @@ pip_add_bus_if $core intr {
 	INTERRUPT intr
 }
 
-# parameters
+###################################################################### parameters
+
 pip_add_usr_par $core C_CORE_VERSION {
 	display_name {Version Of IMPLEMENTATION}
 	tooltip {Version Of IMPLEMENTATION}
@@ -408,6 +409,28 @@ pip_add_usr_par $core {C_REG_IDX_WIDTH} {
 	value 8
 	value_format long
 }
+
+pip_add_usr_par $core {C_TEST} {
+	display_name {Enable Test}
+	tooltip {Enable Test}
+	widget {checkBox}
+} {
+	value_resolve_type user
+	value false
+	value_format bool
+} {
+	value false
+	value_format bool
+}
+
+gui_new $core {page "Default"} {
+	{param C_CORE_VERSION}
+	{param C_TS_WIDTH}
+	{param C_DATA_WIDTH}
+	{param C_REG_IDX_WIDTH}
+	{param C_TEST}
+}
+
 pip_add_usr_par $core {C_IMG_PBITS} {
 	display_name {Image PIXEL Bit Width}
 	tooltip {IMAGE PIXEL BIT WIDTH}
@@ -478,6 +501,14 @@ pip_add_usr_par $core {C_IMG_HDEF} {
 	value_format long
 }
 
+gui_new $core {page "Stream"} {
+	{param C_IMG_PBITS}
+	{param C_IMG_WBITS}
+	{param C_IMG_HBITS}
+	{param C_IMG_WDEF}
+	{param C_IMG_HDEF}
+}
+
 pip_add_usr_par $core {C_BUF_ADDR_WIDTH} {
 	display_name {Buffer Address Width}
 	tooltip {Buffer Address Width}
@@ -502,7 +533,7 @@ pip_add_usr_par $core {C_STREAM_NBR} {
 	value 2
 	value_format long
 	value_validation_type list
-	value_validation_list {0 1 2 3 4 5 6 7}
+	value_validation_list {0 1 2 3 4 5 6 7 8}
 } {
 	value 2
 	value_format long
@@ -524,13 +555,20 @@ pip_add_usr_par $core C_ST_ADDR {
 	value_format bitString
 }
 
+gui_new $core {page "StreamAddr"} {
+	{param C_STREAM_NBR}
+	{param C_BUF_ADDR_WIDTH}
+	{param C_ST_ADDR}
+}
+
 for {set i 0} {$i < 8} {incr i} {
 	pip_add_usr_par $core C_S[set i]_ADDR [subst {
 		display_name {stream $i address}
 		tooltip {first buffer address of stream $i}
 		widget {hexEdit}
+		show_label {false}
 	}] [subst {
-		enablement_tcl_expr {spirit:decode(id('MODELPARAM_VALUE.C_STREAM_NBR')) > $i}
+		enablement_tcl_expr {\$C_STREAM_NBR > $i}
 		value_bit_string_length 32
 		value_resolve_type user
 		value [format %#x [expr 0x3E000000 + 0x400000 * $i]]
@@ -546,8 +584,9 @@ for {set i 0} {$i < 8} {incr i} {
 		display_name {stream $i size}
 		tooltip {single buffer size of stream $i}
 		widget {hexEdit}
+		show_label {false}
 	}] [subst {
-		enablement_tcl_expr {spirit:decode(id('MODELPARAM_VALUE.C_STREAM_NBR')) > $i}
+		enablement_tcl_expr {\$C_STREAM_NBR > $i}
 		value_bit_string_length 32
 		value_resolve_type user
 		value {0x00100000}
@@ -558,6 +597,11 @@ for {set i 0} {$i < 8} {incr i} {
 		value {0x00100000}
 		value_format bitString
 	}]
+}
+
+gui_new_table $core "streamAddressTable" {page "StreamAddr"} 8 stream {
+	"address" "address" C_S _ADDR
+	"size"    "size"    C_S _SIZE
 }
 
 pip_add_usr_par $core {C_BR_INITOR_NBR} {
@@ -590,6 +634,11 @@ pip_add_usr_par $core {C_BR_ADDR_WIDTH} {
 	value_format long
 }
 
+gui_new $core {page "blockram"} {
+	{param C_BR_INITOR_NBR}
+	{param C_BR_ADDR_WIDTH}
+}
+
 pip_add_usr_par $core {C_MOTOR_NBR} {
 	display_name {Motor Number}
 	tooltip {Motor Number, must smaller than clock division number}
@@ -602,34 +651,6 @@ pip_add_usr_par $core {C_MOTOR_NBR} {
 	value_validation_list {0 1 2 3 4 5 6 7 8}
 } {
 	value 4
-	value_format long
-}
-pip_add_usr_par $core {C_PWM_NBR} {
-	display_name {PWM Number}
-	tooltip {PWM Number}
-	widget {comboBox}
-} {
-	value_resolve_type user
-	value 4
-	value_format long
-	value_validation_type list
-	value_validation_list {0 1 2 3 4 5 6 7 8}
-} {
-	value 4
-	value_format long
-}
-pip_add_usr_par $core {C_PWM_CNT_WIDTH} {
-	display_name {PWM Counter Width}
-	tooltip {PWM Counter Width}
-	widget {comboBox}
-} {
-	value_resolve_type user
-	value 16
-	value_format long
-	value_validation_type list
-	value_validation_list {1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16}
-} {
-	value 16
 	value_format long
 }
 pip_add_usr_par $core {C_ZPD_SEQ} {
@@ -691,15 +712,44 @@ pip_add_usr_par $core {C_MICROSTEP_WIDTH} {
 	value_format long
 }
 
-pip_add_usr_par $core {C_TEST} {
-	display_name {Enable Test}
-	tooltip {Enable Test}
-	widget {checkBox}
+gui_new $core {page "motor"} {
+	{param C_MOTOR_NBR}
+	{param C_ZPD_SEQ}
+	{param C_STEP_NUMBER_WIDTH}
+	{param C_SPEED_DATA_WIDTH}
+	{param C_MICROSTEP_WIDTH}
+}
+
+pip_add_usr_par $core {C_PWM_NBR} {
+	display_name {PWM Number}
+	tooltip {PWM Number}
+	widget {comboBox}
 } {
 	value_resolve_type user
-	value false
-	value_format bool
+	value 4
+	value_format long
+	value_validation_type list
+	value_validation_list {0 1 2 3 4 5 6 7 8}
 } {
-	value false
-	value_format bool
+	value 4
+	value_format long
+}
+pip_add_usr_par $core {C_PWM_CNT_WIDTH} {
+	display_name {PWM Counter Width}
+	tooltip {PWM Counter Width}
+	widget {comboBox}
+} {
+	value_resolve_type user
+	value 16
+	value_format long
+	value_validation_type list
+	value_validation_list {1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16}
+} {
+	value 16
+	value_format long
+}
+
+gui_new $core {page "pwm"} {
+	{param C_PWM_NBR}
+	{param C_PWM_CNT_WIDTH}
 }

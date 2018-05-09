@@ -253,6 +253,140 @@ proc get_associate_busif {
 	return $locvar
 }
 
+proc __gui_add_page {
+	core_inst
+	page_name
+	{disp_name ""}
+	{parent_info {}}
+} {
+	if {$disp_name == ""} {
+		set disp_name $page_name
+	}
+
+	ipgui::add_page -name $page_name \
+		-component $core_inst \
+		-display_name $disp_name \
+		-parent [__gui_get_ele $core_inst $parent_info]
+}
+
+proc __gui_get_ele {
+	core_inst
+	ele_info
+} {
+	puts "get ele: $core_inst            $ele_info"
+	if {[llength $ele_info] == 0} {
+		return nullptr
+	}
+
+	set ele_type [__get_type $ele_info]
+	if {$ele_type == "param"} {
+		set ele_type guiparam
+	}
+	set ele_name [__get_name $ele_info]
+
+	return [ipgui::get_[set ele_type]spec \
+		-name [set ele_name] \
+		-component $core_inst]
+}
+
+proc __gui_add_group {
+	core_inst
+	group_name
+	{disp_name ""}
+	{parent_info {}}
+	{layout_dir vertical}
+} {
+	if {$disp_name == ""} {
+		set disp_name $group_name
+	}
+
+	ipgui::add_group -name $group_name \
+		-component $core_inst \
+		-parent [__gui_get_ele $core_inst $parent_info] \
+		-display_name $disp_name -layout $layout_dir
+}
+
+proc __gui_add_static_text {
+	core_inst
+	ele_name
+	disp_name
+	{parent_info {}}
+} {
+	ipgui::add_static_text -name $ele_name \
+		-component $core_inst \
+		-parent [__gui_get_ele $core_inst $parent_info] \
+		-text $disp_name
+}
+
+proc __get_type {ele_info} {
+	return [lindex $ele_info 0]
+}
+proc __get_name {ele_info} {
+	return [lindex $ele_info 1]
+}
+
+proc __gui_move {
+	core_inst
+	src_info
+	parent_info
+	{order_num 0}
+} {
+	ipgui::move_[__get_type $src_info] -component $core_inst -order $order_num \
+		[__gui_get_ele $core_inst $src_info] \
+		-parent [__gui_get_ele $core_inst $parent_info]
+}
+
+proc lambda {arguments expression} {
+    list ::apply [list $arguments [list expr $expression]]
+}
+
+proc gui_new_table {
+	core_inst
+	table_name
+	parent_info
+	row_num
+	index_prefix
+	columns_info
+} {
+	puts "table          __gui_add_group"
+	__gui_add_group $core_inst $table_name $table_name $parent_info horizontal
+
+	# index column name
+	set icn [set table_name]_index
+	puts "table          __gui_add_group $icn"
+	__gui_add_group $core_inst $icn "" [subst {group $table_name}] vertical
+	puts "table          __gui_add_group 3"
+	for {set i 0} {$i < $row_num} {incr i} {
+		__gui_add_static_text $core_inst \
+			$index_prefix[set i] \
+			$index_prefix[set i] \
+			[subst {group $icn}]
+	}
+
+	puts "start          comlumns"
+	foreach {t td prefix postfix} $columns_info {
+		puts "$t $td $prefix $postfix"
+		puts "start"
+		__gui_add_group $core_inst $t $td [subst {group $table_name}] vertical
+		for {set i 0} {$i < $row_num} {incr i} {
+			__gui_move $core_inst \
+				[subst {param $prefix[set i]$postfix}] \
+				[subst {group $t}] $i
+		}
+	}
+}
+
+proc gui_new {
+	core_inst
+	dst_info
+	{ele_list {}}
+} {
+	__gui_add_[lindex $dst_info 0] $core_inst {*}[lrange $dst_info 1 end]
+	foreach ele [lreverse $ele_list] {
+		__gui_move $core_inst $ele $dst_info
+	}
+}
+
 proc NEW_CORE {
 	root_dir
 	{disp_name ""}
@@ -302,6 +436,8 @@ proc NEW_CORE {
 		-top_level_hdl_file src/$core_name.v \
 		-include_dirs src/include \
 		$core
+
+	ipgui::remove_page -component $core [ipgui::get_pagespec -name "Page 0" -component $core ]
 
 	return $core
 }
