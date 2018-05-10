@@ -84,6 +84,9 @@ set ip_list [list \
 	fsa \
 		{Fusion Splicer Image Analyzer} \
 		{Fusion Splicer Image Analyzer} \
+	fscpu \
+		{Fusion Splicer CPU} \
+		{Fusion Splicer CPU} \
 ]
 
 if { $argc eq 1 } {
