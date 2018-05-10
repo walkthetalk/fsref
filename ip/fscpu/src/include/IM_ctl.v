@@ -157,16 +157,16 @@ module IM_ctl # (
 	end
 //////////////////////////////// delay4 ////////////////////////////////////////
 
-	reg pos_needback_d4;
+	//reg pos_needback_d4;
 	reg pos_ok_d4;
 	always @ (posedge clk) begin
 		if (resetn == 1'b0) begin
 			pos_ok_d4 <= 0;
-			pos_needback_d4 <= 0;
+			//pos_needback_d4 <= 0;
 		end
 		else if (pen_d3) begin
 			pos_ok_d4 <= pos_ok;
-			pos_needback_d4 <= pos_needback;
+			//pos_needback_d4 <= pos_needback;
 		end
 	end
 

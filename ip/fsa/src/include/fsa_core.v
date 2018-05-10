@@ -174,7 +174,7 @@ module fsa_core #(
 	reg [C_PIXEL_WIDTH-1:0] tdata_p3;
 	reg wfirst_p3;
 	reg wlast_p3;
-	reg plast_p3;
+	//reg plast_p3;
 	reg hfirst_p3;
 	reg hlast_p3;
 	reg [C_IMG_HW-1:0] y_p3;
@@ -186,7 +186,7 @@ module fsa_core #(
 			tdata_p3    <= 0;
 			wfirst_p3   <= 0;
 			wlast_p3    <= 0;
-			plast_p3    <= 0;
+			//plast_p3    <= 0;
 			hfirst_p3   <= 0;
 			hlast_p3    <= 0;
 			y_p3        <= 0;
@@ -196,7 +196,7 @@ module fsa_core #(
 			rd_en_d3    <= rd_en_d2;
 			x_d3        <= x_d2;
 			tdata_p3    <= tdata_p2;
-			plast_p3    <= plast_p2 ;
+			//plast_p3    <= plast_p2 ;
 			wfirst_p3   <= wfirst_p2;
 			wlast_p3    <= wlast_p2;
 			hfirst_p3   <= hfirst_p2;
