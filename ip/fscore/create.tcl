@@ -225,7 +225,7 @@ proc create_fscore {
 	{fifo_aximm_depth 128}
 	{motor_step_width 32}
 	{motor_speed_width 32}
-	{motor_br_addr_width 10}
+	{motor_br_addr_width 12}
 	{motor_ms_width 3}
 	{ts_width 64}
 } {
@@ -293,8 +293,8 @@ proc create_fscore {
 		CONFIG.C_S0_SIZE 0x00100000 \
 		CONFIG.C_S1_ADDR 0x3F400000 \
 		CONFIG.C_S1_SIZE 0x00100000 \
-		CONFIG.C_BR_INITOR_NBR 2 \
-		CONFIG.C_BR_ADDR_WIDTH $motor_br_addr_width \
+		CONFIG.C_BR_INITOR_NBR 3 \
+		CONFIG.C_BR_ADDR_WIDTH [expr max($motor_br_addr_width, $img_w_width, $img_h_width)] \
 		CONFIG.C_MOTOR_NBR 4 \
 		CONFIG.C_ZPD_SEQ {"0011"} \
 		CONFIG.C_STEP_NUMBER_WIDTH $motor_step_width \
@@ -302,6 +302,14 @@ proc create_fscore {
 		CONFIG.C_MICROSTEP_WIDTH $motor_ms_width \
 		CONFIG.C_PWM_NBR 2 \
 	] [get_bd_cells $mname/fsctl]
+
+	create_bd_cell -type ip -vlnv $VENDOR:$LIBRARY:fscpu:$VERSION $mname/fscpu
+	set_property -dict [list \
+		CONFIG.C_IMG_WW $img_w_width \
+		CONFIG.C_IMG_HW $img_h_width \
+		CONFIG.C_STEP_NUMBER_WIDTH $motor_step_width \
+		CONFIG.C_SPEED_DATA_WIDTH $motor_speed_width \
+	] [get_bd_cells $mname/fscpu]
 
 	pip_connect_intf_net [subst {
 		$mname/axilite2regctl/M_REG_CTL $mname/fsctl/S_REG_CTL
@@ -323,13 +331,21 @@ proc create_fscore {
 		$mname/fsctl/S1_FSA_RESULT      $mname/stream1/FSA_RESULT
 		$mname/fsctl/S0_DST             $mname/pblender/S0_POS
 		$mname/fsctl/S1_DST             $mname/pblender/S1_POS
+		$mname/fsctl/BR2_INIT_CTL	$mname/fscpu/BPM_INIT
+		$mname/fsctl/REQ0_CTL           $mname/fscpu/REQ_CTL
+		$mname/stream0/FSA_RESULT_EXT   $mname/fscpu/FSA_RESULT
+		$mname/fscpu/Ml_REQ             $mname/push_motor/S0_EXT_REQ
+		$mname/fscpu/Mr_REQ             $mname/push_motor/S1_EXT_REQ
 	}]
+
 	pip_connect_net [subst {
 		$mname/fsctl/st_addr            $mname/pvdma_T/MBUF_R_addr
 		$mname/fsctl/s0_dst_bmp         $mname/pblender/s0_dst_bmp
 		$mname/fsctl/s1_dst_bmp         $mname/pblender/s1_dst_bmp
 		$mname/fsctl/s0_wr_done         $mname/stream0/wr_done
 		$mname/fsctl/s1_wr_done         $mname/stream1/wr_done
+		$mname/fscpu/ml_sel             $mname/push_motor/s0_ext_sel
+		$mname/fscpu/mr_sel             $mname/push_motor/s1_ext_sel
 	}]
 
 	# external interface
@@ -390,10 +406,11 @@ proc create_fscore {
 
 	pip_connect_pin $mname/fsctl/s0_in_resetn       $mname/stream0/s_resetn
 	pip_connect_pin $mname/fsctl/s0_fsa_disp_resetn $mname/stream0/fsa_disp_resetn
-	pip_connect_pin $mname/fsctl/s0_out_resetn     $mname/stream0/m_resetn
+	pip_connect_pin $mname/fsctl/s0_out_resetn      $mname/stream0/m_resetn
 	pip_connect_pin $mname/fsctl/s1_in_resetn       $mname/stream1/s_resetn
 	pip_connect_pin $mname/fsctl/s1_fsa_disp_resetn $mname/stream1/fsa_disp_resetn
-	pip_connect_pin $mname/fsctl/s1_out_resetn     $mname/stream1/m_resetn
+	pip_connect_pin $mname/fsctl/s1_out_resetn      $mname/stream1/m_resetn
+	pip_connect_pin $mname/fscpu/resetn             $mname/fsctl/reqctl0_resetn
 
 	# external signal
 	create_bd_pin -dir I $mname/s_axi_clk
@@ -427,6 +444,7 @@ proc create_fscore {
 		$mname/align_motor/clk
 		$mname/pwm0/clk
 		$mname/pwm1/clk
+		$mname/fscpu/clk
 	}]
 	create_bd_pin -dir I $mname/resetn
 	pip_connect_pin $mname/resetn [subst {
