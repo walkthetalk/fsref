@@ -14,6 +14,7 @@ set if_list [list \
 	mbr_rd_ctl \
 	fsa_ctl \
 	fsa_result \
+	req_ctl \
 ]
 
 set ip_list [list \
