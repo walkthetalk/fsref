@@ -281,6 +281,21 @@ for {set i 0} {$i < 8} {incr i} {
 	append_associate_busif o_clk_busif PWM[set i]_CTL
 }
 
+for {set i 0} {$i < 1} {incr i} {
+	pip_add_bus_if $core REQ[set i]_CTL [subst {
+		abstraction_type_vlnv $VENDOR:interface:req_ctl_rtl:1.0
+		bus_type_vlnv $VENDOR:interface:req_ctl:1.0
+		interface_mode master
+	}] [subst {
+		EN           reqctl[set i]_en
+		CMD          reqctl[set i]_cmd
+		PARAM        reqctl[set i]_param
+		DONE         reqctl[set i]_done
+		ERR          reqctl[set i]_err
+	}]
+	append_associate_busif o_clk_busif REQ[set i]_CTL
+}
+
 # clock & reset
 pip_add_bus_if $core resetn {
 	abstraction_type_vlnv xilinx.com:signal:reset_rtl:1.0
@@ -314,6 +329,17 @@ pip_add_bus_if $core o_resetn {
 	POLARITY {ACTIVE_LOW}
 }
 append_associate_busif o_clk_reset o_resetn
+
+pip_add_bus_if $core reqctl0_resetn {
+	abstraction_type_vlnv xilinx.com:signal:reset_rtl:1.0
+	bus_type_vlnv xilinx.com:signal:reset:1.0
+	interface_mode slave
+} {
+	RST reqctl0_resetn
+} {
+	POLARITY {ACTIVE_LOW}
+}
+append_associate_busif o_clk_reset reqctl0_resetn
 
 # stream resetn
 pip_add_bus_if $core st_out_resetn {

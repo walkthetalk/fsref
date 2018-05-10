@@ -789,6 +789,17 @@ class VIfPwmCtl(VIntface):
 		self._addPort({'ftype': 'cfg',     'iotype': 'output', 'name': 'numerator',   'width': dictData["ndwidth"] })
 		self._addPort({'ftype': 'cfg',     'iotype': 'output', 'name': 'denominator', 'width': dictData["ndwidth"] })
 
+class VIfReqCtl(VIntface):
+	def __init__(self, dictData):
+		super(VIfReqCtl, self).__init__(dictData)
+
+		self._addPort({'ftype': 'cfg',     'iotype': 'output', 'name': 'resetn'})
+		self._addPort({'ftype': 'cfg',     'iotype': 'output', 'name': 'en'})
+		self._addPort({'ftype': 'cfg',     'iotype': 'output', 'name': 'cmd',   'width': "32"})
+		self._addPort({'ftype': 'cfg',     'iotype': 'output', 'name': 'param', 'width': "128"})
+		self._addPort({'ftype': 'inro',    'iotype': 'input',  'name': 'done'})
+		self._addPort({'ftype': 'inro',    'iotype': 'input',  'name': 'err',   'width': "32"})
+
 class VerilogModuleFile:
 	def __init__(self, name):
 		self.name = name
@@ -1000,6 +1011,13 @@ class VMFsctl(VerilogModuleFile):
 			"comments": "pwm interface",
 			"ndwidth": 'C_PWM_CNT_WIDTH',
 			'indsel': 'pwm_sel'
+		})
+
+		self.addExtInterface("VIfReqCtl", {
+			"name": "reqctl",
+			"size": "1",
+			"realsize": "1",
+			"comments": "request to fscpu"
 		})
 	def __addlocalparams(self):
 		self.addLocalparam({ "name": "C_REG_NUM", "comments": "register number", "defV": "2**C_REG_IDX_WIDTH" })
@@ -1470,6 +1488,38 @@ class VMFsctl(VerilogModuleFile):
 		ridx += 1
 		ret += suppcomment(lvl, str4regdefcomment(ridx))
 		ret += suppreadreg0(lvl, ridx)
+
+
+		intf = self.getif('reqctl')
+
+		ridx += 1
+		ret += suppcomment(lvl, str4regdefcomment(ridx))
+		ret += drc_rw(lvl, ridx, 0, 1, str4array(intf.name, 'resetn') + '[0]')
+
+		ridx += 1
+		ret += suppcomment(lvl, str4regdefcomment(ridx))
+		ret += drc_ro(lvl, ridx, 0, 1, str4array(intf.name, 'done') + '[0]')
+
+		ridx += 1
+		ret += suppcomment(lvl, str4regdefcomment(ridx))
+		ret += drc_ro(lvl, ridx, 0, 32, str4array(intf.name, 'err') + '[0]')
+
+		ridx += 1
+		ret += suppcomment(lvl, str4regdefcomment(ridx))
+		ret += drc_wo(lvl, ridx, 0, 1, str4array(intf.name, 'en') + '[0]', 0, 'true')
+		#ret += suppreadreg0(lvl, ridx)
+
+		ridx += 1
+		ret += suppcomment(lvl, str4regdefcomment(ridx))
+		ret += drc_wo(lvl, ridx, 0, 1, str4array(intf.name, 'cmd') + '[0]', 0, 'true')
+		#ret += suppreadreg0(lvl, ridx)
+
+		for i in range(0,128,32):
+			ridx += 1
+			ret += suppcomment(lvl, str4regdefcomment(ridx))
+			strtemp = '[' + str(i + 31) + ':' + str(i) + ']'
+			ret += drc_wo(lvl, ridx, 0, 1, str4array(intf.name, 'param') + '[0]' + strtemp, 0, 'true')
+			#ret += suppreadreg0(lvl, ridx)
 
 		ridx += 1
 		ret += suppline(lvl, str4loopheader(ridx, 'C_REG_NUM', 'remain_regs', 'i'))
