@@ -12,7 +12,7 @@ module fscpu #(
 	input  wire                           bpm_init,
 	input  wire                           bpm_wr_en,
 	input  wire [C_SPEED_DATA_WIDTH-1:0]  bpm_data,
-	output wire [C_IMG_WW-1:0]            bpm_size,
+	output wire [C_IMG_WW:0]              bpm_size,
 
 	input  wire         req_en  ,
 	input  wire [ 31:0] req_cmd ,
