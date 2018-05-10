@@ -227,11 +227,11 @@ generate
 endgenerate
 
 	/////////////////////////////////// read side //////////////////////////
-	reg   r_tvalid;  assign m_axis_tvalid = r_tvalid;
-	wire [FIFO_DW-FD_DATA-1:0] r_tdata;   assign m_axis_tdata  = r_tdata;
-	wire  r_tuser;   assign m_axis_tuser  = r_tuser;
-	wire  r_tlast;   assign m_axis_tlast  = r_tlast;
-	wire  r_tready;  assign r_tready      = m_axis_tready;
+	reg   r_tvalid;
+	wire [FIFO_DW-FD_DATA-1:0] r_tdata;
+	wire  r_tuser;
+	wire  r_tlast;
+	wire  r_tready;
 	assign fr_en = (~r_tvalid || r_tready) && ~fr_empty;
 	always @ (posedge clk) begin
 		if (resetn == 1'b0)
@@ -244,4 +244,23 @@ endgenerate
 	assign r_tdata = fr_data[FIFO_DW-1:FD_DATA];
 	assign r_tuser = fr_data[FD_SOF];
 	assign r_tlast = fr_data[FD_LAST];
+
+	axis_relay # (
+		.C_PIXEL_WIDTH(C_OUT_DW + C_TEST)
+	) relay_inst (
+		.clk(clk),
+		.resetn(resetn),
+
+		.s_axis_tvalid(r_tvalid),
+		.s_axis_tdata (r_tdata ),
+		.s_axis_tuser (r_tuser ),
+		.s_axis_tlast (r_tlast ),
+		.s_axis_tready(r_tready),
+
+		.m_axis_tvalid(m_axis_tvalid),
+		.m_axis_tdata (m_axis_tdata ),
+		.m_axis_tuser (m_axis_tuser ),
+		.m_axis_tlast (m_axis_tlast ),
+		.m_axis_tready(m_axis_tready)
+	);
 endmodule
