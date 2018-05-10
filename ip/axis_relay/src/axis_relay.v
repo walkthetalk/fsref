@@ -1,26 +1,8 @@
 `timescale 1ns / 1ps
-//////////////////////////////////////////////////////////////////////////////////
-// Company:
-// Engineer:
-//
-// Create Date: 11/18/2016 01:33:37 PM
-// Design Name:
-// Module Name: scaler
-// Project Name:
-// Target Devices:
-// Tool Versions:
-// Description:
-//
-// Dependencies:
-//
-// Revision:
-// Revision 0.01 - File Created
-// Additional Comments:
-//
-//////////////////////////////////////////////////////////////////////////////////
 module axis_relay #
 (
 	parameter integer C_PIXEL_WIDTH = 8,
+	parameter integer C_PASSTHROUGH = 0,
 	parameter integer C_TEST = 0
 ) (
 	input  wire clk,
@@ -31,7 +13,7 @@ module axis_relay #
 	input  wire [C_PIXEL_WIDTH-1:0] s_axis_tdata ,
 	input  wire                     s_axis_tuser ,
 	input  wire                     s_axis_tlast ,
-	output reg                      s_axis_tready,
+	output wire                     s_axis_tready,
 
 	output wire                     m_axis_tvalid,
 	output wire [C_PIXEL_WIDTH-1:0] m_axis_tdata ,
@@ -40,6 +22,15 @@ module axis_relay #
 	input  wire                     m_axis_tready
 );
 
+generate
+if (C_PASSTHROUGH) begin
+	assign m_axis_tvalid = s_axis_tvalid;
+	assign m_axis_tdata  = s_axis_tdata ;
+	assign m_axis_tlast  = s_axis_tlast ;
+	assign m_axis_tuser  = s_axis_tuser ;
+	assign s_axis_tready = m_axis_tready;
+end
+else begin
 	reg                     relay_tvalid[1:0];
 	reg [C_PIXEL_WIDTH-1:0] relay_tdata[1:0];
 	reg                     relay_tuser[1:0];
@@ -106,19 +97,22 @@ module axis_relay #
 		end
 	end
 
+	reg r_s_axis_tready;
+	assign s_axis_tready = r_s_axis_tready;
 	always @ (posedge clk) begin
 		if (resetn == 1'b0)
-			s_axis_tready <= 0;
+			r_s_axis_tready <= 0;
 		else begin
 			case ({relay_tvalid[1], relay_tvalid[0]})
 			2'b00, 2'b10:
-				s_axis_tready <= 1;
+				r_s_axis_tready <= 1;
 			2'b01:
-				s_axis_tready <= (~s_axis_tready || m_axis_tready);
+				r_s_axis_tready <= (~r_s_axis_tready || m_axis_tready);
 			2'b11:
-				s_axis_tready <= (~s_axis_tready && m_axis_tready);
+				r_s_axis_tready <= (~r_s_axis_tready && m_axis_tready);
 			endcase
 		end
 	end
-
+end
+endgenerate
 endmodule
