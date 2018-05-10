@@ -210,7 +210,7 @@ pip_add_usr_par $core {C_SPEED_ADDRESS_WIDTH} {
 	value 10
 	value_format long
 	value_validation_type list
-	value_validation_list {5 6 7 8 9 10}
+	value_validation_list {5 6 7 8 9 10 11 12}
 } {
 	value 10
 	value_format long
