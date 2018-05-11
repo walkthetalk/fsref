@@ -4,36 +4,33 @@ module block_ram #(
 )(
 	input clk,
 
-	input  wire                     wr_resetn,
-	input  wire                     wr_en,
-	input  wire [C_DATA_WIDTH-1:0]  wr_data,
-	output wire [C_ADDRESS_WIDTH:0] size,
-
-	input wire reA,
+	input wire weA,
+	input wire [(C_DATA_WIDTH-1):0] dataA,
 	input wire [(C_ADDRESS_WIDTH-1):0] addrA,
 	output reg [(C_DATA_WIDTH-1):0] qA,
 
-	input wire reB,
+	input wire weB,
 	input wire [(C_ADDRESS_WIDTH-1):0] addrB,
+	input wire [(C_DATA_WIDTH-1):0] dataB,
 	output reg [(C_DATA_WIDTH-1):0] qB
 );
 	reg [C_DATA_WIDTH-1:0] ram[2**C_ADDRESS_WIDTH-1:0];
 
-	assign size = (2**C_ADDRESS_WIDTH);
-	reg  [C_ADDRESS_WIDTH-1 : 0] wr_addr;
 	always @ (posedge clk) begin
-		if (wr_resetn == 1'b0)
-			wr_addr <= 0;
-		else if (wr_en)
-			wr_addr <= wr_addr + 1;
+		if (weA) begin
+			ram[addrA] <= dataA;
+			qA <= dataA;
+		end
+		else
+			qA <= ram[addrA];
 	end
 
 	always @ (posedge clk) begin
-		if (wr_resetn && wr_en)
-			ram[wr_addr] <= wr_data;
-		if (reA)
-			qA <= ram[addrA];
-		if (reB)
+		if (weB) begin
+			ram[addrB] <= dataB;
+			qB <= dataB;
+		end
+		else
 			qB <= ram[addrB];
 	end
 

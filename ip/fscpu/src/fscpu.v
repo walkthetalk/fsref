@@ -97,13 +97,14 @@ module fscpu #(
 			r_req_done <= 1;
 	end
 	////////////////// block ram //////////////////////////////
-	wire                          bpm_reA  ;	/// blockram for push motor
+	//wire                          bpm_reA  ;	/// blockram for push motor
 	wire [C_IMG_WW-1:0]           bpm_addrA;
 	wire[C_STEP_NUMBER_WIDTH-1:0] bpm_qA   ;
-	wire                          bpm_reB  ;
+	//wire                          bpm_reB  ;
 	wire[C_IMG_WW-1:0]            bpm_addrB;
 	wire[C_STEP_NUMBER_WIDTH-1:0] bpm_qB   ;
-	block_ram # (
+
+	block_ram_container # (
 		.C_DATA_WIDTH(C_STEP_NUMBER_WIDTH),
 		.C_ADDRESS_WIDTH(C_IMG_WW)
 	) br4pushmotor (
@@ -114,18 +115,16 @@ module fscpu #(
 		.wr_data  (bpm_data ),
 		.size     (bpm_size ),
 
-		.reA  (bpm_reA  ),
+		//.reA  (bpm_reA  ),
 		.addrA(bpm_addrA),
 		.qA   (bpm_qA   ),
 
-		.reB  (bpm_reB  ),
+		//.reB  (bpm_reB  ),
 		.addrB(bpm_addrB),
 		.qB   (bpm_qB   )
 	);
 
 	////////////////// lft motor //////////////////////////////
-	reg  lft_im_ctl_resetn;
-	wire lft_im_ctl_done;
 	IM_ctl # (
 		.C_IMG_WW(C_IMG_WW),
 		.C_IMG_HW(C_IMG_HW),
@@ -164,14 +163,12 @@ module fscpu #(
 		.m_mod_remain(ml_mod_remain),
 		.m_new_remain(ml_new_remain),
 
-		.rd_en  (bpm_reA  ),
+		//.rd_en  (bpm_reA  ),
 		.rd_addr(bpm_addrA),
 		.rd_data(bpm_qA   )
 	);
 
 	/////////////////// rt motor //////////////////////////////
-	reg  rt_im_ctl_resetn;
-	wire rt_im_ctl_done;
 	IM_ctl # (
 		.C_IMG_WW(C_IMG_WW),
 		.C_IMG_HW(C_IMG_HW),
@@ -207,7 +204,7 @@ module fscpu #(
 		.m_mod_remain(mr_mod_remain),
 		.m_new_remain(mr_new_remain),
 
-		.rd_en  (bpm_reB  ),
+		//.rd_en  (bpm_reB  ),
 		.rd_addr(bpm_addrB),
 		.rd_data(bpm_qB   )
 	);
