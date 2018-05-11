@@ -10,7 +10,7 @@ module IM_ctl # (
 
 	output reg          exe_done,
 
-	input wire [31:0]   img_delay_cnt;
+	input wire [31:0]   img_delay_cnt,
 
 	input wire                req_single_dir,
 	input wire                req_dir_back,

@@ -6,12 +6,12 @@ module fscpu #(
 	parameter integer C_SPEED_DATA_WIDTH = 32,
 	parameter integer C_STEP_NUMBER_WIDTH = 32
 )(
-	input	clk,
-	input	resetn,
+	input  wire clk,
+	input  wire resetn,
 
 	input  wire                           bpm_init,
 	input  wire                           bpm_wr_en,
-	input  wire [C_SPEED_DATA_WIDTH-1:0]  bpm_data,
+	input  wire [C_STEP_NUMBER_WIDTH-1:0] bpm_data,
 	output wire [C_IMG_WW:0]              bpm_size,
 
 	input  wire         req_en  ,
@@ -30,6 +30,7 @@ module fscpu #(
 	input  wire                           ml_zpsign  ,
 	input  wire                           ml_tpsign  ,
 	input  wire                           ml_state   ,
+	input  wire [C_SPEED_DATA_WIDTH-1:0]  ml_rt_speed,
 	input  wire [C_STEP_NUMBER_WIDTH-1:0] ml_position,
 	output wire                           ml_start   ,
 	output wire                           ml_stop    ,
@@ -43,6 +44,7 @@ module fscpu #(
 	input  wire                           mr_zpsign  ,
 	input  wire                           mr_tpsign  ,
 	input  wire                           mr_state   ,
+	input  wire [C_SPEED_DATA_WIDTH-1:0]  mr_rt_speed,
 	input  wire [C_STEP_NUMBER_WIDTH-1:0] mr_position,
 	output wire                           mr_start   ,
 	output wire                           mr_stop    ,
@@ -173,11 +175,14 @@ module fscpu #(
 		.C_IMG_WW(C_IMG_WW),
 		.C_IMG_HW(C_IMG_HW),
 		.C_STEP_NUMBER_WIDTH(C_STEP_NUMBER_WIDTH),
+		.C_SPEED_DATA_WIDTH (C_SPEED_DATA_WIDTH ),
 		.C_L2R(0)
 	) rt_motor_ctl (
 		.clk   (clk   ),
 		.resetn  (dev_oper_bmp[DEV_MOTOR_RT]),
 		.exe_done(req_done_bmp[DEV_MOTOR_RT]),
+
+		.img_delay_cnt(cfg_img_delay_cnt),
 
 		.req_single_dir(req_par0[0]),
 		.req_dir_back  (req_par0[1]),
