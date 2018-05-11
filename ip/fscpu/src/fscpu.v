@@ -64,10 +64,13 @@ module fscpu #(
 	wire [31:0] req_done_bmp;
 
 	reg  [31:0] cfg_img_delay_cnt;
-	localparam integer DEV_MOTOR_LFT = 1;
-	localparam integer DEV_MOTOR_RT = 2;
-	localparam integer DEV_MOTOR_X = 4;
-	localparam integer DEV_MOTOR_Y = 8;
+	localparam integer DBIT_MOTOR_LFT = 0;
+	localparam integer DBIT_MOTOR_RT  = 1;
+	localparam integer DBIT_MOTOR_X   = 2;
+	localparam integer DBIT_MOTOR_Y   = 3;
+
+	`define DIDX(_x) DBIT_``_x
+	`define DBIT(_x) (1 << DBIT_``_x)
 	always @ (posedge clk) begin
 		if (resetn == 1'b0)
 			dev_oper_bmp <= 0;
@@ -77,9 +80,9 @@ module fscpu #(
 				dev_oper_bmp      <= 0;
 				cfg_img_delay_cnt <= req_par0;
 			end
-			1: dev_oper_bmp <= DEV_MOTOR_LFT;
-			2: dev_oper_bmp <= DEV_MOTOR_RT;
-			3: dev_oper_bmp <= (DEV_MOTOR_LFT | DEV_MOTOR_RT);
+			1: dev_oper_bmp <= `DBIT(MOTOR_LFT);
+			2: dev_oper_bmp <= `DBIT(MOTOR_RT);
+			3: dev_oper_bmp <= (`DBIT(MOTOR_LFT) | `DBIT(MOTOR_RT));
 			default:
 				dev_oper_bmp <= 0;
 			endcase
@@ -135,8 +138,8 @@ module fscpu #(
 		.C_L2R(1)
 	) lft_motor_ctl (
 		.clk          (clk   ),
-		.resetn       (dev_oper_bmp[DEV_MOTOR_LFT]),
-		.exe_done     (req_done_bmp[DEV_MOTOR_LFT]),
+		.resetn       (dev_oper_bmp[`DIDX(MOTOR_LFT)]),
+		.exe_done     (req_done_bmp[`DIDX(MOTOR_LFT)]),
 
 		.img_delay_cnt(cfg_img_delay_cnt),
 
@@ -178,9 +181,9 @@ module fscpu #(
 		.C_SPEED_DATA_WIDTH (C_SPEED_DATA_WIDTH ),
 		.C_L2R(0)
 	) rt_motor_ctl (
-		.clk   (clk   ),
-		.resetn  (dev_oper_bmp[DEV_MOTOR_RT]),
-		.exe_done(req_done_bmp[DEV_MOTOR_RT]),
+		.clk          (clk   ),
+		.resetn       (dev_oper_bmp[`DIDX(MOTOR_RT)]),
+		.exe_done     (req_done_bmp[`DIDX(MOTOR_RT)]),
 
 		.img_delay_cnt(cfg_img_delay_cnt),
 
