@@ -1511,7 +1511,7 @@ class VMFsctl(VerilogModuleFile):
 
 		ridx += 1
 		ret += suppcomment(lvl, str4regdefcomment(ridx))
-		ret += drc_wo(lvl, ridx, 0, 1, str4array(intf.name, 'cmd') + '[0]', 0, 'true')
+		ret += drc_wo(lvl, ridx, 0, 32, str4array(intf.name, 'cmd') + '[0]', 0, 'true')
 		#ret += suppreadreg0(lvl, ridx)
 
 		for i in range(0,128,32):
