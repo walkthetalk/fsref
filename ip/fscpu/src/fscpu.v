@@ -60,6 +60,8 @@ module fscpu #(
 
 	reg  [31:0] dev_oper_bmp;
 	wire [31:0] req_done_bmp;
+
+	reg  [31:0] cfg_img_delay_cnt;
 	localparam integer DEV_MOTOR_LFT = 1;
 	localparam integer DEV_MOTOR_RT = 2;
 	localparam integer DEV_MOTOR_X = 4;
@@ -71,9 +73,13 @@ module fscpu #(
 			dev_oper_bmp <= 0;
 		else if (req_en) begin
 			case (req_cmd)
-			0: dev_oper_bmp <= DEV_MOTOR_LFT;
-			1: dev_oper_bmp <= DEV_MOTOR_RT;
-			2: dev_oper_bmp <= (DEV_MOTOR_LFT | DEV_MOTOR_RT);
+			0: begin
+				dev_oper_bmp      <= 0;
+				cfg_img_delay_cnt <= req_par0;
+			end
+			1: dev_oper_bmp <= DEV_MOTOR_LFT;
+			2: dev_oper_bmp <= DEV_MOTOR_RT;
+			3: dev_oper_bmp <= (DEV_MOTOR_LFT | DEV_MOTOR_RT);
 			default:
 				dev_oper_bmp <= 0;
 			endcase
@@ -127,9 +133,11 @@ module fscpu #(
 		.C_SPEED_DATA_WIDTH (C_SPEED_DATA_WIDTH ),
 		.C_L2R(1)
 	) lft_motor_ctl (
-		.clk   (clk   ),
-		.resetn  (dev_oper_bmp[DEV_MOTOR_LFT]),
-		.exe_done(req_done_bmp[DEV_MOTOR_LFT]),
+		.clk          (clk   ),
+		.resetn       (dev_oper_bmp[DEV_MOTOR_LFT]),
+		.exe_done     (req_done_bmp[DEV_MOTOR_LFT]),
+
+		.img_delay_cnt(cfg_img_delay_cnt),
 
 		.req_single_dir(req_par0[0]),
 		.req_dir_back  (req_par0[1]),

@@ -8,6 +8,10 @@ module IM_ctl # (
 	input wire clk,
 	input wire resetn,
 
+	output reg          exe_done,
+
+	input wire [31:0]   img_delay_cnt;
+
 	input wire                req_single_dir,
 	input wire                req_dir_back,
 	input wire                req_dep_img,
@@ -15,8 +19,6 @@ module IM_ctl # (
 	input wire [C_IMG_WW-1:0] req_img_tol,
 	input wire [C_SPEED_DATA_WIDTH-1:0]  req_speed,
 	input wire [C_STEP_NUMBER_WIDTH-1:0] req_step,
-
-	output reg                exe_done,
 
 	input wire                img_pulse,
 	input wire                img_valid,	/// image position valid
@@ -41,7 +43,6 @@ module IM_ctl # (
 );
 
 /////////////////// motor_pos ///////////////////////////////////////////
-	wire [31:0]   img_delay_cnt;
 	wire          movie_rec_en;
 	img_delay_ctl # (
 		.C_TEST(0)
