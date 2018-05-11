@@ -1,90 +1,114 @@
+`include "../src/include/block_ram.v"
+`include "../src/include/block_ram_container.v"
+`include "../src/include/img_delay_ctl.v"
+`include "../src/include/IM_ctl.v"
 `include "../src/fscpu.v"
 
 module test_fscpu # (
-	parameter integer C_PIXEL_WIDTH = 8,
 	parameter integer C_IMG_HW = 8,
 	parameter integer C_IMG_WW = 8,
-	parameter integer BR_DW    = 32
+	parameter integer C_SPEED_DATA_WIDTH = 32,
+	parameter integer C_STEP_NUMBER_WIDTH = 8
 ) (
 );
-/*
-	localparam RANDOMINPUT = 1;
-	localparam RANDOMOUTPUT = 1;
-	localparam integer height = 20;
-	localparam integer width  = 40;
-	localparam integer BR_AW = C_IMG_WW;
-	localparam integer TEST_BW = 12;
-	localparam integer GEN_BW = 2;
-	localparam integer GEN_BV = 2'b10;
-
-	reg [C_PIXEL_WIDTH-1:0] data[height-1:0][width-1:0];
 
 	reg clk;
 	reg resetn;
 
-	reg                      r0_sof    ;
-	reg                      r0_rd_en  ;
-	reg  [BR_AW-1:0]         r0_rd_addr;
-	wire [BR_DW-1:0]         r0_data   ;
+	reg bpm_init;
+	reg bpm_wr_en;
+	reg [C_STEP_NUMBER_WIDTH-1:0] bpm_data;
+	wire [C_IMG_WW:0] bpm_size;
 
-	reg                      r1_sof    ;
-	reg                      r1_rd_en  ;
-	reg  [BR_AW-1:0]         r1_rd_addr;
-	wire [BR_DW-1:0]         r1_data   ;
+	reg req_en;
+	reg[31:0] req_cmd;
+	reg[127:0] req_param;
+	wire req_done;
+	wire[31:0] req_err;
 
-	reg  [C_PIXEL_WIDTH-1:0] ref_data ;
-	wire [C_IMG_WW-1:0]      lft_v    ;
-	wire [C_IMG_WW-1:0]      rt_v     ;
-	reg                      s_axis_tvalid;
-	reg  [C_PIXEL_WIDTH-1:0] s_axis_tdata ;
-	reg                      s_axis_tuser ;
-	reg                      s_axis_tlast ;
-	wire                     s_axis_tready;
+	reg ana_done;
+	reg lft_valid;
+	reg[C_IMG_WW-1:0] lft_edge;
+	reg rt_valid;
+	reg[C_IMG_WW-1:0] rt_edge;
 
-	reg                      fsync;
-	wire                     m_axis_tvalid;
-	wire [TEST_BW+GEN_BW-1:0]         m_axis_tdata ;
-	wire                     m_axis_tuser ;
-	wire                     m_axis_tlast ;
-	reg                      m_axis_tready;
+	wire                           ml_sel       ;
+	reg                            ml_zpsign    ;
+	reg                            ml_tpsign    ;
+	reg                            ml_state     ;
+	reg  [C_STEP_NUMBER_WIDTH-1:0] ml_position  ;
+	wire                           ml_start     ;
+	wire                           ml_stop      ;
+	wire [C_SPEED_DATA_WIDTH-1:0]  ml_speed     ;
+	wire [C_STEP_NUMBER_WIDTH-1:0] ml_step      ;
+	wire                           ml_dir       ;
+	wire                           ml_mod_remain;
+	wire [C_STEP_NUMBER_WIDTH-1:0] ml_new_remain;
 
-	fsa # (
-		.C_TEST(TEST_BW),
-		.C_OUT_DW(GEN_BW),
-		.C_OUT_DV(GEN_BV),
-		.C_PIXEL_WIDTH (C_PIXEL_WIDTH),
-		.C_IMG_HW (C_IMG_HW),
-		.C_IMG_WW (C_IMG_WW),
-		.BR_NUM   (4),
-		.BR_AW    (BR_AW),	/// same as C_IMG_WW
-		.BR_DW    (BR_DW)
-	) fsa_inst (
+	wire                           mr_sel       ;
+	reg                            mr_zpsign    ;
+	reg                            mr_tpsign    ;
+	reg                            mr_state     ;
+	reg  [C_STEP_NUMBER_WIDTH-1:0] mr_position  ;
+	wire                           mr_start     ;
+	wire                           mr_stop      ;
+	wire [C_SPEED_DATA_WIDTH-1:0]  mr_speed     ;
+	wire [C_STEP_NUMBER_WIDTH-1:0] mr_step      ;
+	wire                           mr_dir       ;
+	wire                           mr_mod_remain;
+	wire [C_STEP_NUMBER_WIDTH-1:0] mr_new_remain;
+
+	fscpu # (
+		.C_IMG_HW(C_IMG_HW),
+		.C_IMG_WW(C_IMG_WW),
+		.C_SPEED_DATA_WIDTH(C_SPEED_DATA_WIDTH),
+		.C_STEP_NUMBER_WIDTH(C_STEP_NUMBER_WIDTH)
+	) fscpu_inst (
 		.clk(clk),
 		.resetn(resetn),
 
-		.height(height),
-		.width (width),
+		.bpm_init (bpm_init ),
+		.bpm_wr_en(bpm_wr_en),
+		.bpm_data (bpm_data ),
+		.bpm_size (bpm_size ),
 
-		.r_sof ({r1_sof,    r0_sof    }),
-		.r_en  ({r1_rd_en,  r0_rd_en  }),
-		.r_addr({r1_rd_addr,r0_rd_addr}),
-		.r_data({r1_data,   r0_data   }),
+		.req_en   (req_en   ),
+		.req_cmd  (req_cmd  ),
+		.req_param(req_param),
+		.req_done (req_done ),
+		.req_err  (req_err  ),
 
-		.ref_data     (ref_data),
-		.lft_v        (lft_v   ),
-		.rt_v         (rt_v    ),
-		.s_axis_tvalid(s_axis_tvalid),
-		.s_axis_tdata (s_axis_tdata ),
-		.s_axis_tuser (s_axis_tuser ),
-		.s_axis_tlast (s_axis_tlast ),
-		.s_axis_tready(s_axis_tready),
+		.ana_done (ana_done ),
+		.lft_valid(lft_valid),
+		.lft_edge (lft_edge ),
+		.rt_valid (rt_valid ),
+		.rt_edge  (rt_edge  ),
 
-		.fsync(fsync),
-		.m_axis_tvalid(m_axis_tvalid),
-		.m_axis_tdata (m_axis_tdata ),
-		.m_axis_tuser (m_axis_tuser ),
-		.m_axis_tlast (m_axis_tlast ),
-		.m_axis_tready(m_axis_tready)
+		.ml_sel       (ml_sel       ),
+		.ml_zpsign    (ml_zpsign    ),
+		.ml_tpsign    (ml_tpsign    ),
+		.ml_state     (ml_state     ),
+		.ml_position  (ml_position  ),
+		.ml_start     (ml_start     ),
+		.ml_stop      (ml_stop      ),
+		.ml_speed     (ml_speed     ),
+		.ml_step      (ml_step      ),
+		.ml_dir       (ml_dir       ),
+		.ml_mod_remain(ml_mod_remain),
+		.ml_new_remain(ml_new_remain),
+
+		.mr_sel       (mr_sel       ),
+		.mr_zpsign    (mr_zpsign    ),
+		.mr_tpsign    (mr_tpsign    ),
+		.mr_state     (mr_state     ),
+		.mr_position  (mr_position  ),
+		.mr_start     (mr_start     ),
+		.mr_stop      (mr_stop      ),
+		.mr_speed     (mr_speed     ),
+		.mr_step      (mr_step      ),
+		.mr_dir       (mr_dir       ),
+		.mr_mod_remain(mr_mod_remain),
+		.mr_new_remain(mr_new_remain)
 	);
 
 initial begin
@@ -98,101 +122,60 @@ initial begin
 	forever #5 resetn <= 1'b1;
 end
 
-integer i, j;
-initial begin
-	for (i = 0; i < height; i=i+1) begin
-		for (j=0; j < width; j=j+1) begin
-			if (((i >= 5 && i <= 7) || (i >= 10 && i <= 15))
-				&& (j <= 17 || j >= 23))
-				data[i][j] = 10;
-			else
-				data[i][j] = 128+j;
-		end
-	end
-	assign ref_data = 128;
+reg[63:0] time_cnt;
+always @ (posedge clk) begin
+	if (resetn == 1'b0)
+		time_cnt <= 0;
+	else
+		time_cnt <= time_cnt + 1;
 end
 
-	reg[63:0] clk_cnt;
-	always @ (posedge clk) begin
-		if (resetn == 1'b0)
-			clk_cnt <= 0;
-		else
-			clk_cnt <= clk_cnt + 1;
+always @ (posedge clk) begin
+	if (resetn == 1'b0) begin
+		bpm_init  <= 0;
+		bpm_wr_en <= 0;
+		bpm_data  <= 0;
 	end
+	else if (time_cnt > 100 && time_cnt < 1100) begin
+		bpm_init <= 1;
+		bpm_wr_en <= 1;
+		bpm_data  <= (time_cnt - 100) * 2;
+	end
+	else begin
+		bpm_init <= 0;
+		bpm_wr_en <= 0;
+	end
+end
 
-	reg randominput;
-	always @ (posedge clk) begin
-		if (resetn == 1'b0)
-			randominput <= 1'b0;
-		else
-			randominput <= (RANDOMINPUT ? {$random}%2 : 1);
+always @ (posedge clk) begin
+	if (resetn == 1'b0) begin
+		req_en <= 0;
 	end
+	else if (time_cnt == 1200) begin
+		req_en <= 1;
+		req_cmd <= 2;
+		//req_param <= {32'b0, 32'hFF, 32'b0, 32'b11};
+		req_param <= {32'b0, 32'hFF, 32'h032F, 32'b101};
+	end
+	else begin
+		req_en <= 0;
+	end
+end
 
-	always @ (posedge clk) begin
-		if (resetn == 1'b0)
-			m_axis_tready <= 1'b0;
-		else
-			m_axis_tready <= (RANDOMOUTPUT ? {$random}%2 : 1);
+always @ (posedge clk) begin
+	if (resetn == 1'b0) begin
+		ana_done  <= 0;
+		lft_valid <= 0;
+		lft_edge  <= 0;
+		rt_valid  <= 0;
+		rt_edge   <= 0;
 	end
+	else if (time_cnt == 1300) begin
+		ana_done <= 1;
+	end
+	else begin
+		ana_done <= 0;
+	end
+end
 
-	reg[C_IMG_WW-1:0] col;
-	reg[C_IMG_HW-1:0] row;
-	wire snext;
-	assign snext = (~s_axis_tvalid | s_axis_tready) && randominput;
-	always @ (posedge clk) begin
-		if (resetn == 1'b0) begin
-			col <= 0;
-			row <= 0;
-		end
-		else if (snext) begin
-			if (col == width-1)
-				col <= 0;
-			else
-				col <= col + 1;
-			if (col == width-1) begin
-				if (row == height - 1)
-					row <= 0;
-				else
-					row <= row + 1;
-			end
-		end
-	end
-	always @ (posedge clk) begin
-		if (resetn == 1'b0) begin
-			s_axis_tuser <= 0;
-			s_axis_tlast <= 0;
-			s_axis_tdata <= 0;
-			s_axis_tvalid <= 0;
-		end
-		else if (snext) begin
-			s_axis_tvalid <= 1;
-			s_axis_tlast <= (col == width-1);
-			s_axis_tuser <= (col == 0 && row == 0);
-			s_axis_tdata <= data[row][col];
-		end
-		else if (s_axis_tready) begin
-			s_axis_tvalid <= 0;
-		end
-	end
-
-	always @ (posedge clk) begin
-		if (resetn == 1'b0)
-			fsync <= 0;
-		else
-			fsync <= (clk_cnt[11:0] == 0);
-	end
-
-	always @ (posedge clk) begin
-		if (resetn == 1'b0) begin
-		end
-		else if (m_axis_tvalid && m_axis_tready) begin
-			if (m_axis_tuser)
-				$write("\nstart new frame:\n");
-			$write("%b ", m_axis_tdata[GEN_BW-1:0]);
-			//$write("%d ", (m_axis_tdata/2));
-			if (m_axis_tlast)
-				$write("\n");
-		end
-	end
-*/
 endmodule
