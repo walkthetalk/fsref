@@ -71,8 +71,6 @@ module fscpu #(
 	always @ (posedge clk) begin
 		if (resetn == 1'b0)
 			dev_oper_bmp <= 0;
-		else if (req_done_bmp == dev_oper_bmp)	/// ensure one clock reset at least
-			dev_oper_bmp <= 0;
 		else if (req_en) begin
 			case (req_cmd)
 			0: begin
@@ -86,6 +84,8 @@ module fscpu #(
 				dev_oper_bmp <= 0;
 			endcase
 		end
+		else if (req_done_bmp == dev_oper_bmp)	/// ensure one clock reset at least
+			dev_oper_bmp <= 0;
 	end
 	reg r_req_done;
 	assign req_done = r_req_done;
