@@ -33,6 +33,7 @@ wire			       s0_tpsign;
 wire			       s0_state;
 reg  [C_STEP_NUMBER_WIDTH-1:0] s0_stroke = 100;
 wire [C_SPEED_DATA_WIDTH-1:0]  s0_rt_speed;
+wire [C_STEP_NUMBER_WIDTH-1:0] s0_position;
 reg  [C_SPEED_DATA_WIDTH-1:0]  s0_speed;
 reg  [C_STEP_NUMBER_WIDTH-1:0] s0_step;
 reg			       s0_start;
@@ -90,6 +91,7 @@ step_motor # (
 	.s0_stroke(s0_stroke),
 	.s0_speed (s0_speed ),
 	.s0_rt_speed(s0_rt_speed),
+	.s0_position(s0_position),
 	.s0_step  (s0_step  ),
 	.s0_start (s0_start ),
 	.s0_stop  (s0_stop  ),
@@ -167,7 +169,7 @@ always @ (posedge ctl_clk) begin
 	else if (s0_state == 1'b0 && ~s0_start && ({$random}%1000 == 0) && ~br_init) begin
 		s0_speed <= 15;
 		s0_step  <= 30;
-		s0_dir   <= 1;
+		s0_dir   <= 0;
 		s0_start <= 1;
 		s0_ms    <= C_MS;
 	end
