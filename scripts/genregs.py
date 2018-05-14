@@ -1511,14 +1511,14 @@ class VMFsctl(VerilogModuleFile):
 
 		ridx += 1
 		ret += suppcomment(lvl, str4regdefcomment(ridx))
-		ret += drc_wo(lvl, ridx, 0, 32, str4array(intf.name, 'cmd') + '[0]', 0, 'true')
+		ret += drc_rw(lvl, ridx, 0, 32, str4array(intf.name, 'cmd') + '[0]', 0)
 		#ret += suppreadreg0(lvl, ridx)
 
 		for i in range(0,128,32):
 			ridx += 1
 			ret += suppcomment(lvl, str4regdefcomment(ridx))
 			strtemp = '[' + str(i + 32 - 1) + ':' + str(i) + ']'
-			ret += drc_wo(lvl, ridx, 0, 32, str4array(intf.name, 'param') + '[0]' + strtemp, 0, 'true')
+			ret += drc_rw(lvl, ridx, 0, 32, str4array(intf.name, 'param') + '[0]' + strtemp, 0)
 			#ret += suppreadreg0(lvl, ridx)
 
 		ridx += 1
