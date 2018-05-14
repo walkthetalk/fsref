@@ -137,7 +137,7 @@ module IM_ctl # (
 		else if (pen_d2) begin
 			if (pos_rofr == 1'b0 && pos_lofl == 1'b0)
 				pos_ok <= 1'b1;
-			pos_needback <= (pos_lofd == C_L2R);
+			pos_needback <= (pos_lofd != C_L2R);
 			rd_en <= 1'b1;
 			if (C_L2R ? pos_rofr : pos_lofl)
 				rd_addr <= pos_cmd;
