@@ -1,6 +1,7 @@
 module IM_ctl # (
 	parameter integer C_IMG_WW = 12,
 	parameter integer C_IMG_HW = 12,
+	parameter integer C_FRMN_WIDTH = 2,
 	parameter integer C_STEP_NUMBER_WIDTH = 32,
 	parameter integer C_SPEED_DATA_WIDTH = 32,
 	parameter integer C_L2R = 1
@@ -10,7 +11,8 @@ module IM_ctl # (
 
 	output reg          exe_done,
 
-	input wire [31:0]   img_delay_cnt,
+	input wire [31:0]                img_delay_cnt,
+	input wire [C_FRMN_WIDTH-1:0]    img_delay_frm,
 
 	input wire                req_single_dir,
 	input wire                req_dir_back,
@@ -43,23 +45,20 @@ module IM_ctl # (
 );
 
 /////////////////// motor_pos ///////////////////////////////////////////
-	wire          movie_rec_en;
+	wire [C_STEP_NUMBER_WIDTH-1:0] movie_pos;
 	img_delay_ctl # (
+		.C_STEP_NUMBER_WIDTH(C_STEP_NUMBER_WIDTH),
+		.C_FRMN_WIDTH(C_FRMN_WIDTH),
 		.C_TEST(0)
 	) delay_ctl_inst (
 		.clk(clk),
-		.reset(img_pulse),
+		.eof(img_pulse),
 		.delay0_cnt  (img_delay_cnt),
-		.delay0_pulse(movie_rec_en )
+		.delay0_frm  (img_delay_frm),
+		.delay0_pulse(),
+		.cur_pos(m_position),
+		.movie_pos(movie_pos)
 	);
-
-	reg [C_STEP_NUMBER_WIDTH-1:0] movie_pos;
-	always @ (posedge clk) begin
-		if (resetn == 1'b0)
-			movie_pos <= 0;
-		else if (movie_rec_en)
-			movie_pos <= m_position;
-	end
 
 //////////////////////////////// delay1 ////////////////////////////////////////
 	reg [C_IMG_WW-1:0] pos_l;	/// left
@@ -139,9 +138,9 @@ module IM_ctl # (
 				pos_ok <= 1'b1;
 			pos_needback <= (pos_lofd != C_L2R);
 			rd_en <= 1'b1;
-			if (C_L2R ? pos_rofr : pos_lofl)
+			if (pos_rofr)
 				rd_addr <= pos_cmd;
-			else if (C_L2R ? pos_lofl : pos_rofr)
+			else if (pos_lofl)
 				rd_addr <= pos_dmc;
 			else
 				rd_addr <= 0;
@@ -275,10 +274,11 @@ module IM_ctl # (
 							m_step <= rd_data;
 						else begin
 							m_step <= 0;
-							need_dyn_adjust <= 1'b1;
 						end
 						m_dir <= req_dir_back;
 					end
+
+					need_dyn_adjust <= ~img_valid;
 				end
 			end
 		end
@@ -302,7 +302,7 @@ module IM_ctl # (
 		end
 		else if (pen_d5) begin
 			if (req_single_dir) begin
-				if (m_running && need_dyn_adjust) begin
+				if (m_running && need_dyn_adjust && img_valid) begin
 					if (req_dir_back) begin
 						if (m_position > dst_pos) begin
 							m_mod_remain <= 1'b1;
