@@ -3,6 +3,7 @@
 `include "../src/include/simple_dpram_sclk.v"
 `include "../src/include/simple_fifo.v"
 `include "../src/include/fsa_core.v"
+`include "../src/include/axis_relay.v"
 `include "../src/include/fsa_stream.v"
 `include "../src/fsa.v"
 `include "../../axis_blender/src/axis_blender.v"
@@ -156,9 +157,24 @@ integer i, j;
 initial begin
 	for (i = 0; i < height; i=i+1) begin
 		for (j=0; j < width; j=j+1) begin
-			if (((i >= 5 && i <= 7) || (i >= 10 && i <= 15))
-				&& (j <= 17 || j >= 23))
-				data[i][j] = 10;
+			if (j <= 17 || j >= 23) begin
+				if (j <= 14 || j >= 27) begin
+					if ((i >= 5 && i <= 7) || (i >= 10 && i <= 15)) begin
+						data[i][j] = 10;
+					end
+					else begin
+						data[i][j] = 128+j;
+					end
+				end
+				else begin
+					if ((i >= 6 && i <= 7) || (i >= 10 && i <= 13)) begin
+						data[i][j] = 10;
+					end
+					else begin
+						data[i][j] = 128+j;
+					end
+				end
+			end
 			else
 				data[i][j] = 128+j;
 		end
@@ -243,7 +259,7 @@ end
 	reg[C_IMG_WW-1:0] s0_col;
 	reg[C_IMG_HW-1:0] s0_row;
 	wire s0next;
-	assign s0next = (~s0_valid | s0_ready) && randoms0;
+	assign s0next = (~s0_valid | s0_ready) && randoms0 && en_axis;
 	always @ (posedge clk) begin
 		if (resetn == 1'b0) begin
 			s0_col <= 0;

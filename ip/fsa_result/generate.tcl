@@ -22,6 +22,41 @@ pip_add_bus_abstraction_port $busabs LEFT_VERTEX {
 	is_data true
 }
 
+pip_add_bus_abstraction_port $busabs LEFT_HEADER_X {
+	default_value 0
+	master_presence required
+	master_direction out
+	is_data true
+}
+
+pip_add_bus_abstraction_port $busabs LEFT_CORNER_TOP_X {
+	default_value 0
+	master_presence required
+	master_direction out
+	is_data true
+}
+
+pip_add_bus_abstraction_port $busabs LEFT_CORNER_TOP_Y {
+	default_value 0
+	master_presence required
+	master_direction out
+	is_data true
+}
+
+pip_add_bus_abstraction_port $busabs LEFT_CORNER_BOT_X {
+	default_value 0
+	master_presence required
+	master_direction out
+	is_data true
+}
+
+pip_add_bus_abstraction_port $busabs LEFT_CORNER_BOT_Y {
+	default_value 0
+	master_presence required
+	master_direction out
+	is_data true
+}
+
 pip_add_bus_abstraction_port $busabs RIGHT_VALID {
 	default_value 0
 	master_presence required
@@ -32,6 +67,41 @@ pip_add_bus_abstraction_port $busabs RIGHT_VALID {
 }
 
 pip_add_bus_abstraction_port $busabs RIGHT_VERTEX {
+	default_value 0
+	master_presence required
+	master_direction out
+	is_data true
+}
+
+pip_add_bus_abstraction_port $busabs RIGHT_HEADER_X {
+	default_value 0
+	master_presence required
+	master_direction out
+	is_data true
+}
+
+pip_add_bus_abstraction_port $busabs RIGHT_CORNER_TOP_X {
+	default_value 0
+	master_presence required
+	master_direction out
+	is_data true
+}
+
+pip_add_bus_abstraction_port $busabs RIGHT_CORNER_TOP_Y {
+	default_value 0
+	master_presence required
+	master_direction out
+	is_data true
+}
+
+pip_add_bus_abstraction_port $busabs RIGHT_CORNER_BOT_X {
+	default_value 0
+	master_presence required
+	master_direction out
+	is_data true
+}
+
+pip_add_bus_abstraction_port $busabs RIGHT_CORNER_BOT_Y {
 	default_value 0
 	master_presence required
 	master_direction out
