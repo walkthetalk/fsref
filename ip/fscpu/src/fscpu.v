@@ -152,10 +152,11 @@ module fscpu #(
 		.req_single_dir(req_par0[0]),
 		.req_dir_back  (req_par0[1]),
 		.req_dep_img   (req_par0[2]),
-		.req_img_dst   (req_par1[C_IMG_WW-1           : 0]),
-		.req_img_tol   (req_par1[C_IMG_WW-1+16        :16]),
-		.req_speed     (req_par2[C_SPEED_DATA_WIDTH-1 : 0]),
-		.req_step      (req_par3[C_STEP_NUMBER_WIDTH-1: 0]),
+		.req_img_tol   (req_par0[C_IMG_WW-1+16        :16]),
+		.req_speed     (req_par1[C_SPEED_DATA_WIDTH-1 : 0]),
+
+		.req_img_dst   (req_par2[C_IMG_WW-1           : 0]),
+		.req_step      (req_par2[C_STEP_NUMBER_WIDTH-1: 0]),
 
 		.img_pulse(ana_done ),
 		.img_valid(lft_valid),
@@ -197,9 +198,10 @@ module fscpu #(
 		.req_single_dir(req_par0[0]),
 		.req_dir_back  (req_par0[1]),
 		.req_dep_img   (req_par0[2]),
-		.req_img_dst   (req_par1[C_IMG_WW-1           : 0]),
-		.req_img_tol   (req_par1[C_IMG_WW-1+16        :16]),
-		.req_speed     (req_par2[C_SPEED_DATA_WIDTH-1 : 0]),
+		.req_img_tol   (req_par0[C_IMG_WW-1+16        :16]),
+		.req_speed     (req_par1[C_SPEED_DATA_WIDTH-1 : 0]),
+
+		.req_img_dst   (req_par3[C_IMG_WW-1           : 0]),
 		.req_step      (req_par3[C_STEP_NUMBER_WIDTH-1: 0]),
 
 		.img_pulse(ana_done ),
