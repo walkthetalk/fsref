@@ -22,12 +22,16 @@ module fsa_stream #(
 	input  wire [C_IMG_WW-1:0]      lft_edge   ,
 	input  wire                     rt_valid   ,
 	input  wire [C_IMG_WW-1:0]      rt_edge    ,
+	input  wire                     lft_header_valid,
 	input  wire [C_IMG_WW-1:0]      lft_header_x    ,
+	input  wire                     lft_corner_valid,
 	input  wire [C_IMG_WW-1:0]      lft_corner_top_x,
 	input  wire [C_IMG_HW-1:0]      lft_corner_top_y,
 	input  wire [C_IMG_WW-1:0]      lft_corner_bot_x,
 	input  wire [C_IMG_HW-1:0]      lft_corner_bot_y,
+	input  wire                     rt_header_valid,
 	input  wire [C_IMG_WW-1:0]      rt_header_x    ,
+	input  wire                     rt_corner_valid,
 	input  wire [C_IMG_WW-1:0]      rt_corner_top_x,
 	input  wire [C_IMG_HW-1:0]      rt_corner_top_y,
 	input  wire [C_IMG_WW-1:0]      rt_corner_bot_x,
@@ -66,12 +70,16 @@ module fsa_stream #(
 	reg [C_IMG_WW-1:0]      r_lft_edge        ;
 	reg                     r_rt_valid        ;
 	reg [C_IMG_WW-1:0]      r_rt_edge         ;
+	reg                     r_lft_header_valid;
 	reg [C_IMG_WW-1:0]      r_lft_header_x    ;
+	reg                     r_lft_corner_valid;
 	reg [C_IMG_WW-1:0]      r_lft_corner_top_x;
 	reg [C_IMG_HW-1:0]      r_lft_corner_top_y;
 	reg [C_IMG_WW-1:0]      r_lft_corner_bot_x;
 	reg [C_IMG_HW-1:0]      r_lft_corner_bot_y;
+	reg                     r_rt_header_valid ;
 	reg [C_IMG_WW-1:0]      r_rt_header_x     ;
+	reg                     r_rt_corner_valid ;
 	reg [C_IMG_WW-1:0]      r_rt_corner_top_x ;
 	reg [C_IMG_HW-1:0]      r_rt_corner_top_y ;
 	reg [C_IMG_WW-1:0]      r_rt_corner_bot_x ;
@@ -82,12 +90,16 @@ module fsa_stream #(
 			r_lft_edge         <= lft_edge        ;
 			r_rt_valid         <= rt_valid        ;
 			r_rt_edge          <= rt_edge         ;
+			r_lft_header_valid <= lft_header_valid;
 			r_lft_header_x     <= lft_header_x    ;
+			r_lft_corner_valid <= lft_corner_valid;
 			r_lft_corner_top_x <= lft_corner_top_x;
 			r_lft_corner_top_y <= lft_corner_top_y;
 			r_lft_corner_bot_x <= lft_corner_bot_x;
 			r_lft_corner_bot_y <= lft_corner_bot_y;
+			r_rt_header_valid  <= rt_header_valid ;
 			r_rt_header_x      <= rt_header_x     ;
+			r_rt_corner_valid  <= rt_corner_valid ;
 			r_rt_corner_top_x  <= rt_corner_top_x ;
 			r_rt_corner_top_y  <= rt_corner_top_y ;
 			r_rt_corner_bot_x  <= rt_corner_bot_x ;
@@ -286,20 +298,20 @@ module fsa_stream #(
 			py_d4     <= py_d3;
 			pfirst_d4 <= pfirst_d3;
 			xlast_d4  <= xlast_d3;
-			lc_t      <= ((r_lft_corner_top_y <= py_d3 && py_d3 < rd_top)
+			lc_t      <= r_lft_corner_valid && ((r_lft_corner_top_y <= py_d3 && py_d3 < rd_top)
 					&& (r_lft_corner_top_x < px_d3 && px_d3 <= r_lft_edge));
-			lc_b      <= ((r_lft_corner_bot_y >= py_d3 && py_d3 > rd_bot)
+			lc_b      <= r_lft_corner_valid && ((r_lft_corner_bot_y >= py_d3 && py_d3 > rd_bot)
 					&& (r_lft_corner_bot_x < px_d3 && px_d3 <= r_lft_edge));
-			rc_t      <= ((r_rt_corner_top_y <= py_d3 && py_d3 < rd_top)
+			rc_t      <= r_rt_corner_valid && ((r_rt_corner_top_y <= py_d3 && py_d3 < rd_top)
 					&& (r_rt_edge <= px_d3 && px_d3 < r_rt_corner_top_x));
-			rc_b      <= ((r_rt_corner_bot_y >= py_d3 && py_d3 > rd_bot)
+			rc_b      <= r_rt_corner_valid && ((r_rt_corner_bot_y >= py_d3 && py_d3 > rd_bot)
 					&& (r_rt_edge <= px_d3 && px_d3 < r_rt_corner_bot_x));
-			lb        <= (px_d3 <= r_lft_header_x);
-			rb        <= (px_d3 >= r_rt_header_x);
-			lb_t      <= ((px_d3 <= r_lft_corner_top_x) && (py_d3 < rd_top));
-			lb_b      <= ((px_d3 <= r_lft_corner_bot_x) && (py_d3 > rd_bot));
-			rb_t      <= ((px_d3 >= r_rt_corner_top_x) && (py_d3 < rd_top));
-			rb_b      <= ((px_d3 >= r_rt_corner_bot_x) && (py_d3 > rd_bot));
+			lb        <= r_lft_header_valid && (px_d3 <= r_lft_header_x);
+			rb        <= r_rt_header_valid && (px_d3 >= r_rt_header_x);
+			lb_t      <= r_lft_corner_valid && ((px_d3 <= r_lft_corner_top_x) && (py_d3 < rd_top));
+			lb_b      <= r_lft_corner_valid && ((px_d3 <= r_lft_corner_bot_x) && (py_d3 > rd_bot));
+			rb_t      <= r_rt_corner_valid && ((px_d3 >= r_rt_corner_top_x) && (py_d3 < rd_top));
+			rb_b      <= r_rt_corner_valid && ((px_d3 >= r_rt_corner_bot_x) && (py_d3 > rd_bot));
 		end
 	end
 

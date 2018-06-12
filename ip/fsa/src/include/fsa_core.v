@@ -28,14 +28,18 @@ module fsa_core #(
 	output wire                     ana_done,
 	output reg                      res_lft_valid       ,
 	output reg  [C_IMG_WW-1:0]      res_lft_edge        ,
+	output reg                      res_lft_header_valid,
 	output reg  [C_IMG_WW-1:0]      res_lft_header_x    ,
+	output reg                      res_lft_corner_valid,
 	output reg  [C_IMG_WW-1:0]      res_lft_corner_top_x,
 	output reg  [C_IMG_HW-1:0]      res_lft_corner_top_y,
 	output reg  [C_IMG_WW-1:0]      res_lft_corner_bot_x,
 	output reg  [C_IMG_HW-1:0]      res_lft_corner_bot_y,
 	output reg                      res_rt_valid        ,
 	output reg  [C_IMG_WW-1:0]      res_rt_edge         ,
+	output reg                      res_rt_header_valid ,
 	output reg  [C_IMG_WW-1:0]      res_rt_header_x     ,
+	output reg                      res_rt_corner_valid ,
 	output reg  [C_IMG_WW-1:0]      res_rt_corner_top_x ,
 	output reg  [C_IMG_HW-1:0]      res_rt_corner_top_y ,
 	output reg  [C_IMG_WW-1:0]      res_rt_corner_bot_x ,
@@ -363,7 +367,7 @@ module fsa_core #(
 	end
 
 	//////////////////////////// height ////////////////////////////////////
-	localparam integer fiber_height_tol = 3;
+	localparam integer fiber_height_tol = 2;
 	reg                lft_height_valid;
 	reg [C_IMG_HW-1:0] lft_height;
 	reg [C_IMG_HW-1:0] lft_height_lower;
@@ -425,7 +429,7 @@ module fsa_core #(
 		else if (rd_en_d4 && hM2_p4) begin
 			lft_col_valid <= { lft_col_valid[C_FIBER_THICKNESS_LEN-2:0], lft_col_thickness_valid};
 			if (~rd_val_p4) begin
-				lft_header_found <= 1'b1;
+				lft_header_found <= lft_height_valid;
 			end
 			if (update_lft_header_x) begin
 				lft_header_x        <= x_d4 - C_FIBER_THICKNESS_LEN_HALF - 1;
@@ -453,7 +457,7 @@ module fsa_core #(
 				rt_header_found <= 1'b0;
 			end
 			else if (update_rt_header_x) begin
-				rt_header_found <= 1'b1;
+				rt_header_found    <= rt_height_valid;
 				rt_header_x        <= x_d4 - C_FIBER_THICKNESS_LEN_HALF - 1;
 			end
 		end
@@ -476,7 +480,7 @@ module fsa_core #(
 		end
 		else if (rd_en_d4 && hlast_p4) begin
 			if (~rd_val_p4) begin
-				lft_corner_found <= 1'b1;
+				lft_corner_found <= lft_header_found;
 			end
 			if (~lft_corner_found && rd_val_p4) begin
 				if (x_d4 == lft_header_x) begin
@@ -514,7 +518,7 @@ module fsa_core #(
 			rt_corner_bot_x   <= 0;
 		end
 		else if (rd_en_d4) begin
-			rt_corner_found <= rd_val_p4;
+			rt_corner_found <= rd_val_p4 && rt_header_found;
 			if (~rt_corner_found) begin
 				rt_corner_top_x <= x_d4;
 				rt_corner_top_y <= rd_top_p4;
@@ -591,12 +595,16 @@ module fsa_core #(
 			res_lft_valid <= lft_valid_p5;
 			res_rt_edge   <= rt_edge_p5;
 			res_rt_valid  <= rt_valid_p5;
+			res_lft_header_valid <= lft_header_found;
 			res_lft_header_x     <= lft_header_x    ;
+			res_lft_corner_valid <= lft_corner_found;
 			res_lft_corner_top_x <= lft_corner_top_x;
 			res_lft_corner_top_y <= lft_corner_top_y;
 			res_lft_corner_bot_x <= lft_corner_bot_x;
 			res_lft_corner_bot_y <= lft_corner_bot_y;
+			res_rt_header_valid  <= rt_header_found ;
 			res_rt_header_x      <= rt_header_x     ;
+			res_rt_corner_valid  <= rt_corner_found ;
 			res_rt_corner_top_x  <= rt_corner_top_x ;
 			res_rt_corner_top_y  <= rt_corner_top_y ;
 			res_rt_corner_bot_x  <= rt_corner_bot_x ;
