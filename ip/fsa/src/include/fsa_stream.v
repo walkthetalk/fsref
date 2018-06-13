@@ -4,7 +4,6 @@ module fsa_stream #(
 	parameter integer C_OUT_DV = 1,
 	parameter integer C_IMG_HW = 12,
 	parameter integer C_IMG_WW = 12,
-	parameter integer BR_DW    = 32,
 	parameter integer BR_AW    = 12	/// same as C_IMG_WW
 )(
 	input	clk,
@@ -16,7 +15,9 @@ module fsa_stream #(
 	output wire                     rd_sof  ,
 	output reg                      rd_en   ,
 	output wire [BR_AW-1:0]         rd_addr ,
-	input  wire [BR_DW-1:0]         rd_data ,
+	input  wire                     rd_val  ,
+	input  wire [C_IMG_HW-1:0]      rd_top  ,
+	input  wire [C_IMG_HW-1:0]      rd_bot  ,
 
 	input  wire                     lft_valid  ,
 	input  wire [C_IMG_WW-1:0]      lft_edge   ,
@@ -50,19 +51,6 @@ module fsa_stream #(
 	localparam integer FD_LAST = 1;
 	localparam integer FD_DATA = 2;
 	localparam integer FD_TEST = 2 + C_OUT_DW;
-
-	localparam integer BBIT_B = 0;
-	localparam integer BBIT_E = BBIT_B + C_IMG_HW;
-	localparam integer TBIT_B = BBIT_E;
-	localparam integer TBIT_E = TBIT_B + C_IMG_HW;
-	localparam integer VBIT   = TBIT_E;
-
-	wire               rd_val;
-	assign rd_val = rd_data[VBIT];
-	wire[C_IMG_HW-1:0] rd_top;
-	assign rd_top = rd_data[TBIT_E-1:TBIT_B];
-	wire[C_IMG_HW-1:0] rd_bot;
-	assign rd_bot = rd_data[BBIT_E-1:BBIT_B];
 
 	assign rd_sof = fsync;
 	/// store fsa result

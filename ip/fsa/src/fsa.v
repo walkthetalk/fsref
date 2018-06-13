@@ -170,8 +170,7 @@ generate
 			.C_OUT_DV(C_OUT_DV),
 			.C_IMG_HW(C_IMG_HW),
 			.C_IMG_WW(C_IMG_WW),
-			.BR_AW(BR_AW),
-			.BR_DW(BR_DW)
+			.BR_AW(BR_AW)
 		) fsa_stream_inst (
 			.clk(clk),
 			.resetn(m_axis_resetn),
@@ -181,7 +180,9 @@ generate
 			.rd_sof(r_sof_stream),
 			.rd_en(rd_en_p1[RD_NUM-2]),
 			.rd_addr(rd_addr_p1[RD_NUM-2]),
-			.rd_data(rd_data_f[RD_NUM-2]),
+			.rd_val (rd_data_f[RD_NUM-2][C_IMG_HW*2           ]),
+			.rd_top (rd_data_f[RD_NUM-2][C_IMG_HW*2-1:C_IMG_HW]),
+			.rd_bot (rd_data_f[RD_NUM-2][C_IMG_HW-1  :       0]),
 			.lft_valid       (lft_valid),
 			.lft_edge        (lft_edge ),
 			.rt_valid        (rt_valid ),
@@ -215,7 +216,6 @@ endgenerate
 		.C_PIXEL_WIDTH (C_PIXEL_WIDTH),
 		.C_IMG_HW (C_IMG_HW),
 		.C_IMG_WW (C_IMG_WW),
-		.BR_DW    (BR_DW   ),
 		.BR_NUM   (BR_NUM  ),
 		.BR_AW    (BR_AW   )	/// same as C_IMG_WW
 	) algo (
@@ -230,11 +230,15 @@ endgenerate
 
 		.wr_en  (wr_wen),
 		.wr_addr(wr_waddr),
-		.wr_data(wr_wdata),
+		.wr_val (wr_wdata[C_IMG_HW*2           ]),
+		.wr_top (wr_wdata[C_IMG_HW*2-1:C_IMG_HW]),
+		.wr_bot (wr_wdata[C_IMG_HW-1  :       0]),
 
 		.rd_en  (wr_ren  ),
 		.rd_addr(wr_raddr),
-		.rd_data(wr_rdata),
+		.rd_val (wr_rdata[C_IMG_HW*2           ]),
+		.rd_top (wr_rdata[C_IMG_HW*2-1:C_IMG_HW]),
+		.rd_bot (wr_rdata[C_IMG_HW-1  :       0]),
 
 		.ref_data(ref_data),
 		.ana_done(ana_done),

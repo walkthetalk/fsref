@@ -3,7 +3,6 @@ module fsa_core #(
 	parameter integer C_PIXEL_WIDTH = 8,
 	parameter integer C_IMG_HW = 12,
 	parameter integer C_IMG_WW = 12,
-	parameter integer BR_DW    = 32,
 	parameter integer BR_NUM   = 4,
 	parameter integer BR_AW    = 12	/// same as C_IMG_WW
 )(
@@ -18,11 +17,15 @@ module fsa_core #(
 
 	output reg  [BR_NUM-1:0]        wr_en   ,
 	output reg  [BR_AW-1:0]         wr_addr ,
-	output wire [BR_DW-1:0]         wr_data ,
+	output reg                      wr_val  ,
+	output reg  [C_IMG_HW-1:0]      wr_top  ,
+	output reg  [C_IMG_HW-1:0]      wr_bot  ,
 
 	output reg                      rd_en   ,
 	output reg  [BR_AW-1:0]         rd_addr ,
-	input  wire [BR_DW-1:0]         rd_data ,
+	input  wire                     rd_val  ,
+	input  wire [C_IMG_HW-1:0]      rd_top  ,
+	input  wire [C_IMG_HW-1:0]      rd_bot  ,
 
 	input  wire [C_PIXEL_WIDTH-1:0] ref_data,
 	output wire                     ana_done,
@@ -51,29 +54,6 @@ module fsa_core #(
 	input  wire                     s_axis_tlast,
 	output wire                     s_axis_tready
 );
-	localparam integer BBIT_B = 0;
-	localparam integer BBIT_E = BBIT_B + C_IMG_HW;
-	localparam integer TBIT_B = BBIT_E;
-	localparam integer TBIT_E = TBIT_B + C_IMG_HW;
-	localparam integer VBIT   = TBIT_E;
-
-	assign wr_data[BR_DW-1:VBIT+1] = 0;
-
-	reg                wr_val;
-	wire               rd_val;
-	assign wr_data[VBIT] = wr_val;
-	assign rd_val = rd_data[VBIT];
-
-	reg [C_IMG_HW-1:0] wr_top;
-	wire[C_IMG_HW-1:0] rd_top;
-	assign wr_data[TBIT_E-1:TBIT_B] = wr_top;
-	assign rd_top = rd_data[TBIT_E-1:TBIT_B];
-
-	reg [C_IMG_HW-1:0] wr_bot;
-	wire[C_IMG_HW-1:0] rd_bot;
-	assign wr_data[BBIT_E-1:BBIT_B] = wr_bot;
-	assign rd_bot = rd_data[BBIT_E-1:BBIT_B];
-
 	assign s_axis_tready = 1'b1;
 	wire snext;
 	assign snext = s_axis_tvalid & s_axis_tready;
