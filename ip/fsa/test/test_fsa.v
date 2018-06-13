@@ -3,6 +3,7 @@
 `include "../src/include/simple_dpram_sclk.v"
 `include "../src/include/simple_fifo.v"
 `include "../src/include/fsa_core.v"
+`include "../src/include/fsa_detect_edge.v"
 `include "../src/include/axis_relay.v"
 `include "../src/include/fsa_stream.v"
 `include "../src/fsa.v"

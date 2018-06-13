@@ -15,9 +15,13 @@ module fsa_stream #(
 	output wire                     rd_sof  ,
 	output reg                      rd_en   ,
 	output wire [BR_AW-1:0]         rd_addr ,
-	input  wire                     rd_val  ,
-	input  wire [C_IMG_HW-1:0]      rd_top  ,
-	input  wire [C_IMG_HW-1:0]      rd_bot  ,
+	input  wire                     rd_black,
+	input  wire                     rd_val_outer,
+	input  wire [C_IMG_HW-1:0]      rd_top_outer,
+	input  wire [C_IMG_HW-1:0]      rd_bot_outer,
+	input  wire                     rd_val_inner,
+	input  wire [C_IMG_HW-1:0]      rd_top_inner,
+	input  wire [C_IMG_HW-1:0]      rd_bot_inner,
 
 	input  wire                     lft_valid  ,
 	input  wire [C_IMG_WW-1:0]      lft_edge   ,
@@ -286,20 +290,20 @@ module fsa_stream #(
 			py_d4     <= py_d3;
 			pfirst_d4 <= pfirst_d3;
 			xlast_d4  <= xlast_d3;
-			lc_t      <= r_lft_corner_valid && ((r_lft_corner_top_y <= py_d3 && py_d3 < rd_top)
+			lc_t      <= r_lft_corner_valid && ((r_lft_corner_top_y <= py_d3 && py_d3 < rd_top_outer)
 					&& (r_lft_corner_top_x < px_d3 && px_d3 <= r_lft_edge));
-			lc_b      <= r_lft_corner_valid && ((r_lft_corner_bot_y >= py_d3 && py_d3 > rd_bot)
+			lc_b      <= r_lft_corner_valid && ((r_lft_corner_bot_y >= py_d3 && py_d3 > rd_bot_outer)
 					&& (r_lft_corner_bot_x < px_d3 && px_d3 <= r_lft_edge));
-			rc_t      <= r_rt_corner_valid && ((r_rt_corner_top_y <= py_d3 && py_d3 < rd_top)
+			rc_t      <= r_rt_corner_valid && ((r_rt_corner_top_y <= py_d3 && py_d3 < rd_top_outer)
 					&& (r_rt_edge <= px_d3 && px_d3 < r_rt_corner_top_x));
-			rc_b      <= r_rt_corner_valid && ((r_rt_corner_bot_y >= py_d3 && py_d3 > rd_bot)
+			rc_b      <= r_rt_corner_valid && ((r_rt_corner_bot_y >= py_d3 && py_d3 > rd_bot_outer)
 					&& (r_rt_edge <= px_d3 && px_d3 < r_rt_corner_bot_x));
 			lb        <= r_lft_header_valid && (px_d3 <= r_lft_header_x);
 			rb        <= r_rt_header_valid && (px_d3 >= r_rt_header_x);
-			lb_t      <= r_lft_corner_valid && ((px_d3 <= r_lft_corner_top_x) && (py_d3 < rd_top));
-			lb_b      <= r_lft_corner_valid && ((px_d3 <= r_lft_corner_bot_x) && (py_d3 > rd_bot));
-			rb_t      <= r_rt_corner_valid && ((px_d3 >= r_rt_corner_top_x) && (py_d3 < rd_top));
-			rb_b      <= r_rt_corner_valid && ((px_d3 >= r_rt_corner_bot_x) && (py_d3 > rd_bot));
+			lb_t      <= r_lft_corner_valid && ((px_d3 <= r_lft_corner_top_x) && (py_d3 < rd_top_outer));
+			lb_b      <= r_lft_corner_valid && ((px_d3 <= r_lft_corner_bot_x) && (py_d3 > rd_bot_outer));
+			rb_t      <= r_rt_corner_valid && ((px_d3 >= r_rt_corner_top_x) && (py_d3 < rd_top_outer));
+			rb_b      <= r_rt_corner_valid && ((px_d3 >= r_rt_corner_bot_x) && (py_d3 > rd_bot_outer));
 		end
 	end
 
@@ -315,8 +319,8 @@ module fsa_stream #(
 			fw_data[FD_SOF]  <= pfirst_d4;
 			fw_data[FD_LAST] <= xlast_d4;
 			if (1) begin
-				if ((r_lft_valid && (lc_t | lc_b | lb))
-				 	|| (r_rt_valid && (rc_t | rc_b | rb))) begin
+				if ((r_lft_valid && (lc_t | lc_b))
+					|| (r_rt_valid && (rc_t | rc_b))) begin
 					fw_data[FD_DATA+C_OUT_DW-1:FD_DATA] <= C_OUT_DV;
 				end
 				else begin
@@ -324,7 +328,7 @@ module fsa_stream #(
 				end
 			end
 			else begin
-				if (rd_val && py_d4 >= rd_top && py_d4 <= rd_bot)
+				if (rd_val_outer && py_d4 >= rd_top_outer && py_d4 <= rd_bot_outer)
 					fw_data[FD_DATA+C_OUT_DW-1:FD_DATA] <= C_OUT_DV;
 				else
 					fw_data[FD_DATA+C_OUT_DW-1:FD_DATA] <= 1'b0;

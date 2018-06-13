@@ -9,7 +9,7 @@ module fsa #(
 	parameter integer C_IMG_WW = 12,
 	parameter integer BR_NUM   = 4,
 	parameter integer BR_AW    = 12,	/// same as C_IMG_WW
-	parameter integer BR_DW    = 32
+	parameter integer BR_DW    = 51		/// C_IMG_HW * 4 + 1
 )(
 	input	clk,
 	input	resetn,
@@ -60,6 +60,23 @@ module fsa #(
 );
 	localparam integer RD_OUT_STREAM = (C_OUT_DW > 0 ? 1 : 0);
 	localparam integer RD_NUM = 1 + 1 + RD_OUT_STREAM;
+
+	localparam integer BOT_OL = 0;
+	localparam integer BOT_OH = BOT_OL + C_IMG_HW - 1;
+	localparam integer TOP_OL = BOT_OH + 1;
+	localparam integer TOP_OH = TOP_OL + C_IMG_HW - 1;
+	localparam integer VAL_OL = TOP_OH + 1;
+	localparam integer VAL_OH = VAL_OL;
+
+	localparam integer BOT_IL = VAL_OH + 1;
+	localparam integer BOT_IH = BOT_IL + C_IMG_HW - 1;
+	localparam integer TOP_IL = BOT_IH + 1;
+	localparam integer TOP_IH = TOP_IL + C_IMG_HW - 1;
+	localparam integer VAL_IL = TOP_IH + 1;
+	localparam integer VAL_IH = VAL_IL;
+
+	localparam integer BLACK_L = VAL_IH + 1;
+	localparam integer BLACK_H = BLACK_L;
 
 	/// block ram for speed data
 	wire              wr_sof;
@@ -180,9 +197,13 @@ generate
 			.rd_sof(r_sof_stream),
 			.rd_en(rd_en_p1[RD_NUM-2]),
 			.rd_addr(rd_addr_p1[RD_NUM-2]),
-			.rd_val (rd_data_f[RD_NUM-2][C_IMG_HW*2           ]),
-			.rd_top (rd_data_f[RD_NUM-2][C_IMG_HW*2-1:C_IMG_HW]),
-			.rd_bot (rd_data_f[RD_NUM-2][C_IMG_HW-1  :       0]),
+			.rd_black    (rd_data_f[RD_NUM-2][BLACK_H:BLACK_L]),
+			.rd_val_outer(rd_data_f[RD_NUM-2][VAL_OH : VAL_OL]),
+			.rd_top_outer(rd_data_f[RD_NUM-2][TOP_OH : TOP_OL]),
+			.rd_bot_outer(rd_data_f[RD_NUM-2][BOT_OH : BOT_OL]),
+			.rd_val_inner(rd_data_f[RD_NUM-2][VAL_IH : VAL_IL]),
+			.rd_top_inner(rd_data_f[RD_NUM-2][TOP_IH : TOP_IL]),
+			.rd_bot_inner(rd_data_f[RD_NUM-2][BOT_IH : BOT_IL]),
 			.lft_valid       (lft_valid),
 			.lft_edge        (lft_edge ),
 			.rt_valid        (rt_valid ),
@@ -212,6 +233,18 @@ generate
 	end
 endgenerate
 
+	wire                fsaic_wr_sof_d3   ;
+	wire                fsaic_rd_en_d3    ;
+	wire                fsaic_hM2_p3      ;
+	wire                fsaic_hM3_p3      ;
+	wire                fsaic_hlast_p3    ;
+	wire                fsaic_wfirst_p3   ;
+	wire                fsaic_wlast_p3    ;
+	wire [BR_AW-1:0]    fsaic_x_d3        ;
+	wire                fsaic_rd_val_outer;
+	wire [C_IMG_HW-1:0] fsaic_rd_top_outer;
+	wire [C_IMG_HW-1:0] fsaic_rd_bot_outer;
+
 	fsa_core # (
 		.C_PIXEL_WIDTH (C_PIXEL_WIDTH),
 		.C_IMG_HW (C_IMG_HW),
@@ -230,17 +263,67 @@ endgenerate
 
 		.wr_en  (wr_wen),
 		.wr_addr(wr_waddr),
-		.wr_val (wr_wdata[C_IMG_HW*2           ]),
-		.wr_top (wr_wdata[C_IMG_HW*2-1:C_IMG_HW]),
-		.wr_bot (wr_wdata[C_IMG_HW-1  :       0]),
+		.wr_black    (wr_wdata[BLACK_H:BLACK_L]),
+		.wr_val_outer(wr_wdata[VAL_OH : VAL_OL]),
+		.wr_top_outer(wr_wdata[TOP_OH : TOP_OL]),
+		.wr_bot_outer(wr_wdata[BOT_OH : BOT_OL]),
+		.wr_val_inner(wr_wdata[VAL_IH : VAL_IL]),
+		.wr_top_inner(wr_wdata[TOP_IH : TOP_IL]),
+		.wr_bot_inner(wr_wdata[BOT_IH : BOT_IL]),
 
 		.rd_en  (wr_ren  ),
 		.rd_addr(wr_raddr),
-		.rd_val (wr_rdata[C_IMG_HW*2           ]),
-		.rd_top (wr_rdata[C_IMG_HW*2-1:C_IMG_HW]),
-		.rd_bot (wr_rdata[C_IMG_HW-1  :       0]),
+		.rd_black    (wr_rdata[BLACK_H:BLACK_L]),
+		.rd_val_outer(wr_rdata[VAL_OH : VAL_OL]),
+		.rd_top_outer(wr_rdata[TOP_OH : TOP_OL]),
+		.rd_bot_outer(wr_rdata[BOT_OH : BOT_OL]),
+		.rd_val_inner(wr_rdata[VAL_IH : VAL_IL]),
+		.rd_top_inner(wr_rdata[TOP_IH : TOP_IL]),
+		.rd_bot_inner(wr_rdata[BOT_IH : BOT_IL]),
 
 		.ref_data(ref_data),
+
+		.s_axis_tvalid(s_axis_tvalid),
+		.s_axis_tdata (s_axis_tdata ),
+		.s_axis_tuser (s_axis_tuser ),
+		.s_axis_tlast (s_axis_tlast ),
+		.s_axis_tready(s_axis_tready),
+
+		.o_wr_sof_d3   (fsaic_wr_sof_d3   ),
+		.o_rd_en_d3    (fsaic_rd_en_d3    ),
+		.o_hM2_p3      (fsaic_hM2_p3      ),
+		.o_hM3_p3      (fsaic_hM3_p3      ),
+		.o_hlast_p3    (fsaic_hlast_p3    ),
+		.o_wfirst_p3   (fsaic_wfirst_p3   ),
+		.o_wlast_p3    (fsaic_wlast_p3    ),
+		.o_x_d3        (fsaic_x_d3        ),
+		.o_rd_val_outer(fsaic_rd_val_outer),
+		.o_rd_top_outer(fsaic_rd_top_outer),
+		.o_rd_bot_outer(fsaic_rd_bot_outer)
+	);
+
+	fsa_detect_edge # (
+		.C_PIXEL_WIDTH (C_PIXEL_WIDTH),
+		.C_IMG_HW (C_IMG_HW),
+		.C_IMG_WW (C_IMG_WW),
+		.BR_NUM   (BR_NUM  ),
+		.BR_AW    (BR_AW   )	/// same as C_IMG_WW
+	) edge_detector (
+		.clk(clk),
+		.resetn(resetn),
+
+		.wr_sof_d3   (fsaic_wr_sof_d3   ),
+		.rd_en_d3    (fsaic_rd_en_d3    ),
+		.hM2_p3      (fsaic_hM2_p3      ),
+		.hM3_p3      (fsaic_hM3_p3      ),
+		.hlast_p3    (fsaic_hlast_p3    ),
+		.wfirst_p3   (fsaic_wfirst_p3   ),
+		.wlast_p3    (fsaic_wlast_p3    ),
+		.x_d3        (fsaic_x_d3        ),
+		.rd_val_outer(fsaic_rd_val_outer),
+		.rd_top_outer(fsaic_rd_top_outer),
+		.rd_bot_outer(fsaic_rd_bot_outer),
+
 		.ana_done(ana_done),
 		.res_lft_valid(lft_valid),
 		.res_lft_edge (lft_edge ),
@@ -253,18 +336,12 @@ endgenerate
 		.res_lft_corner_top_y(lft_corner_top_y),
 		.res_lft_corner_bot_x(lft_corner_bot_x),
 		.res_lft_corner_bot_y(lft_corner_bot_y),
-		.res_rt_header_valid (rt_header_valid),
+		.res_rt_header_valid (rt_header_valid ),
 		.res_rt_header_x     (rt_header_x     ),
 		.res_rt_corner_valid (rt_corner_valid),
 		.res_rt_corner_top_x (rt_corner_top_x ),
 		.res_rt_corner_top_y (rt_corner_top_y ),
 		.res_rt_corner_bot_x (rt_corner_bot_x ),
-		.res_rt_corner_bot_y (rt_corner_bot_y ),
-
-		.s_axis_tvalid(s_axis_tvalid),
-		.s_axis_tdata (s_axis_tdata ),
-		.s_axis_tuser (s_axis_tuser ),
-		.s_axis_tlast (s_axis_tlast ),
-		.s_axis_tready(s_axis_tready)
+		.res_rt_corner_bot_y (rt_corner_bot_y )
 	);
 endmodule

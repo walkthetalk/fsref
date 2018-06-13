@@ -187,7 +187,7 @@ pip_add_usr_par $core {BR_AW} {
 } {
 	value_resolve_type user
 	enablement_value false
-	value_tcl_expr {spirit:decode(id('MODELPARAM_VALUE.C_IMG_WW'))}
+	value_tcl_expr {$C_IMG_WW}
 	value 12
 	value_format long
 } {
@@ -201,12 +201,12 @@ pip_add_usr_par $core {BR_DW} {
 	widget {comboBox}
 } {
 	value_resolve_type user
-	value 32
+	enablement_value false
+	value_tcl_expr {$C_IMG_WW * 4 + 3}
+	value 51
 	value_format long
-	value_validation_type list
-	value_validation_list {32}
 } {
-	value 32
+	value 51
 	value_format long
 }
 
