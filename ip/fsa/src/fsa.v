@@ -237,6 +237,7 @@ endgenerate
 	wire                fsaic_rd_en_d3    ;
 	wire                fsaic_hM2_p3      ;
 	wire                fsaic_hM3_p3      ;
+	wire                fsaic_hfirst_p3   ;
 	wire                fsaic_hlast_p3    ;
 	wire                fsaic_wfirst_p3   ;
 	wire                fsaic_wlast_p3    ;
@@ -293,6 +294,7 @@ endgenerate
 		.o_rd_en_d3    (fsaic_rd_en_d3    ),
 		.o_hM2_p3      (fsaic_hM2_p3      ),
 		.o_hM3_p3      (fsaic_hM3_p3      ),
+		.o_hfirst_p3   (fsaic_hfirst_p3   ),
 		.o_hlast_p3    (fsaic_hlast_p3    ),
 		.o_wfirst_p3   (fsaic_wfirst_p3   ),
 		.o_wlast_p3    (fsaic_wlast_p3    ),
@@ -316,13 +318,14 @@ endgenerate
 		.rd_en_d3    (fsaic_rd_en_d3    ),
 		.hM2_p3      (fsaic_hM2_p3      ),
 		.hM3_p3      (fsaic_hM3_p3      ),
+		.hfirst_p3   (fsaic_hfirst_p3   ),
 		.hlast_p3    (fsaic_hlast_p3    ),
 		.wfirst_p3   (fsaic_wfirst_p3   ),
 		.wlast_p3    (fsaic_wlast_p3    ),
 		.x_d3        (fsaic_x_d3        ),
-		.rd_val_outer(fsaic_rd_val_outer),
-		.rd_top_outer(fsaic_rd_top_outer),
-		.rd_bot_outer(fsaic_rd_bot_outer),
+		.rd_val_outer_p3(fsaic_rd_val_outer),
+		.rd_top_outer_p3(fsaic_rd_top_outer),
+		.rd_bot_outer_p3(fsaic_rd_bot_outer),
 
 		.ana_done(ana_done),
 		.res_lft_valid(lft_valid),

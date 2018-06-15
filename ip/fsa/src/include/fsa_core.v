@@ -47,6 +47,7 @@ module fsa_core #(
 	output wire                o_rd_en_d3    ,
 	output wire                o_hM2_p3      ,
 	output wire                o_hM3_p3      ,
+	output wire                o_hfirst_p3   ,
 	output wire                o_hlast_p3    ,
 	output wire                o_wfirst_p3   ,
 	output wire                o_wlast_p3    ,
@@ -302,6 +303,7 @@ module fsa_core #(
 	assign o_rd_en_d3  = rd_en_d3 ;
 	assign o_hM2_p3    = hM2_p3   ;
 	assign o_hM3_p3    = hM3_p3   ;
+	assign o_hfirst_p3 = hfirst_p3;
 	assign o_hlast_p3  = hlast_p3 ;
 	assign o_wfirst_p3 = wfirst_p3;
 	assign o_wlast_p3  = wlast_p3 ;
