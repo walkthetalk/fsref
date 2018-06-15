@@ -62,13 +62,18 @@ pip_add_bus_if $core FSA_RESULT_EXT [subst {
 	DONE               ana_done
 	LEFT_VALID         lft_valid
 	LEFT_VERTEX        lft_edge
-	LEFT_HEADER_X      lft_header_x
+	LEFT_HEADER_OUTER_VALID  lft_header_outer_valid
+	LEFT_HEADER_OUTER_X      lft_header_outer_x
+	LEFT_CORNER_VALID  lft_corner_valid
 	LEFT_CORNER_TOP_X  lft_corner_top_x
 	LEFT_CORNER_TOP_Y  lft_corner_top_y
 	LEFT_CORNER_BOT_X  lft_corner_bot_x
 	LEFT_CORNER_BOT_Y  lft_corner_bot_y
 	RIGHT_VALID        rt_valid
 	RIGHT_VERTEX       rt_edge
+	RIGHT_HEADER_OUTER_VALID rt_header_outer_valid
+	RIGHT_HEADER_OUTER_X     rt_header_outer_x
+	RIGHT_CORNER_VALID rt_corner_valid
 	RIGHT_CORNER_TOP_X rt_corner_top_x
 	RIGHT_CORNER_TOP_Y rt_corner_top_y
 	RIGHT_CORNER_BOT_X rt_corner_bot_x

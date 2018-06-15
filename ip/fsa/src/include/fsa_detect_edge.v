@@ -25,8 +25,8 @@ module fsa_detect_edge #(
 	output wire                     ana_done,
 	output reg                      res_lft_valid       ,
 	output reg  [C_IMG_WW-1:0]      res_lft_edge        ,
-	output reg                      res_lft_header_valid,
-	output reg  [C_IMG_WW-1:0]      res_lft_header_x    ,
+	output reg                      res_lft_header_outer_valid,
+	output reg  [C_IMG_WW-1:0]      res_lft_header_outer_x    ,
 	output reg                      res_lft_corner_valid,
 	output reg  [C_IMG_WW-1:0]      res_lft_corner_top_x,
 	output reg  [C_IMG_HW-1:0]      res_lft_corner_top_y,
@@ -34,8 +34,8 @@ module fsa_detect_edge #(
 	output reg  [C_IMG_HW-1:0]      res_lft_corner_bot_y,
 	output reg                      res_rt_valid        ,
 	output reg  [C_IMG_WW-1:0]      res_rt_edge         ,
-	output reg                      res_rt_header_valid ,
-	output reg  [C_IMG_WW-1:0]      res_rt_header_x     ,
+	output reg                      res_rt_header_outer_valid ,
+	output reg  [C_IMG_WW-1:0]      res_rt_header_outer_x     ,
 	output reg                      res_rt_corner_valid ,
 	output reg  [C_IMG_WW-1:0]      res_rt_corner_top_x ,
 	output reg  [C_IMG_HW-1:0]      res_rt_corner_top_y ,
@@ -122,9 +122,9 @@ module fsa_detect_edge #(
 	wire [C_IMG_HW-1:0] rd_top_outer_p4;
 	wire [C_IMG_HW-1:0] rd_bot_outer_p4;
 
-	wire                lft_header_found;
+	wire                lft_header_outer_valid;
 	wire [C_IMG_WW-1:0] lft_header_x;
-	wire                rt_header_found;
+	wire                rt_header_outer_valid;
 	wire [C_IMG_WW-1:0] rt_header_x;
 
 	fsa_detect_header # (
@@ -145,15 +145,15 @@ module fsa_detect_edge #(
 		.lft_edge_p4 (lft_edge_p4 ),
 		.rt_edge_p4  (rt_edge_p4  ),
 
-		.rd_val_outer_p3 (rd_val_outer_p3 ),
-		.rd_top_outer_p3 (rd_top_outer_p3 ),
-		.rd_bot_outer_p3 (rd_bot_outer_p3 ),
-		.rd_val_outer_p4 (rd_val_outer_p4 ),
-		.rd_top_outer_p4 (rd_top_outer_p4 ),
-		.rd_bot_outer_p4 (rd_bot_outer_p4 ),
-		.lft_header_found(lft_header_found),
+		.rd_val_p3 (rd_val_outer_p3 ),
+		.rd_top_p3 (rd_top_outer_p3 ),
+		.rd_bot_p3 (rd_bot_outer_p3 ),
+		.rd_val_p4 (rd_val_outer_p4 ),
+		.rd_top_p4 (rd_top_outer_p4 ),
+		.rd_bot_p4 (rd_bot_outer_p4 ),
+		.lft_header_valid(lft_header_outer_valid),
 		.lft_header_x    (lft_header_x    ),
-		.rt_header_found (rt_header_found ),
+		.rt_header_valid (rt_header_outer_valid ),
 		.rt_header_x     (rt_header_x     )
 	);
 
@@ -185,7 +185,7 @@ module fsa_detect_edge #(
 				lft_bt_header_x <= 1'b1;
 
 			if (~rd_val_outer_p4) begin
-				lft_corner_found <= lft_header_found;
+				lft_corner_found <= lft_header_outer_valid;
 			end
 			if (~lft_corner_found && rd_val_outer_p4) begin
 				if (/*x_d4 == lft_header_x*/lft_is_header_x) begin
@@ -228,7 +228,7 @@ module fsa_detect_edge #(
 			if (x_d4 == rt_header_x)
 				rt_bt_header <= 1'b1;
 
-			rt_corner_found <= rd_val_outer_p4 && rt_header_found;
+			rt_corner_found <= rd_val_outer_p4 && rt_header_outer_valid;
 			if (~rt_corner_found) begin
 				rt_corner_top_x <= x_d4;
 				rt_corner_top_y <= rd_top_outer_p4;
@@ -307,15 +307,15 @@ module fsa_detect_edge #(
 			res_rt_edge   <= rt_edge_p5;
 			res_rt_valid  <= rt_valid_p5;
 
-			res_lft_header_valid <= lft_header_found;
-			res_lft_header_x     <= lft_header_x    ;
+			res_lft_header_outer_valid <= lft_header_outer_valid;
+			res_lft_header_outer_x     <= lft_header_x    ;
 			res_lft_corner_valid <= lft_corner_found;
 			res_lft_corner_top_x <= lft_corner_top_x;
 			res_lft_corner_top_y <= lft_corner_top_y;
 			res_lft_corner_bot_x <= lft_corner_bot_x;
 			res_lft_corner_bot_y <= lft_corner_bot_y;
-			res_rt_header_valid  <= rt_header_found ;
-			res_rt_header_x      <= rt_header_x     ;
+			res_rt_header_outer_valid  <= rt_header_outer_valid ;
+			res_rt_header_outer_x      <= rt_header_x     ;
 			res_rt_corner_valid  <= rt_corner_found ;
 			res_rt_corner_top_x  <= rt_corner_top_x ;
 			res_rt_corner_top_y  <= rt_corner_top_y ;
