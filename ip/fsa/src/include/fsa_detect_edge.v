@@ -42,7 +42,6 @@ module fsa_detect_edge #(
 	output reg  [C_IMG_WW-1:0]      res_rt_corner_bot_x ,
 	output reg  [C_IMG_HW-1:0]      res_rt_corner_bot_y
 );
-
 	reg wr_sof_d4;
 	always @ (posedge clk) begin
 		if (resetn == 1'b0)
@@ -51,30 +50,23 @@ module fsa_detect_edge #(
 			wr_sof_d4 <= wr_sof_d3;
 	end
 	/////////////////////////////////////////////////////////// preprocess
+
 	reg rd_en_d4;
 	reg hM2_p4;
 	reg hM3_p4;
 	reg hlast_p4;
 	reg wfirst_p4;
 	reg wlast_p4;
-	reg rd_val_outer_p4;
 	reg [C_IMG_WW-1:0] x_d4;
-	reg [C_IMG_HW-1:0] rd_top_p4;
-	reg [C_IMG_HW-1:0] rd_bot_p4;
-	reg [C_IMG_HW-1:0] rd_height_p4;
 	always @ (posedge clk) begin
 		if (resetn == 1'b0) begin
-			rd_en_d4 <= 1'b0;
-			hM2_p4   <= 1'b0;
-			hM3_p4   <= 1'b0;
-			hlast_p4 <= 1'b0;
+			rd_en_d4  <= 1'b0;
+			hM2_p4    <= 1'b0;
+			hM3_p4    <= 1'b0;
+			hlast_p4  <= 1'b0;
 			wfirst_p4 <= 1'b0;
 			wlast_p4  <= 1'b0;
-			rd_val_outer_p4 <= 1'b0;
-			rd_top_p4 <= 0;
-			rd_bot_p4 <= 0;
-			rd_height_p4 <= 0;
-			x_d4         <= 0;
+			x_d4      <= 0;
 		end
 		else begin
 			rd_en_d4  <= rd_en_d3;
@@ -83,59 +75,17 @@ module fsa_detect_edge #(
 			hlast_p4  <= hlast_p3;
 			wfirst_p4 <= wfirst_p3;
 			wlast_p4  <= wlast_p3;
-			rd_val_outer_p4 <= rd_val_outer_p3;
-			rd_top_p4 <= rd_top_outer_p3;
-			rd_bot_p4 <= rd_bot_outer_p3;
-			rd_height_p4 <= rd_bot_outer_p3 - rd_top_outer_p3;
-			x_d4         <= x_d3;
+			x_d4      <= x_d3;
 		end
 	end
 
-	//////////////////////////// height ////////////////////////////////////
-	localparam integer fiber_height_tol = 2;
-	reg                lft_height_valid;
-	reg [C_IMG_HW-1:0] lft_height;
-	reg [C_IMG_HW-1:0] lft_height_lower;
-	reg [C_IMG_HW-1:0] lft_height_upper;
-
-	reg                rt_height_valid;
-	reg [C_IMG_HW-1:0] rt_height;
-	reg [C_IMG_HW-1:0] rt_height_lower;
-	reg [C_IMG_HW-1:0] rt_height_upper;
-	always @ (posedge clk) begin
-		if (resetn == 1'b0) begin
-			lft_height_valid <= 0;
-			lft_height       <= 0;
-			lft_height_lower <= 0;
-			lft_height_upper <= 0;
-			rt_height_valid  <= 0;
-			rt_height        <= 0;
-			rt_height_lower  <= 0;
-			rt_height_upper  <= 0;
-		end
-		else if (rd_en_d4 && hM3_p4) begin
-			if (wfirst_p4) begin
-				lft_height_valid <= rd_val_outer_p4;
-				lft_height       <= rd_height_p4;
-				lft_height_upper <= rd_height_p4 + fiber_height_tol;
-				lft_height_lower <= rd_height_p4 - fiber_height_tol;
-			end
-
-			if (wlast_p4) begin
-				rt_height_valid  <= rd_val_outer_p4;
-				rt_height        <= rd_height_p4;
-				rt_height_upper  <= rd_height_p4 + fiber_height_tol;
-				rt_height_lower  <= rd_height_p4 - fiber_height_tol;
-			end
-		end
-	end
 
 	/////////////////////////////////////////////////////////// detect edge
-	reg lft_found;
-	reg lft_valid_p4;
+	reg               lft_found;
+	reg               lft_valid_p4;
 	reg[C_IMG_WW-1:0] lft_edge_p4;
-	reg rt_found;
-	reg rt_valid_p4;
+	reg               rt_found;
+	reg               rt_valid_p4;
 	reg[C_IMG_WW-1:0] rt_edge_p4;
 	always @ (posedge clk) begin
 		if (resetn == 1'b0 || hfirst_p3 == 1'b1) begin
@@ -167,64 +117,46 @@ module fsa_detect_edge #(
 		end
 	end
 
-	///////////////////////////////////////////////////////////////// corner
-	localparam integer C_FIBER_THICKNESS_LEN_HALF = 3;
-	localparam integer C_FIBER_THICKNESS_LEN = C_FIBER_THICKNESS_LEN_HALF * 2 + 1;
-	/// HM2
-	///////////////////////// left
-	reg                             lft_header_done;
-	reg                             lft_header_found;
-	reg [C_FIBER_THICKNESS_LEN-1:0] lft_col_valid;
-	reg [C_IMG_WW-1:0]              lft_header_x;
-	wire                            lft_col_thickness_valid;
-	assign lft_col_thickness_valid = (rd_height_p4 <= lft_height_upper && rd_height_p4 >= lft_height_lower);
-	wire                            update_lft_header_x;
-	assign update_lft_header_x = (~lft_header_done && lft_col_valid == {C_FIBER_THICKNESS_LEN{1'b1}});
+	/////////////////////////////////////////////////////////////////
+	wire                rd_val_outer_p4;
+	wire [C_IMG_HW-1:0] rd_top_outer_p4;
+	wire [C_IMG_HW-1:0] rd_bot_outer_p4;
 
-	always @ (posedge clk) begin
-		if (resetn == 1'b0 || hM3_p4 == 1'b1) begin
-			lft_header_done  <= 0;
-			lft_header_found <= 1'b0;
-			lft_col_valid    <= 0;
-			lft_header_x     <= 0;
-		end
-		else if (rd_en_d4 && hM2_p4) begin
-			lft_col_valid <= { lft_col_valid[C_FIBER_THICKNESS_LEN-2:0], lft_col_thickness_valid};
-			if (x_d4 == lft_edge_p4)
-				lft_header_done <= 1;
-			if (update_lft_header_x) begin
-				lft_header_found <= 1;
-				lft_header_x     <= x_d4 - C_FIBER_THICKNESS_LEN_HALF - 1;
-			end
-		end
-	end
+	wire                lft_header_found;
+	wire [C_IMG_WW-1:0] lft_header_x;
+	wire                rt_header_found;
+	wire [C_IMG_WW-1:0] rt_header_x;
 
-	//////////////// right
-	reg                             rt_header_start;
-	reg                             rt_header_found;
-	reg [C_FIBER_THICKNESS_LEN-1:0] rt_col_valid;
-	reg [C_IMG_WW-1:0]              rt_header_x;
-	wire                            rt_col_thickness_valid;
-	assign rt_col_thickness_valid = (rd_height_p4 <= rt_height_upper && rd_height_p4 >= rt_height_lower);
-	wire                            update_rt_header_x;
-	assign update_rt_header_x = ((~rt_header_found && rt_header_start) && rt_col_valid == {C_FIBER_THICKNESS_LEN{1'b1}});
-	always @ (posedge clk) begin
-		if (resetn == 1'b0 || hM3_p4 == 1'b1) begin
-			rt_header_start <= 0;
-			rt_header_found <= 1'b0;
-			rt_col_valid    <= 0;
-			rt_header_x     <= 0;
-		end
-		else if (rd_en_d4 && hM2_p4) begin
-			rt_col_valid  <= { rt_col_valid[C_FIBER_THICKNESS_LEN-2:0],  rt_col_thickness_valid};
-			if (x_d4 == rt_edge_p4)
-				rt_header_start <= 1;
-			if (update_rt_header_x) begin
-				rt_header_found <= 1;
-				rt_header_x     <= x_d4 - C_FIBER_THICKNESS_LEN_HALF - 1;
-			end
-		end
-	end
+	fsa_detect_header # (
+		.C_IMG_HW(C_IMG_HW),
+		.C_IMG_WW(C_IMG_WW)
+	) outer_header_detector (
+		.clk(clk),
+		.resetn(resetn),
+
+		.rd_en_d3    (rd_en_d3    ),
+		.hM3_p3      (hM3_p3      ),
+		.wfirst_p3   (wfirst_p3   ),
+		.wlast_p3    (wlast_p3    ),
+		.rd_en_d4    (rd_en_d4    ),
+		.hM2_p4      (hM2_p4      ),
+		.hM3_p4      (hM3_p4      ),
+		.x_d4        (x_d4        ),
+		.lft_edge_p4 (lft_edge_p4 ),
+		.rt_edge_p4  (rt_edge_p4  ),
+
+		.rd_val_outer_p3 (rd_val_outer_p3 ),
+		.rd_top_outer_p3 (rd_top_outer_p3 ),
+		.rd_bot_outer_p3 (rd_bot_outer_p3 ),
+		.rd_val_outer_p4 (rd_val_outer_p4 ),
+		.rd_top_outer_p4 (rd_top_outer_p4 ),
+		.rd_bot_outer_p4 (rd_bot_outer_p4 ),
+		.lft_header_found(lft_header_found),
+		.lft_header_x    (lft_header_x    ),
+		.rt_header_found (rt_header_found ),
+		.rt_header_x     (rt_header_x     )
+	);
+
 	///////////////////////////////////////////////////////////////// Hlast
 
 	///////////////////////// left
@@ -258,18 +190,18 @@ module fsa_detect_edge #(
 			if (~lft_corner_found && rd_val_outer_p4) begin
 				if (/*x_d4 == lft_header_x*/lft_is_header_x) begin
 					lft_corner_top_x <= x_d4;
-					lft_corner_top_y <= rd_top_p4;
+					lft_corner_top_y <= rd_top_outer_p4;
 					lft_corner_bot_x <= x_d4;
-					lft_corner_bot_y <= rd_bot_p4;
+					lft_corner_bot_y <= rd_bot_outer_p4;
 				end
 				else if (/*x_d4 > lft_header_x*/lft_bt_header_x) begin
-					if (rd_top_p4 <= lft_corner_top_y) begin
+					if (rd_top_outer_p4 <= lft_corner_top_y) begin
 						lft_corner_top_x <= x_d4;
-						lft_corner_top_y <= rd_top_p4;
+						lft_corner_top_y <= rd_top_outer_p4;
 					end
-					if (rd_bot_p4 >= lft_corner_bot_y) begin
+					if (rd_bot_outer_p4 >= lft_corner_bot_y) begin
 						lft_corner_bot_x <= x_d4;
-						lft_corner_bot_y <= rd_bot_p4;
+						lft_corner_bot_y <= rd_bot_outer_p4;
 					end
 				end
 			end
@@ -299,18 +231,18 @@ module fsa_detect_edge #(
 			rt_corner_found <= rd_val_outer_p4 && rt_header_found;
 			if (~rt_corner_found) begin
 				rt_corner_top_x <= x_d4;
-				rt_corner_top_y <= rd_top_p4;
+				rt_corner_top_y <= rd_top_outer_p4;
 				rt_corner_bot_x <= x_d4;
-				rt_corner_bot_y <= rd_bot_p4;
+				rt_corner_bot_y <= rd_bot_outer_p4;
 			end
 			else if (/*x_d4 <= rt_header_x*/~rt_bt_header) begin
-				if (rd_top_p4 < rt_corner_top_y) begin
+				if (rd_top_outer_p4 < rt_corner_top_y) begin
 					rt_corner_top_x <= x_d4;
-					rt_corner_top_y <= rd_top_p4;
+					rt_corner_top_y <= rd_top_outer_p4;
 				end
-				if (rd_bot_p4 > rt_corner_bot_y) begin
+				if (rd_bot_outer_p4 > rt_corner_bot_y) begin
 					rt_corner_bot_x <= x_d4;
-					rt_corner_bot_y <= rd_bot_p4;
+					rt_corner_bot_y <= rd_bot_outer_p4;
 				end
 			end
 		end
