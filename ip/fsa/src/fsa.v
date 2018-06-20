@@ -28,6 +28,7 @@ module fsa #(
 	output wire [C_IMG_WW-1:0]      lft_edge ,
 	output wire                     lft_header_outer_valid,
 	output wire [C_IMG_WW-1:0]      lft_header_outer_x    ,
+	output wire [C_IMG_WW-1:0]      lft_header_outer_y    ,
 	output wire                     lft_corner_valid,
 	output wire [C_IMG_WW-1:0]      lft_corner_top_x,
 	output wire [C_IMG_HW-1:0]      lft_corner_top_y,
@@ -37,11 +38,19 @@ module fsa #(
 	output wire [C_IMG_WW-1:0]      rt_edge  ,
 	output wire                     rt_header_outer_valid,
 	output wire [C_IMG_WW-1:0]      rt_header_outer_x    ,
+	output wire [C_IMG_WW-1:0]      rt_header_outer_y    ,
 	output wire                     rt_corner_valid,
 	output wire [C_IMG_WW-1:0]      rt_corner_top_x,
 	output wire [C_IMG_HW-1:0]      rt_corner_top_y,
 	output wire [C_IMG_WW-1:0]      rt_corner_bot_x,
 	output wire [C_IMG_HW-1:0]      rt_corner_bot_y,
+
+	output wire                     lft_header_inner_valid,
+	output wire [C_IMG_WW-1:0]      lft_header_inner_x    ,
+	output wire [C_IMG_WW-1:0]      lft_header_inner_y    ,
+	output wire                     rt_header_inner_valid ,
+	output wire [C_IMG_WW-1:0]      rt_header_inner_x     ,
+	output wire [C_IMG_WW-1:0]      rt_header_inner_y     ,
 
 	input  wire                     s_axis_tvalid,
 	input  wire [C_PIXEL_WIDTH-1:0] s_axis_tdata,
@@ -334,6 +343,7 @@ endgenerate
 		.res_rt_edge  (rt_edge  ),
 		.res_lft_header_outer_valid(lft_header_outer_valid),
 		.res_lft_header_outer_x    (lft_header_outer_x    ),
+		.res_lft_header_outer_y    (lft_header_outer_y    ),
 		.res_lft_corner_valid(lft_corner_valid),
 		.res_lft_corner_top_x(lft_corner_top_x),
 		.res_lft_corner_top_y(lft_corner_top_y),
@@ -341,10 +351,18 @@ endgenerate
 		.res_lft_corner_bot_y(lft_corner_bot_y),
 		.res_rt_header_outer_valid (rt_header_outer_valid ),
 		.res_rt_header_outer_x     (rt_header_outer_x     ),
+		.res_rt_header_outer_y     (rt_header_outer_y     ),
 		.res_rt_corner_valid (rt_corner_valid),
 		.res_rt_corner_top_x (rt_corner_top_x ),
 		.res_rt_corner_top_y (rt_corner_top_y ),
 		.res_rt_corner_bot_x (rt_corner_bot_x ),
-		.res_rt_corner_bot_y (rt_corner_bot_y )
+		.res_rt_corner_bot_y (rt_corner_bot_y ),
+
+		.res_lft_header_inner_valid(lft_header_inner_valid),
+		.res_lft_header_inner_x    (lft_header_inner_x    ),
+		.res_lft_header_inner_y    (lft_header_inner_y    ),
+		.res_rt_header_inner_valid (rt_header_inner_valid ),
+		.res_rt_header_inner_x     (rt_header_inner_x     ),
+		.res_rt_header_inner_y     (rt_header_inner_y     )
 	);
 endmodule

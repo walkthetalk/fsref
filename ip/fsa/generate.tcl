@@ -64,6 +64,9 @@ pip_add_bus_if $core FSA_RESULT_EXT [subst {
 	LEFT_VERTEX        lft_edge
 	LEFT_HEADER_OUTER_VALID  lft_header_outer_valid
 	LEFT_HEADER_OUTER_X      lft_header_outer_x
+	LEFT_HEADER_OUTER_Y      lft_header_outer_y
+	LEFT_HEADER_INNER_X      lft_header_inner_x
+	LEFT_HEADER_INNER_Y      lft_header_inner_y
 	LEFT_CORNER_VALID  lft_corner_valid
 	LEFT_CORNER_TOP_X  lft_corner_top_x
 	LEFT_CORNER_TOP_Y  lft_corner_top_y
@@ -73,6 +76,9 @@ pip_add_bus_if $core FSA_RESULT_EXT [subst {
 	RIGHT_VERTEX       rt_edge
 	RIGHT_HEADER_OUTER_VALID rt_header_outer_valid
 	RIGHT_HEADER_OUTER_X     rt_header_outer_x
+	RIGHT_HEADER_OUTER_Y     rt_header_outer_y
+	RIGHT_HEADER_INNER_X     rt_header_inner_x
+	RIGHT_HEADER_INNER_Y     rt_header_inner_y
 	RIGHT_CORNER_VALID rt_corner_valid
 	RIGHT_CORNER_TOP_X rt_corner_top_x
 	RIGHT_CORNER_TOP_Y rt_corner_top_y

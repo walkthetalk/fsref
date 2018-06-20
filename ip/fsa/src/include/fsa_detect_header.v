@@ -10,6 +10,7 @@ module fsa_detect_header # (
 	input  wire                wfirst_p3   ,
 	input  wire                wlast_p3    ,
 	input  wire                rd_en_d4    ,
+	input  wire                hM1_p4      ,
 	input  wire                hM2_p4      ,
 	input  wire                hM3_p4      ,
 
@@ -27,8 +28,10 @@ module fsa_detect_header # (
 
 	output reg                lft_header_valid,
 	output reg [C_IMG_WW-1:0] lft_header_x,
+	output reg [C_IMG_HW-1:0] lft_header_y,
 	output reg                rt_header_valid,
-	output reg [C_IMG_WW-1:0] rt_header_x
+	output reg [C_IMG_WW-1:0] rt_header_x,
+	output reg [C_IMG_HW-1:0] rt_header_y
 );
 	localparam integer fiber_height_tol = 2;
 
@@ -39,18 +42,21 @@ module fsa_detect_header # (
 	//reg [C_IMG_HW-1:0] rd_top_p4;
 	//reg [C_IMG_HW-1:0] rd_bot_p4;
 	reg [C_IMG_HW-1:0] rd_height_p4;
+	reg [C_IMG_HW-1:0] rd_yc_p4;	/// center of y
 	always @ (posedge clk) begin
 		if (resetn == 1'b0) begin
 			rd_val_p4 <= 1'b0;
 			rd_top_p4 <= 0;
 			rd_bot_p4 <= 0;
 			rd_height_p4 <= 0;
+			rd_yc_p4  <= 0;
 		end
 		else begin
 			rd_val_p4 <= rd_val_p3;
 			rd_top_p4 <= rd_top_p3;
 			rd_bot_p4 <= rd_bot_p3;
 			rd_height_p4 <= col_height_p3;
+			rd_yc_p4  <= (rd_bot_p3 + rd_top_p3) / 2;
 		end
 	end
 
@@ -113,6 +119,20 @@ module fsa_detect_header # (
 		end
 	end
 
+	reg       update_lft_header_y;
+	always @ (posedge clk) begin
+		if (resetn == 1'b0 || hM2_p4 == 1'b1) begin
+			update_lft_header_y <= 1;
+			lft_header_y  <= 0;
+		end
+		else if (rd_en_d4 && hM1_p4) begin
+			if (x_d4 == lft_header_x)
+				update_lft_header_y <= 0;
+			if (update_lft_header_y)
+				lft_header_y <= rd_yc_p4;
+		end
+	end
+
 	//////////////// right
 	reg                             rt_header_start;
 	//reg                             rt_header_valid;
@@ -137,6 +157,20 @@ module fsa_detect_header # (
 				rt_header_valid <= 1;
 				rt_header_x     <= x_d4 - C_FIBER_THICKNESS_LEN_HALF - 1;
 			end
+		end
+	end
+
+	reg       update_rt_header_y;
+	always @ (posedge clk) begin
+		if (resetn == 1'b0 || hM2_p4 == 1'b1) begin
+			update_rt_header_y <= 1;
+			rt_header_y  <= 0;
+		end
+		else if (rd_en_d4 && hM1_p4) begin
+			if (x_d4 == rt_header_x)
+				update_rt_header_y <= 0;
+			if (update_rt_header_y)
+				rt_header_y <= rd_yc_p4;
 		end
 	end
 endmodule
