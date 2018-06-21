@@ -293,7 +293,7 @@ proc create_fscore {
 		CONFIG.C_S0_SIZE 0x00100000 \
 		CONFIG.C_S1_ADDR 0x3F400000 \
 		CONFIG.C_S1_SIZE 0x00100000 \
-		CONFIG.C_BR_INITOR_NBR 3 \
+		CONFIG.C_BR_INITOR_NBR 4 \
 		CONFIG.C_BR_ADDR_WIDTH [expr max($motor_br_addr_width, $img_w_width, $img_h_width)] \
 		CONFIG.C_MOTOR_NBR 4 \
 		CONFIG.C_ZPD_SEQ {"0011"} \
@@ -332,10 +332,14 @@ proc create_fscore {
 		$mname/fsctl/S0_DST             $mname/pblender/S0_POS
 		$mname/fsctl/S1_DST             $mname/pblender/S1_POS
 		$mname/fsctl/BR2_INIT_CTL	$mname/fscpu/BPM_INIT
+		$mname/fsctl/BR3_INIT_CTL	$mname/fscpu/BAM_INIT
 		$mname/fsctl/REQ0_CTL           $mname/fscpu/REQ_CTL
-		$mname/stream0/FSA_RESULT_EXT   $mname/fscpu/FSA_RESULT
+		$mname/stream0/FSA_RESULT_EXT   $mname/fscpu/FSA_RESULT_X
+		$mname/stream1/FSA_RESULT_EXT   $mname/fscpu/FSA_RESULT_Y
 		$mname/fscpu/Ml_REQ             $mname/push_motor/S0_EXT_REQ
 		$mname/fscpu/Mr_REQ             $mname/push_motor/S1_EXT_REQ
+		$mname/fscpu/Mx_REQ             $mname/align_motor/S0_EXT_REQ
+		$mname/fscpu/My_REQ             $mname/align_motor/S1_EXT_REQ
 	}]
 
 	pip_connect_net [subst {
@@ -346,6 +350,8 @@ proc create_fscore {
 		$mname/fsctl/s1_wr_done         $mname/stream1/wr_done
 		$mname/fscpu/ml_sel             $mname/push_motor/s0_ext_sel
 		$mname/fscpu/mr_sel             $mname/push_motor/s1_ext_sel
+		$mname/fscpu/mx_sel             $mname/align_motor/s0_ext_sel
+		$mname/fscpu/my_sel             $mname/align_motor/s1_ext_sel
 	}]
 
 	# external interface
