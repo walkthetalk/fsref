@@ -1,4 +1,4 @@
-module IM_ctl # (
+module PM_ctl # (
 	parameter integer C_IMG_WW = 12,
 	parameter integer C_IMG_HW = 12,
 	parameter integer C_FRMN_WIDTH = 2,
@@ -41,7 +41,12 @@ module IM_ctl # (
 
 	output reg                 rd_en,
 	output reg  [C_IMG_WW-1:0] rd_addr,
-	input  wire [C_STEP_NUMBER_WIDTH-1:0] rd_data
+	input  wire [C_STEP_NUMBER_WIDTH-1:0] rd_data,
+
+	output wire [31:0]         test1,
+	output wire [31:0]         test2,
+	output wire [31:0]         test3,
+	output wire [31:0]         test4
 );
 
 /////////////////// motor_pos ///////////////////////////////////////////
@@ -240,6 +245,7 @@ module IM_ctl # (
 			m_stop <= 1'b0;
 		else if (pen_d5) begin
 			if (req_single_dir) begin
+				/*
 				if (m_running) begin
 					if (req_dir_back) begin
 						if (m_position <= dst_pos)
@@ -250,6 +256,7 @@ module IM_ctl # (
 							m_stop <= 1'b1;
 					end
 				end
+				*/
 			end
 		end
 	end
@@ -293,6 +300,10 @@ module IM_ctl # (
 	end
 
 	/// change remain step
+	reg [31:0] r_test1;	assign test1 = r_test1;
+	reg [31:0] r_test2;	assign test2 = r_test2;
+	reg [31:0] r_test3;	assign test3 = r_test3;
+	reg [31:0] r_test4;	assign test4 = r_test4;
 	always @ (posedge clk) begin
 		if (resetn == 1'b0) begin
 			m_mod_remain  <= 1'b0;
@@ -303,6 +314,10 @@ module IM_ctl # (
 		else if (pen_d5) begin
 			if (req_single_dir) begin
 				if (m_running && need_dyn_adjust && img_valid) begin
+					r_test1 <= dst_pos;
+					r_test2 <= m_position;
+					r_test3 <= movie_pos;
+					r_test4 <= rd_data;
 					if (req_dir_back) begin
 						if (m_position > dst_pos) begin
 							m_mod_remain <= 1'b1;

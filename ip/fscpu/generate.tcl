@@ -1,16 +1,18 @@
 define_associate_busif clk
 
-pip_add_bus_if $core BPM_INIT [subst {
-	abstraction_type_vlnv {$VENDOR:interface:blockram_init_ctl_rtl:1.0}
-	bus_type_vlnv {$VENDOR:interface:blockram_init_ctl:1.0}
-	interface_mode {slave}
-}] [subst {
-	INIT  bpm_init
-	WR_EN bpm_wr_en
-	DATA  bpm_data
-	SIZE  bpm_size
-}]
-append_associate_busif clk BPM_INIT
+foreach i {bpm bam} {
+	pip_add_bus_if $core [string toupper $i]_INIT [subst {
+		abstraction_type_vlnv {$VENDOR:interface:blockram_init_ctl_rtl:1.0}
+		bus_type_vlnv {$VENDOR:interface:blockram_init_ctl:1.0}
+		interface_mode {slave}
+	}] [subst {
+		INIT  [set i]_init
+		WR_EN [set i]_wr_en
+		DATA  [set i]_data
+		SIZE  [set i]_size
+	}]
+	append_associate_busif clk [string toupper $i]_INIT
+}
 
 pip_add_bus_if $core REQ_CTL [subst {
 	abstraction_type_vlnv {$VENDOR:interface:req_ctl_rtl:1.0}
@@ -25,21 +27,30 @@ pip_add_bus_if $core REQ_CTL [subst {
 }]
 append_associate_busif clk REQ_CTL
 
-pip_add_bus_if $core FSA_RESULT [subst {
-	abstraction_type_vlnv $VENDOR:interface:fsa_result_rtl:1.0
-	bus_type_vlnv $VENDOR:interface:fsa_result:1.0
-	interface_mode slave
-}] {
-	DONE         ana_done
-	LEFT_VALID   lft_valid
-	LEFT_VERTEX  lft_edge
-	RIGHT_VALID  rt_valid
-	RIGHT_VERTEX rt_edge
+foreach i {x y} {
+	pip_add_bus_if $core FSA_RESULT_[string toupper $i] [subst {
+		abstraction_type_vlnv $VENDOR:interface:fsa_result_rtl:1.0
+		bus_type_vlnv $VENDOR:interface:fsa_result:1.0
+		interface_mode slave
+	}] [subst {
+		DONE                     [set i]_ana_done
+		LEFT_VALID               [set i]_lft_valid
+		LEFT_VERTEX              [set i]_lft_edge
+		LEFT_HEADER_OUTER_VALID  [set i]_lft_header_outer_valid
+		LEFT_HEADER_OUTER_Y      [set i]_lft_header_outer_y
+		LEFT_HEADER_INNER_VALID  [set i]_lft_header_inner_valid
+		LEFT_HEADER_INNER_Y      [set i]_lft_header_inner_y
+		RIGHT_VALID              [set i]_rt_valid
+		RIGHT_VERTEX             [set i]_rt_edge
+		RIGHT_HEADER_OUTER_VALID [set i]_rt_header_outer_valid
+		RIGHT_HEADER_OUTER_Y     [set i]_rt_header_outer_y
+		RIGHT_HEADER_INNER_VALID [set i]_rt_header_inner_valid
+		RIGHT_HEADER_INNER_Y     [set i]_rt_header_inner_y
+	}]
+	append_associate_busif clk FSA_RESULT_[string toupper $i]
 }
-append_associate_busif clk FSA_RESULT
 
-
-foreach i {l r} {
+foreach i {l r x y} {
 	pip_add_bus_if $core M[set i]_REQ [subst {
 		abstraction_type_vlnv $VENDOR:interface:step_motor_req_ctl_rtl:1.0
 		bus_type_vlnv $VENDOR:interface:step_motor_req_ctl:1.0
