@@ -3,6 +3,7 @@ import sys
 import inspect
 import pathlib
 from sympy.parsing.sympy_parser import parse_expr
+from sympy import sympify
 
 def get_scirpt_dir():
 	filename = inspect.getframeinfo(inspect.currentframe()).filename
@@ -64,7 +65,7 @@ def str4alwaysend():
 	return 'end'
 
 def h2lrange(l, w):
-	lstr = str(l)
+	lstr = parse_expr(str(l))
 	wstr = str(w)
 	if wstr == '1' or wstr == '':
 		return '[{}]'.format(lstr)
@@ -843,7 +844,12 @@ class VerilogModuleFile:
 		ret += contentstr
 		ret += suppline(lvl, str4looptail())
 		return ret
-	def gen_ind_reg(self, lvl, ridx, lbit, rwtype, ifname, pname, width='', dstlbit=''):
+	def getIfPortWidth(self, ifname, pname):
+		intf = self.getif(ifname)
+		port = intf.getport(pname)
+		return port.width
+
+	def gen_ind_reg(self, lvl, ridx, lbit, rwtype, ifname, pname, occupywidth = ''):
 		intf = self.getif(ifname)
 		port = intf.getport(pname)
 		if port.iotype == 'input':
@@ -852,8 +858,30 @@ class VerilogModuleFile:
 			dstname = str4cfg(intf.name, pname)
 		else:
 			dstname = str4array(intf.name, pname)
-		regwdith = (port.width if width == '' else width)
-		return drc_ind(lvl, ridx, lbit, regwdith, rwtype,
+		ret = drc_ind(lvl, ridx, lbit, port.width, rwtype,
+			dstname, '', intf.realsize, intf._get('indsel'))
+		if occupywidth != '':
+			portwidthstr = str(port.width)
+			if portwidthstr == '':
+				portwidthstr = '1'
+			condstr = portwidthstr + ' < ' + str(occupywidth)
+			if parse_expr(condstr) != sympify(False):
+				ret += suppline(lvl, 'if ({}) begin: {}'.format(condstr, 'idle' + str(ridx)+'_'+str(lbit)))
+				idle_lbit  = str(lbit) + ' + ' + portwidthstr
+				idle_width = str(occupywidth) + '-' + portwidthstr
+				ret += drc_ro(lvl+1, ridx, idle_lbit, idle_width, '0')
+				ret += suppline(lvl, 'end')
+		return ret
+	def gen_ind_reg_part(self, lvl, ridx, lbit, rwtype, ifname, pname, width, dstlbit):
+		intf = self.getif(ifname)
+		port = intf.getport(pname)
+		if port.iotype == 'input':
+			dstname = str4array(intf.name, pname)
+		elif intf._has('outsync'):
+			dstname = str4cfg(intf.name, pname)
+		else:
+			dstname = str4array(intf.name, pname)
+		return drc_ind(lvl, ridx, lbit, width, rwtype,
 			dstname, dstlbit, intf.realsize, intf._get('indsel'))
 	def save(self, path):
 		with open(path, 'w') as fd:
@@ -1019,6 +1047,9 @@ class VMFsctl(VerilogModuleFile):
 			"realsize": "1",
 			"comments": "request to fscpu"
 		})
+
+		for i in range(0, 8):
+			self.addExtPort({'iotype': 'input',  'wrtype': 'wire', 'name': 'test' + str(i), 'width': '32'})
 	def __addlocalparams(self):
 		self.addLocalparam({ "name": "C_REG_NUM", "comments": "register number", "defV": "2**C_REG_IDX_WIDTH" })
 
@@ -1243,54 +1274,54 @@ class VMFsctl(VerilogModuleFile):
 
 		ridx += 1
 		ret += suppcomment(lvl, str4regdefcomment(ridx))
-		ret += self.gen_ind_reg(lvl, ridx, 0, 'rw', 's', 'dst_bmp')
+		ret += self.gen_ind_reg(lvl, ridx, 0, 'rw', 's', 'dst_bmp', 32)
 
 		ridx += 1
 		ret += suppcomment(lvl, str4regdefcomment(ridx))
-		ret += self.gen_ind_reg(lvl, ridx, 0, 'rw', 's', 'height')
-		ret += self.gen_ind_reg(lvl, ridx, 16, 'rw', 's', 'width')
+		ret += self.gen_ind_reg(lvl, ridx, 0, 'rw', 's', 'height', 16)
+		ret += self.gen_ind_reg(lvl, ridx, 16, 'rw', 's', 'width', 16)
 
 		ridx += 1
 		ret += suppcomment(lvl, str4regdefcomment(ridx))
-		ret += self.gen_ind_reg(lvl, ridx, 0, 'rw', 's', 'win_top')
-		ret += self.gen_ind_reg(lvl, ridx, 16, 'rw', 's', 'win_left')
+		ret += self.gen_ind_reg(lvl, ridx, 0, 'rw', 's', 'win_top', 16)
+		ret += self.gen_ind_reg(lvl, ridx, 16, 'rw', 's', 'win_left', 16)
 
 		ridx += 1
 		ret += suppcomment(lvl, str4regdefcomment(ridx))
-		ret += self.gen_ind_reg(lvl, ridx, 0, 'rw', 's', 'win_height')
-		ret += self.gen_ind_reg(lvl, ridx, 16, 'rw', 's', 'win_width')
+		ret += self.gen_ind_reg(lvl, ridx, 0, 'rw', 's', 'win_height', 16)
+		ret += self.gen_ind_reg(lvl, ridx, 16, 'rw', 's', 'win_width', 16)
 
 		ridx += 1
 		ret += suppcomment(lvl, str4regdefcomment(ridx))
-		ret += self.gen_ind_reg(lvl, ridx, 0, 'rw', 's', 'dst_top')
-		ret += self.gen_ind_reg(lvl, ridx, 16, 'rw', 's', 'dst_left')
+		ret += self.gen_ind_reg(lvl, ridx, 0, 'rw', 's', 'dst_top', 16)
+		ret += self.gen_ind_reg(lvl, ridx, 16, 'rw', 's', 'dst_left', 16)
 
 		ridx += 1
 		ret += suppcomment(lvl, str4regdefcomment(ridx))
-		ret += self.gen_ind_reg(lvl, ridx, 0, 'rw', 's', 'dst_height')
-		ret += self.gen_ind_reg(lvl, ridx, 16, 'rw', 's', 'dst_width')
+		ret += self.gen_ind_reg(lvl, ridx, 0, 'rw', 's', 'dst_height', 16)
+		ret += self.gen_ind_reg(lvl, ridx, 16, 'rw', 's', 'dst_width', 16)
 
 		ridx += 1
 		ret += suppcomment(lvl, str4regdefcomment(ridx))
-		ret += self.gen_ind_reg(lvl, ridx, 0, 'ro', 's', 'rd_buf_idx')
+		ret += self.gen_ind_reg(lvl, ridx, 0, 'ro', 's', 'rd_buf_idx', 32)
 
 		ridx += 1
 		ret += suppcomment(lvl, str4regdefcomment(ridx))
-		ret += self.gen_ind_reg(lvl, ridx, 0, 'ro', 's', 'rd_buf_ts', 32, 0)
+		ret += self.gen_ind_reg_part(lvl, ridx, 0, 'ro', 's', 'rd_buf_ts', 32, 0)
 
 		ridx += 1
 		ret += suppcomment(lvl, str4regdefcomment(ridx))
-		ret += self.gen_ind_reg(lvl, ridx, 0, 'ro', 's', 'rd_buf_ts', 32, 32)
+		ret += self.gen_ind_reg_part(lvl, ridx, 0, 'ro', 's', 'rd_buf_ts', 32, 32)
 
 		ridx += 1
 		ret += suppcomment(lvl, str4regdefcomment(ridx))
-		ret += self.gen_ind_reg(lvl, ridx, 0, 'ro', 's', 'lft_v')
-		ret += self.gen_ind_reg(lvl, ridx, 16, 'ro', 's', 'rt_v')
+		ret += self.gen_ind_reg(lvl, ridx, 0, 'ro', 's', 'lft_v', 16)
+		ret += self.gen_ind_reg(lvl, ridx, 16, 'ro', 's', 'rt_v', 16)
 		#ret += suppreadreg0(lvl, ridx)
 
 		ridx += 1
 		ret += suppcomment(lvl, str4regdefcomment(ridx))
-		ret += self.gen_ind_reg(lvl, ridx, 0, 'rw', 's', 'ref_data')
+		ret += self.gen_ind_reg(lvl, ridx, 0, 'rw', 's', 'ref_data', 32)
 
 		ridx += 1
 		ret += suppcomment(lvl, str4regdefcomment(ridx))
@@ -1399,23 +1430,23 @@ class VMFsctl(VerilogModuleFile):
 
 		ridx += 1
 		ret += suppcomment(lvl, str4regdefcomment(ridx))
-		ret += self.gen_ind_reg(lvl, ridx, 0, 'rw', 'motor', 'ms')
+		ret += self.gen_ind_reg(lvl, ridx, 0, 'rw', 'motor', 'ms', 32)
 
 		ridx += 1
 		ret += suppcomment(lvl, str4regdefcomment(ridx))
-		ret += self.gen_ind_reg(lvl, ridx, 0, 'rw', 'motor', 'stroke')
+		ret += self.gen_ind_reg(lvl, ridx, 0, 'rw', 'motor', 'stroke', 32)
 
 		ridx += 1
 		ret += suppcomment(lvl, str4regdefcomment(ridx))
-		ret += self.gen_ind_reg(lvl, ridx, 0, 'rw', 'motor', 'dir')
+		ret += self.gen_ind_reg(lvl, ridx, 0, 'rw', 'motor', 'dir', 32)
 
 		ridx += 1
 		ret += suppcomment(lvl, str4regdefcomment(ridx))
-		ret += self.gen_ind_reg(lvl, ridx, 0, 'rw', 'motor', 'step')
+		ret += self.gen_ind_reg(lvl, ridx, 0, 'rw', 'motor', 'step', 32)
 
 		ridx += 1
 		ret += suppcomment(lvl, str4regdefcomment(ridx))
-		ret += self.gen_ind_reg(lvl, ridx, 0, 'rw', 'motor', 'speed')
+		ret += self.gen_ind_reg(lvl, ridx, 0, 'rw', 'motor', 'speed', 32)
 
 		ridx += 1
 		ret += suppcomment(lvl, str4regdefcomment(ridx))
@@ -1451,11 +1482,11 @@ class VMFsctl(VerilogModuleFile):
 
 		ridx += 1
 		ret += suppcomment(lvl, str4regdefcomment(ridx))
-		ret += self.gen_ind_reg(lvl, ridx, 0, 'rw', 'pwm', 'denominator')
+		ret += self.gen_ind_reg(lvl, ridx, 0, 'rw', 'pwm', 'denominator', 32)
 
 		ridx += 1
 		ret += suppcomment(lvl, str4regdefcomment(ridx))
-		ret += self.gen_ind_reg(lvl, ridx, 0, 'rw', 'pwm', 'numerator')
+		ret += self.gen_ind_reg(lvl, ridx, 0, 'rw', 'pwm', 'numerator', 32)
 
 		ridx += 1
 		ret += suppcomment(lvl, str4regdefcomment(ridx))
@@ -1529,6 +1560,11 @@ class VMFsctl(VerilogModuleFile):
 			strtemp = '[' + str(i + 32 - 1) + ':' + str(i) + ']'
 			ret += drc_rw(lvl, ridx, 0, 32, str4array(intf.name, 'param') + '[0]' + strtemp, 0)
 			#ret += suppreadreg0(lvl, ridx)
+
+		for i in range(0, 8):
+			ridx += 1
+			ret += suppcomment(lvl, str4regdefcomment(ridx))
+			ret += drc_ro(lvl, ridx, 0, 32, 'test' + str(i))
 
 		ridx += 1
 		ret += suppline(lvl, str4loopheader(ridx, 'C_REG_NUM', 'remain_regs', 'i'))

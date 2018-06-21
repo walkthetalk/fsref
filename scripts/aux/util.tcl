@@ -273,7 +273,7 @@ proc __gui_get_ele {
 	core_inst
 	ele_info
 } {
-	puts "get ele: $core_inst            $ele_info"
+	#puts "get ele: $core_inst            $ele_info"
 	if {[llength $ele_info] == 0} {
 		return nullptr
 	}
