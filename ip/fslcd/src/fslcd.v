@@ -36,7 +36,7 @@ module fslcd #
 	output [C_OUT_COMP_WIDTH-1:0] b,
 	output hsync_out,
 	output vsync_out,
-	output [3:0] ctrl_out
+	output active_data
 );
 
 	function integer com_msb (input integer com_idx);
@@ -59,10 +59,7 @@ module fslcd #
 
 	localparam integer C_EXTENT = C_OUT_COMP_WIDTH - C_IN_COMP_WIDTH;
 
-	assign ctrl_out[0] = vid_active_video;
-	assign ctrl_out[1] = 1;
-	assign ctrl_out[2] = 1;
-	assign ctrl_out[3] = 0;
+	assign active_data = vid_active_video;
 
 	if (C_IN_COMP_WIDTH >= C_OUT_COMP_WIDTH) begin
 		assign r = vid_data[com_msb(2):com_lsb_shrink(2)];

@@ -228,6 +228,7 @@ proc create_fscore {
 	{motor_br_addr_width 12}
 	{motor_ms_width 3}
 	{ts_width 64}
+	{pwm_num 4}
 } {
 	if {$coreversion == {}} { set coreversion [format 0x%08x [clock seconds]] }
 
@@ -282,6 +283,16 @@ proc create_fscore {
 			CONFIG.C_PWM_CNT_WIDTH {16} \
 		] [get_bd_cells $mname/pwm1]
 
+		create_bd_cell -type ip -vlnv ocfb:pvip:pwm:1.0.9 $mname/pwm2
+		set_property -dict [list \
+			CONFIG.C_PWM_CNT_WIDTH {16} \
+		] [get_bd_cells $mname/pwm2]
+
+		create_bd_cell -type ip -vlnv ocfb:pvip:pwm:1.0.9 $mname/pwm3
+		set_property -dict [list \
+			CONFIG.C_PWM_CNT_WIDTH {16} \
+		] [get_bd_cells $mname/pwm3]
+
 	create_bd_cell -type ip -vlnv $VENDOR:$LIBRARY:axilite2regctl:$VERSION $mname/axilite2regctl
 
 	create_bd_cell -type ip -vlnv $VENDOR:$LIBRARY:fsctl:$VERSION $mname/fsctl
@@ -300,7 +311,7 @@ proc create_fscore {
 		CONFIG.C_STEP_NUMBER_WIDTH $motor_step_width \
 		CONFIG.C_SPEED_DATA_WIDTH $motor_speed_width \
 		CONFIG.C_MICROSTEP_WIDTH $motor_ms_width \
-		CONFIG.C_PWM_NBR 2 \
+		CONFIG.C_PWM_NBR $pwm_num \
 	] [get_bd_cells $mname/fsctl]
 
 	create_bd_cell -type ip -vlnv $VENDOR:$LIBRARY:fscpu:$VERSION $mname/fscpu
@@ -398,6 +409,8 @@ proc create_fscore {
 		$mname/align_motor/M1            $mname/ALIGN_MOTOR1_IC_CTL
 		$mname/fsctl/PWM0_CTL            $mname/pwm0/S_CTL
 		$mname/fsctl/PWM1_CTL            $mname/pwm1/S_CTL
+		$mname/fsctl/PWM2_CTL            $mname/pwm2/S_CTL
+		$mname/fsctl/PWM3_CTL            $mname/pwm3/S_CTL
 	}]
 
 	pip_connect_pin $mname/fsctl/st_out_resetn [subst {
@@ -450,6 +463,8 @@ proc create_fscore {
 		$mname/align_motor/clk
 		$mname/pwm0/clk
 		$mname/pwm1/clk
+		$mname/pwm2/clk
+		$mname/pwm3/clk
 		$mname/fscpu/clk
 	}]
 	create_bd_pin -dir I $mname/resetn
@@ -471,6 +486,14 @@ proc create_fscore {
 	create_bd_pin -dir O $mname/cmos1_light
 	pip_connect_pin $mname/pwm1/drive [subst {
 		$mname/cmos1_light
+	}]
+	create_bd_pin -dir O $mname/lcd_lum
+	pip_connect_pin $mname/pwm2/drive [subst {
+		$mname/lcd_lum
+	}]
+	create_bd_pin -dir O $mname/discharge_mag
+	pip_connect_pin $mname/pwm3/drive [subst {
+		$mname/discharge_mag
 	}]
 
 	create_bd_pin -dir O -type intr $mname/intr

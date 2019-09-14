@@ -395,8 +395,8 @@ module fscpu #(
 		.req_img_tol   (req_par0[C_IMG_WW-1+16        :16]),
 		.req_speed     (req_par1[C_SPEED_DATA_WIDTH-1 : 0]),
 
-		.req_img_dst   (req_par2[C_IMG_WW-1           : 0]),
-		.req_step      (req_par2[C_STEP_NUMBER_WIDTH-1: 0]),
+		.req_img_dst   (req_par3[C_IMG_WW-1           : 0]),
+		.req_step      (req_par3[C_STEP_NUMBER_WIDTH-1: 0]),
 
 		.img_pulse   (y_ana_done),
 		.img_lo_valid(y_lft_header_outer_valid),

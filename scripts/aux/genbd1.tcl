@@ -9,7 +9,7 @@ set_property -dict [list \
     CONFIG.PCW_EN_CLK3_PORT {1} \
     CONFIG.PCW_FPGA0_PERIPHERAL_FREQMHZ {75} \
     CONFIG.PCW_FPGA1_PERIPHERAL_FREQMHZ {150} \
-    CONFIG.PCW_FPGA2_PERIPHERAL_FREQMHZ {10} \
+    CONFIG.PCW_FPGA2_PERIPHERAL_FREQMHZ {33} \
     CONFIG.PCW_FPGA3_PERIPHERAL_FREQMHZ {24} \
     CONFIG.PCW_EN_RST0_PORT {1} \
     CONFIG.PCW_EN_RST1_PORT {1} \
@@ -17,7 +17,7 @@ set_property -dict [list \
     CONFIG.PCW_USE_FABRIC_INTERRUPT {1} \
     CONFIG.PCW_IRQ_F2P_INTR {1} \
     CONFIG.PCW_PRESET_BANK1_VOLTAGE {LVCMOS 1.8V} \
-    CONFIG.PCW_UIPARAM_DDR_PARTNO {MT41K256M16 RE-125} \
+    CONFIG.PCW_UIPARAM_DDR_PARTNO {MT41J256M16 RE-125} \
     CONFIG.PCW_UIPARAM_DDR_USE_INTERNAL_VREF {1} \
     CONFIG.PCW_QSPI_PERIPHERAL_ENABLE {1} \
     CONFIG.PCW_QSPI_GRP_SINGLE_SS_ENABLE {1} \
@@ -27,13 +27,11 @@ set_property -dict [list \
     CONFIG.PCW_ENET0_GRP_MDIO_ENABLE {0} \
     CONFIG.PCW_SD0_PERIPHERAL_ENABLE {1} \
     CONFIG.PCW_UART1_PERIPHERAL_ENABLE {1} \
+    CONFIG.PCW_UART1_UART1_IO {MIO 12 .. 13} \
     CONFIG.PCW_USB0_PERIPHERAL_ENABLE {1} \
     CONFIG.PCW_I2C0_PERIPHERAL_ENABLE {1} \
     CONFIG.PCW_I2C0_I2C0_IO {MIO 14 .. 15} \
     CONFIG.PCW_I2C0_GRP_INT_ENABLE {1} \
-    CONFIG.PCW_I2C1_PERIPHERAL_ENABLE {1} \
-    CONFIG.PCW_I2C1_I2C1_IO {MIO 12 .. 13} \
-    CONFIG.PCW_I2C1_GRP_INT_ENABLE {1} \
     CONFIG.PCW_USE_S_AXI_HP0 {1} \
     CONFIG.PCW_S_AXI_HP0_DATA_WIDTH {64} \
     CONFIG.PCW_USE_S_AXI_HP1 {1} \
@@ -59,29 +57,27 @@ set_property -dict [list \
 # 5. vtc
 create_bd_cell -type ip -vlnv xilinx.com:ip:v_tc:6.1 vtc
 set_property -dict [list \
+    CONFIG.max_clocks_per_line {1024} \
+    CONFIG.max_lines_per_frame {512} \
     CONFIG.HAS_AXI4_LITE {false} \
     CONFIG.HAS_INTC_IF {false} \
     CONFIG.VIDEO_MODE {Custom} \
-    CONFIG.GEN_F0_VSYNC_VSTART {250} \
-    CONFIG.GEN_HACTIVE_SIZE {320} \
-    CONFIG.GEN_HSYNC_END {340} \
-    CONFIG.GEN_HFRAME_SIZE {417} \
-    CONFIG.GEN_F0_VSYNC_HSTART {320} \
-    CONFIG.GEN_F0_VSYNC_HEND {320} \
-    CONFIG.GEN_F0_VFRAME_SIZE {263} \
-    CONFIG.GEN_F0_VSYNC_VEND {252} \
-    CONFIG.GEN_F0_VBLANK_HEND {320} \
-    CONFIG.GEN_HSYNC_START {338} \
-    CONFIG.GEN_VACTIVE_SIZE {240} \
-    CONFIG.GEN_F0_VBLANK_HSTART {320} \
-    CONFIG.FSYNC_HSTART0 {320} \
-    CONFIG.FSYNC_VSTART0 {240} \
+    CONFIG.GEN_HACTIVE_SIZE {800} \
+    CONFIG.GEN_HFRAME_SIZE {1023} \
+    CONFIG.GEN_HSYNC_START {889} \
+    CONFIG.GEN_HSYNC_END {891} \
+    CONFIG.GEN_VACTIVE_SIZE {480} \
+    CONFIG.GEN_F0_VFRAME_SIZE {505} \
+    CONFIG.GEN_F0_VSYNC_VSTART {496} \
+    CONFIG.GEN_F0_VSYNC_VEND {498} \
+    CONFIG.FSYNC_HSTART0 {800} \
+    CONFIG.FSYNC_VSTART0 {480} \
     CONFIG.enable_detection {false}] [get_bd_cells vtc]
 # 6. lcd
 create_bd_cell -type ip -vlnv $VENDOR:$LIBRARY:fslcd:$VERSION fslcd
 set_property -dict [list \
     CONFIG.C_IN_COMP_WIDTH {8} \
-    CONFIG.C_OUT_COMP_WIDTH {6} \
+    CONFIG.C_OUT_COMP_WIDTH {8} \
 ] [get_bd_cells fslcd]
 
 # 7. cmos
@@ -237,19 +233,21 @@ connect_bd_net [get_bd_pins /fscmos_1/cmos_data] [get_bd_ports cmos1_data]
 # connect from/to external lcd
 create_bd_port -dir O lcd_clk
 connect_bd_net [get_bd_pins cpu/FCLK_CLK2] [get_bd_ports lcd_clk]
-create_bd_port -dir O -from 5 -to 0 lcd_R
+create_bd_port -dir O -from 7 -to 0 lcd_R
 connect_bd_net [get_bd_pins /fslcd/r] [get_bd_ports lcd_R]
-create_bd_port -dir O -from 5 -to 0 lcd_G
+create_bd_port -dir O -from 7 -to 0 lcd_G
 connect_bd_net [get_bd_pins /fslcd/g] [get_bd_ports lcd_G]
-create_bd_port -dir O -from 5 -to 0 lcd_B
+create_bd_port -dir O -from 7 -to 0 lcd_B
 connect_bd_net [get_bd_pins /fslcd/b] [get_bd_ports lcd_B]
 
 create_bd_port -dir O lcd_hsync
 connect_bd_net [get_bd_pins /fslcd/hsync_out] [get_bd_ports lcd_hsync]
 create_bd_port -dir O lcd_vsync
 connect_bd_net [get_bd_pins /fslcd/vsync_out] [get_bd_ports lcd_vsync]
-create_bd_port -dir O -from 3 -to 0 lcd_ctrl
-connect_bd_net [get_bd_pins /fslcd/ctrl_out] [get_bd_ports lcd_ctrl]
+create_bd_port -dir O lcd_de
+connect_bd_net [get_bd_pins /fslcd/active_data] [get_bd_ports lcd_de]
+create_bd_port -dir O lcd_lum
+connect_bd_net [get_bd_pins /fscore/lcd_lum] [get_bd_ports lcd_lum]
 
 # connect from/to external motor ic
 create_bd_port -dir O -from 2 -to 0 pm_ms

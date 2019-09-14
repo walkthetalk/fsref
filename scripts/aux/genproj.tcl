@@ -4,7 +4,7 @@ source $origin_dir/scripts/aux/util.tcl
 source $origin_dir/ip/fscore/create.tcl
 
 # create project
-create_project fsref $origin_dir -part xc7z020clg400-1
+create_project fsref $origin_dir -part xc7z020clg484-2
 set_property simulator_language Verilog [current_project]
 
 # update ips
