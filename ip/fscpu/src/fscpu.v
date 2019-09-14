@@ -107,12 +107,7 @@ module fscpu #(
 	output wire [C_STEP_NUMBER_WIDTH-1:0] my_step    ,
 	output wire                           my_dir     ,
 	output wire                           my_mod_remain,
-	output wire [C_STEP_NUMBER_WIDTH-1:0] my_new_remain,
-
-	output wire [31:0]                    test1,
-	output wire [31:0]                    test2,
-	output wire [31:0]                    test3,
-	output wire [31:0]                    test4
+	output wire [C_STEP_NUMBER_WIDTH-1:0] my_new_remain
 
 );
 	wire [31:0] req_par0;	assign req_par0 = req_param[ 31: 0];
@@ -267,12 +262,7 @@ module fscpu #(
 
 		//.rd_en  (bpm_reA  ),
 		.rd_addr(bpm_addrA),
-		.rd_data(bpm_qA   )/*,
-
-		.test1(test1),
-		.test2(test2),
-		.test3(test3),
-		.test4(test4)*/
+		.rd_data(bpm_qA   )
 	);
 
 	/////////////////// rt motor //////////////////////////////
@@ -365,16 +355,11 @@ module fscpu #(
 		.m_mod_remain(mx_mod_remain),
 		.m_new_remain(mx_new_remain),
 
-		.m_other_state(my_state    ),
+		.m_dep_state(ml_state | mr_state | mx_state | my_state),
 
 		//.rd_en  (bam_reA  ),
 		.rd_addr(bam_addrA),
-		.rd_data(bam_qA   ),
-
-		.test1(test1),
-		.test2(test2),
-		.test3(test3),
-		.test4(test4)
+		.rd_data(bam_qA   )
 	);
 
 	////////////////// y motor //////////////////////////////
@@ -421,7 +406,7 @@ module fscpu #(
 		.m_mod_remain(my_mod_remain),
 		.m_new_remain(my_new_remain),
 
-		.m_other_state(mx_state    ),
+		.m_dep_state(ml_state | mr_state | mx_state | my_state),
 
 		//.rd_en  (bam_reA  ),
 		.rd_addr(bam_addrB),

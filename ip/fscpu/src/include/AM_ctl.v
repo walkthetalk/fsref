@@ -41,7 +41,7 @@ module AM_ctl # (
 	output wire                           m_mod_remain,
 	output wire [C_STEP_NUMBER_WIDTH-1:0] m_new_remain,
 
-	input  wire                           m_other_state,
+	input  wire                           m_dep_state,
 
 	output reg                 rd_en,
 	output reg  [C_IMG_HW-1:0] rd_addr,
@@ -74,21 +74,21 @@ module AM_ctl # (
 	end
 
 	reg [1:0] m_self_running_hist;
-	reg [1:0] m_other_running_hist;
+	reg [1:0] m_dep_running_hist;
 	always @ (posedge clk) begin
 		if (resetn == 1'b0) begin
 			m_self_running_hist <= 0;
-			m_other_running_hist <= 0;
+			m_dep_running_hist <= 0;
 		end
 		else if (img_pulse) begin
 			m_self_running_hist <= {m_self_running_hist[0], m_state};
-			m_other_running_hist <= {m_other_running_hist[0], m_other_state};
+			m_dep_running_hist <= {m_dep_running_hist[0], m_dep_state};
 		end
 		else begin
 			if (m_state)
 				m_self_running_hist[0]  <= 1'b1;
-			if (m_other_state)
-				m_other_running_hist[0] <= 1'b1;
+			if (m_dep_state)
+				m_dep_running_hist[0] <= 1'b1;
 		end
 	end
 
@@ -118,16 +118,15 @@ module AM_ctl # (
 	end
 
 	reg img_self_valid;
-	reg img_both_valid;
+	reg img_real_valid;
 	always @ (posedge clk) begin
 		if (resetn == 1'b0) begin
 			img_self_valid <= 0;
-			img_both_valid <= 0;
+			img_real_valid <= 0;
 		end
 		else if (pen_d1) begin
 			img_self_valid <= (m_self_running_hist == 2'b00);
-			img_both_valid <= (m_self_running_hist == 2'b00
-					&& m_other_running_hist == 2'b00);
+			img_real_valid <= (m_dep_running_hist == 2'b00);
 		end
 	end
 
@@ -279,7 +278,7 @@ module AM_ctl # (
 		end
 		else if (req_dep_img) begin
 			if (pen_d7)
-				exe_done <= (pos_ok && img_both_valid);
+				exe_done <= (pos_ok && img_real_valid);
 		end
 		else begin
 			if (m_stopped)
