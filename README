@@ -1,3 +1,11 @@
 tcl notes:
 1. tcl will not expand variable in parenthesis, use 'subst'
 	https://stackoverflow.com/questions/30799457/using-variable-in-parenthesis-in-tcl-proc
+
+
+frame sync:
+1. all path must use frame sync, or scaler may remain data from last frame, which will result in error timing sequence
+2. the frame sync cannot be too early, i.e. after output the last valid pixel.
+3. the frame sync cannot be too late, i.e. just before output the first valid pixel.
+4. if there is windower on the stream path, it may remain half frame data after output last pixel,
+   which will result in invlaid frame sync no matter where it is.
