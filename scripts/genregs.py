@@ -1048,7 +1048,7 @@ class VMFsctl(VerilogModuleFile):
 			"comments": "request to fscpu"
 		})
 
-		for i in range(0, 8):
+		for i in range(0, 16):
 			self.addExtPort({'iotype': 'input',  'wrtype': 'wire', 'name': 'test' + str(i), 'width': '32'})
 	def __addlocalparams(self):
 		self.addLocalparam({ "name": "C_REG_NUM", "comments": "register number", "defV": "2**C_REG_IDX_WIDTH" })
@@ -1561,7 +1561,7 @@ class VMFsctl(VerilogModuleFile):
 			ret += drc_rw(lvl, ridx, 0, 32, str4array(intf.name, 'param') + '[0]' + strtemp, 0)
 			#ret += suppreadreg0(lvl, ridx)
 
-		for i in range(0, 8):
+		for i in range(0, 16):
 			ridx += 1
 			ret += suppcomment(lvl, str4regdefcomment(ridx))
 			ret += drc_ro(lvl, ridx, 0, 32, 'test' + str(i))
