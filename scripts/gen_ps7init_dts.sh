@@ -37,6 +37,9 @@ ${HSI_BIN} \
 	-source ${dir_main}/scripts/aux/gen_ps7init_dts.tcl \
 	-tclargs "${dir_main}" "${repo_dt}" "${ps7init_dir}" "${dts_dir}"
 
+cp ${ps7init_dir}/ps7_init_gpl.h ${dir_main}/scripts/ubootpatch/
+cp ${ps7init_dir}/ps7_init_gpl.c ${dir_main}/scripts/ubootpatch/
+
 #command -v dtc >/dev/null 2>&1 || { echo >&2 "ERROR: require dtc but not installed."; exit 1; }
 #dtc -I dts -O dtb -R 8 -p 0x3000 \
 #	-i ${dts_dir} \
