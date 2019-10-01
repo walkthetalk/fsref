@@ -21,10 +21,11 @@ fi
 
 if [ -d "$1" ]; then
 	dtxdir="$1"
-else
-	dtxdir="${dir_main}/../device-tree-xlnx/"
 fi
-echo "HINT:  git clone https://github.com/Xilinx/device-tree-xlnx.git"
+if [ ! -d "$dtxdir" ]; then
+	echo "HINT:  git clone https://github.com/Xilinx/device-tree-xlnx.git"
+	exit 1
+fi
 
 repo_dt="`readlink -fe "${dtxdir}"`"
 
@@ -36,8 +37,8 @@ ${HSI_BIN} \
 	-source ${dir_main}/scripts/aux/gen_ps7init_dts.tcl \
 	-tclargs "${dir_main}" "${repo_dt}" "${ps7init_dir}" "${dts_dir}"
 
-command -v dtc >/dev/null 2>&1 || { echo >&2 "ERROR: require dtc but not installed."; exit 1; }
-dtc -I dts -O dtb -R 8 -p 0x3000 \
-	-i ${dts_dir} \
-	-o ${out_dir}/devicetree.dtb \
-	${dir_main}/scripts/dtspatch/wrapper.dts
+#command -v dtc >/dev/null 2>&1 || { echo >&2 "ERROR: require dtc but not installed."; exit 1; }
+#dtc -I dts -O dtb -R 8 -p 0x3000 \
+#	-i ${dts_dir} \
+#	-o ${out_dir}/devicetree.dtb \
+#	${dir_main}/scripts/dtspatch/wrapper.dts
