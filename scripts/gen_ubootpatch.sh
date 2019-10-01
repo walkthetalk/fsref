@@ -13,7 +13,7 @@ patch_name="add_fsref.patch"
 file_list=(
 	"board/xilinx/zynq/zynq-fsref/ps7_init_gpl.c"
 	"board/xilinx/zynq/zynq-fsref/ps7_init_gpl.h"
-	"arch/arm/dst/zynq-fsref.dts"
+	"arch/arm/dts/zynq-fsref.dts"
 	"configs/zynq_fsref_defconfig"
 )
 
