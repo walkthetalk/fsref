@@ -1,26 +1,16 @@
-From fb9e3e6989bbea9cb343356bf1981f6add40df65 Mon Sep 17 00:00:00 2001
-From: Yi Qingliang <niqingliang2003@gmail.com>
-Date: Tue, 6 Feb 2018 16:32:54 +0800
-Subject: [PATCH] simplefb: add 'memory-region' support for device tree.
-
-Signed-off-by: Yi Qingliang <niqingliang2003@gmail.com>
----
- drivers/video/fbdev/simplefb.c | 27 ++++++++++++++++++++++++---
- 1 file changed, 24 insertions(+), 3 deletions(-)
-
-diff --git a/drivers/video/fbdev/simplefb.c b/drivers/video/fbdev/simplefb.c
-index 61f799a5..edd9d94e 100644
---- a/drivers/video/fbdev/simplefb.c
-+++ b/drivers/video/fbdev/simplefb.c
-@@ -30,6 +30,7 @@
- #include <linux/clk-provider.h>
+Index: linux-5.3.2/drivers/video/fbdev/simplefb.c
+===================================================================
+--- linux-5.3.2.orig/drivers/video/fbdev/simplefb.c
++++ linux-5.3.2/drivers/video/fbdev/simplefb.c
+@@ -22,6 +22,7 @@
  #include <linux/of.h>
+ #include <linux/of_clk.h>
  #include <linux/of_platform.h>
 +#include <linux/of_address.h>
  #include <linux/parser.h>
  #include <linux/regulator/consumer.h>
  
-@@ -389,6 +390,10 @@ static void simplefb_regulators_destroy(struct simplefb_par *par) { }
+@@ -402,6 +403,10 @@ static void simplefb_regulators_destroy(
  static int simplefb_probe(struct platform_device *pdev)
  {
  	int ret;
@@ -31,7 +21,7 @@ index 61f799a5..edd9d94e 100644
  	struct simplefb_params params;
  	struct fb_info *info;
  	struct simplefb_par *par;
-@@ -405,12 +410,26 @@ static int simplefb_probe(struct platform_device *pdev)
+@@ -418,12 +423,26 @@ static int simplefb_probe(struct platfor
  
  	if (ret)
  		return ret;
@@ -59,19 +49,12 @@ index 61f799a5..edd9d94e 100644
  
  	info = framebuffer_alloc(sizeof(struct simplefb_par), &pdev->dev);
  	if (!info)
-@@ -458,8 +477,10 @@ static int simplefb_probe(struct platform_device *pdev)
- 		goto error_unmap;
+@@ -472,7 +491,7 @@ static int simplefb_probe(struct platfor
  
- 	ret = simplefb_regulators_init(par, pdev);
--	if (ret < 0)
+ 	ret = simplefb_regulators_get(par, pdev);
+ 	if (ret < 0)
 -		goto error_clocks;
-+	if (ret < 0) {
-+		dev_err(&pdev->dev, "simplefb_regulators_init err %d %d\n", ret, __LINE__);
-+		//goto error_clocks;
-+	}
++		dev_warn(&pdev->dev, "simplefb get regulator failed as %d\n", ret);
  
- 	dev_info(&pdev->dev, "framebuffer at 0x%lx, 0x%x bytes, mapped to 0x%p\n",
- 			     info->fix.smem_start, info->fix.smem_len,
--- 
-2.15.1
-
+ 	simplefb_clocks_enable(par, pdev);
+ 	simplefb_regulators_enable(par, pdev);
