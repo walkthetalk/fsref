@@ -14,4 +14,7 @@ if [ "$1" != "" ]; then
 	BDNAME="$1"
 fi
 
-${dir_main}/scripts/aux/conv ${dir_main}/fsref.runs/impl_1/${BDNAME}_wrapper.bit ${out_dir}/system.bit.bin
+SRC_FILE="${dir_main}/scripts/bit2bin/zynq_bit2bin.c"
+gcc ${SRC_FILE} -o ${out_dir}/bit2bin
+
+${out_dir}/bit2bin ${dir_main}/fsref.runs/impl_1/${BDNAME}_wrapper.bit ${out_dir}/system.bit.bin
