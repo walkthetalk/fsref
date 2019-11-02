@@ -216,6 +216,8 @@ proc creat_stream {
 proc create_fscore {
 	mname
 	{coreversion {}}
+	{lcd_width 800}
+	{lcd_height 480}
 	{pixel_width 8}
 	{img_w_width 12}
 	{img_h_width 12}
@@ -298,12 +300,14 @@ proc create_fscore {
 	create_bd_cell -type ip -vlnv $VENDOR:$LIBRARY:fsctl:$VERSION $mname/fsctl
 	set_property -dict [list \
 		CONFIG.C_CORE_VERSION $coreversion \
+		CONFIG.C_IMG_WDEF $lcd_width \
+		CONFIG.C_IMG_HDEF $lcd_height \
 		CONFIG.C_STREAM_NBR 2 \
-		CONFIG.C_ST_ADDR 0x3FF00000 \
-		CONFIG.C_S0_ADDR 0x3F000000 \
-		CONFIG.C_S0_SIZE 0x00100000 \
-		CONFIG.C_S1_ADDR 0x3F400000 \
-		CONFIG.C_S1_SIZE 0x00100000 \
+		CONFIG.C_ST_ADDR 0x3F000000 \
+		CONFIG.C_S0_ADDR 0x3B000000 \
+		CONFIG.C_S0_SIZE 0x00800000 \
+		CONFIG.C_S1_ADDR 0x3D000000 \
+		CONFIG.C_S1_SIZE 0x00800000 \
 		CONFIG.C_BR_INITOR_NBR 4 \
 		CONFIG.C_BR_ADDR_WIDTH [expr max($motor_br_addr_width, $img_w_width, $img_h_width)] \
 		CONFIG.C_MOTOR_NBR 4 \
