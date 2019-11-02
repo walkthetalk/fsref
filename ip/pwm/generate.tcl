@@ -23,3 +23,18 @@ pip_add_usr_par $core {C_PWM_CNT_WIDTH} {
 	value 16
 	value_format long
 }
+
+pip_add_usr_par $core {C_DEFAULT_VALUE} {
+	display_name {PWM Default Value}
+	tooltip {PWM Default Value}
+	widget {comboBox}
+} {
+	value_resolve_type user
+	value 0
+	value_format long
+	value_validation_type list
+	value_validation_list {0 1}
+} {
+	value 0
+	value_format long
+}
