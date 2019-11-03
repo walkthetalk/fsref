@@ -59,6 +59,18 @@ pip_add_usr_par $core {C_PIXEL_WIDTH} {
 	value 8
 	value_format long
 }
+pip_add_usr_par $core {C_BYPASS} {
+	display_name {Direct connect S/M}
+	tooltip {Direct connect S/M}
+	widget {checkBox}
+} {
+	value_resolve_type user
+	value false
+	value_format bool
+} {
+	value false
+	value_format bool
+}
 pip_add_usr_par $core {C_COL_ODD} {
 	display_name {Is Column Odd}
 	tooltip {Is Column Odd}
