@@ -13,6 +13,7 @@ proc creat_stream {
 	{burst_length 16}
 	{fifo_aximm_depth 128}
 	{ts_width 64}
+	{bypass_extractor 1}
 } {
 	global VENDOR
 	global LIBRARY
@@ -30,6 +31,7 @@ proc creat_stream {
 	create_bd_cell -type ip -vlnv $VENDOR:$LIBRARY:axis_bayer_extractor:$VERSION $mname/axis_bayer_extractor
 	set_property -dict [list \
 		CONFIG.C_PIXEL_WIDTH $channel_width \
+		CONFIG.C_BYPASS $bypass_extractor \
 	] [get_bd_cells $mname/axis_bayer_extractor]
 
 	create_pvdma $mname/pvdma bidirection $channel_width $img_w_width $img_h_width $addr_width $data_width $burst_length $fifo_aximm_depth $ts_width

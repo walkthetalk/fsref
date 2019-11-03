@@ -95,6 +95,10 @@ set_property -dict [list \
 
 # 7. cmos
 create_bd_cell -type ip -vlnv $VENDOR:$LIBRARY:fscmos:$VERSION fscmos_0
+set_property -dict [list \
+    CONFIG.C_IN_WIDTH {10} \
+    CONFIG.C_OUT_WIDTH {8} \
+    ] [get_bd_cells fscmos_0]
 copy_bd_objs /  [get_bd_cells {fscmos_0}]
 
 create_bd_cell -type ip -vlnv xilinx.com:ip:v_vid_in_axi4s:4.0 videoin_0
@@ -229,8 +233,9 @@ create_bd_port -dir I cmos0_href
 connect_bd_net [get_bd_pins /fscmos_0/cmos_href] [get_bd_ports cmos0_href]
 create_bd_port -dir I cmos0_vsync
 connect_bd_net [get_bd_pins /fscmos_0/cmos_vsync] [get_bd_ports cmos0_vsync]
-create_bd_port -dir I -from 7 -to 0 cmos0_data
+create_bd_port -dir I -from 9 -to 0 cmos0_data
 connect_bd_net [get_bd_pins /fscmos_0/cmos_data] [get_bd_ports cmos0_data]
+
 create_bd_port -type clk -dir O cmos1_xclk
 connect_bd_net [get_bd_pins cpu/FCLK_CLK3] [get_bd_ports cmos1_xclk]
 create_bd_port -dir I cmos1_pclk
@@ -240,8 +245,23 @@ create_bd_port -dir I cmos1_href
 connect_bd_net [get_bd_pins /fscmos_1/cmos_href] [get_bd_ports cmos1_href]
 create_bd_port -dir I cmos1_vsync
 connect_bd_net [get_bd_pins /fscmos_1/cmos_vsync] [get_bd_ports cmos1_vsync]
-create_bd_port -dir I -from 7 -to 0 cmos1_data
+create_bd_port -dir I -from 9 -to 0 cmos1_data
 connect_bd_net [get_bd_pins /fscmos_1/cmos_data] [get_bd_ports cmos1_data]
+
+# cmos i2c
+set_property -dict [list \
+    CONFIG.PCW_I2C0_PERIPHERAL_ENABLE {1} \
+    CONFIG.PCW_I2C1_PERIPHERAL_ENABLE {1} \
+    ] [get_bd_cells cpu]
+make_bd_intf_pins_external -name cmos0_i2c [get_bd_intf_pins cpu/IIC_0]
+make_bd_intf_pins_external -name cmos1_i2c [get_bd_intf_pins cpu/IIC_1]
+# cmos resetn
+create_bd_port -type clk -dir O cmos0_resetn
+create_bd_port -type clk -dir O cmos1_resetn
+pip_connect_pin xlconstant_0/dout {
+	cmos0_resetn
+	cmos1_resetn
+}
 
 # connect from/to external lcd
 create_bd_port -dir O lcd_clk
