@@ -226,6 +226,14 @@
 	ps-clk-frequency = <33333333>;
 };
 
+&i2c0 {
+	status = "okay";
+};
+
+&i2c1 {
+	status = "okay";
+};
+
 // custom framebuffers
 &amba {
 	framebuffer0 {
