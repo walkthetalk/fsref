@@ -1,0 +1,10 @@
+1. requirement
+1) install python-sympy
+2) install xilinx vitis
+
+2. make bitbin
+
+3. Load the Bitstream
+	mkdir -p /lib/firmware
+	cp [xxx]/system.bit.bin /lib/firmware/
+	echo system.bit.bin > /sys/class/fpga_manager/fpga0/firmware

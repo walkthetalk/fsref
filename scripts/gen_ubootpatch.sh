@@ -17,6 +17,8 @@ file_list=(
 	"configs/zynq_fsref_defconfig"
 )
 
+tmp_dir="${tmp_dir}/u-boot"
+mkdir ${tmp_dir}
 cd ${tmp_dir}
 quilt new ${patch_name}
 for i in ${file_list[@]}; do
@@ -32,6 +34,9 @@ done
 sed -i '/^[\t ]*\/\//d' ${file_list[0]}
 quilt refresh
 
+if ! [ -d ${out_dir} ]; then
+	mkdir -p ${out_dir}
+fi
 cp ${tmp_dir}/patches/${patch_name} ${out_dir}
 
 rm -rf ${tmp_dir}

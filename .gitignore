@@ -8,3 +8,8 @@ fsref.*
 dts/device-tree.mss
 output/*
 .Xil/*
+*.xsa
+hwdesign/*
+Packages/*
+ip/fscpu/NA/*
+ip/fsctl/src/fsctl.v

@@ -29,6 +29,9 @@ for i in ${file_list[@]}; do
 done
 quilt refresh
 
+if [ ! -d ${out_dir} ]; then
+	mkdir -p ${out_dir}
+fi
 cp ${kernel_dir}/patches/${patch_name} ${out_dir}
 
 rm -rf ${tmp_dir}

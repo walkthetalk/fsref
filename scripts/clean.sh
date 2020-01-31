@@ -21,19 +21,10 @@ fi
 cd $dir_main
 if [ $clr_proj == true ]; then
 	echo "clearing project"
-	rm -rf *.str
 	rm -rf fsref.*
-	rm -rf *.log
-	rm -rf *.jou
 	rm -rf .Xil
-	rm -rf dts/pl.dtsi
-	rm -rf dts/skeleton.dtsi
-	rm -rf dts/system.dts
-	rm -rf dts/zynq-7000.dtsi
-	rm -rf dts/device-tree.mss
 	rm -rf output
-	rm -rf vivado*
-	rm -rf scripts/.Xil
+	rm -rf ip/fsctl/src/fsctl.v
 fi
 
 cd ip

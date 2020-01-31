@@ -68,7 +68,7 @@ set_property -dict [list \
     CONFIG.C_VTG_MASTER_SLAVE {1} \
 ] [get_bd_cells videoout]
 # 5. vtc
-create_bd_cell -type ip -vlnv xilinx.com:ip:v_tc:6.1 vtc
+create_bd_cell -type ip -vlnv xilinx.com:ip:v_tc:6.2 vtc
 set_property -dict [list \
     CONFIG.max_clocks_per_line {1024} \
     CONFIG.max_lines_per_frame {512} \
@@ -329,3 +329,8 @@ set_property -dict [list offset {0x00000000} range {1G}] [get_bd_addr_segs {fsco
 
 # modify for alinx board: light lcd by default
 set_property -dict [list CONFIG.C_DEFAULT_VALUE {1}] [get_bd_cells fscore/pwm2]
+
+# modify for fsref
+set_property -dict [list CONFIG.PCW_QSPI_GRP_SINGLE_SS_ENABLE {1} CONFIG.PCW_SD0_GRP_CD_IO {MIO 9}] [get_bd_cells cpu]
+
+

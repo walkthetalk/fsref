@@ -1,16 +1,16 @@
 dirs=(
 	"/mnt/xilinx"
+	"/opt/xilinx"
 	"/mnt/datum/sw/xilinx"
-	"/opt/Xilinx"
 )
 
 for item in ${dirs[@]};do
 	if [ -d "$item" ]; then
 		XVERSION="`cd ${item}/Vivado/; find -mindepth 1 -maxdepth 1 -type d | cut -d '/' -f 2`"
 		VIVADO_BIN_DIR="${item}/Vivado/${XVERSION}/bin"
-		SDK_BIN_DIR="${item}/SDK/${XVERSION}/bin"
+		VITIS_BIN_DIR="${item}/Vitis/${XVERSION}/bin"
 		VIVADO_BIN="${VIVADO_BIN_DIR}/vivado"
-		HSI_BIN="${SDK_BIN_DIR}/hsi"
+		XSCT_BIN="${VITIS_BIN_DIR}/xsct"
 		echo "the vivado binary is located in ${VIVADO_BIN_DIR}"
 		break
 	fi
