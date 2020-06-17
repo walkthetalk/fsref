@@ -217,24 +217,34 @@ proc creat_stream {
 
 proc create_fscore {
 	mname
-	{coreversion {}}
-	{lcd_width 800}
-	{lcd_height 480}
-	{pixel_width 8}
-	{img_w_width 12}
-	{img_h_width 12}
-	{addr_width 32}
-	{data_width 64}
-	{burst_length 16}
-	{fifo_aximm_depth 128}
-	{motor_step_width 32}
-	{motor_speed_width 32}
-	{motor_br_addr_width 12}
-	{motor_ms_width 3}
-	{ts_width 64}
-	{pwm_num 4}
+	pdict
 } {
-	if {$coreversion == {}} { set coreversion [format 0x%08x [clock seconds]] }
+	set dic [dict create \
+		lcd_hactive_size 800 \
+		lcd_vactive_size 480 \
+		pixel_width 8 \
+		img_w_width 12 \
+		img_h_width 12 \
+		addr_width 32 \
+		data_width 64 \
+		burst_length 16 \
+		fifo_aximm_depth 128 \
+		motor_step_width 32 \
+		motor_speed_width 32 \
+		motor_br_addr_width 12 \
+		motor_ms_width 3 \
+		ts_width 64 \
+		pwm_num 4 \
+	]
+	dict append dic coreversion [format 0x%08x [clock seconds]]
+	dict for { k v } $dic {
+		if {[dict exists $pdict $k]} {
+			#dict set dic $k [dict get $pdict $k]
+			set $k [dict get $pdict $k]
+		} else {
+			set $k $v
+		}
+	}
 
 	global VENDOR
 	global LIBRARY
@@ -302,8 +312,8 @@ proc create_fscore {
 	create_bd_cell -type ip -vlnv $VENDOR:$LIBRARY:fsctl:$VERSION $mname/fsctl
 	set_property -dict [list \
 		CONFIG.C_CORE_VERSION $coreversion \
-		CONFIG.C_IMG_WDEF $lcd_width \
-		CONFIG.C_IMG_HDEF $lcd_height \
+		CONFIG.C_IMG_WDEF $lcd_hactive_size \
+		CONFIG.C_IMG_HDEF $lcd_vactive_size \
 		CONFIG.C_STREAM_NBR 2 \
 		CONFIG.C_ST_ADDR 0x3F000000 \
 		CONFIG.C_S0_ADDR 0x3B000000 \

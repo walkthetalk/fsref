@@ -3,6 +3,34 @@ create_bd_cell -type ip -vlnv xilinx.com:ip:processing_system7:5.5 cpu
 
 # @note: if using hp as 32bit, you should set the cpu register in software
 
+set dic [dict create \
+	lcd_max_clocks_per_line 1024 \
+	lcd_max_lines_per_frame 1024 \
+	lcd_hactive_size 800 \
+	lcd_hframe_size {1023} \
+	lcd_hsync_start {889} \
+	lcd_hsync_end {891} \
+	lcd_vactive_size 480 \
+	lcd_f0_vframe_size {505} \
+	lcd_f0_vsync_start {496} \
+	lcd_f0_vsync_end {498} \
+	lcd_fsync_hstart0 {800} \
+	lcd_fsync_vstart0 {480} \
+	pixel_width 8 \
+	img_w_width 12 \
+	img_h_width 12 \
+	addr_width 32 \
+	data_width 64 \
+	burst_length 16 \
+	fifo_aximm_depth 128 \
+	motor_step_width 32 \
+	motor_speed_width 32 \
+	motor_br_addr_width 12 \
+	motor_ms_width 3 \
+	ts_width 64 \
+	pwm_num 4 \
+]
+
 set_property -dict [list \
     CONFIG.PCW_EN_CLK0_PORT {1} \
     CONFIG.PCW_EN_CLK1_PORT {1} \
@@ -70,21 +98,21 @@ set_property -dict [list \
 # 5. vtc
 create_bd_cell -type ip -vlnv xilinx.com:ip:v_tc:6.2 vtc
 set_property -dict [list \
-    CONFIG.max_clocks_per_line {1024} \
-    CONFIG.max_lines_per_frame {512} \
+    CONFIG.max_clocks_per_line [dict get $dic lcd_max_clocks_per_line] \
+    CONFIG.max_lines_per_frame [dict get $dic lcd_max_lines_per_frame] \
     CONFIG.HAS_AXI4_LITE {false} \
     CONFIG.HAS_INTC_IF {false} \
     CONFIG.VIDEO_MODE {Custom} \
-    CONFIG.GEN_HACTIVE_SIZE {800} \
-    CONFIG.GEN_HFRAME_SIZE {1023} \
-    CONFIG.GEN_HSYNC_START {889} \
-    CONFIG.GEN_HSYNC_END {891} \
-    CONFIG.GEN_VACTIVE_SIZE {480} \
-    CONFIG.GEN_F0_VFRAME_SIZE {505} \
-    CONFIG.GEN_F0_VSYNC_VSTART {496} \
-    CONFIG.GEN_F0_VSYNC_VEND {498} \
-    CONFIG.FSYNC_HSTART0 {800} \
-    CONFIG.FSYNC_VSTART0 {480} \
+    CONFIG.GEN_HACTIVE_SIZE [dict get $dic lcd_hactive_size] \
+    CONFIG.GEN_HFRAME_SIZE [dict get $dic lcd_hframe_size] \
+    CONFIG.GEN_HSYNC_START [dict get $dic lcd_hsync_start] \
+    CONFIG.GEN_HSYNC_END [dict get $dic lcd_hsync_end] \
+    CONFIG.GEN_VACTIVE_SIZE [dict get $dic lcd_vactive_size] \
+    CONFIG.GEN_F0_VFRAME_SIZE [dict get $dic lcd_f0_vframe_size] \
+    CONFIG.GEN_F0_VSYNC_VSTART [dict get $dic lcd_f0_vsync_start] \
+    CONFIG.GEN_F0_VSYNC_VEND [dict get $dic lcd_f0_vsync_end] \
+    CONFIG.FSYNC_HSTART0 [dict get $dic lcd_fsync_hstart0] \
+    CONFIG.FSYNC_VSTART0 [dict get $dic lcd_fsync_vstart0] \
     CONFIG.enable_detection {false}] [get_bd_cells vtc]
 # 6. lcd
 create_bd_cell -type ip -vlnv $VENDOR:$LIBRARY:fslcd:$VERSION fslcd
@@ -114,7 +142,7 @@ copy_bd_objs /  [get_bd_cells videoin_0]
 create_bd_cell -type ip -vlnv $VENDOR:$LIBRARY:fsmotor:$VERSION fsmotor
 
 # X. fusion splicer core
-create_fscore /fscore
+create_fscore /fscore $dic
 
 # interconnection of data
 create_bd_cell -type ip -vlnv xilinx.com:ip:axi_interconnect:2.1 ic_data_0
