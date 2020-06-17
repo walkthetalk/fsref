@@ -25,6 +25,7 @@ dir_dts    := ${dir_out}/dts
 PSINIT_FILES := ${dir_psinit}/ps7_init_gpl.h ${dir_psinit}/ps7_init_gpl.c
 DTS_FILES := ${dir_dts}/system-top.dts
 
+
 .PHONY: project
 project: ${XPR_FILE}
 
@@ -50,6 +51,14 @@ ${XPR_FILE}: ${REG_FILE}
 	-mode batch \
 	-source ${dir_main}/scripts/aux/genall.tcl \
 	-tclargs "${dir_main}"
+
+.PHONY: fslcd
+fslcd:
+	${VIVADO} \
+	-nojournal -nolog \
+	-mode batch \
+	-source ${dir_main}/scripts/aux/genall.tcl \
+	-tclargs "${dir_main}" "fslcd"
 
 ${XSA_FILE}: ${BIT_FILE}
 	${VIVADO} \
@@ -82,5 +91,13 @@ ${dir_out}/freertos.boot.bin: ${BIT_FILE} ${dir_out}
 	${SDK_BIN_DIR}/bootgen \
 		-image ${dir_main}/scripts/freertos.bif -arch zynq -o ${out_file} -w on
 
+.PHONY: cleanall
 cleanall:
 	${dir_main}/scripts/clean.sh
+.PHONY: help
+help:
+	@echo -e "destination:"
+	@echo -e "\tproject"
+	@echo -e "\tbitbin"
+	@echo -e "\tdts"
+	@echo -e "\tcleanall"

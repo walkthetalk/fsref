@@ -25,6 +25,8 @@ if [ $clr_proj == true ]; then
 	rm -rf .Xil
 	rm -rf output
 	rm -rf ip/fsctl/src/fsctl.v
+	rm -rf hwdesign
+	rm -rf Packages
 fi
 
 cd ip

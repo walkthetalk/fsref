@@ -8,3 +8,11 @@
 	mkdir -p /lib/firmware
 	cp [xxx]/system.bit.bin /lib/firmware/
 	echo system.bit.bin > /sys/class/fpga_manager/fpga0/firmware
+
+1. LCD
+1) change ip/fscore/create.tcl
+	lcd_width/lcd_height
+2) change scripts/aux/genbd1.tcl
+	vtc time sequence
+4) change ip/fslcd
+3) dts
