@@ -4,18 +4,23 @@ create_bd_cell -type ip -vlnv xilinx.com:ip:processing_system7:5.5 cpu
 # @note: if using hp as 32bit, you should set the cpu register in software
 
 set dic [dict create \
+	lcd_clk_freqmhz 9 \
 	lcd_max_clocks_per_line 1024 \
-	lcd_max_lines_per_frame 1024 \
-	lcd_hactive_size 800 \
-	lcd_hframe_size {1023} \
-	lcd_hsync_start {889} \
-	lcd_hsync_end {891} \
-	lcd_vactive_size 480 \
-	lcd_f0_vframe_size {505} \
-	lcd_f0_vsync_start {496} \
-	lcd_f0_vsync_end {498} \
-	lcd_fsync_hstart0 {800} \
-	lcd_fsync_vstart0 {480} \
+	lcd_max_lines_per_frame 512 \
+	lcd_hactive_size 480 \
+	lcd_hframe_size 525 \
+	lcd_hsync_start 501 \
+	lcd_hsync_end 503 \
+	lcd_vactive_size 272 \
+	lcd_f0_vframe_size 286 \
+	lcd_f0_vsync_start 278 \
+	lcd_f0_vsync_end 280 \
+	lcd_f0_vsync_hstart 480 \
+	lcd_f0_vsync_hend 480 \
+	lcd_f0_vblank_hstart 485 \
+	lcd_f0_vblank_hend 520 \
+	lcd_fsync_hstart0 {480} \
+	lcd_fsync_vstart0 {272} \
 	pixel_width 8 \
 	img_w_width 12 \
 	img_h_width 12 \
@@ -38,7 +43,7 @@ set_property -dict [list \
     CONFIG.PCW_EN_CLK3_PORT {1} \
     CONFIG.PCW_FPGA0_PERIPHERAL_FREQMHZ {75} \
     CONFIG.PCW_FPGA1_PERIPHERAL_FREQMHZ {150} \
-    CONFIG.PCW_FPGA2_PERIPHERAL_FREQMHZ {33} \
+    CONFIG.PCW_FPGA2_PERIPHERAL_FREQMHZ [dict get $dic lcd_clk_freqmhz] \
     CONFIG.PCW_FPGA3_PERIPHERAL_FREQMHZ {24} \
     CONFIG.PCW_EN_RST0_PORT {1} \
     CONFIG.PCW_EN_RST1_PORT {1} \
@@ -113,6 +118,10 @@ set_property -dict [list \
     CONFIG.GEN_F0_VSYNC_VEND [dict get $dic lcd_f0_vsync_end] \
     CONFIG.FSYNC_HSTART0 [dict get $dic lcd_fsync_hstart0] \
     CONFIG.FSYNC_VSTART0 [dict get $dic lcd_fsync_vstart0] \
+    CONFIG.GEN_F0_VSYNC_HSTART [dict get $dic lcd_f0_vsync_hstart] \
+    CONFIG.GEN_F0_VSYNC_HEND [dict get $dic lcd_f0_vsync_hend] \
+    CONFIG.GEN_F0_VBLANK_HSTART [dict get $dic lcd_f0_vblank_hstart] \
+    CONFIG.GEN_F0_VBLANK_HEND [dict get $dic lcd_f0_vblank_hend] \
     CONFIG.enable_detection {false}] [get_bd_cells vtc]
 # 6. lcd
 create_bd_cell -type ip -vlnv $VENDOR:$LIBRARY:fslcd:$VERSION fslcd
