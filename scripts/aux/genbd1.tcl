@@ -15,8 +15,8 @@ set dic [dict create \
 	lcd_f0_vframe_size 286 \
 	lcd_f0_vsync_start 278 \
 	lcd_f0_vsync_end 280 \
-	lcd_f0_vsync_hstart 480 \
-	lcd_f0_vsync_hend 480 \
+	lcd_f0_vsync_hstart 485 \
+	lcd_f0_vsync_hend 520 \
 	lcd_f0_vblank_hstart 485 \
 	lcd_f0_vblank_hend 520 \
 	lcd_fsync_hstart0 {480} \
