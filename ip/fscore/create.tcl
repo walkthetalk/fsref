@@ -6,14 +6,14 @@ proc creat_stream {
 	mname
 	{fsa_ena 0}
 	{channel_width 8}
-	{img_w_width 12}
-	{img_h_width 12}
-	{addr_width 32}
-	{data_width 64}
-	{burst_length 16}
-	{fifo_aximm_depth 128}
-	{ts_width 64}
-	{bypass_extractor 1}
+	{stream_w_width 12}
+	{stream_h_width 12}
+	{vdma_addr_width 32}
+	{vdma_data_width 64}
+	{vdma_burst_length 16}
+	{vdma_fifo_depth 128}
+	{vdma_timestamp_width 64}
+	{stream_bypass_bayer_extractor 1}
 } {
 	global VENDOR
 	global LIBRARY
@@ -31,16 +31,16 @@ proc creat_stream {
 	create_bd_cell -type ip -vlnv $VENDOR:$LIBRARY:axis_bayer_extractor:$VERSION $mname/axis_bayer_extractor
 	set_property -dict [list \
 		CONFIG.C_PIXEL_WIDTH $channel_width \
-		CONFIG.C_BYPASS $bypass_extractor \
+		CONFIG.C_BYPASS $stream_bypass_bayer_extractor \
 	] [get_bd_cells $mname/axis_bayer_extractor]
 
-	create_pvdma $mname/pvdma bidirection $channel_width $img_w_width $img_h_width $addr_width $data_width $burst_length $fifo_aximm_depth $ts_width
+	create_pvdma $mname/pvdma bidirection $channel_width $stream_w_width $stream_h_width $vdma_addr_width $vdma_data_width $vdma_burst_length $vdma_fifo_depth $vdma_timestamp_width
 
 	create_bd_cell -type ip -vlnv $VENDOR:$LIBRARY:axis_window:$VERSION $mname/axis_window
 	set_property -dict [list \
 		CONFIG.C_PIXEL_WIDTH $pixel_width \
-		CONFIG.C_IMG_WBITS $img_w_width \
-		CONFIG.C_IMG_HBITS $img_h_width \
+		CONFIG.C_IMG_WBITS $stream_w_width \
+		CONFIG.C_IMG_HBITS $stream_h_width \
 	] [get_bd_cells $mname/axis_window]
 
 	create_bd_cell -type ip -vlnv $VENDOR:$LIBRARY:axis_scaler:$VERSION $mname/axis_scaler
@@ -49,10 +49,10 @@ proc creat_stream {
 		CONFIG.C_CH1_WIDTH   $channel_width \
 		CONFIG.C_CH2_WIDTH   $channel_width \
 		CONFIG.C_PIXEL_WIDTH $pixel_width \
-		CONFIG.C_SH_WIDTH    $img_h_width \
-		CONFIG.C_SW_WIDTH    $img_w_width \
-		CONFIG.C_MH_WIDTH    $img_h_width \
-		CONFIG.C_MW_WIDTH    $img_w_width \
+		CONFIG.C_SH_WIDTH    $stream_h_width \
+		CONFIG.C_SW_WIDTH    $stream_w_width \
+		CONFIG.C_MH_WIDTH    $stream_h_width \
+		CONFIG.C_MW_WIDTH    $stream_w_width \
 	] [get_bd_cells $mname/axis_scaler]
 
 	# interfaces
@@ -79,7 +79,7 @@ proc creat_stream {
 	create_bd_intf_pin -mode Slave -vlnv $VENDOR:interface:scale_ctl_rtl:1.0 $mname/M_SCALE
 	pip_connect_intf_net [subst {$mname/M_SCALE    $mname/axis_scaler/SCALE_CTL}]
 
-	create_bd_pin -from [expr $ts_width - 1] -to 0 -dir I -type data $mname/sys_ts
+	create_bd_pin -from [expr $vdma_timestamp_width - 1] -to 0 -dir I -type data $mname/sys_ts
 	connect_bd_net [get_bd_pins $mname/sys_ts] [get_bd_pins $mname/pvdma/sys_ts]
 
 	create_bd_pin -dir I $mname/fsync
@@ -222,18 +222,19 @@ proc create_fscore {
 	set dic [dict create \
 		lcd_hactive_size 800 \
 		lcd_vactive_size 480 \
-		pixel_width 8 \
-		img_w_width 12 \
-		img_h_width 12 \
-		addr_width 32 \
-		data_width 64 \
-		burst_length 16 \
-		fifo_aximm_depth 128 \
+		stream_pixel_width 8 \
+		stream_w_width 12 \
+		stream_h_width 12 \
+		vdma_addr_width 32 \
+		vdma_data_width 64 \
+		vdma_burst_length 16 \
+		vdma_fifo_depth 128 \
 		motor_step_width 32 \
 		motor_speed_width 32 \
 		motor_br_addr_width 12 \
 		motor_ms_width 3 \
-		ts_width 64 \
+		vdma_timestamp_width 64 \
+		stream_bypass_bayer_extractor 0 \
 		pwm_num 4 \
 	]
 	dict append dic coreversion [format 0x%08x [clock seconds]]
@@ -253,13 +254,13 @@ proc create_fscore {
 	create_bd_cell -type hier $mname
 
 	create_bd_cell -type ip -vlnv $VENDOR:$LIBRARY:timestamper:$VERSION $mname/sys_timestamper
-	set_property -dict [list CONFIG.C_TS_WIDTH $ts_width] [get_bd_cells $mname/sys_timestamper]
+	set_property -dict [list CONFIG.C_TS_WIDTH $vdma_timestamp_width] [get_bd_cells $mname/sys_timestamper]
 
-	create_pvdma $mname/pvdma_T mm2s 32 $img_w_width $img_h_width $addr_width $data_width $burst_length $fifo_aximm_depth
-	creat_stream $mname/stream0 1 $pixel_width $img_w_width $img_h_width $addr_width $data_width $burst_length $fifo_aximm_depth $ts_width
-	creat_stream $mname/stream1 1 $pixel_width $img_w_width $img_h_width $addr_width $data_width $burst_length $fifo_aximm_depth $ts_width
+	create_pvdma $mname/pvdma_T mm2s 32 $stream_w_width $stream_h_width $vdma_addr_width $vdma_data_width $vdma_burst_length $vdma_fifo_depth
+	creat_stream $mname/stream0 1 $stream_pixel_width $stream_w_width $stream_h_width $vdma_addr_width $vdma_data_width $vdma_burst_length $vdma_fifo_depth $vdma_timestamp_width $stream_bypass_bayer_extractor
+	creat_stream $mname/stream1 1 $stream_pixel_width $stream_w_width $stream_h_width $vdma_addr_width $vdma_data_width $vdma_burst_length $vdma_fifo_depth $vdma_timestamp_width $stream_bypass_bayer_extractor
 
-	create_pblender $mname/pblender $pixel_width 12 12
+	create_pblender $mname/pblender $stream_pixel_width 12 12
 
 	create_bd_cell -type ip -vlnv $VENDOR:$LIBRARY:step_motor:$VERSION $mname/push_motor
 	set_property -dict [list \
@@ -321,7 +322,7 @@ proc create_fscore {
 		CONFIG.C_S1_ADDR 0x3D000000 \
 		CONFIG.C_S1_SIZE 0x00800000 \
 		CONFIG.C_BR_INITOR_NBR 4 \
-		CONFIG.C_BR_ADDR_WIDTH [expr max($motor_br_addr_width, $img_w_width, $img_h_width)] \
+		CONFIG.C_BR_ADDR_WIDTH [expr max($motor_br_addr_width, $stream_w_width, $stream_h_width)] \
 		CONFIG.C_MOTOR_NBR 4 \
 		CONFIG.C_ZPD_SEQ {"0011"} \
 		CONFIG.C_STEP_NUMBER_WIDTH $motor_step_width \
@@ -332,8 +333,8 @@ proc create_fscore {
 
 	create_bd_cell -type ip -vlnv $VENDOR:$LIBRARY:fscpu:$VERSION $mname/fscpu
 	set_property -dict [list \
-		CONFIG.C_IMG_WW $img_w_width \
-		CONFIG.C_IMG_HW $img_h_width \
+		CONFIG.C_IMG_WW $stream_w_width \
+		CONFIG.C_IMG_HW $stream_h_width \
 		CONFIG.C_STEP_NUMBER_WIDTH $motor_step_width \
 		CONFIG.C_SPEED_DATA_WIDTH $motor_speed_width \
 	] [get_bd_cells $mname/fscpu]

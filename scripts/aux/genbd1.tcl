@@ -9,30 +9,31 @@ set dic [dict create \
 	lcd_max_lines_per_frame 512 \
 	lcd_hactive_size 480 \
 	lcd_hframe_size 525 \
-	lcd_hsync_start 501 \
-	lcd_hsync_end 503 \
+	lcd_hsync_start 482 \
+	lcd_hsync_end 523 \
 	lcd_vactive_size 272 \
 	lcd_f0_vframe_size 286 \
-	lcd_f0_vsync_start 278 \
-	lcd_f0_vsync_end 280 \
+	lcd_f0_vsync_start 274 \
+	lcd_f0_vsync_end 284 \
 	lcd_f0_vsync_hstart 485 \
 	lcd_f0_vsync_hend 520 \
 	lcd_f0_vblank_hstart 485 \
 	lcd_f0_vblank_hend 520 \
-	lcd_fsync_hstart0 {480} \
-	lcd_fsync_vstart0 {272} \
-	pixel_width 8 \
-	img_w_width 12 \
-	img_h_width 12 \
-	addr_width 32 \
-	data_width 64 \
-	burst_length 16 \
-	fifo_aximm_depth 128 \
+	lcd_fsync_hstart0 480 \
+	lcd_fsync_vstart0 272 \
+	stream_pixel_width 8 \
+	stream_w_width 12 \
+	stream_h_width 12 \
+	vdma_addr_width 32 \
+	vdma_data_width 64 \
+	vdma_burst_length 16 \
+	vdma_fifo_depth 128 \
+	vdma_timestamp_width 64 \
+	stream_bypass_bayer_extractor 0 \
 	motor_step_width 32 \
 	motor_speed_width 32 \
 	motor_br_addr_width 12 \
 	motor_ms_width 3 \
-	ts_width 64 \
 	pwm_num 4 \
 ]
 
@@ -101,12 +102,15 @@ set_property -dict [list \
     CONFIG.C_VTG_MASTER_SLAVE {1} \
 ] [get_bd_cells videoout]
 # 5. vtc
+# @note blank generation must be true, axis2videoout need it
 create_bd_cell -type ip -vlnv xilinx.com:ip:v_tc:6.2 vtc
 set_property -dict [list \
     CONFIG.max_clocks_per_line [dict get $dic lcd_max_clocks_per_line] \
     CONFIG.max_lines_per_frame [dict get $dic lcd_max_lines_per_frame] \
     CONFIG.HAS_AXI4_LITE {false} \
     CONFIG.HAS_INTC_IF {false} \
+    CONFIG.vertical_blank_generation {true} \
+    CONFIG.horizontal_blank_generation {true} \
     CONFIG.VIDEO_MODE {Custom} \
     CONFIG.GEN_HACTIVE_SIZE [dict get $dic lcd_hactive_size] \
     CONFIG.GEN_HFRAME_SIZE [dict get $dic lcd_hframe_size] \
