@@ -54,7 +54,6 @@ proc create_pblender {
 		CONFIG.C_S0_CHN_NUM       3 \
 		CONFIG.C_S1_CHN_NUM       3 \
 		CONFIG.C_ALPHA_WIDTH      8 \
-		CONFIG.C_FIXED_ALPHA      {0x80} \
 		CONFIG.C_S1_ENABLE        {true} \
 		CONFIG.C_IN_NEED_WIDTH	  0 \
 	] [get_bd_cells $mname/blender2]
