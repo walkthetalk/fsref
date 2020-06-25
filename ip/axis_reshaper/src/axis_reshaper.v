@@ -38,7 +38,10 @@ module axis_reshaper #
 	output wire [C_PIXEL_WIDTH-1:0] m_axis_tdata,
 	output wire m_axis_tuser,
 	output wire m_axis_tlast,
-	input  wire m_axis_tready
+	input  wire m_axis_tready,
+
+	output wire [C_WIDTH_BITS-1:0] m_width,
+	output wire [C_HEIGHT_BITS-1:0]m_height
 );
 	reg                     relay_tvalid[1:0];
 	reg [C_PIXEL_WIDTH-1:0] relay_tdata[1:0];
@@ -67,6 +70,8 @@ module axis_reshaper #
 	assign width_valid = (width_last != 0);
 	assign height_mismatch = (height_last != height_cur);
 	assign height_valid = (height_last != 0);
+	assign m_width = width_last;
+	assign m_height = height_last;
 
 	reg locked;
 	wire store_en;

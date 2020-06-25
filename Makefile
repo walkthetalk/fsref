@@ -60,6 +60,14 @@ fslcd:
 	-source ${dir_main}/scripts/aux/genall.tcl \
 	-tclargs "${dir_main}" "fslcd"
 
+.PHONY: axis_reshaper
+axis_reshaper:
+	${VIVADO} \
+	-nojournal -nolog \
+	-mode batch \
+	-source ${dir_main}/scripts/aux/genall.tcl \
+	-tclargs "${dir_main}" "axis_reshaper"
+
 ${XSA_FILE}: ${BIT_FILE}
 	${VIVADO} \
 	-nojournal -nolog \

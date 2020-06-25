@@ -22,6 +22,15 @@ pip_add_bus_if $core M_AXIS {
 	TREADY	m_axis_tready
 }
 
+pip_add_bus_if $core M_SIZE [subst {
+	abstraction_type_vlnv {$VENDOR:interface:window_ctl_rtl:1.0}
+	bus_type_vlnv {$VENDOR:interface:window_ctl:1.0}
+	interface_mode {master}
+}] {
+	WIDTH  m_width
+	HEIGHT m_height
+}
+
 pip_add_bus_if $core resetn {
 	abstraction_type_vlnv xilinx.com:signal:reset_rtl:1.0
 	bus_type_vlnv xilinx.com:signal:reset:1.0
