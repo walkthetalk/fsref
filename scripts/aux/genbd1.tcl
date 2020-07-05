@@ -382,4 +382,18 @@ set_property -dict [list CONFIG.C_DEFAULT_VALUE {1}] [get_bd_cells fscore/pwm2]
 # modify for fsref
 set_property -dict [list CONFIG.PCW_QSPI_GRP_SINGLE_SS_ENABLE {1} CONFIG.PCW_SD0_GRP_CD_IO {MIO 9}] [get_bd_cells cpu]
 
-
+# 10. disable all motor related ports
+delete_bd_objs [get_bd_nets fsmotor_pm_xen] [get_bd_ports pm_xen]
+delete_bd_objs [get_bd_nets fsmotor_pm_ms] [get_bd_ports pm_ms]
+delete_bd_objs [get_bd_nets fsmotor_pm0_drive] [get_bd_ports pm0_drive]
+delete_bd_objs [get_bd_nets fsmotor_pm0_dir] [get_bd_ports pm0_dir]
+delete_bd_objs [get_bd_nets fsmotor_pm1_drive] [get_bd_ports pm1_drive]
+delete_bd_objs [get_bd_nets fsmotor_pm1_dir] [get_bd_ports pm1_dir]
+delete_bd_objs [get_bd_nets fsmotor_am_xen] [get_bd_ports am_xen]
+delete_bd_objs [get_bd_nets fsmotor_am_ms] [get_bd_ports am_ms]
+delete_bd_objs [get_bd_nets fsmotor_am0_drive] [get_bd_ports am0_drive]
+delete_bd_objs [get_bd_nets fsmotor_am0_dir] [get_bd_ports am0_dir]
+delete_bd_objs [get_bd_nets fsmotor_am1_drive] [get_bd_ports am1_drive]
+delete_bd_objs [get_bd_nets fsmotor_am1_dir] [get_bd_ports am1_dir]
+delete_bd_objs [get_bd_nets pm0_zpd_1] [get_bd_ports pm0_zpd]
+delete_bd_objs [get_bd_nets pm1_zpd_1] [get_bd_ports pm1_zpd]
