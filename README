@@ -9,3 +9,7 @@ frame sync:
 3. the frame sync cannot be too late, i.e. just before output the first valid pixel.
 4. if there is windower on the stream path, it may remain half frame data after output last pixel,
    which will result in invlaid frame sync no matter where it is.
+5. for scale, the dest.height/source.height should be bigger than 0.28 on 10M/150M clock.
+   maybe calc as 10 / (150 / (cmos_num * (cmos_read + cmos_write) + lcd) = 0.3
+   for better window/scale, we should process it when reading frm memory directly,
+   but the fsa result can't be simply overlapped on the source image (also need window/scale).
