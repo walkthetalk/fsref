@@ -36,7 +36,8 @@ module fslcd #
 	output [C_OUT_COMP_WIDTH-1:0] b,
 	output hsync_out,
 	output vsync_out,
-	output active_data
+	output active_data,
+	output out_clk
 );
 
 	function integer com_msb (input integer com_idx);
@@ -74,5 +75,6 @@ module fslcd #
 
 	assign hsync_out = vid_hsync;
 	assign vsync_out = vid_vsync;
+	assign out_clk = vid_io_in_clk;
 
 endmodule
