@@ -229,6 +229,7 @@ proc create_fscore {
 		vdma_data_width 64 \
 		vdma_burst_length 16 \
 		vdma_fifo_depth 128 \
+		motor_num 6 \
 		motor_step_width 32 \
 		motor_speed_width 32 \
 		motor_br_addr_width 12 \
@@ -288,25 +289,38 @@ proc create_fscore {
 		CONFIG.C_OPT_BR_TIME {true} \
 	] [get_bd_cells $mname/align_motor]
 
-		create_bd_cell -type ip -vlnv ocfb:pvip:pwm:1.0.9 $mname/pwm0
-		set_property -dict [list \
-			CONFIG.C_PWM_CNT_WIDTH {16} \
-		] [get_bd_cells $mname/pwm0]
+	create_bd_cell -type ip -vlnv $VENDOR:$LIBRARY:step_motor:$VERSION $mname/rotate_motor
+	set_property -dict [list \
+		CONFIG.C_CLK_DIV_NBR 32 \
+		CONFIG.C_MOTOR_NBR 2 \
+		CONFIG.C_ZPD_SEQ {"00"} \
+		CONFIG.C_MICROSTEP_PASSTHOUGH_SEQ {"11"} \
+		CONFIG.C_STEP_NUMBER_WIDTH $motor_step_width \
+		CONFIG.C_SPEED_DATA_WIDTH $motor_speed_width \
+		CONFIG.C_SPEED_ADDRESS_WIDTH $motor_br_addr_width \
+		CONFIG.C_MICROSTEP_WIDTH $motor_ms_width \
+		CONFIG.C_OPT_BR_TIME {true} \
+	] [get_bd_cells $mname/rotate_motor]
 
-		create_bd_cell -type ip -vlnv ocfb:pvip:pwm:1.0.9 $mname/pwm1
-		set_property -dict [list \
-			CONFIG.C_PWM_CNT_WIDTH {16} \
-		] [get_bd_cells $mname/pwm1]
+	create_bd_cell -type ip -vlnv ocfb:pvip:pwm:1.0.9 $mname/pwm0
+	set_property -dict [list \
+		CONFIG.C_PWM_CNT_WIDTH {16} \
+	] [get_bd_cells $mname/pwm0]
 
-		create_bd_cell -type ip -vlnv ocfb:pvip:pwm:1.0.9 $mname/pwm2
-		set_property -dict [list \
-			CONFIG.C_PWM_CNT_WIDTH {16} \
-		] [get_bd_cells $mname/pwm2]
+	create_bd_cell -type ip -vlnv ocfb:pvip:pwm:1.0.9 $mname/pwm1
+	set_property -dict [list \
+		CONFIG.C_PWM_CNT_WIDTH {16} \
+	] [get_bd_cells $mname/pwm1]
 
-		create_bd_cell -type ip -vlnv ocfb:pvip:pwm:1.0.9 $mname/pwm3
-		set_property -dict [list \
-			CONFIG.C_PWM_CNT_WIDTH {16} \
-		] [get_bd_cells $mname/pwm3]
+	create_bd_cell -type ip -vlnv ocfb:pvip:pwm:1.0.9 $mname/pwm2
+	set_property -dict [list \
+		CONFIG.C_PWM_CNT_WIDTH {16} \
+	] [get_bd_cells $mname/pwm2]
+
+	create_bd_cell -type ip -vlnv ocfb:pvip:pwm:1.0.9 $mname/pwm3
+	set_property -dict [list \
+		CONFIG.C_PWM_CNT_WIDTH {16} \
+	] [get_bd_cells $mname/pwm3]
 
 	create_bd_cell -type ip -vlnv $VENDOR:$LIBRARY:axilite2regctl:$VERSION $mname/axilite2regctl
 
@@ -321,10 +335,10 @@ proc create_fscore {
 		CONFIG.C_S0_SIZE 0x00800000 \
 		CONFIG.C_S1_ADDR 0x3D000000 \
 		CONFIG.C_S1_SIZE 0x00800000 \
-		CONFIG.C_BR_INITOR_NBR 4 \
+		CONFIG.C_BR_INITOR_NBR 5 \
 		CONFIG.C_BR_ADDR_WIDTH [expr max($motor_br_addr_width, $stream_w_width, $stream_h_width)] \
-		CONFIG.C_MOTOR_NBR 4 \
-		CONFIG.C_ZPD_SEQ {"0011"} \
+		CONFIG.C_MOTOR_NBR $motor_num \
+		CONFIG.C_ZPD_SEQ {"00000011"} \
 		CONFIG.C_STEP_NUMBER_WIDTH $motor_step_width \
 		CONFIG.C_SPEED_DATA_WIDTH $motor_speed_width \
 		CONFIG.C_MICROSTEP_WIDTH $motor_ms_width \
@@ -398,6 +412,8 @@ proc create_fscore {
 	create_bd_intf_pin -mode Master -vlnv $VENDOR:interface:motor_ic_ctl_rtl:1.0 $mname/PUSH_MOTOR1_IC_CTL
 	create_bd_intf_pin -mode Master -vlnv $VENDOR:interface:motor_ic_ctl_rtl:1.0 $mname/ALIGN_MOTOR0_IC_CTL
 	create_bd_intf_pin -mode Master -vlnv $VENDOR:interface:motor_ic_ctl_rtl:1.0 $mname/ALIGN_MOTOR1_IC_CTL
+	create_bd_intf_pin -mode Master -vlnv $VENDOR:interface:motor_ic_ctl_rtl:1.0 $mname/ROTATE_MOTOR0_IC_CTL
+	create_bd_intf_pin -mode Master -vlnv $VENDOR:interface:motor_ic_ctl_rtl:1.0 $mname/ROTATE_MOTOR1_IC_CTL
 
 	pip_connect_intf_net [subst {
 		$mname/axilite2regctl/S_AXI_LITE $mname/S_AXI_LITE
@@ -424,6 +440,13 @@ proc create_fscore {
 		$mname/fsctl/MOTOR3_REQ          $mname/align_motor/S1_REQ
 		$mname/align_motor/M0            $mname/ALIGN_MOTOR0_IC_CTL
 		$mname/align_motor/M1            $mname/ALIGN_MOTOR1_IC_CTL
+		$mname/fsctl/BR4_INIT_CTL        $mname/rotate_motor/BR_INIT
+		$mname/fsctl/MOTOR4_CFG          $mname/rotate_motor/S0_CFG
+		$mname/fsctl/MOTOR4_REQ          $mname/rotate_motor/S0_REQ
+		$mname/fsctl/MOTOR5_CFG          $mname/rotate_motor/S1_CFG
+		$mname/fsctl/MOTOR5_REQ          $mname/rotate_motor/S1_REQ
+		$mname/rotate_motor/M0           $mname/ROTATE_MOTOR0_IC_CTL
+		$mname/rotate_motor/M1           $mname/ROTATE_MOTOR1_IC_CTL
 		$mname/fsctl/PWM0_CTL            $mname/pwm0/S_CTL
 		$mname/fsctl/PWM1_CTL            $mname/pwm1/S_CTL
 		$mname/fsctl/PWM2_CTL            $mname/pwm2/S_CTL
@@ -478,6 +501,7 @@ proc create_fscore {
 		$mname/pblender/clk
 		$mname/push_motor/clk
 		$mname/align_motor/clk
+		$mname/rotate_motor/clk
 		$mname/pwm0/clk
 		$mname/pwm1/clk
 		$mname/pwm2/clk
@@ -494,6 +518,7 @@ proc create_fscore {
 		$mname/pblender/resetn
 		$mname/push_motor/resetn
 		$mname/align_motor/resetn
+		$mname/rotate_motor/resetn
 	}]
 
 	create_bd_pin -dir O $mname/cmos0_light

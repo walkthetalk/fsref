@@ -84,25 +84,74 @@ set_property -dict {IOSTANDARD LVCMOS33 PACKAGE_PIN G20} [get_ports {cmos1_data[
 set_property -dict {IOSTANDARD LVCMOS33 PACKAGE_PIN J21} [get_ports {cmos1_data[0]}]
 
 # motor
-#set_property -dict {IOSTANDARD LVCMOS33 PACKAGE_PIN P20} [get_ports {pm_ms[2]}]
-#set_property -dict {IOSTANDARD LVCMOS33 PACKAGE_PIN N20} [get_ports {pm_ms[1]}]
-#set_property -dict {IOSTANDARD LVCMOS33 PACKAGE_PIN U19} [get_ports {pm_ms[0]}]
-#set_property -dict {IOSTANDARD LVCMOS33 PACKAGE_PIN W15} [get_ports {pm_xen}]
-#set_property -dict {IOSTANDARD LVCMOS33 PACKAGE_PIN T11} [get_ports {pm0_zpd}]
-#set_property -dict {IOSTANDARD LVCMOS33 PACKAGE_PIN U18} [get_ports {pm0_drive}]
-#set_property -dict {IOSTANDARD LVCMOS33 PACKAGE_PIN V15} [get_ports {pm0_dir}]
-#set_property -dict {IOSTANDARD LVCMOS33 PACKAGE_PIN G14} [get_ports {pm1_zpd}]
-#set_property -dict {IOSTANDARD LVCMOS33 PACKAGE_PIN P16} [get_ports {pm1_drive}]
-#set_property -dict {IOSTANDARD LVCMOS33 PACKAGE_PIN P15} [get_ports {pm1_dir}]
 
-#set_property -dict {IOSTANDARD LVCMOS33 PACKAGE_PIN W19} [get_ports {am_ms[2]}]
-#set_property -dict {IOSTANDARD LVCMOS33 PACKAGE_PIN W18} [get_ports {am_ms[1]}]
-#set_property -dict {IOSTANDARD LVCMOS33 PACKAGE_PIN R18} [get_ports {am_ms[0]}]
-#set_property -dict {IOSTANDARD LVCMOS33 PACKAGE_PIN W16} [get_ports {am_xen}]
-#set_property -dict {IOSTANDARD LVCMOS33 PACKAGE_PIN W20} [get_ports {am0_drive}]
-#set_property -dict {IOSTANDARD LVCMOS33 PACKAGE_PIN V20} [get_ports {am0_dir}]
-#set_property -dict {IOSTANDARD LVCMOS33 PACKAGE_PIN T17} [get_ports {am1_drive}]
-#set_property -dict {IOSTANDARD LVCMOS33 PACKAGE_PIN V16} [get_ports {am1_dir}]
+# push motor (x6,x7)
+set_property -dict {IOSTANDARD LVCMOS33 PACKAGE_PIN W5  } [get_ports {pm_decay}]
+
+set_property -dict {IOSTANDARD LVCMOS33 PACKAGE_PIN AA13} [get_ports {pm_ms[2]}]
+set_property -dict {IOSTANDARD LVCMOS33 PACKAGE_PIN Y13 } [get_ports {pm_ms[1]}]
+set_property -dict {IOSTANDARD LVCMOS33 PACKAGE_PIN W13 } [get_ports {pm_ms[0]}]
+
+set_property -dict {IOSTANDARD LVCMOS33 PACKAGE_PIN W6  } [get_ports {pm0_xen}]
+set_property -dict {IOSTANDARD LVCMOS33 PACKAGE_PIN Y19 } [get_ports {pm0_xrst}]
+set_property -dict {IOSTANDARD LVCMOS33 PACKAGE_PIN V13 } [get_ports {pm0_dir}]
+set_property -dict {IOSTANDARD LVCMOS33 PACKAGE_PIN H15 } [get_ports {pm0_drive}]
+
+set_property -dict {IOSTANDARD LVCMOS33 PACKAGE_PIN V18 } [get_ports {pm1_xen}]
+set_property -dict {IOSTANDARD LVCMOS33 PACKAGE_PIN V19 } [get_ports {pm1_xrst}]
+set_property -dict {IOSTANDARD LVCMOS33 PACKAGE_PIN V17 } [get_ports {pm1_dir}]
+set_property -dict {IOSTANDARD LVCMOS33 PACKAGE_PIN U17 } [get_ports {pm1_drive}]
+
+# align motor (x4,x5)
+set_property -dict {IOSTANDARD LVCMOS33 PACKAGE_PIN AA12} [get_ports {am_decay}]
+
+set_property -dict {IOSTANDARD LVCMOS33 PACKAGE_PIN AA19} [get_ports {am_ms[2]}]
+set_property -dict {IOSTANDARD LVCMOS33 PACKAGE_PIN U20 } [get_ports {am_ms[1]}]
+set_property -dict {IOSTANDARD LVCMOS33 PACKAGE_PIN V20 } [get_ports {am_ms[0]}]
+
+set_property -dict {IOSTANDARD LVCMOS33 PACKAGE_PIN AB12} [get_ports {am0_xen}]
+set_property -dict {IOSTANDARD LVCMOS33 PACKAGE_PIN AB11} [get_ports {am0_xrst}]
+set_property -dict {IOSTANDARD LVCMOS33 PACKAGE_PIN T21 } [get_ports {am0_dir}]
+set_property -dict {IOSTANDARD LVCMOS33 PACKAGE_PIN U21 } [get_ports {am0_drive}]
+
+set_property -dict {IOSTANDARD LVCMOS33 PACKAGE_PIN AA17} [get_ports {am1_xen}]
+set_property -dict {IOSTANDARD LVCMOS33 PACKAGE_PIN AB17} [get_ports {am1_xrst}]
+set_property -dict {IOSTANDARD LVCMOS33 PACKAGE_PIN AB22} [get_ports {am1_dir}]
+set_property -dict {IOSTANDARD LVCMOS33 PACKAGE_PIN AA22} [get_ports {am1_drive}]
+
+# rotate motor (x2,x3)
+set_property -dict {IOSTANDARD LVCMOS33 PACKAGE_PIN AB6 } [get_ports {rm_decay}]
+
+set_property -dict {IOSTANDARD LVCMOS33 PACKAGE_PIN AA11} [get_ports {rm_ms[2]}]
+set_property -dict {IOSTANDARD LVCMOS33 PACKAGE_PIN AB9 } [get_ports {rm_ms[1]}]
+set_property -dict {IOSTANDARD LVCMOS33 PACKAGE_PIN AB10} [get_ports {rm_ms[0]}]
+
+set_property -dict {IOSTANDARD LVCMOS33 PACKAGE_PIN AB7 } [get_ports {rm0_xen}]
+set_property -dict {IOSTANDARD LVCMOS33 PACKAGE_PIN V4  } [get_ports {rm0_xrst}]
+set_property -dict {IOSTANDARD LVCMOS33 PACKAGE_PIN AA8 } [get_ports {rm0_dir}]
+set_property -dict {IOSTANDARD LVCMOS33 PACKAGE_PIN AA9 } [get_ports {rm0_drive}]
+
+set_property -dict {IOSTANDARD LVCMOS33 PACKAGE_PIN V14 } [get_ports {rm1_xen}]
+set_property -dict {IOSTANDARD LVCMOS33 PACKAGE_PIN V15 } [get_ports {rm1_xrst}]
+set_property -dict {IOSTANDARD LVCMOS33 PACKAGE_PIN U15 } [get_ports {rm1_dir}]
+set_property -dict {IOSTANDARD LVCMOS33 PACKAGE_PIN U16 } [get_ports {rm1_drive}]
+
+# reserve motor
+###set_property -dict {IOSTANDARD LVCMOS33 PACKAGE_PIN W15 } [get_ports {om_decay}]
+###
+###set_property -dict {IOSTANDARD LVCMOS33 PACKAGE_PIN AA18} [get_ports {om_ms[2]}]
+###set_property -dict {IOSTANDARD LVCMOS33 PACKAGE_PIN W18 } [get_ports {om_ms[1]}]
+###set_property -dict {IOSTANDARD LVCMOS33 PACKAGE_PIN AB16} [get_ports {om_ms[0]}]
+###
+###set_property -dict {IOSTANDARD LVCMOS33 PACKAGE_PIN AB14} [get_ports {om0_xen}]
+###set_property -dict {IOSTANDARD LVCMOS33 PACKAGE_PIN AB15} [get_ports {om0_xrst}]
+###set_property -dict {IOSTANDARD LVCMOS33 PACKAGE_PIN AA16} [get_ports {om0_dir}]
+###set_property -dict {IOSTANDARD LVCMOS33 PACKAGE_PIN Y15 } [get_ports {om0_drive}]
+###
+###set_property -dict {IOSTANDARD LVCMOS33 PACKAGE_PIN M20 } [get_ports {om1_xen}]
+###set_property -dict {IOSTANDARD LVCMOS33 PACKAGE_PIN M19 } [get_ports {om1_xrst}]
+###set_property -dict {IOSTANDARD LVCMOS33 PACKAGE_PIN T16 } [get_ports {om1_dir}]
+###set_property -dict {IOSTANDARD LVCMOS33 PACKAGE_PIN T17 } [get_ports {om1_drive}]
 
 # clock
 set_clock_groups -asynchronous -group [get_clocks {clk_fpga_0 clk_fpga_1}]

@@ -1,4 +1,4 @@
-for {set i 0} {$i < 4} {incr i} {
+for {set i 0} {$i < 6} {incr i} {
 	pip_add_bus_if $core S[set i] [subst {
 		abstraction_type_vlnv $VENDOR:interface:motor_ic_ctl_rtl:1.0
 		bus_type_vlnv $VENDOR:interface:motor_ic_ctl:1.0

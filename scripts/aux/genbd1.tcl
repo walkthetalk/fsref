@@ -30,6 +30,7 @@ set dic [dict create \
 	vdma_fifo_depth 128 \
 	vdma_timestamp_width 64 \
 	stream_bypass_bayer_extractor 0 \
+	motor_num 6 \
 	motor_step_width 32 \
 	motor_speed_width 32 \
 	motor_br_addr_width 12 \
@@ -333,23 +334,48 @@ connect_bd_net [get_bd_pins /fscore/lcd_lum] [get_bd_ports lcd_lum]
 
 # connect from/to external motor ic
 create_bd_port -dir O -from 2 -to 0 pm_ms
-create_bd_port -dir O pm_xen
 create_bd_port -dir I pm0_zpd
+create_bd_port -dir I pm1_zpd
+create_bd_port -dir O pm0_xen
+create_bd_port -dir O pm0_xrst
 create_bd_port -dir O pm0_drive
 create_bd_port -dir O pm0_dir
-create_bd_port -dir I pm1_zpd
+create_bd_port -dir O pm1_xen
+create_bd_port -dir O pm1_xrst
 create_bd_port -dir O pm1_drive
 create_bd_port -dir O pm1_dir
 create_bd_port -dir O -from 2 -to 0 am_ms
-create_bd_port -dir O am_xen
+create_bd_port -dir O am0_xen
+create_bd_port -dir O am0_xrst
 create_bd_port -dir O am0_drive
 create_bd_port -dir O am0_dir
+create_bd_port -dir O am1_xen
+create_bd_port -dir O am1_xrst
 create_bd_port -dir O am1_drive
 create_bd_port -dir O am1_dir
-foreach i {pm_ms pm_xen pm0_zpd pm0_drive pm0_dir pm1_zpd pm1_drive pm1_dir
-        am_ms am_xen am0_drive am0_dir am1_drive am1_dir} {
+create_bd_port -dir O -from 2 -to 0 rm_ms
+create_bd_port -dir O rm0_xen
+create_bd_port -dir O rm0_xrst
+create_bd_port -dir O rm0_drive
+create_bd_port -dir O rm0_dir
+create_bd_port -dir O rm1_xen
+create_bd_port -dir O rm1_xrst
+create_bd_port -dir O rm1_drive
+create_bd_port -dir O rm1_dir
+foreach i {pm0_zpd pm1_zpd
+	pm_ms pm0_xen pm0_xrst pm0_drive pm0_dir pm1_xen pm1_xrst pm1_drive pm1_dir
+	am_ms am0_xen am0_xrst am0_drive am0_dir am1_xen am1_xrst am1_drive am1_dir
+	rm_ms rm0_xen rm0_xrst rm0_drive rm0_dir rm1_xen rm1_xrst rm1_drive rm1_dir} {
         connect_bd_net [get_bd_pins /fsmotor/$i] [get_bd_ports $i]
 }
+
+create_bd_port -dir O pm_decay
+create_bd_port -dir O am_decay
+create_bd_port -dir O rm_decay
+connect_bd_net [get_bd_ports pm_decay] [get_bd_pins xlconstant_0/dout]
+connect_bd_net [get_bd_ports am_decay] [get_bd_pins xlconstant_0/dout]
+connect_bd_net [get_bd_ports rm_decay] [get_bd_pins xlconstant_0/dout]
+
 
 # connect from/to external cmoslight
 create_bd_port -dir O cmos0_light
@@ -381,19 +407,3 @@ set_property -dict [list CONFIG.C_DEFAULT_VALUE {1}] [get_bd_cells fscore/pwm2]
 
 # modify for fsref
 set_property -dict [list CONFIG.PCW_QSPI_GRP_SINGLE_SS_ENABLE {1} CONFIG.PCW_SD0_GRP_CD_IO {MIO 9}] [get_bd_cells cpu]
-
-# 10. disable all motor related ports
-delete_bd_objs [get_bd_nets fsmotor_pm_xen] [get_bd_ports pm_xen]
-delete_bd_objs [get_bd_nets fsmotor_pm_ms] [get_bd_ports pm_ms]
-delete_bd_objs [get_bd_nets fsmotor_pm0_drive] [get_bd_ports pm0_drive]
-delete_bd_objs [get_bd_nets fsmotor_pm0_dir] [get_bd_ports pm0_dir]
-delete_bd_objs [get_bd_nets fsmotor_pm1_drive] [get_bd_ports pm1_drive]
-delete_bd_objs [get_bd_nets fsmotor_pm1_dir] [get_bd_ports pm1_dir]
-delete_bd_objs [get_bd_nets fsmotor_am_xen] [get_bd_ports am_xen]
-delete_bd_objs [get_bd_nets fsmotor_am_ms] [get_bd_ports am_ms]
-delete_bd_objs [get_bd_nets fsmotor_am0_drive] [get_bd_ports am0_drive]
-delete_bd_objs [get_bd_nets fsmotor_am0_dir] [get_bd_ports am0_dir]
-delete_bd_objs [get_bd_nets fsmotor_am1_drive] [get_bd_ports am1_drive]
-delete_bd_objs [get_bd_nets fsmotor_am1_dir] [get_bd_ports am1_dir]
-delete_bd_objs [get_bd_nets pm0_zpd_1] [get_bd_ports pm0_zpd]
-delete_bd_objs [get_bd_nets pm1_zpd_1] [get_bd_ports pm1_zpd]
