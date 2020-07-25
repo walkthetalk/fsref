@@ -162,3 +162,16 @@ pip_add_usr_par $core {C_PIXEL_WIDTH} {
 	value 8
 	value_format long
 }
+
+pip_add_usr_par $core {C_VAR_DATA} {
+	display_name {Variable Data}
+	tooltip {Variable Data}
+	widget {checkBox}
+} {
+	value_resolve_type user
+	value false
+	value_format bool
+} {
+	value false
+	value_format bool
+}

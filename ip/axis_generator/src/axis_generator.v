@@ -6,7 +6,8 @@ module axis_generator #
 	parameter integer C_PIXEL_WIDTH = 8,
 	parameter integer C_EXT_FSYNC = 0,
 	parameter integer C_IMG_WBITS = 12,
-	parameter integer C_IMG_HBITS = 12
+	parameter integer C_IMG_HBITS = 12,
+	parameter integer C_VAR_DATA = 0
 )
 (
 	input wire clk,
@@ -193,7 +194,28 @@ endgenerate
 				m_tuser <= 0;
 		end
 	end
+generate
+if (C_VAR_DATA) begin
+	reg[7:0] out_data;
+	assign m_axis_tdata = {8'b11111111, out_data[7:0], out_data[7:0], out_data[7:0]};
+	always @ (posedge clk) begin
+		if (resetn == 1'b0) begin
+			out_data <= 255;
+		end
+		else if (m_axis_tready & m_axis_tvalid) begin
+			if (m_axis_tlast) begin
+				out_data <= 255;
+			end
+			else begin
+				out_data <= out_data - 1;
+			end
+		end
+	end
+end
+else begin
 	assign m_axis_tdata = 0;
+end
+endgenerate
 
 	/// window calc
 	wire                     s_enable   [C_WIN_NUM-1 : 0];
