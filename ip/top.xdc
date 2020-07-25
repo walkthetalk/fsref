@@ -92,10 +92,14 @@ set_property -dict {IOSTANDARD LVCMOS33 PACKAGE_PIN AA13} [get_ports {pm_ms[2]}]
 set_property -dict {IOSTANDARD LVCMOS33 PACKAGE_PIN Y13 } [get_ports {pm_ms[1]}]
 set_property -dict {IOSTANDARD LVCMOS33 PACKAGE_PIN W13 } [get_ports {pm_ms[0]}]
 
+set_property -dict {IOSTANDARD LVCMOS33 PACKAGE_PIN A16 } [get_ports {pm0_zpd}]
+
 set_property -dict {IOSTANDARD LVCMOS33 PACKAGE_PIN W6  } [get_ports {pm0_xen}]
 set_property -dict {IOSTANDARD LVCMOS33 PACKAGE_PIN Y19 } [get_ports {pm0_xrst}]
 set_property -dict {IOSTANDARD LVCMOS33 PACKAGE_PIN V13 } [get_ports {pm0_dir}]
 set_property -dict {IOSTANDARD LVCMOS33 PACKAGE_PIN H15 } [get_ports {pm0_drive}]
+
+set_property -dict {IOSTANDARD LVCMOS33 PACKAGE_PIN P17 } [get_ports {pm1_zpd}]
 
 set_property -dict {IOSTANDARD LVCMOS33 PACKAGE_PIN V18 } [get_ports {pm1_xen}]
 set_property -dict {IOSTANDARD LVCMOS33 PACKAGE_PIN V19 } [get_ports {pm1_xrst}]
