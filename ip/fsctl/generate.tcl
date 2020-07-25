@@ -257,6 +257,7 @@ for {set i 0} {$i < 8} {incr i} {
 		TPSIGN    motor[set i]_tpsign
 		STATE     motor[set i]_state
 		RT_SPEED  motor[set i]_rt_speed
+		POSITION  motor[set i]_position
 		START     motor[set i]_start
 		STOP      motor[set i]_stop
 		SPEED     motor[set i]_speed
