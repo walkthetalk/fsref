@@ -75,6 +75,6 @@ module fslcd #
 
 	assign hsync_out = vid_hsync;
 	assign vsync_out = vid_vsync;
-	assign out_clk = vid_io_in_clk;
+	assign out_clk = ~vid_io_in_clk;
 
 endmodule
