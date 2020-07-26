@@ -315,7 +315,7 @@ create_bd_port -dir O lcd_power
 connect_bd_net [get_bd_ports lcd_power] [get_bd_pins xlconstant_0/dout]
 
 create_bd_port -dir O lcd_clk
-connect_bd_net [get_bd_pins cpu/FCLK_CLK2] [get_bd_ports lcd_clk]
+connect_bd_net [get_bd_pins fslcd/out_clk] [get_bd_ports lcd_clk]
 create_bd_port -dir O -from 7 -to 0 lcd_R
 connect_bd_net [get_bd_pins /fslcd/r] [get_bd_ports lcd_R]
 create_bd_port -dir O -from 7 -to 0 lcd_G
