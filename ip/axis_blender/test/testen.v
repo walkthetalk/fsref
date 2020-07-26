@@ -92,8 +92,8 @@ initial begin
 	m_random  <= 1'b1;
 	m_enprint <= 1'b1;
 
-	s_width       <=  3;
-	s_height <=  5;
+	s_width   <=  3;
+	s_height  <=  5;
 end
 
 generate
@@ -119,7 +119,7 @@ generate
 					s_valid[i] <= en_input;
 			end
 		end
-		assign s_data[i] = (s_ridx * 16 + s_cidx) + (255 << 16);
+		assign s_data[i] = (s_ridx * 16 + s_cidx) + (255 << 24);
 		assign s_user[i] = (s_ridx == 0 && s_cidx == 0);
 		assign s_last[i] = (s_cidx == s_width - 1);
 

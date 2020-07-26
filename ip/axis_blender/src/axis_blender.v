@@ -184,17 +184,21 @@ else begin: with_alpha
 		assign alpha_data    = s1_axis_tdata[C_S1_WIDTH + C_ALPHA_WIDTH - 1 : C_S1_WIDTH];
 	end
 
+	/// TODO optimize alpha calc
+	wire [C_ALPHA_WIDTH:0]   alpha_fixed;
+	assign alpha_fixed = (alpha_data[C_ALPHA_WIDTH-1]) ? (alpha_data + 1) : alpha_data;
+
 	/// delay0
 	reg[C_CHN_WIDTH-1:0]                   s0_data_d0     [C_S0_CHN_NUM-1:0];
-	reg[C_ALPHA_WIDTH-1:0]                 nalpha_d0;
+	reg[C_ALPHA_WIDTH:0]                   nalpha_d0;
 	reg[C_CHN_WIDTH + C_ALPHA_WIDTH -1:0]  s1_mul_alpha_d0[C_S1_CHN_NUM-1:0];
 
 	always @ (posedge clk) begin
 		if (out_ready) begin
 			if (needs1)
-				nalpha_d0       <= ~alpha_data;
+				nalpha_d0       <= {1'b1, {C_ALPHA_WIDTH{1'b0}}} - alpha_fixed;
 			else
-				nalpha_d0       <= {C_ALPHA_WIDTH{1'b1}};
+				nalpha_d0       <= {1'b1, {C_ALPHA_WIDTH{1'b0}}};
 		end
 	end
 
@@ -219,7 +223,7 @@ else begin: with_alpha
 		always @ (posedge clk) begin
 			if (out_ready) begin
 				if (needs1)
-					s1_mul_alpha_d0[i] <= s1_pure_data[i] * alpha_data;
+					s1_mul_alpha_d0[i] <= s1_pure_data[i] * alpha_fixed;
 				else
 					s1_mul_alpha_d0[i] <= 0;
 			end
