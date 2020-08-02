@@ -2,7 +2,8 @@
 create_bd_cell -type ip -vlnv xilinx.com:ip:processing_system7:5.5 cpu
 
 # @note: if using hp as 32bit, you should set the cpu register in software
-
+# @note: frame sync should be center of interspace between frames to adapting
+#        different window control
 set dic [dict create \
 	lcd_clk_freqmhz 9 \
 	lcd_max_clocks_per_line 1024 \

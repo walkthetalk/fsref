@@ -142,8 +142,11 @@ proc creat_stream {
 			CONFIG.M01_TUSER_REMAP {tuser[0:0]} \
 		] [get_bd_cells $mname/axis_broadcaster]
 
+		create_bd_cell -type ip -vlnv $VENDOR:$LIBRARY:window_broadcaster:$VERSION $mname/size_broadcaster
+		set_property -dict [list CONFIG.C_HAS_POSITION {false}] [get_bd_cells $mname/size_broadcaster]
+
 		create_bd_cell -type ip -vlnv $VENDOR:$LIBRARY:window_broadcaster:$VERSION $mname/window_broadcaster
-		set_property -dict [list CONFIG.C_HAS_POSITION {false}] [get_bd_cells $mname/window_broadcaster]
+		set_property -dict [list CONFIG.C_HAS_POSITION {true}] [get_bd_cells $mname/window_broadcaster]
 
 		create_bd_cell -type ip -vlnv $VENDOR:$LIBRARY:fsa:$VERSION $mname/fsa
 		set_property -dict [list \
@@ -161,6 +164,7 @@ proc creat_stream {
 		delete_bd_objs [get_bd_intf_nets $mname/axis_bayer_extractor_M_AXIS]
 		delete_bd_objs [get_bd_intf_nets $mname/pvdma_M_AXIS]
 		delete_bd_objs [get_bd_intf_nets $mname/IMG_SIZE_1]
+		delete_bd_objs [get_bd_intf_nets $mname/M_WIN_1]
 		pip_connect_intf_net [subst {
 			$mname/axis_bayer_extractor/M_AXIS  $mname/axis_broadcaster/S_AXIS
 			$mname/axis_broadcaster/M00_AXIS    $mname/pvdma/S_AXIS
@@ -168,9 +172,12 @@ proc creat_stream {
 			$mname/axis_broadcaster/M01_AXIS    $mname/fsa/S_AXIS
 			$mname/fsa/M_AXIS                   $mname/axis_blender/S1_AXIS
 			$mname/axis_blender/M_AXIS          $mname/axis_window/S_AXIS
-			$mname/IMG_SIZE                     $mname/window_broadcaster/S_WIN
-			$mname/window_broadcaster/M0_WIN    $mname/fsa/IMG_SIZE
-			$mname/window_broadcaster/M1_WIN    $mname/pvdma/IMG_SIZE
+			$mname/IMG_SIZE                     $mname/size_broadcaster/S_WIN
+			$mname/size_broadcaster/M0_WIN      $mname/fsa/IMG_SIZE
+			$mname/size_broadcaster/M1_WIN      $mname/pvdma/IMG_SIZE
+			$mname/M_WIN                        $mname/window_broadcaster/S_WIN
+			$mname/window_broadcaster/M0_WIN    $mname/fsa/S_WIN_CTL
+			$mname/window_broadcaster/M1_WIN    $mname/axis_window/S_WIN_CTL
 		}]
 
 		pip_connect_pin $mname/clk [subst {
