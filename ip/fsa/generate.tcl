@@ -10,6 +10,18 @@ pip_add_bus_if $core IMG_SIZE [subst {
 }
 append_associate_busif clk IMG_SIZE
 
+pip_add_bus_if $core S_WIN_CTL [subst {
+	abstraction_type_vlnv {$VENDOR:interface:window_ctl_rtl:1.0}
+	bus_type_vlnv {$VENDOR:interface:window_ctl:1.0}
+	interface_mode {slave}
+}] {
+	LEFT    win_left
+	TOP     win_top
+	WIDTH   win_width
+	HEIGHT  win_height
+}
+append_associate_busif clk S_WIN_CTL
+
 pip_add_bus_if $core S_AXIS {
 	abstraction_type_vlnv {xilinx.com:interface:axis_rtl:1.0}
 	bus_type_vlnv {xilinx.com:interface:axis:1.0}

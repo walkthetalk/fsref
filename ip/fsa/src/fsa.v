@@ -17,6 +17,11 @@ module fsa #(
 	input  wire [C_IMG_HW-1:0]      height  ,
 	input  wire [C_IMG_WW-1:0]      width   ,
 
+	input  wire [C_IMG_WW-1:0]      win_left,
+	input  wire [C_IMG_HW-1:0]      win_top,
+	input  wire [C_IMG_WW-1:0]      win_width,
+	input  wire [C_IMG_HW-1:0]      win_height,
+
 	input  wire r_sof  ,
 	input  wire r_en   ,
 	input  wire [BR_AW-1:0] r_addr ,
@@ -270,6 +275,10 @@ endgenerate
 
 		.height(height),
 		.width (width),
+		.win_left(win_left),
+		.win_top(win_top),
+		.win_width(win_width),
+		.win_height(win_height),
 
 		.sof   (wr_sof),
 		.wr_bmp(wr_bmp),

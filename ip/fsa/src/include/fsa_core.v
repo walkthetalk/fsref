@@ -12,6 +12,11 @@ module fsa_core #(
 	input  wire [C_IMG_HW-1:0]      height  ,
 	input  wire [C_IMG_WW-1:0]      width   ,
 
+	input  wire [C_IMG_WW-1:0]      win_left,
+	input  wire [C_IMG_HW-1:0]      win_top,
+	input  wire [C_IMG_WW-1:0]      win_width,
+	input  wire [C_IMG_HW-1:0]      win_height,
+
 	output wire                     sof     ,
 	input  wire [BR_NUM-1:0]        wr_bmp  ,
 
