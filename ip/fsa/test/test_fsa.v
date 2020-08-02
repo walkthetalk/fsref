@@ -14,14 +14,18 @@ module test_fsa # (
 	parameter integer C_PIXEL_WIDTH = 8,
 	parameter integer C_IMG_HW = 8,
 	parameter integer C_IMG_WW = 8,
-	parameter integer BR_DW    = 32
+	parameter integer BR_DW    = 35
 ) (
 );
 
-	localparam RANDOMINPUT = 1;
-	localparam RANDOMOUTPUT = 1;
+	localparam RANDOMINPUT = 0;
+	localparam RANDOMOUTPUT = 0;
 	localparam integer height = 20;
 	localparam integer width  = 40;
+	localparam integer win_left = 0;
+	localparam integer win_top  = 2;
+	localparam integer win_width = width;
+	localparam integer win_height  = 16;
 	localparam integer BR_AW = C_IMG_WW;
 	localparam integer TEST_BW = 12;
 	localparam integer GEN_BW = 32;
@@ -75,6 +79,10 @@ module test_fsa # (
 
 		.height(height),
 		.width (width),
+		.win_left(win_left),
+		.win_top(win_top),
+		.win_width(win_width),
+		.win_height(win_height),
 
 		.r_sof ({r1_sof,    r0_sof    }),
 		.r_en  ({r1_rd_en,  r0_rd_en  }),
@@ -314,7 +322,7 @@ end
 		end
 	end
 generate
-if (1) begin
+if (0) begin
 	always @ (posedge clk) begin
 		if (resetn == 1'b0) begin
 		end
