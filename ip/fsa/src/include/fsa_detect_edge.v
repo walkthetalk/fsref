@@ -21,6 +21,9 @@ module fsa_detect_edge #(
 	input  wire                rd_val_outer_p3,
 	input  wire [C_IMG_HW-1:0] rd_top_outer_p3,
 	input  wire [C_IMG_HW-1:0] rd_bot_outer_p3,
+	input  wire                rd_val_inner_p3,
+	input  wire [C_IMG_HW-1:0] rd_top_inner_p3,
+	input  wire [C_IMG_HW-1:0] rd_bot_inner_p3,
 
 	output wire                     ana_done,
 	output reg                      res_lft_valid       ,

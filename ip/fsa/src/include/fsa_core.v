@@ -54,7 +54,10 @@ module fsa_core #(
 	output wire [BR_AW-1:0]    o_x_d3        ,
 	output wire                o_rd_val_outer,
 	output wire [C_IMG_HW-1:0] o_rd_top_outer,
-	output wire [C_IMG_HW-1:0] o_rd_bot_outer
+	output wire [C_IMG_HW-1:0] o_rd_bot_outer,
+	output wire                o_rd_val_inner,
+	output wire [C_IMG_HW-1:0] o_rd_top_inner,
+	output wire [C_IMG_HW-1:0] o_rd_bot_inner
 );
 	assign s_axis_tready = 1'b1;
 	wire snext;
@@ -311,4 +314,7 @@ module fsa_core #(
 	assign o_rd_val_outer = rd_val_outer;
 	assign o_rd_top_outer = rd_top_outer;
 	assign o_rd_bot_outer = rd_bot_outer;
+	assign o_rd_val_inner = rd_val_inner;
+	assign o_rd_top_inner = rd_top_inner;
+	assign o_rd_bot_inner = rd_bot_inner;
 endmodule

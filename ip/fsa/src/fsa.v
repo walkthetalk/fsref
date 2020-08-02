@@ -9,7 +9,7 @@ module fsa #(
 	parameter integer C_IMG_WW = 12,
 	parameter integer BR_NUM   = 4,
 	parameter integer BR_AW    = 12,	/// same as C_IMG_WW
-	parameter integer BR_DW    = 51		/// C_IMG_HW * 4 + 1
+	parameter integer BR_DW    = 51		/// C_IMG_HW * 4 + 3
 )(
 	input	clk,
 	input	resetn,
@@ -254,6 +254,9 @@ endgenerate
 	wire                fsaic_rd_val_outer;
 	wire [C_IMG_HW-1:0] fsaic_rd_top_outer;
 	wire [C_IMG_HW-1:0] fsaic_rd_bot_outer;
+	wire                fsaic_rd_val_inner;
+	wire [C_IMG_HW-1:0] fsaic_rd_top_inner;
+	wire [C_IMG_HW-1:0] fsaic_rd_bot_inner;
 
 	fsa_core # (
 		.C_PIXEL_WIDTH (C_PIXEL_WIDTH),
@@ -310,7 +313,10 @@ endgenerate
 		.o_x_d3        (fsaic_x_d3        ),
 		.o_rd_val_outer(fsaic_rd_val_outer),
 		.o_rd_top_outer(fsaic_rd_top_outer),
-		.o_rd_bot_outer(fsaic_rd_bot_outer)
+		.o_rd_bot_outer(fsaic_rd_bot_outer),
+		.o_rd_val_inner(fsaic_rd_val_inner),
+		.o_rd_top_inner(fsaic_rd_top_inner),
+		.o_rd_bot_inner(fsaic_rd_bot_inner)
 	);
 
 	fsa_detect_edge # (
@@ -335,6 +341,9 @@ endgenerate
 		.rd_val_outer_p3(fsaic_rd_val_outer),
 		.rd_top_outer_p3(fsaic_rd_top_outer),
 		.rd_bot_outer_p3(fsaic_rd_bot_outer),
+		.rd_val_inner_p3(fsaic_rd_val_inner),
+		.rd_top_inner_p3(fsaic_rd_top_inner),
+		.rd_bot_inner_p3(fsaic_rd_bot_inner),
 
 		.ana_done(ana_done),
 		.res_lft_valid(lft_valid),
