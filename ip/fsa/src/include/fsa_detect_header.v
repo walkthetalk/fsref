@@ -88,7 +88,7 @@ module fsa_detect_header # (
 	end
 
 	//////////////////////////// header ///////////////////////////////////
-	localparam integer C_FIBER_THICKNESS_LEN_HALF = 3;
+	localparam integer C_FIBER_THICKNESS_LEN_HALF = 5;
 	localparam integer C_FIBER_THICKNESS_LEN = C_FIBER_THICKNESS_LEN_HALF * 2 + 1;
 	/// HM2
 	///////////////////////// left
