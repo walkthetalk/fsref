@@ -68,6 +68,25 @@ module fsa_core #(
 	wire snext;
 	assign snext = s_axis_tvalid & s_axis_tready;
 
+	reg [C_IMG_WW-1:0] wleft;
+	reg [C_IMG_WW-1:0] wright;
+	reg [C_IMG_HW-1:0] htop;
+	reg [C_IMG_HW-1:0] hbottom;
+	always @ (posedge clk) begin
+		if (resetn == 1'b0) begin
+			wleft <= 0;
+			wright <= 0;
+			htop <= 0;
+			hbottom <= 0;
+		end
+		else if (snext && s_axis_tuser) begin
+			wleft <= win_left;
+			wright <= win_left + win_width;
+			htop <= win_top;
+			hbottom <= win_top + win_height;
+		end
+	end
+
 	reg [C_PIXEL_WIDTH-1:0] tdata_p0;
 	reg wfirst_p0;
 	reg wlast_p0;
@@ -136,13 +155,47 @@ module fsa_core #(
 			rd_en_d1    <= rd_en;
 			x_d1        <= rd_addr;
 			tdata_p1    <= tdata_p0;
-			wfirst_p1   <= wfirst_p0;
-			wlast_p1    <= wlast_p0;
-			hfirst_p1   <= hfirst_p0;
-			hlast_p1    <= (y_p0 == height-1);
-			hM2_p1      <= (y_p0 == height-2);
-			hM3_p1      <= (y_p0 == height-3);
+			wfirst_p1   <= (rd_addr == wleft);//wfirst_p0;
+			wlast_p1    <= (rd_addr == wright-1);//wlast_p0;
+			hfirst_p1   <= (y_p0 == htop);//hfirst_p0;
+			hlast_p1    <= (y_p0 == hbottom-1);//(y_p0 == height-1);
+			hM2_p1      <= (y_p0 == hbottom-2);//(y_p0 == height-2);
+			hM3_p1      <= (y_p0 == hbottom-3);//(y_p0 == height-3);
 			y_p1        <= y_p0;
+		end
+	end
+
+	reg wlast_p1_d1;
+	reg hlast_p1_d1;
+	always @ (posedge clk) begin
+		if (resetn == 1'b0) begin
+			wlast_p1_d1 <= 0;
+			hlast_p1_d1 <= 0;
+		end
+		else begin
+			wlast_p1_d1 <= wlast_p1;
+			hlast_p1_d1 <= hlast_p1;
+		end
+	end
+
+	// @note width window valid
+	reg w_valid_p2;
+	reg h_valid_p2;
+	always @ (posedge clk) begin
+		if (resetn == 1'b0) begin
+			w_valid_p2 <= 0;
+			h_valid_p2 <= 0;
+		end
+		else begin
+			if (wfirst_p1)
+				w_valid_p2 <= 1;
+			else if (wlast_p1_d1)
+				w_valid_p2 <= 0;
+
+			if (hfirst_p1 && wfirst_p1)
+				h_valid_p2 <= 1;
+			else if (hlast_p1_d1 && wlast_p1_d1)
+				h_valid_p2 <= 0;
 		end
 	end
 
@@ -220,7 +273,7 @@ module fsa_core #(
 		end
 		else begin
 			wr_sof_d3   <= rd_en_d2 && plast_p2;
-			rd_en_d3    <= rd_en_d2;
+			rd_en_d3    <= rd_en_d2 && h_valid_p2;//rd_en_d2;
 			x_d3        <= x_d2;
 			tdata_p3    <= tdata_p2;
 			if (hfirst_p2 || hlast_p2)
