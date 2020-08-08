@@ -66,6 +66,9 @@ set ip_list [list \
 	s2mm \
 		{AXI Stream to MM} \
 		{AXI Stream to MM} \
+	s2mm_adv \
+		{AXI Stream to MM advance version} \
+		{AXI Stream to MM advance version} \
 	mm2s \
 		{AXI MM to Stream} \
 		{AXI MM to Stream} \
