@@ -39,3 +39,10 @@ pip_add_bus_abstraction_port $busabs BOTTOME {
 	slave_direction in
 	is_data true
 }
+
+pip_add_bus_abstraction_port $busabs STRIDE {
+	default_value 0
+	master_direction out
+	slave_direction in
+	is_data true
+}

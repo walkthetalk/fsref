@@ -7,9 +7,13 @@ pip_add_bus_if $core S_WIN [subst {
 	TOP     s_top
 	WIDTH   s_width
 	HEIGHT  s_height
+	STRIDE  s_stride
 }
 pip_set_prop_of_port $core {s_left s_top} {
 	enablement_dependency {spirit:decode(id('PARAM_VALUE.C_HAS_POSITION'))}
+}
+pip_set_prop_of_port $core {s_stride} {
+	enablement_dependency {spirit:decode(id('PARAM_VALUE.C_HAS_STRIDE'))}
 }
 
 for {set i 0} {$i < 8} {incr i} {
@@ -23,10 +27,15 @@ for {set i 0} {$i < 8} {incr i} {
 		TOP    m[set i]_top
 		WIDTH  m[set i]_width
 		HEIGHT m[set i]_height
+		STRIDE m[set i]_stride
 	}]
 
 	pip_set_prop_of_port $core [subst {m[set i]_left m[set i]_top}] [subst {
 		enablement_dependency {spirit:decode(id('MODELPARAM_VALUE.C_MASTER_NUM')) > $i && spirit:decode(id('PARAM_VALUE.C_HAS_POSITION'))}
+	}]
+
+	pip_set_prop_of_port $core [subst {m[set i]_stride}] [subst {
+		enablement_dependency {spirit:decode(id('MODELPARAM_VALUE.C_MASTER_NUM')) > $i && spirit:decode(id('PARAM_VALUE.C_HAS_STRIDE'))}
 	}]
 }
 
@@ -61,6 +70,21 @@ pip_add_usr_par $core {C_HBITS} {
 	value_format long
 }
 
+pip_add_usr_par $core {C_SBITS} {
+	display_name {Image Stride Bit Width}
+	tooltip {IMAGE Stride BIT WIDTH}
+	widget {comboBox}
+} {
+	value_resolve_type user
+	value 32
+	value_format long
+	value_validation_type list
+	value_validation_list {32 64}
+} {
+	value 32
+	value_format long
+}
+
 pip_add_usr_par $core {C_MASTER_NUM} {
 	display_name {Number Of Master}
 	tooltip {Number Of Master}
@@ -83,5 +107,15 @@ pip_add_usr_par $core {C_HAS_POSITION} {
 } {
 	value_resolve_type user
 	value true
+	value_format bool
+}
+
+pip_add_usr_par $core {C_HAS_STRIDE} {
+	display_name {Has Stride}
+	tooltip {Has Stride}
+	widget {checkBox}
+} {
+	value_resolve_type user
+	value false
 	value_format bool
 }
