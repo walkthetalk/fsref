@@ -1,5 +1,5 @@
 `timescale 1ns / 1ps
-`include "../src/axis_shifter_v2.v"
+`include "../src/include/axis_shifter_v2.v"
 `include "../src/axis_window.v"
 module testwindow(
     );
@@ -19,8 +19,8 @@ module testwindow(
 	wire suser;
 	reg svalid;
 
-	reg[11:0] ori_height = 320;
-	reg[11:0] ori_width = 240;
+	reg[11:0] ori_height = 16;
+	reg[11:0] ori_width = 16;
 
 	reg[11:0] w_left = 3;
 	reg[11:0] w_top = 3;
