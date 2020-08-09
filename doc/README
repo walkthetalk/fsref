@@ -12,3 +12,9 @@
 1. LCD
 1) change parameter dic
 2) change dts
+
+VIVADO
+1. XSIM 43-3225 when simulation:
+	https://blog.csdn.net/weixin_37182342/article/details/83855846
+	原因是仿真库不匹配，Xilinx IP生成的默认仿真库为xil_default，自己写的代码设置的仿真库为work，所以在work里是找不到自定义IP的仿真文件。
+	Hierachy Update，默认是第一个Automatic Update and Compile Order，更改为第二个Automatic Update,Manual Compile Order。

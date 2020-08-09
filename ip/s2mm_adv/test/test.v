@@ -13,11 +13,9 @@ parameter integer C_DATACOUNT_BITS = 10;
 
 // Parameters of Axi Master Bus Interface M_AXI
 parameter integer C_M_AXI_BURST_LEN    = 16;
-parameter integer C_M_AXI_ID_WIDTH    = 1;
 parameter integer C_M_AXI_ADDR_WIDTH    = 32;
-parameter integer C_M_AXI_DATA_WIDTH    = 32;
+parameter integer C_M_AXI_DATA_WIDTH    = 64;
 
-wire [C_M_AXI_ID_WIDTH-1 : 0] m_axi_awid;
 wire [C_M_AXI_ADDR_WIDTH-1 : 0] m_axi_awaddr;
 wire [7 : 0] m_axi_awlen;
 wire [2 : 0] m_axi_awsize;
@@ -34,7 +32,6 @@ wire [C_M_AXI_DATA_WIDTH/8-1 : 0] m_axi_wstrb;
 wire  m_axi_wlast;
 wire  m_axi_wvalid;
 reg m_axi_wready = 1;
-reg [C_M_AXI_ID_WIDTH-1 : 0] m_axi_bid;
 reg [1 : 0] m_axi_bresp;
 reg m_axi_bvalid;
 wire  m_axi_bready;
@@ -48,8 +45,10 @@ reg S_AXIS_tvalid;
 reg[11:0] height = 240;
 reg[11:0] width = 320;
 
-wire[31:0] addr;
+wire[C_M_AXI_ADDR_WIDTH-1:0] addr;
 assign addr = 32'h3FF80000;
+wire [C_M_AXI_ADDR_WIDTH-1 : 0] stride;
+assign stride = 256;
 
 reg clk;
 reg resetn;
@@ -57,10 +56,8 @@ reg resetn;
 localparam RANDOMOUTPUT = 1;
 localparam RANDOMINPUT = 1;
 
-wire[9:0] rd_data_count;
 
 s2mmbd_wrapper uut(
-	.M_AXI_awid(m_axi_awid),
 	.M_AXI_awaddr(m_axi_awaddr),
 	.M_AXI_awlen(m_axi_awlen),
 	.M_AXI_awsize(m_axi_awsize),
@@ -77,7 +74,6 @@ s2mmbd_wrapper uut(
 	.M_AXI_wlast(m_axi_wlast),
 	.M_AXI_wvalid(m_axi_wvalid),
 	.M_AXI_wready(m_axi_wready),
-	.M_AXI_bid(m_axi_bid),
 	.M_AXI_bresp(m_axi_bresp),
 	.M_AXI_bvalid(m_axi_bvalid),
 	.M_AXI_bready(m_axi_bready),
@@ -88,13 +84,13 @@ s2mmbd_wrapper uut(
 	.S_AXIS_tuser(S_AXIS_tuser),
 	.S_AXIS_tvalid(S_AXIS_tvalid),
 
-	.addr(addr),
+	.MBUF_W_addr(addr),
 	.clk(clk),
-	.img_height(height),
-	.img_width(width),
+	.IMG_SIZE_height(height),
+	.IMG_SIZE_width(width),
+	.IMG_SIZE_stride(stride),
 	.resetn(resetn),
-	.soft_resetn(1'b1),
-	.rd_data_count(rd_data_count)
+	.soft_resetn(1'b1)
 );
 
 initial begin

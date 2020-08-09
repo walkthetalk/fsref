@@ -52,6 +52,22 @@ ${XPR_FILE}: ${REG_FILE}
 	-source ${dir_main}/scripts/aux/genall.tcl \
 	-tclargs "${dir_main}"
 
+.PHONY: window_ctl
+window_ctl:
+	${VIVADO} \
+	-nojournal -nolog \
+	-mode batch \
+	-source ${dir_main}/scripts/aux/genall.tcl \
+	-tclargs "${dir_main}" "window_ctl"
+
+.PHONY: window_broadcaster
+window_broadcaster:
+	${VIVADO} \
+	-nojournal -nolog \
+	-mode batch \
+	-source ${dir_main}/scripts/aux/genall.tcl \
+	-tclargs "${dir_main}" "window_broadcaster"
+
 .PHONY: fslcd
 fslcd:
 	${VIVADO} \
@@ -67,6 +83,14 @@ axis_reshaper:
 	-mode batch \
 	-source ${dir_main}/scripts/aux/genall.tcl \
 	-tclargs "${dir_main}" "axis_reshaper"
+
+.PHONY: s2mm_adv
+s2mm_adv:
+	${VIVADO} \
+	-nojournal -nolog \
+	-mode batch \
+	-source ${dir_main}/scripts/aux/genall.tcl \
+	-tclargs "${dir_main}" "s2mm_adv"
 
 ${XSA_FILE}: ${BIT_FILE}
 	${VIVADO} \

@@ -30,3 +30,17 @@ add_files -fileset constrs_1 $xdc_file
 set_property target_constrs_file $xdc_file [current_fileset -constrset]
 set_property used_in_synthesis false [get_files $xdc_file]
 set_property used_in_implementation true [get_files $xdc_file]
+
+# create board s2mm_test
+#create_bd_design -srcset sim_1 "s2mm_test"
+#open_bd_design {$origin_dir/fsref.srcs/sim_1/bd/s2mm_test/s2mm_test.bd}
+#source $origin_dir/scripts/aux/genbd_s2mm_test.tcl
+#save_bd_design
+#make_wrapper -files [get_files $origin_dir/fsref.srcs/sim_1/bd/s2mm_test/s2mm_test.bd] -top
+#add_files -fileset sim_1 -norecurse $origin_dir/fsref.srcs/sim_1/bd/s2mm_test/hdl/s2mm_test_wrapper.v
+#set_property used_in_synthesis false [get_files  $origin_dir/fsref.srcs/sim_1/bd/s2mm_test/s2mm_test.bd]
+#set_property used_in_implementation false [get_files  $origin_dir/fsref.srcs/sim_1/bd/s2mm_test/s2mm_test.bd]
+#
+#set_property SOURCE_SET sources_1 [get_filesets sim_1]
+#add_files -fileset sim_1 -norecurse -scan_for_includes $origin_dir/ip/s2mm_adv/test/test.v
+#update_compile_order -fileset sim_1
