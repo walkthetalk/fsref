@@ -3,7 +3,7 @@
  * 1. size of image must be integral multiple of C_M_AXI_DATA_WIDTH * C_M_AXI_BURST_LEN.
  * 2. the sof [start of frame] must be 1'b1 for first image data.
  */
-module FIFO2MM #
+module FIFO2MM_adv #
 (
 	parameter integer C_DATACOUNT_BITS = 12,
 	// Burst Length. Supports 1, 2, 4, 8, 16, 32, 64, 128, 256 burst lengths
@@ -114,8 +114,6 @@ module FIFO2MM #
 			r_soft_resetting <= 1'b0;
 		else if (~soft_resetn && soft_resetn_d1)	/// soft_resetn_negedge
 			r_soft_resetting <= 1'b1;
-		else
-			r_soft_resetting <= r_soft_resetting;
 	end
 
 	// I/O Connections assignments
@@ -124,19 +122,10 @@ module FIFO2MM #
 	always @ (posedge M_AXI_ACLK) begin
 		if (M_AXI_ARESETN == 0)
 			r_frame_pulse <= 1'b0;
-		else if (burst_done && trans_frame_done)
+		else if (burst_done && final_data)
 			r_frame_pulse <= 1'b1;
 		else
 			r_frame_pulse <= 1'b0;
-	end
-	reg trans_frame_done;
-	always @ (posedge M_AXI_ACLK) begin
-		if (M_AXI_ARESETN == 0)
-			trans_frame_done <= 0;
-		else if (wnext && axi_wlast && final_data)
-			trans_frame_done <= 1;
-		else if (burst_done)
-			trans_frame_done <= 0;
 	end
 
 	wire try_read_en;
@@ -186,7 +175,7 @@ module FIFO2MM #
 	always @(posedge M_AXI_ACLK) begin
 		if (M_AXI_ARESETN == 0)
 			axi_awvalid <= 1'b0;
-		else if (~axi_awvalid && sob_d0)
+		else if (sob_d0)
 			axi_awvalid <= 1'b1;
 		else if (M_AXI_AWREADY && axi_awvalid)
 			axi_awvalid <= 1'b0;
@@ -202,22 +191,20 @@ module FIFO2MM #
 	reg [C_M_AXI_ADDR_WIDTH-1:0] line_addr;
 	always @(posedge M_AXI_ACLK) begin
 		if (M_AXI_ARESETN == 0) begin
+			line_addr <= 0;
+			axi_awaddr <= 0;
+		end
+		else if (sof_d1) begin
 			line_addr <= base_addr;
 			axi_awaddr <= base_addr;
 		end
-		else if (wnext &&　axi_wlast) begin
-			if (end_of_col) begin
-				if (end_of_row) begin
-					line_addr <= base_addr;
-					axi_awaddr <= base_addr;
-				end
-				else begin
-					line_addr <= line_addr + img_stride;
-					axi_awaddr <= line_addr + img_stride;
-				end
-			end
-			else begin
+		else if (wnext && axi_wlast) begin
+			if (~end_of_col) begin
 				axi_awaddr <= axi_awaddr + C_M_AXI_BURST_LEN * C_M_AXI_DATA_WIDTH / 8;
+			end
+			else if (~end_of_row) begin
+				line_addr <= line_addr + img_stride;
+				axi_awaddr <= line_addr + img_stride;
 			end
 		end
 	end
@@ -240,7 +227,7 @@ module FIFO2MM #
 		if (M_AXI_ARESETN == 0)
 			axi_wlast <= 1'b0;
 		else if (sob_d0)
-			axi_wlast <= (next_burst_len == 1);
+			axi_wlast <= (next_burst_len == 0);
 		else if (wnext)
 			axi_wlast <= (write_index == 1);
 	end
@@ -266,13 +253,10 @@ module FIFO2MM #
 	always @(posedge M_AXI_ACLK) begin
 		if (M_AXI_ARESETN == 1'b0)
 			sob_d0 <= 1'b0;
-		else if (~sob_d0 && (~burst_active || burst_done)
-			&& soft_resetn
-			&& (rd_data_count > next_burst_len)
-			)
-			sob_d0 <= 1'b1;
-		else
+		else if (sob_d0)
 			sob_d0 <= 1'b0;
+		else if (framing && ~burst_active && (rd_data_count > next_burst_len))
+			sob_d0 <= 1'b1;
 	end
 
 	always @(posedge M_AXI_ACLK) begin
@@ -287,13 +271,10 @@ module FIFO2MM #
 	// @note next_burst_len is real length - 1
 	reg [C_TRANSACTIONS_NUM-1:0] next_burst_len;
 	always @(posedge M_AXI_ACLK) begin
-		if (M_AXI_ARESETN == 1'b0 || soft_resetn == 1'b0) begin
-			if (img_width >= C_M_AXI_BURST_LEN * C_ADATA_PIXELS)
-				next_burst_len <= C_M_AXI_BURST_LEN - 1;
-			else
-				next_burst_len <= (img_width - C_ADATA_PIXELS) / C_ADATA_PIXELS;
+		if (M_AXI_ARESETN == 1'b0) begin
+			next_burst_len <= 0;
 		end
-		else if (burst_done) begin
+		else if (sof_d1 || burst_done) begin
 			if (r_img_col_idx >= C_M_AXI_BURST_LEN * C_ADATA_PIXELS)
 				next_burst_len <= C_M_AXI_BURST_LEN - 1;
 			else
@@ -302,7 +283,11 @@ module FIFO2MM #
 	end
 
 	always @(posedge M_AXI_ACLK) begin
-		if (M_AXI_ARESETN == 1'b0 || soft_resetn == 1'b0) begin
+		if (M_AXI_ARESETN == 1'b0) begin
+			r_img_col_idx <= 0;
+			r_img_row_idx <= 0;
+		end
+		else if (start_of_frame) begin
 			r_img_col_idx <= img_width - C_ADATA_PIXELS;
 			r_img_row_idx <= img_height - 1;
 		end
@@ -314,10 +299,6 @@ module FIFO2MM #
 				r_img_col_idx <= img_width - C_ADATA_PIXELS;
 				r_img_row_idx <= r_img_row_idx - 1;
 			end
-			else begin	// @note next frame
-				r_img_col_idx <= img_width - C_ADATA_PIXELS;
-				r_img_row_idx <= img_height - 1;
-			end
 		end
 	end
 	reg end_of_col;
@@ -327,6 +308,10 @@ module FIFO2MM #
 	// @note img must > 2x2
 	always @(posedge M_AXI_ACLK) begin
 		if (M_AXI_ARESETN == 1'b0 || soft_resetn == 1'b0) begin
+			end_of_col <= 1;
+			end_of_row <= 1;
+		end
+		else if (start_of_frame) begin
 			end_of_col <= 0;
 			end_of_row <= 0;
 		end
@@ -342,10 +327,40 @@ module FIFO2MM #
 					end_of_row <= 1;
 				end
 			end
-			else begin	// @note next frame
-				end_of_col <= 0;
-				end_of_row <= 0;
-			end
 		end
+	end
+
+	// @note new start
+	reg start_of_frame;
+	reg framing;
+	always @ (posedge M_AXI_ACLK) begin
+		if (M_AXI_ARESETN == 1'b0 || soft_resetn == 1'b0) begin
+			start_of_frame <= 0;
+		end
+		else if (start_of_frame) begin
+			start_of_frame <= 0;
+		end
+		else if (~sof_d1 && ~framing && img_width != 0 && img_height != 0) begin
+			start_of_frame <= 1'b1;
+		end
+	end
+	always @ (posedge M_AXI_ACLK) begin
+		if (M_AXI_ARESETN == 1'b0) begin
+			framing <= 0;
+		end
+		else if (sof_d1) begin
+			framing <= 1'b1;
+		end
+		else if (burst_done && (final_data || resetting)) begin
+			framing <= 1'b0;
+		end
+	end
+
+	reg sof_d1;
+	always @ (posedge M_AXI_ACLK) begin
+		if (M_AXI_ARESETN == 1'b0)
+			sof_d1 <= 0;
+		else
+			sof_d1 <= start_of_frame;
 	end
 endmodule
