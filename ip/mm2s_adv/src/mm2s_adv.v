@@ -83,6 +83,7 @@ module mm2s_adv #
 	localparam integer C_BURST_PIXEL_INDEX_BITS = log2(C_BURST_PIXELS);
 	localparam integer C_WRITE_INDEX_BITS = C_IMG_WBITS - log2(C_ADATA_PIXELS);
 	localparam integer C_IMG_STRIDE_SIZE = 2**C_IMG_STRIDE_WIDTH;
+	localparam integer C_BYTES_PER_PIXEL = (C_PIXEL_STORE_WIDTH / 8);
 
 	wire [C_M_AXI_ADDR_WIDTH-1:0] line_addr;
 	wire eol_write;
@@ -94,7 +95,7 @@ module mm2s_adv #
 		.C_M_AXI_ADDR_WIDTH(C_M_AXI_ADDR_WIDTH),
 		.C_M_AXI_DATA_WIDTH(C_M_AXI_DATA_WIDTH)
 	) read4mm_inst (
-		.img_width(img_width),
+		.img_width(mm_pixel_per_line),
 
 		.soft_resetn(soft_resetn),
 		.resetting(resetting),
@@ -134,30 +135,29 @@ module mm2s_adv #
 		else
 			sof_d1 <= fsync;
 	end
-	assign sof = fsync;
+	/// @note we can tell mutex buffer controller for reading done
+	assign sof = (eol_write && line_addr_last);
 
-	reg [C_IMG_WBITS-1:0] mm_offset;	// align with burst size
-	reg [C_IMG_WBITS-1:0] mm_width;		// align with mm data width
+	reg [C_IMG_WBITS-1:0] mm_pixel_offset;	// align with burst size
+	reg [C_IMG_WBITS-1:0] mm_pixel_per_line;		// align with mm data width
 	reg [C_IMG_WBITS-1:0] read_offset;
 	`define align_mm(x, hbits, lbits) {x[(hbits)-1: (lbits)], {(lbits){1'b0}}}
 	wire [C_IMG_WBITS-1:0] __mm_width_with_head;
 	assign __mm_width_with_head = win_left[C_BURST_PIXEL_INDEX_BITS-1:0] + win_width + C_ADATA_PIXELS - 1;
 	always @(posedge clk) begin
 		if (resetn == 1'b0) begin
-			mm_offset <= 0;
-			mm_width  <= 0;
+			mm_pixel_offset <= 0;
+			mm_pixel_per_line  <= 0;
 			read_offset <= 0;
 		end
 		else if (fsync) begin
-			mm_offset <= `align_mm(win_left, C_IMG_WBITS, C_BURST_PIXEL_INDEX_BITS);
-			mm_width <= `align_mm(__mm_width_with_head, C_IMG_WBITS, log2(C_ADATA_PIXELS));
+			mm_pixel_offset <= `align_mm(win_left, C_IMG_WBITS, C_BURST_PIXEL_INDEX_BITS);
+			mm_pixel_per_line <= `align_mm(__mm_width_with_head, C_IMG_WBITS, log2(C_ADATA_PIXELS));
 			read_offset <= win_left[C_BURST_PIXEL_INDEX_BITS-1:0];
 		end
 	end
 
 	// ping-pong line buffer
-	reg write_ram_index;
-
 	wire write_enable;
 	wire [C_WRITE_INDEX_BITS-1:0] write_address;
 	wire [C_M_AXI_DATA_WIDTH-1:0] write_data;
@@ -169,7 +169,11 @@ module mm2s_adv #
 
 	wire [C_PIXEL_STORE_WIDTH-1:0] read_data0;
 	wire [C_PIXEL_STORE_WIDTH-1:0] read_data1;
-	assign read_data = (write_ram_index == 1 ? read_data0 : read_data1);
+	reg  [BUF_NUM-1:0] buffer_reading_d1;
+	always @(posedge clk) begin
+		buffer_reading_d1 <= buffer_reading;
+	end
+	assign read_data = (buffer_reading_d1 == 1 ? read_data0 : read_data1);
 
 	asym_ram # (
 		.WR_DATA_WIDTH(C_M_AXI_DATA_WIDTH)
@@ -178,12 +182,12 @@ module mm2s_adv #
 		, .RD_ADDR_WIDTH(C_IMG_WBITS)
 	) lineA (
 		.clkW(clk)
-		, .we(write_ram_index == 0 && write_enable)
+		, .we(buffer_writing[0] && write_enable)
 		, .wa(write_address)
 		, .wd(write_data)
 		
 		, .clkR(clk)
-		, .re(write_ram_index == 1 && read_enable)
+		, .re(buffer_reading[0] && read_enable)
 		, .ra(read_address)
 		, .rd(read_data0)
 	);
@@ -194,30 +198,81 @@ module mm2s_adv #
 		, .RD_ADDR_WIDTH(C_IMG_WBITS)
 	) lineB (
 		.clkW(clk)
-		, .we(write_ram_index == 1 && write_enable)
+		, .we(buffer_writing[1] && write_enable)
 		, .wa(write_address)
 		, .wd(write_data)
 		
 		, .clkR(clk)
-		, .re(write_ram_index == 0 && read_enable)
+		, .re(buffer_reading[1] && read_enable)
 		, .ra(read_address)
 		, .rd(read_data1)
 	);
 
-	reg ram_ready;
+	/////////////////////////////////////// buffer control /////////////////
+	localparam integer BUF_NUM = 2;
+	reg[BUF_NUM-1:0] buffer_full;		// only full flag
+	reg[BUF_NUM-1:0] buffer_writing;	// only index bitmap
+	reg[BUF_NUM-1:0] buffer_reading;	// only index bitmap
+
+	reg eol_read;
+
 	always @(posedge clk) begin
 		if (resetn == 0)
-			ram_ready <= 0;
+			buffer_writing <= 0;
 		else if (fsync)
-			ram_ready <= 0;
+			buffer_writing <= 1;
 		else if (eol_write)
-			ram_ready <= 1;
+			buffer_writing <= {buffer_writing[BUF_NUM-2:0], buffer_writing[BUF_NUM-1]};
+	end
+	always @(posedge clk) begin
+		if (resetn == 0)
+			buffer_reading <= 0;
+		else if (fsync)
+			buffer_reading <= 1;
+		else if (eol_read)
+			buffer_reading <= {buffer_reading[BUF_NUM-2:0], buffer_reading[BUF_NUM-1]};
 	end
 
-	// scaler
+	always @(posedge clk) begin
+		if (resetn == 0)
+			eol_read <= 0;
+		else if (eol_read)
+			eol_read <= 0;
+		else if (pixel_addr_valid && pixel_addr_ready && pixel_addr_last)
+			eol_read <= 1;
+	end
+
+	generate
+		genvar i;
+		for (i = 0; i < BUF_NUM; i=i+1) begin
+			always @(posedge clk) begin
+				if (resetn == 0)
+					buffer_full[i] <= 0;
+				else if (fsync)
+					buffer_full[i] <= 0;
+				else if ((eol_read & buffer_reading[i]) != (eol_write & buffer_writing[i]))
+					buffer_full[i] <= (eol_write & buffer_writing[i]);
+			end
+		end
+	endgenerate
+
+	////////////////////////////////////// scaler //////////////////////////
 	wire line_addr_valid;
-	reg line_addr_ready;
+	wire line_addr_ready;
 	wire line_addr_last;
+	assign line_addr_ready = ((buffer_writing & buffer_full) == 0 && ~is_writing);
+	reg is_writing;
+	always @(posedge clk) begin
+		if (resetn == 0)
+			is_writing <= 0;
+		else if (fsync)
+			is_writing <= 0;
+		else if (line_addr_ready && line_addr_valid)
+			is_writing <= 1;
+		else if (eol_write)
+			is_writing <= 0;
+	end
+
 	scale_1d # (
 		.C_M_WIDTH(C_IMG_HBITS),
 		.C_S_WIDTH(C_IMG_HBITS),
@@ -228,46 +283,44 @@ module mm2s_adv #
 		.s_width(win_height),
 		.m_width(dst_height),
 
+		// @note delay 1 clock from fsync to wait for mm_pixel_offset ready
+		//       we think the frame_address (1 clock delay after output sof) if ready before fsync
 		.start(sof_d1),
 		.o_valid(line_addr_valid),
 		.o_ready(line_addr_ready),
 		.o_last(line_addr_last),
 
 		.s_base_addr(frame_addr),
-		.s_off_addr(mm_offset),
+		.s_off_addr(mm_pixel_offset * C_BYTES_PER_PIXEL),
 		.s_inc_addr(C_IMG_STRIDE_SIZE),
 		.s_addr(line_addr)
 	);
 
-	// @note just for reading first line
-	reg framing;
-	always @(posedge clk) begin
-		if (resetn == 0)
-			framing <= 0;
-		else if (fsync)
-			framing <= 0;
-		else if (line_addr_ready)
-			framing <= 1;
-	end
-	always @(posedge clk) begin
-		if (resetn == 0) begin
-			line_addr_ready <= 0;
-			write_ram_index <= 0;
-		end
-		else if (line_addr_valid && ~resetting) begin
-			if (~framing || (pixel_addr_valid && pixel_addr_ready && pixel_addr_last)) begin
-				line_addr_ready <= 1;
-				write_ram_index <= ~write_ram_index;
-			end
-		end
-		else begin
-			line_addr_ready <= 0;
-		end
-	end
-
 	wire pixel_addr_valid;
 	wire pixel_addr_ready;
 	wire pixel_addr_last;
+	reg is_reading;
+	reg sol_read;
+	always @(posedge clk) begin
+		if (resetn == 0)
+			sol_read <= 0;
+		else if (fsync)
+			sol_read <= 0;
+		else if (sol_read)
+			sol_read <= 0;
+		else if ((buffer_full & buffer_reading) && ~is_reading)
+			sol_read <= 1;
+	end
+	always @(posedge clk) begin
+		if (resetn == 0)
+			is_reading <= 0;
+		else if (fsync)
+			is_reading <= 0;
+		else if (sol_read)
+			is_reading <= 1;
+		else if (eol_read)
+			is_reading <= 0;
+	end
 	scale_1d # (
 		.C_M_WIDTH(C_IMG_WBITS),
 		.C_S_WIDTH(C_IMG_WBITS),
@@ -277,6 +330,8 @@ module mm2s_adv #
 		.resetn(resetn),
 		.s_width(win_width),
 		.m_width(dst_width),
+
+		.start(sol_read),
 
 		.o_valid(pixel_addr_valid),
 		.o_ready(pixel_addr_ready),
@@ -288,7 +343,7 @@ module mm2s_adv #
 		.s_addr(read_address)
 	);
 
-	/// master axi stream
+	////////////////////////////// master axi stream ///////////////////////
 	reg axis_tvalid;
 	assign m_axis_tvalid = axis_tvalid;
 	assign m_axis_tdata = read_data;
@@ -299,7 +354,8 @@ module mm2s_adv #
 	wire axis_tready;
 	assign axis_tready = m_axis_tready;
 
-	assign pixel_addr_ready = ram_ready && (~axis_tvalid || axis_tready);
+	/// @note buffer_reading will change after eol_read
+	assign pixel_addr_ready = (is_reading && (~axis_tvalid || axis_tready));
 	always @(posedge clk) begin
 		if (resetn == 0) begin
 			axis_tvalid <= 0;

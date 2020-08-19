@@ -137,10 +137,21 @@ initial begin
 	forever #2 soft_resetn <= 1;
 end
 
+reg running;
 initial begin
-	fsync <= 0;
-	repeat (20) #2 fsync <= 0;
-	forever #2 fsync <= 1;
+	running <= 0;
+	repeat (20) #2 running <= 0;
+	repeat (1) #2 running <= 1;
+	forever #2 running <= 0;
+end
+
+always @(posedge clk) begin
+	if (resetn == 0)
+		fsync <= 0;
+	else if (fsync)
+		fsync <= 0;
+	else if (running)
+		fsync <= 1;
 end
 
 assign img_width = 60;
