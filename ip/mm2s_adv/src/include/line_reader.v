@@ -1,3 +1,4 @@
+`timescale 1 ns / 1 ps
 /**
  * @note:
  * 1. width of image must be integral multiple of C_M_AXI_DATA_WIDTH.

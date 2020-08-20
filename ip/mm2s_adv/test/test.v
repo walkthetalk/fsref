@@ -24,8 +24,8 @@ module test();
 	wire  resetting;
 
 /// mm to fifo
-	wire [C_IMG_WBITS-1:0] img_width;
-	wire [C_IMG_HBITS-1:0] img_height;
+	reg [C_IMG_WBITS-1:0] img_width;
+	reg [C_IMG_HBITS-1:0] img_height;
 
 	wire [C_IMG_WBITS-1:0] win_left;
 	wire [C_IMG_WBITS-1:0] win_width;
@@ -54,7 +54,7 @@ module test();
 	reg  [C_M_AXI_DATA_WIDTH-1 : 0] m_axi_rdata;
 	reg  [1 : 0] m_axi_rresp;
 	wire         m_axi_rlast;
-	wire         m_axi_rvalid;
+	reg          m_axi_rvalid;
 	wire         m_axi_rready;
 
 	wire m_axis_tvalid;
@@ -154,35 +154,61 @@ always @(posedge clk) begin
 		fsync <= 1;
 end
 
-assign img_width = 60;
-assign img_height = 40;
+assign win_left = img_width/4;
+assign win_width = img_width/2;
+assign win_top = img_height/4;
+assign win_height = img_height/2;
 
-assign win_left = 0;
-assign win_width = 60;
-assign win_top = 0;
-assign win_height = 40;
-
-assign dst_width = 60;
-assign dst_height = 40;
+assign dst_width = img_width;
+assign dst_height = img_height;
 
 assign frame_addr = 32'h3FF80000;
 
 assign m_axi_arready = 1;
 
+////////////////////////////////// file ////////////////////////////////////////
+integer fileR, picType, dataPosition, grayDepth;
+reg[80*8:0] outputFileName;
+reg[11:0] outputFileIdx = 0;
+integer fileW = 0;
+initial begin
+	fileR=$fopen("a.pgm", "r");
+	$fscanf(fileR, "P%d\n%d %d\n%d\n", picType, img_width, img_height, grayDepth);
+	dataPosition=$ftell(fileR);
+	$display("header: %dx%d, %d", img_width, img_height, grayDepth);
+end
+
+////////////////////////////////////////////////////////////////////////////////
+localparam integer C_IMG_STRIDE_SIZE = 2**C_IMG_STRIDE_WIDTH;
+reg [C_M_AXI_ADDR_WIDTH-1:0] img_offset;
+
+
 reg[7 : 0] burstIdx;
 reg[C_M_AXI_ADDR_WIDTH-1:0] burstAddr;
-always @(posedge clk) begin
+always @(posedge clk) begin: readfile
+	integer i;
 	if (resetn == 0) begin
-		burstIdx <= 0;
-		burstAddr <= 0;
+		burstIdx = 0;
+		burstAddr = 0;
+		m_axi_rdata = 0;
 	end
 	else if (m_axi_arvalid && m_axi_arready) begin
-		burstIdx <= m_axi_arlen;
-		burstAddr <= m_axi_araddr;
+		burstIdx = m_axi_arlen;
+		burstAddr = m_axi_araddr;
+		img_offset = (burstAddr - frame_addr) / C_IMG_STRIDE_SIZE * img_width + (burstAddr - frame_addr) % C_IMG_STRIDE_SIZE;
+		$fseek(fileR, dataPosition + img_offset, 0);
+		for (i = 0; i < C_M_AXI_DATA_WIDTH; i = i+8) begin
+			m_axi_rdata[i+7 -: 8] = $fgetc(fileR);
+		end
 	end
 	else if (m_axi_rready && m_axi_rvalid && ~m_axi_rlast) begin
-		burstAddr <= burstAddr + (C_M_AXI_DATA_WIDTH / 8);
-		burstIdx <= burstIdx - 1;
+		burstIdx = burstIdx - 1;
+		burstAddr = burstAddr + (C_M_AXI_DATA_WIDTH / 8);
+		img_offset = (burstAddr - frame_addr) / C_IMG_STRIDE_SIZE * img_width + (burstAddr - frame_addr) % C_IMG_STRIDE_SIZE;
+		$fseek(fileR, dataPosition + img_offset, 0);
+		for (i = 0; i < C_M_AXI_DATA_WIDTH; i = i+8) begin
+			m_axi_rdata[i+7 -: 8] = $fgetc(fileR);
+		end
 	end
 end
 assign m_axi_rlast = (burstIdx == 0);
@@ -199,9 +225,15 @@ always @(posedge clk) begin
 		readingmm <= 0;
 	end
 end
-assign m_axi_rvalid = readingmm;
+always @(posedge clk) begin
+	if (resetn == 0) begin
+		m_axi_rvalid <= 0;
+	end
+	else
+		m_axi_rvalid = (readingmm && (RANDOMINPUT ? {$random}%2 : 1));
+end
 
-
+//////////////////////////////////////////// output ////////////////////////////
 always @(posedge clk) begin
 	if (resetn == 0) begin
 		m_axis_tready <= 0;
@@ -210,15 +242,65 @@ always @(posedge clk) begin
 		m_axis_tready <= (RANDOMOUTPUT ? {$random}%2 : 1);
 end
 
+reg [C_IMG_WBITS-1:0] m_axis_width;
+reg [C_IMG_HBITS-1:0] m_axis_height;
+reg [C_IMG_WBITS-1:0] m_axis_col;
+reg [C_IMG_HBITS-1:0] m_axis_row;
+reg [C_M_AXI_ADDR_WIDTH-1:0] outputFileIdx;
+reg[80*8:0] outputFileName;
+integer fileW = 0;
 always @ (posedge clk) begin
 	if (resetn == 0) begin
+		m_axis_width <= 0;
+		m_axis_height <= 0;
+		outputFileIdx <= 0;
+	end
+	else if (fsync) begin
+		m_axis_width <= dst_width;
+		m_axis_height <= dst_height;
+		m_axis_col <= 1;
+		m_axis_row <= 1;
+
+		outputFileIdx <= outputFileIdx + 1;
+		$sformat(outputFileName, "output%0d.pgm", outputFileIdx);
+		fileW=$fopen(outputFileName, "w");
+		$display("outputFileName: %s - %0d", outputFileName, fileW);
+		$fwrite(fileW, "P%0d\n%0d %0d\n%0d\n", picType, dst_width, dst_height, grayDepth);
 	end
 	else if (m_axis_tvalid && m_axis_tready) begin
-		if (m_axis_tuser)
-			$display("start frame\n");
-		$display("%0d ", m_axis_tdata);
-		if (m_axis_tlast)
-			$display("\n");
+		if (m_axis_col > m_axis_width || m_axis_row > m_axis_height) begin
+			$error("too big frame!\n");
+		end
+		if (m_axis_tuser) begin
+			if (m_axis_col != 1 || m_axis_row != 1) begin
+				$error("start frame col/row index error!\n");
+			end
+			else begin
+				$write("start frame\n");
+			end
+		end
+		$write("%0d ", m_axis_tdata);
+		if (m_axis_tlast) begin
+			if (m_axis_col != m_axis_width) begin
+				$error("\nline end error!\n");
+			end
+			else begin
+				$write("\n");
+			end
+		end
+
+		$fwrite(fileW, "%c", m_axis_tdata);
+		if (m_axis_col == m_axis_width && m_axis_row == m_axis_height) begin
+			$fclose(fileW);
+		end
+
+		if (m_axis_tlast) begin
+			m_axis_row <= m_axis_row + 1;
+			m_axis_col <= 1;
+		end
+		else begin
+			m_axis_col <= m_axis_col + 1;
+		end
 	end
 end
 

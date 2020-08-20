@@ -1,3 +1,5 @@
+`timescale 1 ns / 1 ps
+
 module scale_1d #
 (
 	parameter integer C_M_WIDTH = 12,

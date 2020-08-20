@@ -138,7 +138,10 @@ module mm2s_adv #
 	/// @note we can tell mutex buffer controller for reading done
 	assign sof = (eol_write && line_addr_last);
 
-	reg [C_IMG_WBITS-1:0] mm_pixel_offset;	// align with burst size
+	// reg [C_IMG_WBITS-1:0] mm_pixel_offset;	// align with burst size
+	`define mm_line_pixel_offset `align_mm(win_left, C_IMG_WBITS, C_BURST_PIXEL_INDEX_BITS)
+	reg [C_M_AXI_ADDR_WIDTH-1:0] frame_addr_offset;
+
 	reg [C_IMG_WBITS-1:0] mm_pixel_per_line;		// align with mm data width
 	reg [C_IMG_WBITS-1:0] read_offset;
 	`define align_mm(x, hbits, lbits) {x[(hbits)-1: (lbits)], {(lbits){1'b0}}}
@@ -146,12 +149,13 @@ module mm2s_adv #
 	assign __mm_width_with_head = win_left[C_BURST_PIXEL_INDEX_BITS-1:0] + win_width + C_ADATA_PIXELS - 1;
 	always @(posedge clk) begin
 		if (resetn == 1'b0) begin
-			mm_pixel_offset <= 0;
+			frame_addr_offset <= 0;
 			mm_pixel_per_line  <= 0;
 			read_offset <= 0;
 		end
 		else if (fsync) begin
-			mm_pixel_offset <= `align_mm(win_left, C_IMG_WBITS, C_BURST_PIXEL_INDEX_BITS);
+			frame_addr_offset <= `mm_line_pixel_offset * C_BYTES_PER_PIXEL
+						+ {win_top, {(C_IMG_STRIDE_WIDTH){1'b0}}};
 			mm_pixel_per_line <= `align_mm(__mm_width_with_head, C_IMG_WBITS, log2(C_ADATA_PIXELS));
 			read_offset <= win_left[C_BURST_PIXEL_INDEX_BITS-1:0];
 		end
@@ -238,7 +242,7 @@ module mm2s_adv #
 			eol_read <= 0;
 		else if (eol_read)
 			eol_read <= 0;
-		else if (pixel_addr_valid && pixel_addr_ready && pixel_addr_last)
+		else if (m_axis_tvalid && m_axis_tready && m_axis_tlast)
 			eol_read <= 1;
 	end
 
@@ -291,7 +295,7 @@ module mm2s_adv #
 		.o_last(line_addr_last),
 
 		.s_base_addr(frame_addr),
-		.s_off_addr(mm_pixel_offset * C_BYTES_PER_PIXEL),
+		.s_off_addr(frame_addr_offset),
 		.s_inc_addr(C_IMG_STRIDE_SIZE),
 		.s_addr(line_addr)
 	);

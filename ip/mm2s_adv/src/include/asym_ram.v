@@ -1,3 +1,5 @@
+`timescale 1 ns / 1 ps
+
 module asym_ram(clkW, clkR, we, re, wa, ra, wd, rd);
 	parameter WR_DATA_WIDTH = 64;
 	parameter WR_ADDR_WIDTH = 9;
