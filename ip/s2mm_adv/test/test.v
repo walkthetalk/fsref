@@ -1,3 +1,8 @@
+`include "../src/include/FIFO2MM_adv.v"
+`include "../src/s2mm_adv.v"
+`include "s2mm_test_fifo_generator_0_0.v"
+`include "s2mm_test.v"
+
 `timescale 1ns / 1ps
 
 /// 2. first line output : if f0 valid
@@ -56,8 +61,7 @@ reg resetn;
 localparam RANDOMOUTPUT = 1;
 localparam RANDOMINPUT = 1;
 
-
-s2mmbd_wrapper uut(
+s2mm_test uut(
 	.M_AXI_awaddr(m_axi_awaddr),
 	.M_AXI_awlen(m_axi_awlen),
 	.M_AXI_awsize(m_axi_awsize),

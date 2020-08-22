@@ -8,7 +8,7 @@ module mm2s_adv #
 	// Users to add parameters here
 	parameter integer C_PIXEL_WIDTH	= 8,
 	parameter integer C_PIXEL_STORE_WIDTH = 8,
-	parameter integer C_IMG_STRIDE_WIDTH = 10,
+	parameter integer C_IMG_STRIDE_SIZE = 1024,
 
 	parameter integer C_IMG_WBITS	= 12,
 	parameter integer C_IMG_HBITS	= 12,
@@ -80,7 +80,6 @@ module mm2s_adv #
 	localparam integer C_BURST_PIXELS = C_ADATA_PIXELS * C_M_AXI_BURST_LEN;
 	localparam integer C_BURST_PIXEL_INDEX_BITS = log2(C_BURST_PIXELS);
 	localparam integer C_WRITE_INDEX_BITS = C_IMG_WBITS - log2(C_ADATA_PIXELS);
-	localparam integer C_IMG_STRIDE_SIZE = 2**C_IMG_STRIDE_WIDTH;
 	localparam integer C_BYTES_PER_PIXEL = (C_PIXEL_STORE_WIDTH / 8);
 
 	wire [C_M_AXI_ADDR_WIDTH-1:0] line_addr;
@@ -151,7 +150,7 @@ module mm2s_adv #
 		end
 		else if (fsync) begin
 			frame_addr_offset <= `mm_line_pixel_offset * C_BYTES_PER_PIXEL
-						+ {win_top, {(C_IMG_STRIDE_WIDTH){1'b0}}};
+						+ win_top * C_IMG_STRIDE_SIZE;
 			mm_pixel_per_line <= `align_mm(__mm_width_with_head, C_IMG_WBITS, log2(C_ADATA_PIXELS));
 			read_offset <= win_left[C_BURST_PIXEL_INDEX_BITS-1:0];
 		end

@@ -15,8 +15,8 @@ pip_add_bus_if $core MBUF_R [subst {
 	bus_type_vlnv $VENDOR:interface:mutex_buffer_ctl:1.0
 	interface_mode master
 }] {
-	SOF r_sof
-	ADDR r_addr
+	SOF sof
+	ADDR frame_addr
 }
 
 pip_add_bus_if $core IMG_SIZE [subst {
@@ -28,34 +28,24 @@ pip_add_bus_if $core IMG_SIZE [subst {
 	HEIGHT  img_height
 }
 
-pip_add_bus_if $core FIFO_WRITE {
-	abstraction_type_vlnv {xilinx.com:interface:fifo_write_rtl:1.0}
-	bus_type_vlnv {xilinx.com:interface:fifo_write:1.0}
-	interface_mode {master}
-} {
-	WR_DATA mm2s_wr_data
-	WR_EN mm2s_wr_en
-	FULL mm2s_full
+pip_add_bus_if $core SRC_WIN [subst {
+	abstraction_type_vlnv {$VENDOR:interface:window_ctl_rtl:1.0}
+	bus_type_vlnv {$VENDOR:interface:window_ctl:1.0}
+	interface_mode {slave}
+}] {
+	WIDTH   win_width
+	HEIGHT  win_height
+	LEFT    win_left
+	TOP     win_top
 }
 
-pip_add_bus_if $core FIFO_READ {
-	abstraction_type_vlnv {xilinx.com:interface:fifo_read_rtl:1.0}
-	bus_type_vlnv {xilinx.com:interface:fifo_read:1.0}
-	interface_mode {master}
-} {
-	RD_DATA mm2s_rd_data
-	RD_EN mm2s_rd_en
-	EMPTY mm2s_empty
-}
-
-pip_add_bus_if $core resetting {
-	abstraction_type_vlnv xilinx.com:signal:reset_rtl:1.0
-	bus_type_vlnv xilinx.com:signal:reset:1.0
-	interface_mode master
-} {
-	RST resetting
-} {
-	POLARITY {ACTIVE_HIGH}
+pip_add_bus_if $core DST_SIZE [subst {
+	abstraction_type_vlnv {$VENDOR:interface:window_ctl_rtl:1.0}
+	bus_type_vlnv {$VENDOR:interface:window_ctl:1.0}
+	interface_mode {slave}
+}] {
+	WIDTH   dst_width
+	HEIGHT  dst_height
 }
 
 pip_add_bus_if $core M_AXI {
@@ -116,7 +106,7 @@ pip_add_bus_if $core clk {
 } {
 	CLK clk
 } {
-	ASSOCIATED_BUSIF {fsync:M_AXI:IMG_SIZE:FIFO_WRITE:MBUF_R:FIFO_READ:M_AXIS}
+	ASSOCIATED_BUSIF {fsync:M_AXI:IMG_SIZE:MBUF_R:M_AXIS:DST_SIZE:SRC_WIN}
 }
 
 # parameters
@@ -165,18 +155,18 @@ pip_add_usr_par $core {C_IMG_HBITS} {
 	value_format long
 }
 
-pip_add_usr_par $core {C_DATACOUNT_BITS} {
-	display_name {Write data count bits}
-	tooltip {WR_DATA_COUNT_BITS}
+pip_add_usr_par $core {C_IMG_STRIDE_SIZE} {
+	display_name {Image Stride Size of Bytes}
+	tooltip {IMAGE STRIDE SIZE OF BYTES, must not less than store_bytes_per_pixel * pixels_per_line, and must be devided by size_bytes_per_full_burst exactly.}
 	widget {comboBox}
 } {
 	value_resolve_type user
-	value 12
+	value 1024
 	value_format long
 	value_validation_type list
-	value_validation_list {3 4 5 6 7 8 9 10 11 12}
+	value_validation_list {512 1024 2048 4096}
 } {
-	value 12
+	value 1024
 	value_format long
 }
 

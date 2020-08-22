@@ -162,6 +162,21 @@ pip_add_usr_par $core {C_IMG_HBITS} {
 	value_format long
 }
 
+pip_add_usr_par $core {C_IMG_STRIDE_SIZE} {
+	display_name {Image Stride Size of Bytes}
+	tooltip {IMAGE STRIDE SIZE OF BYTES, must not less than store_bytes_per_pixel * pixels_per_line, and must be devided by size_bytes_per_full_burst exactly.}
+	widget {comboBox}
+} {
+	value_resolve_type user
+	value 1024
+	value_format long
+	value_validation_type list
+	value_validation_list {512 1024 2048 4096}
+} {
+	value 1024
+	value_format long
+}
+
 pip_add_usr_par $core {C_DATACOUNT_BITS} {
 	display_name {Read data count bits}
 	tooltip {RD_DATA_COUNT_BITS}

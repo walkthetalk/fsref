@@ -8,6 +8,7 @@ module s2mm_adv #
 	parameter integer C_IMG_HBITS = 12,
 	parameter integer C_DATACOUNT_BITS = 12,
 	parameter integer C_PIXEL_STORE_WIDTH = 8,
+	parameter integer C_IMG_STRIDE_SIZE = 1024,
 
 
 	// User parameters ends
@@ -136,7 +137,7 @@ module s2mm_adv #
 	) FIFO2MM_inst (
 		.img_width(img_width),
 		.img_height(img_height),
-		.img_stride(img_stride),
+		.img_stride(C_IMG_STRIDE_SIZE),
 
 		.soft_resetn(soft_resetn),
 		//.resetting(resetting),

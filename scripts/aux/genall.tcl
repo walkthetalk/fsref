@@ -72,6 +72,9 @@ set ip_list [list \
 	mm2s \
 		{AXI MM to Stream} \
 		{AXI MM to Stream} \
+	mm2s_adv \
+		{AXI MM to Stream Advance} \
+		{AXI MM to Stream Advance} \
 	axi_combiner \
 		{AXI MM Combiner} \
 		{Combine read/ra and write/wa channel into one full AXI Bus} \

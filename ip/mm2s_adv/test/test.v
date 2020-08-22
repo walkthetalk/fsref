@@ -8,7 +8,7 @@
 module test();
 	localparam integer C_PIXEL_WIDTH	= 8;
 	localparam integer C_PIXEL_STORE_WIDTH  = 8;
-	localparam integer C_IMG_STRIDE_WIDTH   = 10;
+	localparam integer C_IMG_STRIDE_SIZE   = 1024;
 
 	localparam integer C_IMG_WBITS = 12;
 	localparam integer C_IMG_HBITS = 12;
@@ -68,7 +68,7 @@ localparam RANDOMINPUT = 1;
 mm2s_adv #(
 	.C_PIXEL_WIDTH(C_PIXEL_WIDTH),
 	.C_PIXEL_STORE_WIDTH(C_PIXEL_STORE_WIDTH),
-	.C_IMG_STRIDE_WIDTH(C_IMG_STRIDE_WIDTH),
+	.C_IMG_STRIDE_SIZE(C_IMG_STRIDE_SIZE),
 	.C_IMG_WBITS(C_IMG_WBITS),
 	.C_IMG_HBITS(C_IMG_HBITS),
 	.C_M_AXI_BURST_LEN(C_M_AXI_BURST_LEN),
@@ -162,7 +162,6 @@ initial begin
 end
 
 ////////////////////////////////////////////////////////////////////////////////
-localparam integer C_IMG_STRIDE_SIZE = 2**C_IMG_STRIDE_WIDTH;
 reg [C_M_AXI_ADDR_WIDTH-1:0] img_offset;
 
 

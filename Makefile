@@ -25,6 +25,16 @@ dir_dts    := ${dir_out}/dts
 PSINIT_FILES := ${dir_psinit}/ps7_init_gpl.h ${dir_psinit}/ps7_init_gpl.c
 DTS_FILES := ${dir_dts}/system-top.dts
 
+define IP_template =
+.PHONY: ${1}
+${1}:
+	${VIVADO} \
+	-nojournal -nolog \
+	-mode batch \
+	-source ${dir_main}/scripts/aux/genall.tcl \
+	-tclargs "${dir_main}" "$$@"
+endef
+
 
 .PHONY: project
 project: ${XPR_FILE}
@@ -35,12 +45,12 @@ bitbin: ${BITBIN_FILE}
 .PHONY: dts
 dts: ${PSINIT_FILES} ${DTS_FILES}
 
-.PHONY: start_vivado
-
 ${REG_FILE}:
 	${dir_main}/scripts/genregs.py
 ${dir_out}:
 	mkdir -p ${dir_out}
+
+.PHONY: start_vivado
 start_vivado: ${XPR_FILE}
 	${VIVADO} -journal /tmp/vivado.jou -log /tmp/vivado.log ${XPR_FILE}
 
@@ -52,45 +62,33 @@ ${XPR_FILE}: ${REG_FILE}
 	-source ${dir_main}/scripts/aux/genall.tcl \
 	-tclargs "${dir_main}"
 
-.PHONY: window_ctl
-window_ctl:
-	${VIVADO} \
-	-nojournal -nolog \
-	-mode batch \
-	-source ${dir_main}/scripts/aux/genall.tcl \
-	-tclargs "${dir_main}" "window_ctl"
+IP_list := fscmos \
+	fslcd \
+	pwm \
+	fsmotor \
+	axilite2regctl \
+	window_broadcaster \
+	axis_window \
+	axis_interconnector \
+	axis_generator \
+	axis_blender \
+	axis_relay \
+	axis_bayer_extractor \
+	axis_reshaper \
+	axis_scaler \
+	mutex_buffer \
+	s2mm \
+	s2mm_adv \
+	mm2s \
+	mm2s_adv \
+	axi_combiner \
+	step_motor \
+	fsctl \
+	timestamper \
+	fsa \
+	fscpu \
 
-.PHONY: window_broadcaster
-window_broadcaster:
-	${VIVADO} \
-	-nojournal -nolog \
-	-mode batch \
-	-source ${dir_main}/scripts/aux/genall.tcl \
-	-tclargs "${dir_main}" "window_broadcaster"
-
-.PHONY: fslcd
-fslcd:
-	${VIVADO} \
-	-nojournal -nolog \
-	-mode batch \
-	-source ${dir_main}/scripts/aux/genall.tcl \
-	-tclargs "${dir_main}" "fslcd"
-
-.PHONY: axis_reshaper
-axis_reshaper:
-	${VIVADO} \
-	-nojournal -nolog \
-	-mode batch \
-	-source ${dir_main}/scripts/aux/genall.tcl \
-	-tclargs "${dir_main}" "axis_reshaper"
-
-.PHONY: s2mm_adv
-s2mm_adv:
-	${VIVADO} \
-	-nojournal -nolog \
-	-mode batch \
-	-source ${dir_main}/scripts/aux/genall.tcl \
-	-tclargs "${dir_main}" "s2mm_adv"
+$(foreach temp,${IP_list},$(eval $(call IP_template,${temp})))
 
 ${XSA_FILE}: ${BIT_FILE}
 	${VIVADO} \
