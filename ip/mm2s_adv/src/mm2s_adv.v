@@ -1,4 +1,7 @@
 `timescale 1 ns / 1 ps
+// @note sof_d1 is the trigger of total frame,
+//       so we will check soft_resetn and fsync when determine sof_d1
+// @note soft_resetn and fsync must be pulse at same clock
 
 module mm2s_adv #
 (
@@ -20,11 +23,8 @@ module mm2s_adv #
 	input wire  clk,
 	input wire  resetn,
 
-	/// @NOTE: resetting will keep until current transaction done.
-	///        if under idle state when negedge of soft_resetn,
-	///        don't need resetting, i.e. resetting will keep zero.
+	input wire  fsync,
 	input wire  soft_resetn,
-	output wire resetting,
 
 /// mm to fifo
 	input wire [C_IMG_WBITS-1:0] img_width,
@@ -37,8 +37,6 @@ module mm2s_adv #
 
 	input wire [C_IMG_WBITS-1:0] dst_width,
 	input wire [C_IMG_HBITS-1:0] dst_height,
-
-	input wire fsync,
 
 	output wire sof,
 	input wire [C_M_AXI_ADDR_WIDTH-1:0] frame_addr,
@@ -97,9 +95,6 @@ module mm2s_adv #
 	) read4mm_inst (
 		.img_width(mm_pixel_per_line),
 
-		.soft_resetn(soft_resetn),
-		.resetting(resetting),
-
 		.sol(line_addr_valid && line_addr_ready),
 		.line_addr(line_addr),
 
@@ -127,13 +122,14 @@ module mm2s_adv #
 		.M_AXI_RREADY(m_axi_rready)
 	);
 
-	/// @todo consider soft reset
 	reg sof_d1;
 	always @(posedge clk) begin
 		if (resetn == 1'b0)
 			sof_d1 <= 0;
-		else
-			sof_d1 <= fsync;
+		else if (sof_d1)
+			sof_d1 <= 0;
+		else if (fsync && soft_resetn)
+			sof_d1 <= 1;
 	end
 	/// @note we can tell mutex buffer controller for reading done
 	assign sof = (eol_write && line_addr_last);

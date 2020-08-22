@@ -16,9 +16,6 @@ module line_reader #
 	parameter integer C_M_AXI_DATA_WIDTH	= 32
 )
 (
-	input wire soft_resetn,
-	output wire resetting,
-
 	input wire [C_IMG_WBITS-1:0] img_width,
 
 	input wire sol,
@@ -83,30 +80,10 @@ module line_reader #
 	reg [C_IMG_WBITS-1 : 0] r_img_col_idx;
 	reg [C_WRITE_INDEX_BITS-1 : 0] r_wr_addr;
 
-	///  resetting
-	reg soft_resetn_d1;
-	always @ (posedge M_AXI_ACLK) begin
-		if (M_AXI_ARESETN == 1'b0) soft_resetn_d1 <= 1'b0;
-		else soft_resetn_d1 <= soft_resetn;
-	end
-
-	reg r_soft_resetting;
-	assign resetting = r_soft_resetting;
-	always @ (posedge M_AXI_ACLK) begin
-		if (M_AXI_ARESETN == 1'b0)
-			r_soft_resetting <= 1'b1;
-		else if (~(start_burst_pulse | burst_read_active))
-			r_soft_resetting <= 1'b0;
-		else if (burst_done)
-			r_soft_resetting <= 1'b0;
-		else if (~soft_resetn && soft_resetn_d1)	/// soft_resetn negedge
-			r_soft_resetting <= 1'b1;
-	end
-
 	// I/O Connections assignments
 	assign wr_data		= M_AXI_RDATA;
 	assign rnext 		= M_AXI_RVALID && M_AXI_RREADY;
-	assign wr_en		= rnext && ~r_soft_resetting;
+	assign wr_en		= rnext;
 	assign wr_addr		= r_wr_addr;
 
 	//Read Address (AR)
@@ -166,7 +143,7 @@ module line_reader #
 			start_burst_pulse <= 1'b0;
 		else if (start_burst_pulse)
 			start_burst_pulse <= 0;
-		else if (lining && ~burst_read_active && ~r_eol)
+		else if (lining && ~burst_read_active)
 			start_burst_pulse <= 1'b1;
 	end
 
@@ -191,12 +168,12 @@ module line_reader #
 			if (r_img_col_idx >= C_M_AXI_BURST_LEN * C_ADATA_PIXELS)
 				next_burst_len <= C_M_AXI_BURST_LEN - 1;
 			else
-				next_burst_len <= r_img_col_idx / C_ADATA_PIXELS;
+				next_burst_len <= r_img_col_idx / C_ADATA_PIXELS - 1;
 		end
 	end
 
 	always @(posedge M_AXI_ACLK) begin
-		if (M_AXI_ARESETN == 0 || r_soft_resetting) begin
+		if (M_AXI_ARESETN == 0) begin
 			r_img_col_idx <= 0;
 		end
 		else if (sol) begin
@@ -222,7 +199,7 @@ module line_reader #
 	end
 
 	always @(posedge M_AXI_ACLK) begin
-		if (M_AXI_ARESETN == 0 || soft_resetn == 1'b0) begin
+		if (M_AXI_ARESETN == 0) begin
 			sol_d1 <= 1'b0;
 		end
 		else begin
@@ -251,7 +228,7 @@ module line_reader #
 
 	// @note image_width must >  C_ADATA_PIXELS * 2
 	always @(posedge M_AXI_ACLK) begin
-		if (M_AXI_ARESETN == 0 || soft_resetn == 1'b0) begin
+		if (M_AXI_ARESETN == 0) begin
 			r_eol <= 1'b1;
 		end
 		else if (sol) begin

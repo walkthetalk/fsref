@@ -21,19 +21,18 @@ module test();
 	reg   resetn;
 
 	reg   soft_resetn;
-	wire  resetting;
 
 /// mm to fifo
 	reg [C_IMG_WBITS-1:0] img_width;
 	reg [C_IMG_HBITS-1:0] img_height;
 
-	wire [C_IMG_WBITS-1:0] win_left;
-	wire [C_IMG_WBITS-1:0] win_width;
-	wire [C_IMG_HBITS-1:0] win_top;
-	wire [C_IMG_HBITS-1:0] win_height;
+	reg [C_IMG_WBITS-1:0] win_left;
+	reg [C_IMG_WBITS-1:0] win_width;
+	reg [C_IMG_HBITS-1:0] win_top;
+	reg [C_IMG_HBITS-1:0] win_height;
 
-	wire [C_IMG_WBITS-1:0] dst_width;
-	wire [C_IMG_HBITS-1:0] dst_height;
+	reg [C_IMG_WBITS-1:0] dst_width;
+	reg [C_IMG_HBITS-1:0] dst_height;
 
 	reg  fsync;
 
@@ -79,7 +78,6 @@ mm2s_adv #(
 	.clk(clk),
 	.resetn(resetn),
 	.soft_resetn(soft_resetn),
-	.resetting(resetting),
 
 	.img_width(img_width),
 	.img_height(img_height),
@@ -131,12 +129,6 @@ initial begin
 	forever #2 resetn <= 1'b1;
 end
 
-initial begin
-	soft_resetn <= 0;
-	repeat (10) #2 soft_resetn <= 0;
-	forever #2 soft_resetn <= 1;
-end
-
 reg running;
 initial begin
 	running <= 0;
@@ -144,23 +136,6 @@ initial begin
 	repeat (1) #2 running <= 1;
 	forever #2 running <= 0;
 end
-
-always @(posedge clk) begin
-	if (resetn == 0)
-		fsync <= 0;
-	else if (fsync)
-		fsync <= 0;
-	else if (running)
-		fsync <= 1;
-end
-
-assign win_left = img_width/4;
-assign win_width = img_width/2;
-assign win_top = img_height/4;
-assign win_height = img_height/2;
-
-assign dst_width = img_width;
-assign dst_height = img_height;
 
 assign frame_addr = 32'h3FF80000;
 
@@ -176,6 +151,14 @@ initial begin
 	$fscanf(fileR, "P%d\n%d %d\n%d\n", picType, img_width, img_height, grayDepth);
 	dataPosition=$ftell(fileR);
 	$display("header: %dx%d, %d", img_width, img_height, grayDepth);
+
+	win_left   <= img_width/4 + 1;
+	win_width  <= img_width/2;
+	win_top    <= img_height/4 + 1;
+	win_height <= img_height/2;
+
+	dst_width  <= img_width /4;
+	dst_height <= img_height /4;
 end
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -229,8 +212,14 @@ always @(posedge clk) begin
 	if (resetn == 0) begin
 		m_axi_rvalid <= 0;
 	end
-	else
-		m_axi_rvalid = (readingmm && (RANDOMINPUT ? {$random}%2 : 1));
+	else if (m_axi_rready && m_axi_rvalid && m_axi_rlast) begin
+		m_axi_rvalid <= 0;
+	end
+	else if (readingmm) begin
+		if (~m_axi_rvalid || m_axi_rready) begin
+			m_axi_rvalid <= (RANDOMINPUT ? {$random}%2 : 1);
+		end
+	end
 end
 
 //////////////////////////////////////////// output ////////////////////////////
@@ -301,6 +290,50 @@ always @ (posedge clk) begin
 		else begin
 			m_axis_col <= m_axis_col + 1;
 		end
+	end
+end
+
+reg end_of_frame;
+always @(posedge clk) begin
+	if (resetn == 0)
+		end_of_frame <= 0;
+	else if (end_of_frame)
+		end_of_frame <= 0;
+	else if (m_axis_tvalid && m_axis_tready) begin
+		if (m_axis_col == m_axis_width && m_axis_row == m_axis_height)
+			end_of_frame <= 1;
+	end
+end
+
+reg framing;
+always @(posedge clk) begin
+	if (resetn == 0)
+		framing <= 0;
+	else if (fsync)
+		framing <= 1;
+	else if (end_of_frame)
+		framing <= 0;
+end
+always @(posedge clk) begin
+	if (resetn == 0) begin
+		fsync <= 0;
+		soft_resetn <= 0;
+	end
+	else if (fsync) begin
+		fsync <= 0;
+		soft_resetn <= 0;
+	end
+	else if (~framing) begin
+		fsync <= 1;
+		soft_resetn <= 1;
+
+		win_left   <= win_left + 1;
+		win_width  <= win_width - 1;
+		win_top    <= win_top + 1;
+		win_height <= win_height - 1;
+
+		dst_width  <= dst_width + 1;
+		dst_height <= dst_height + 1;
 	end
 end
 
