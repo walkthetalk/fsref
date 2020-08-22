@@ -18,3 +18,7 @@ VIVADO
 	https://blog.csdn.net/weixin_37182342/article/details/83855846
 	原因是仿真库不匹配，Xilinx IP生成的默认仿真库为xil_default，自己写的代码设置的仿真库为work，所以在work里是找不到自定义IP的仿真文件。
 	Hierachy Update，默认是第一个Automatic Update and Compile Order，更改为第二个Automatic Update,Manual Compile Order。
+
+# TODO
+1. fsctl: sync fsa_disp_resetn with o_fsync
+2. axis_scaler: need optimize for shrinking size, should skip lines.

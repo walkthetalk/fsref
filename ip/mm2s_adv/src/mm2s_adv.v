@@ -17,7 +17,9 @@ module mm2s_adv #
 	// Parameters of Axi Master Bus Interface M_AXI
 	parameter integer C_M_AXI_BURST_LEN	= 16,
 	parameter integer C_M_AXI_ADDR_WIDTH	= 32,
-	parameter integer C_M_AXI_DATA_WIDTH	= 32
+	parameter integer C_M_AXI_DATA_WIDTH	= 32,
+
+	parameter integer C_MAXIS_CHANNEL = 1
 )
 (
 	input wire  clk,
@@ -59,7 +61,7 @@ module mm2s_adv #
 	output wire         m_axi_rready,
 
 	output wire m_axis_tvalid,
-	output wire [C_PIXEL_WIDTH-1:0] m_axis_tdata,
+	output wire [C_PIXEL_WIDTH * C_MAXIS_CHANNEL -1:0] m_axis_tdata,
 	output wire m_axis_tuser,
 	output wire m_axis_tlast,
 	input wire m_axis_tready
@@ -345,7 +347,11 @@ module mm2s_adv #
 	////////////////////////////// master axi stream ///////////////////////
 	reg axis_tvalid;
 	assign m_axis_tvalid = axis_tvalid;
-	assign m_axis_tdata = read_data;
+	generate
+		for (i = 0; i < C_MAXIS_CHANNEL; i = i+1) begin
+			assign m_axis_tdata[C_PIXEL_WIDTH*(i+1)-1 : C_PIXEL_WIDTH * i] = read_data;
+		end
+	endgenerate
 	reg axis_tuser;
 	assign m_axis_tuser = axis_tuser;
 	reg axis_tlast;

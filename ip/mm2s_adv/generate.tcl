@@ -39,13 +39,14 @@ pip_add_bus_if $core SRC_WIN [subst {
 	TOP     win_top
 }
 
-pip_add_bus_if $core DST_SIZE [subst {
-	abstraction_type_vlnv {$VENDOR:interface:window_ctl_rtl:1.0}
-	bus_type_vlnv {$VENDOR:interface:window_ctl:1.0}
+#NOTE: source size of scale same as WIDTH/HEIGHT of SRC_WIN
+pip_add_bus_if $core SCALE_CTL [subst {
+	abstraction_type_vlnv {$VENDOR:interface:scale_ctl_rtl:1.0}
+	bus_type_vlnv {$VENDOR:interface:scale_ctl:1.0}
 	interface_mode {slave}
 }] {
-	WIDTH   dst_width
-	HEIGHT  dst_height
+	DST_WIDTH   dst_width
+	DST_HEIGHT  dst_height
 }
 
 pip_add_bus_if $core M_AXI {
@@ -106,7 +107,7 @@ pip_add_bus_if $core clk {
 } {
 	CLK clk
 } {
-	ASSOCIATED_BUSIF {fsync:M_AXI:IMG_SIZE:MBUF_R:M_AXIS:DST_SIZE:SRC_WIN}
+	ASSOCIATED_BUSIF {fsync:M_AXI:IMG_SIZE:MBUF_R:M_AXIS:SCALE_CTL:SRC_WIN}
 }
 
 # parameters
@@ -212,6 +213,21 @@ pip_add_usr_par $core {C_M_AXI_DATA_WIDTH} {
 	value_validation_list {32 64}
 } {
 	value 32
+	value_format long
+}
+
+pip_add_usr_par $core {C_MAXIS_CHANNEL} {
+	display_name {M_AXIS Channel Number}
+	tooltip {M_AXIS Channel Number, duplicated}
+	widget {comboBox}
+} {
+	value_resolve_type user
+	value 1
+	value_format long
+	value_validation_type list
+	value_validation_list {1 3}
+} {
+	value 1
 	value_format long
 }
 
