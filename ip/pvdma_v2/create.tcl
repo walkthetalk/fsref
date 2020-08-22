@@ -180,13 +180,11 @@ proc create_pvdma_v2 {
 	create_bd_pin -dir I -type rst $mname/resetn
 	connect_bd_net [get_bd_pins $mname/resetn] [get_bd_pins $mname/*/resetn]
 
-	foreach i $dir_list {
-		connect_bd_net [get_bd_pins $mname/$i/resetting] [get_bd_pins $mname/fifo_$i/srst]
-	}
-
 	if {$dir_s2mm == 1} {
 		create_bd_pin -dir I -type rst $mname/s2mm_resetn
 		connect_bd_net [get_bd_pins $mname/s2mm_resetn] [get_bd_pins $mname/s2mm/soft_resetn]
+
+		connect_bd_net [get_bd_pins $mname/s2mm/resetting] [get_bd_pins $mname/fifo_s2mm/srst]
 	}
 
 	if {$dir_mm2s == 1} {
