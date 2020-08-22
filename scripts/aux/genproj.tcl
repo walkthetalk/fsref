@@ -1,7 +1,7 @@
 set origin_dir [lindex $argv 0]
 
 source $origin_dir/scripts/aux/util.tcl
-source $origin_dir/ip/fscore/create.tcl
+source $origin_dir/ip/fscore_v2/create.tcl
 
 # create project
 create_project fsref $origin_dir -part xc7z020clg484-2

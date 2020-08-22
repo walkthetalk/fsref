@@ -30,6 +30,7 @@ set dic [dict create \
 	vdma_burst_length 16 \
 	vdma_fifo_depth 128 \
 	vdma_timestamp_width 64 \
+	vdma_stride_size 1024 \
 	stream_bypass_bayer_extractor 0 \
 	motor_num 6 \
 	motor_step_width 32 \
@@ -157,7 +158,7 @@ copy_bd_objs /  [get_bd_cells videoin_0]
 create_bd_cell -type ip -vlnv $VENDOR:$LIBRARY:fsmotor:$VERSION fsmotor
 
 # X. fusion splicer core
-create_fscore /fscore $dic
+create_fscore_v2 /fscore $dic
 
 # interconnection of data
 create_bd_cell -type ip -vlnv xilinx.com:ip:axi_interconnect:2.1 ic_data_0
