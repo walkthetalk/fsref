@@ -168,14 +168,14 @@ proc creat_stream_v2 {
 			$mname/FSA_CTL  $mname/fsa/FSA_CTL
 		}]
 
-		create_bd_intf_pin -mode Master -vlnv $VENDOR:interface:fsa_result_rtl:1.0 $mname/FSA_RESULT
+		create_bd_intf_pin -mode Master -vlnv $VENDOR:interface:fsa_result_rtl:1.0 $mname/RESULT0
 		pip_connect_intf_net [subst {
-			$mname/FSA_RESULT  $mname/fsa/FSA_RESULT
+			$mname/RESULT0  $mname/fsa/RESULT0
 		}]
 
-		create_bd_intf_pin -mode Master -vlnv $VENDOR:interface:fsa_result_rtl:1.0 $mname/FSA_RESULT_EXT
+		create_bd_intf_pin -mode Master -vlnv $VENDOR:interface:fsa_result_rtl:1.0 $mname/RESULT1
 		pip_connect_intf_net [subst {
-			$mname/FSA_RESULT_EXT  $mname/fsa/FSA_RESULT_EXT
+			$mname/RESULT1  $mname/fsa/RESULT1
 		}]
 	}
 }
@@ -330,20 +330,20 @@ proc create_fscore_v2 {
 		$mname/fsctl/S0_WIN             $mname/stream0/M_WIN
 		$mname/fsctl/S0_SCALE           $mname/stream0/M_SCALE
 		$mname/fsctl/S0_FSA_CTL         $mname/stream0/FSA_CTL
-		$mname/fsctl/S0_FSA_RESULT      $mname/stream0/FSA_RESULT
+		$mname/fsctl/S0_FSA_RESULT      $mname/stream0/RESULT0
 		$mname/fsctl/S1_ADDR            $mname/stream1/BUF_ADDR
 		$mname/fsctl/S1_READ            $mname/stream1/MBUF_R
 		$mname/fsctl/S1_WIN             $mname/stream1/M_WIN
 		$mname/fsctl/S1_SCALE           $mname/stream1/M_SCALE
 		$mname/fsctl/S1_FSA_CTL         $mname/stream1/FSA_CTL
-		$mname/fsctl/S1_FSA_RESULT      $mname/stream1/FSA_RESULT
+		$mname/fsctl/S1_FSA_RESULT      $mname/stream1/RESULT0
 		$mname/fsctl/S0_DST             $mname/pblender/S0_POS
 		$mname/fsctl/S1_DST             $mname/pblender/S1_POS
 		$mname/fsctl/BR2_INIT_CTL	$mname/fscpu/BPM_INIT
 		$mname/fsctl/BR3_INIT_CTL	$mname/fscpu/BAM_INIT
 		$mname/fsctl/REQ0_CTL           $mname/fscpu/REQ_CTL
-		$mname/stream0/FSA_RESULT_EXT   $mname/fscpu/FSA_RESULT_X
-		$mname/stream1/FSA_RESULT_EXT   $mname/fscpu/FSA_RESULT_Y
+		$mname/stream0/RESULT1          $mname/fscpu/FSA_RESULT_X
+		$mname/stream1/RESULT1          $mname/fscpu/FSA_RESULT_Y
 		$mname/fscpu/Ml_REQ             $mname/push_motor/S0_EXT_REQ
 		$mname/fscpu/Mr_REQ             $mname/push_motor/S1_EXT_REQ
 		$mname/fscpu/Mx_REQ             $mname/align_motor/S0_EXT_REQ

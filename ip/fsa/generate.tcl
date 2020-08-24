@@ -56,72 +56,40 @@ pip_add_bus_if $core FSA_CTL [subst {
 	REF_DATA    ref_data
 }
 
-pip_add_bus_if $core FSA_RESULT [subst {
-	abstraction_type_vlnv $VENDOR:interface:fsa_result_rtl:1.0
-	bus_type_vlnv $VENDOR:interface:fsa_result:1.0
-	interface_mode master
-}] {
-	DONE                     ana_done
-	LEFT_VALID               lft_valid
-	LEFT_VERTEX              lft_edge
-	LEFT_HEADER_OUTER_VALID  lft_header_outer_valid
-	LEFT_HEADER_OUTER_X      lft_header_outer_x
-	LEFT_HEADER_OUTER_Y      lft_header_outer_y
-	LEFT_HEADER_INNER_VALID  lft_header_inner_valid
-	LEFT_HEADER_INNER_X      lft_header_inner_x
-	LEFT_HEADER_INNER_Y      lft_header_inner_y
-	LEFT_CORNER_VALID        lft_corner_valid
-	LEFT_CORNER_TOP_X        lft_corner_top_x
-	LEFT_CORNER_TOP_Y        lft_corner_top_y
-	LEFT_CORNER_BOT_X        lft_corner_bot_x
-	LEFT_CORNER_BOT_Y        lft_corner_bot_y
-	RIGHT_VALID              rt_valid
-	RIGHT_VERTEX             rt_edge
-	RIGHT_HEADER_OUTER_VALID rt_header_outer_valid
-	RIGHT_HEADER_OUTER_X     rt_header_outer_x
-	RIGHT_HEADER_OUTER_Y     rt_header_outer_y
-	RIGHT_HEADER_INNER_VALID rt_header_inner_valid
-	RIGHT_HEADER_INNER_X     rt_header_inner_x
-	RIGHT_HEADER_INNER_Y     rt_header_inner_y
-	RIGHT_CORNER_VALID       rt_corner_valid
-	RIGHT_CORNER_TOP_X       rt_corner_top_x
-	RIGHT_CORNER_TOP_Y       rt_corner_top_y
-	RIGHT_CORNER_BOT_X       rt_corner_bot_x
-	RIGHT_CORNER_BOT_Y       rt_corner_bot_y
-}
-
-pip_add_bus_if $core FSA_RESULT_EXT [subst {
-	abstraction_type_vlnv $VENDOR:interface:fsa_result_rtl:1.0
-	bus_type_vlnv $VENDOR:interface:fsa_result:1.0
-	interface_mode master
-}] {
-	DONE               ana_done
-	LEFT_VALID         lft_valid
-	LEFT_VERTEX        lft_edge
-	LEFT_HEADER_OUTER_VALID  lft_header_outer_valid
-	LEFT_HEADER_OUTER_X      lft_header_outer_x
-	LEFT_HEADER_OUTER_Y      lft_header_outer_y
-	LEFT_HEADER_INNER_VALID  lft_header_inner_valid
-	LEFT_HEADER_INNER_X      lft_header_inner_x
-	LEFT_HEADER_INNER_Y      lft_header_inner_y
-	LEFT_CORNER_VALID  lft_corner_valid
-	LEFT_CORNER_TOP_X  lft_corner_top_x
-	LEFT_CORNER_TOP_Y  lft_corner_top_y
-	LEFT_CORNER_BOT_X  lft_corner_bot_x
-	LEFT_CORNER_BOT_Y  lft_corner_bot_y
-	RIGHT_VALID        rt_valid
-	RIGHT_VERTEX       rt_edge
-	RIGHT_HEADER_OUTER_VALID rt_header_outer_valid
-	RIGHT_HEADER_OUTER_X     rt_header_outer_x
-	RIGHT_HEADER_OUTER_Y     rt_header_outer_y
-	RIGHT_HEADER_INNER_VALID rt_header_inner_valid
-	RIGHT_HEADER_INNER_X     rt_header_inner_x
-	RIGHT_HEADER_INNER_Y     rt_header_inner_y
-	RIGHT_CORNER_VALID rt_corner_valid
-	RIGHT_CORNER_TOP_X rt_corner_top_x
-	RIGHT_CORNER_TOP_Y rt_corner_top_y
-	RIGHT_CORNER_BOT_X rt_corner_bot_x
-	RIGHT_CORNER_BOT_Y rt_corner_bot_y
+for {set i 0} {$i < 3} {incr i} {
+	pip_add_bus_if $core RESULT[set i] [subst {
+		abstraction_type_vlnv $VENDOR:interface:fsa_result_rtl:1.0
+		bus_type_vlnv $VENDOR:interface:fsa_result:1.0
+		interface_mode master
+	}] {
+		DONE                     ana_done
+		LEFT_VALID               lft_valid
+		LEFT_VERTEX              lft_edge
+		LEFT_HEADER_OUTER_VALID  lft_header_outer_valid
+		LEFT_HEADER_OUTER_X      lft_header_outer_x
+		LEFT_HEADER_OUTER_Y      lft_header_outer_y
+		LEFT_HEADER_INNER_VALID  lft_header_inner_valid
+		LEFT_HEADER_INNER_X      lft_header_inner_x
+		LEFT_HEADER_INNER_Y      lft_header_inner_y
+		LEFT_CORNER_VALID        lft_corner_valid
+		LEFT_CORNER_TOP_X        lft_corner_top_x
+		LEFT_CORNER_TOP_Y        lft_corner_top_y
+		LEFT_CORNER_BOT_X        lft_corner_bot_x
+		LEFT_CORNER_BOT_Y        lft_corner_bot_y
+		RIGHT_VALID              rt_valid
+		RIGHT_VERTEX             rt_edge
+		RIGHT_HEADER_OUTER_VALID rt_header_outer_valid
+		RIGHT_HEADER_OUTER_X     rt_header_outer_x
+		RIGHT_HEADER_OUTER_Y     rt_header_outer_y
+		RIGHT_HEADER_INNER_VALID rt_header_inner_valid
+		RIGHT_HEADER_INNER_X     rt_header_inner_x
+		RIGHT_HEADER_INNER_Y     rt_header_inner_y
+		RIGHT_CORNER_VALID       rt_corner_valid
+		RIGHT_CORNER_TOP_X       rt_corner_top_x
+		RIGHT_CORNER_TOP_Y       rt_corner_top_y
+		RIGHT_CORNER_BOT_X       rt_corner_bot_x
+		RIGHT_CORNER_BOT_Y       rt_corner_bot_y
+	}
 }
 
 pip_add_bus_if $core m_axis_fsync {
