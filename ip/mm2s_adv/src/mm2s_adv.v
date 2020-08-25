@@ -64,7 +64,10 @@ module mm2s_adv #
 	output wire [C_PIXEL_WIDTH * C_MAXIS_CHANNEL -1:0] m_axis_tdata,
 	output wire m_axis_tuser,
 	output wire m_axis_tlast,
-	input wire m_axis_tready
+	input wire m_axis_tready,
+
+	output wire [C_IMG_WBITS-1:0] m_axis_source_x,
+	output wire [C_IMG_HBITS-1:0] m_axis_source_y
 );
 	function integer log2;
 		input integer value;
@@ -165,7 +168,6 @@ module mm2s_adv #
 
 	wire read_enable;
 	wire [C_IMG_WBITS-1:0] read_address;
-	wire [C_PIXEL_STORE_WIDTH-1:0] read_data;
 	assign read_enable = (pixel_addr_valid && pixel_addr_ready);
 
 	wire [C_PIXEL_STORE_WIDTH-1:0] read_data0;
@@ -174,7 +176,6 @@ module mm2s_adv #
 	always @(posedge clk) begin
 		buffer_reading_d1 <= buffer_reading;
 	end
-	assign read_data = (buffer_reading_d1 == 1 ? read_data0 : read_data1);
 
 	asym_ram # (
 		.WR_DATA_WIDTH(C_M_AXI_DATA_WIDTH)
@@ -215,6 +216,8 @@ module mm2s_adv #
 	reg[BUF_NUM-1:0] buffer_writing;	// only index bitmap
 	reg[BUF_NUM-1:0] buffer_reading;	// only index bitmap
 
+	reg[C_IMG_HBITS-1:0] source_y_of_buffer[BUF_NUM-1:0];
+
 	reg eol_read;
 
 	always @(posedge clk) begin
@@ -233,6 +236,18 @@ module mm2s_adv #
 		else if (eol_read)
 			buffer_reading <= {buffer_reading[BUF_NUM-2:0], buffer_reading[BUF_NUM-1]};
 	end
+
+	generate
+		genvar i;
+		for (i = 0; i < BUF_NUM; i = i+1) begin
+			always @(posedge clk) begin
+				if (resetn == 0)
+					source_y_of_buffer[i] <= 0;
+				else if (line_addr_valid && line_addr_ready && buffer_writing[i])
+					source_y_of_buffer[i] <= source_y + win_top;
+			end
+		end
+	endgenerate
 
 	always @(posedge clk) begin
 		if (resetn == 0)
@@ -274,6 +289,7 @@ module mm2s_adv #
 			is_writing <= 0;
 	end
 
+	wire [C_IMG_HBITS-1:0] source_y;
 	scale_1d # (
 		.C_M_WIDTH(C_IMG_HBITS),
 		.C_S_WIDTH(C_IMG_HBITS),
@@ -290,6 +306,8 @@ module mm2s_adv #
 		.o_valid(line_addr_valid),
 		.o_ready(line_addr_ready),
 		.o_last(line_addr_last),
+
+		.s_index(source_y),
 
 		.s_base_addr(frame_addr),
 		.s_off_addr(frame_addr_offset),
@@ -322,6 +340,8 @@ module mm2s_adv #
 		else if (eol_read)
 			is_reading <= 0;
 	end
+
+	wire [C_IMG_WBITS-1:0] source_x;
 	scale_1d # (
 		.C_M_WIDTH(C_IMG_WBITS),
 		.C_S_WIDTH(C_IMG_WBITS),
@@ -338,6 +358,8 @@ module mm2s_adv #
 		.o_ready(pixel_addr_ready),
 		.o_last(pixel_addr_last),
 
+		.s_index(source_x),
+
 		.s_base_addr(0),
 		.s_off_addr(read_offset),
 		.s_inc_addr(1),
@@ -345,6 +367,10 @@ module mm2s_adv #
 	);
 
 	////////////////////////////// master axi stream ///////////////////////
+	wire [C_PIXEL_STORE_WIDTH-1:0] read_data;
+	assign read_data = (buffer_reading_d1 == 1 ? read_data0 : read_data1);
+	assign m_axis_source_y = (buffer_reading_d1 == 1 ? source_y_of_buffer[0] : source_y_of_buffer[1]);
+
 	reg axis_tvalid;
 	assign m_axis_tvalid = axis_tvalid;
 	generate
@@ -358,15 +384,19 @@ module mm2s_adv #
 	assign m_axis_tlast = axis_tlast;
 	wire axis_tready;
 	assign axis_tready = m_axis_tready;
+	reg [C_IMG_WBITS-1:0] axis_source_x;
+	assign m_axis_source_x = axis_source_x;
 
 	/// @note buffer_reading will change after eol_read
 	assign pixel_addr_ready = (is_reading && (~axis_tvalid || axis_tready));
 	always @(posedge clk) begin
 		if (resetn == 0) begin
 			axis_tvalid <= 0;
+			axis_source_x <= 0;
 		end
 		else if (pixel_addr_valid && pixel_addr_ready) begin
 			axis_tvalid <= 1;
+			axis_source_x <= source_x + win_left;
 		end
 		else if (axis_tready) begin
 			axis_tvalid <= 0;

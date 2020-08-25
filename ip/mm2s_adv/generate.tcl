@@ -10,6 +10,16 @@ pip_add_bus_if $core M_AXIS {
 	TREADY	m_axis_tready
 }
 
+pip_add_bus_if $core M_AXIS_INDEX [subst {
+	abstraction_type_vlnv {$VENDOR:interface:window_ctl_rtl:1.0}
+	bus_type_vlnv {$VENDOR:interface:window_ctl:1.0}
+	interface_mode {master}
+}] {
+	WIDTH   m_axis_source_x
+	HEIGHT  m_axis_source_y
+}
+
+
 pip_add_bus_if $core MBUF_R [subst {
 	abstraction_type_vlnv $VENDOR:interface:mutex_buffer_ctl_rtl:1.0
 	bus_type_vlnv $VENDOR:interface:mutex_buffer_ctl:1.0
@@ -107,7 +117,7 @@ pip_add_bus_if $core clk {
 } {
 	CLK clk
 } {
-	ASSOCIATED_BUSIF {fsync:M_AXI:IMG_SIZE:MBUF_R:M_AXIS:SCALE_CTL:SRC_WIN}
+	ASSOCIATED_BUSIF {fsync:M_AXI:IMG_SIZE:MBUF_R:M_AXIS:M_AXIS_INDEX:SCALE_CTL:SRC_WIN}
 }
 
 # parameters
