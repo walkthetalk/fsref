@@ -90,6 +90,9 @@ set ip_list [list \
 	fsa \
 		{Fusion Splicer Image Analyzer} \
 		{Fusion Splicer Image Analyzer} \
+	fsa_v2 \
+		{Fusion Splicer Image Analyzer Advance version} \
+		{Fusion Splicer Image Analyzer Advance version} \
 	fscpu \
 		{Fusion Splicer CPU} \
 		{Fusion Splicer CPU} \
