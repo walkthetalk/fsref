@@ -74,7 +74,7 @@ module fsa_v2 #(
 	input  wire [C_IMG_HW-1:0]        si_axis_source_y,
 
 	input  wire                       m_axis_fsync,
-	input  wire                       m_axis_resetn,
+	input  wire                       en_overlay,
 
 	output wire                       m_axis_tvalid,
 	output wire [C_TEST+C_OUT_DW-1:0] m_axis_tdata,
@@ -215,12 +215,13 @@ generate
 			.C_S_CHANNEL(C_S_CHANNEL)
 		) fsa_stream_inst (
 			.clk(clk),
-			.resetn(m_axis_resetn),
+			.resetn(resetn),
 
 			.height(height),
 			.width(width),
 
 			.fsync(m_axis_fsync),
+			.en_overlay(en_overlay),
 
 			.rd_sof(r_sof_stream),
 			.rd_en(rd_en_p1[RD_NUM-2]),

@@ -14,6 +14,7 @@ module fsa_stream_v2 #(
 	input  wire [C_IMG_WW-1:0]      width   ,
 
 	input  wire                     fsync   ,
+	input  wire                     en_overlay,
 
 	output wire                     rd_sof  ,
 	output wire                     rd_en   ,
@@ -190,10 +191,10 @@ module fsa_stream_v2 #(
 		end
 		else begin
 			rd_en_d5 <= rd_en_d4;
-			out_data_d5[FIFO_SOF] <= data_d4[FIFO_SOF];
-			out_data_d5[FD_LAST]  <= data_d4[FIFO_LAST];
-			if ((lft_valid && (lc_t | lc_b))
-				|| (rt_valid && (rc_t | rc_b))) begin
+			out_data_d5[FD_SOF] <= data_d4[FD_SOF];
+			out_data_d5[FD_LAST]  <= data_d4[FD_LAST];
+			if (en_overlay && ((lft_valid && (lc_t | lc_b))
+				|| (rt_valid && (rc_t | rc_b)))) begin
 				out_data_d5[FD_DATA+C_OUT_DW-1:FD_DATA] <= C_OUT_DV;
 			end
 			else begin

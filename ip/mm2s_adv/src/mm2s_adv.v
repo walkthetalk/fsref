@@ -259,7 +259,6 @@ module mm2s_adv #
 	end
 
 	generate
-		genvar i;
 		for (i = 0; i < BUF_NUM; i=i+1) begin
 			always @(posedge clk) begin
 				if (resetn == 0)
