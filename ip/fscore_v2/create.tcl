@@ -123,8 +123,13 @@ proc creat_stream_v2 {
 		create_bd_cell -type ip -vlnv $VENDOR:$LIBRARY:window_broadcaster:$VERSION $mname/window_broadcaster
 		set_property -dict [list CONFIG.C_HAS_POSITION {true}] [get_bd_cells $mname/window_broadcaster]
 
-		create_bd_cell -type ip -vlnv $VENDOR:$LIBRARY:fsa:$VERSION $mname/fsa
+		create_bd_cell -type ip -vlnv $VENDOR:$LIBRARY:fsa_v2:$VERSION $mname/fsa
 		set_property -dict [list \
+			CONFIG.C_PIXEL_WIDTH $channel_width \
+			CONFIG.C_IMG_WW $stream_w_width \
+			CONFIG.C_IMG_HW $stream_h_width \
+			CONFIG.C_CHANNEL_WIDTH $channel_width \
+			CONFIG.C_S_CHANNEL {1} \
 			CONFIG.C_OUT_DW {32} \
 			CONFIG.C_OUT_DV {0xFFFF0000} \
 		] [get_bd_cells $mname/fsa]
@@ -160,7 +165,7 @@ proc creat_stream_v2 {
 
 		create_bd_pin -dir I $mname/fsa_disp_resetn
 		pip_connect_pin $mname/fsa_disp_resetn [subst {
-			$mname/fsa/m_axis_resetn
+			$mname/fsa/en_overlay
 		}]
 
 		create_bd_intf_pin -mode Slave -vlnv $VENDOR:interface:fsa_ctl_rtl:1.0 $mname/FSA_CTL
@@ -176,6 +181,13 @@ proc creat_stream_v2 {
 		create_bd_intf_pin -mode Master -vlnv $VENDOR:interface:fsa_result_rtl:1.0 $mname/RESULT1
 		pip_connect_intf_net [subst {
 			$mname/RESULT1  $mname/fsa/RESULT1
+		}]
+
+		delete_bd_objs [get_bd_intf_nets $mname/pvdma_M_AXIS]
+		pip_connect_intf_net [subst {
+			$mname/pvdma/M_AXIS                 $mname/fsa/I_AXIS
+			$mname/pvdma/M_AXIS_INDEX           $mname/fsa/I_AXIS_INDEX
+			$mname/fsa/M_AXIS                   $mname/M_AXIS
 		}]
 	}
 }

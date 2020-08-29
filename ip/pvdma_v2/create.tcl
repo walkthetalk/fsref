@@ -54,6 +54,8 @@ proc create_pvdma_v2 {
 
 		create_bd_intf_pin -mode Master -vlnv xilinx.com:interface:axis_rtl:1.0 $mname/M_AXIS
 		connect_bd_intf_net [get_bd_intf_pins $mname/mm2s/M_AXIS] [get_bd_intf_pins $mname/M_AXIS]
+		create_bd_intf_pin -mode Master -vlnv $VENDOR:interface:window_ctl_rtl:1.0 $mname/M_AXIS_INDEX
+		pip_connect_intf_net [subst {$mname/M_AXIS_INDEX      $mname/mm2s/M_AXIS_INDEX}]
 
 		create_bd_intf_pin -mode Slave -vlnv $VENDOR:interface:window_ctl_rtl:1.0 $mname/S_WIN
 		pip_connect_intf_net [subst {$mname/S_WIN      $mname/mm2s/SRC_WIN}]
