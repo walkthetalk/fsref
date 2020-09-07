@@ -49,7 +49,7 @@ proc create_pvdma_v2 {
 			CONFIG.C_M_AXI_ADDR_WIDTH $addr_width \
 			CONFIG.C_M_AXI_DATA_WIDTH $data_width \
 			CONFIG.C_IMG_STRIDE_SIZE $stride_size \
-			CONFIG.C_MAXIS_CHANNEL 3 \
+			CONFIG.C_MAXIS_CHANNEL 1 \
 		] [get_bd_cells $mname/mm2s]
 
 		create_bd_intf_pin -mode Master -vlnv xilinx.com:interface:axis_rtl:1.0 $mname/M_AXIS

@@ -106,6 +106,21 @@ def drc_WL(lvl, ridx, lbit, width, name, defv, autoclr='false', dep=''):
 		ret += suppline(lvl+2, '{} <= 0;'.format(name))
 	ret += suppline(lvl, str4alwaysend())
 	return ret
+def drc_from_wre_sync(lvl, ridx, name, defv, autoclr='false', dep=''):
+	ret = ''
+	defstr = str(defv)
+	invstr = '1' if defstr == '0' else '0'
+	ret += suppline(lvl, str4alwaysbegin())
+	ret += suppline(lvl+1, 'if (o_resetn == 1\'b0)')
+	ret += suppline(lvl+2, "{} <= {};".format(name, defstr))
+	depstr = '' if (dep == '') else (' && ' + dep)
+	ret += suppline(lvl+1, 'else if (wre_sync[{}]{})'.format(str(ridx), depstr))
+	ret += suppline(lvl+2, '{} <= {};'.format(name, invstr))
+	if autoclr == 'true':
+		ret += suppline(lvl+1, 'else')
+		ret += suppline(lvl+2, '{} <= {};'.format(name, defstr))
+	ret += suppline(lvl, str4alwaysend())
+	return ret
 def drc_RL(lvl, ridx, lbit, width, name):
 	wstr = str(width)
 	return suppline(lvl, 'assign slv_reg[{}]{} = {};'.format(str(ridx), h2lrange(lbit, width), name))
@@ -799,7 +814,7 @@ class VIfReqCtl(VIntface):
 		self._addPort({'ftype': 'cfg',     'iotype': 'output', 'name': 'en'})
 		self._addPort({'ftype': 'cfg',     'iotype': 'output', 'name': 'cmd',   'width': "32"})
 		self._addPort({'ftype': 'cfg',     'iotype': 'output', 'name': 'param', 'width': "128"})
-		self._addPort({'ftype': 'inro',    'iotype': 'input',  'name': 'done'})
+		self._addPort({'ftype': 'intsrc',  'iotype': 'input',  'name': 'done',    "trigint": "posedge" })
 		self._addPort({'ftype': 'inro',    'iotype': 'input',  'name': 'err',   'width': "32"})
 
 class VerilogModuleFile:
@@ -1077,6 +1092,11 @@ class VMFsctl(VerilogModuleFile):
 			"name": "stream_int",
 			"wrtype": "reg",
 			'comments': "stream interrupt"
+		})
+		self.addIntPort({
+			"name": "reqctl_int",
+			"wrtype": "reg",
+			'comments': "request interrupt"
 		})
 		self.addIntPort({
 			"name": "update_stream_cfg",
@@ -1504,6 +1524,7 @@ class VMFsctl(VerilogModuleFile):
 		ret += suppcomment(lvl, str4regdefcomment(ridx))
 		ret += drc_ro(lvl, ridx, 0, 1, 'stream_int')
 		ret += drc_ro(lvl, ridx, 1, 1, 'motor_int')
+		ret += drc_ro(lvl, ridx, 2, 1, 'reqctl_int')
 		ret += suppline(lvl, 'assign intr = (slv_reg[{}] != 0);'.format(all_int_ridx))
 
 		ridx += 1
@@ -1530,7 +1551,7 @@ class VMFsctl(VerilogModuleFile):
 		ret += suppcomment(lvl, str4regdefcomment(ridx))
 		ret += suppreadreg0(lvl, ridx)
 
-
+		####################### request control interface ##############
 		intf = self.getif('reqctl')
 
 		ridx += 1
@@ -1538,8 +1559,22 @@ class VMFsctl(VerilogModuleFile):
 		ret += drc_rw(lvl, ridx, 0, 1, str4array(intf.name, 'resetn') + '[0]')
 
 		ridx += 1
+		req_int_ena_ridx = ridx
 		ret += suppcomment(lvl, str4regdefcomment(ridx))
-		ret += drc_ro(lvl, ridx, 0, 1, str4array(intf.name, 'done') + '[0]')
+		ret += self.gen_loop(lvl, intf.realsize, str4regdef(ridx),
+				drc_int_ena(lvl+1, ridx+0, "i", str4intena(intf.name,'done') + '[i]'))
+		ridx += 1
+		req_int_sta_ridx = ridx
+		ret += suppcomment(lvl, str4regdefcomment(ridx))
+		ret += self.gen_loop(lvl, intf.realsize, str4regdef(ridx),
+				drc_int_sta(lvl+1, ridx, "i", str4intsta(intf.name,'done') + '[i]'))
+		ret += self.gen_loop(lvl, intf.realsize, 'loop4' + str4intclr(intf.name,'done'),
+				drc_int_clr(lvl+1, ridx, "i", str4intclr(intf.name,'done') + '[i]'))
+		ret += suppline(lvl, str4alwaysbegin())
+		ret += suppline(lvl+1, 'reqctl_int <= ((slv_reg[{}] & slv_reg[{}]) != 0);'.format(
+				req_int_ena_ridx, req_int_sta_ridx
+			))
+		ret += suppline(lvl, str4alwaysend())
 
 		ridx += 1
 		ret += suppcomment(lvl, str4regdefcomment(ridx))
@@ -1547,13 +1582,11 @@ class VMFsctl(VerilogModuleFile):
 
 		ridx += 1
 		ret += suppcomment(lvl, str4regdefcomment(ridx))
-		ret += drc_wo(lvl, ridx, 0, 1, str4array(intf.name, 'en') + '[0]', 0, 'true')
-		#ret += suppreadreg0(lvl, ridx)
-
-		ridx += 1
-		ret += suppcomment(lvl, str4regdefcomment(ridx))
 		ret += drc_rw(lvl, ridx, 0, 32, str4array(intf.name, 'cmd') + '[0]', 0)
 		#ret += suppreadreg0(lvl, ridx)
+		ret += suppcomment(lvl, "note: issue command just when write command")
+		ret += drc_from_wre_sync(lvl, ridx, str4array(intf.name, 'en') + '[0]', 0, 'true')
+
 
 		for i in range(0,128,32):
 			ridx += 1
