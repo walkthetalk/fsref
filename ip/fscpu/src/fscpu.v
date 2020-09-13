@@ -108,8 +108,20 @@ module fscpu #(
 	output wire                           my_dir     ,
 	output wire                           my_mod_remain,
 	output wire [C_STEP_NUMBER_WIDTH-1:0] my_new_remain
-
 );
+	`define DIDX(_x) DBIT_``_x
+	`define DBIT(_x) (1 << DBIT_``_x)
+	localparam integer DBIT_MOTOR_LP = 0;
+	localparam integer DBIT_MOTOR_RP = 1;
+	localparam integer DBIT_MOTOR_XA = 2;
+	localparam integer DBIT_MOTOR_YA = 3;
+	localparam integer DBIT_MOTOR_LR = 4;
+	localparam integer DBIT_MOTOR_RR = 5;
+	// @todo add new req command
+	localparam integer REQ_FRM_DLY   = 29;
+	localparam integer REQ_EXE       = 30;
+	localparam integer REQ_STOP      = 31;
+
 	wire [31:0] req_par0;	assign req_par0 = req_param[ 31: 0];
 	wire [31:0] req_par1;	assign req_par1 = req_param[ 63:32];
 	wire [31:0] req_par2;	assign req_par2 = req_param[ 95:64];
@@ -120,39 +132,115 @@ module fscpu #(
 
 	reg  [31:0] cfg_img_delay_cnt;
 	reg  [1:0]  cfg_img_delay_frm;
-	localparam integer DBIT_MOTOR_LFT = 0;
-	localparam integer DBIT_MOTOR_RT  = 1;
-	localparam integer DBIT_MOTOR_X   = 2;
-	localparam integer DBIT_MOTOR_Y   = 3;
 
-	`define DIDX(_x) DBIT_``_x
-	`define DBIT(_x) (1 << DBIT_``_x)
+	/////////////////////////// record parameters for motor ////////////////
+	reg        req_single_dir[`DIDX(MOTOR_RR):`DIDX(MOTOR_LP)];	// par0[0]
+	reg        req_dir_back  [`DIDX(MOTOR_RR):`DIDX(MOTOR_LP)];	// par0[1]
+	reg        req_dep_img   [`DIDX(MOTOR_RR):`DIDX(MOTOR_LP)];	// par0[2]
+	reg        req_ecf       [`DIDX(MOTOR_RR):`DIDX(MOTOR_LP)];	// par0[3]
+	reg [31:0] req_speed     [`DIDX(MOTOR_RR):`DIDX(MOTOR_LP)];	// par1[C_SPEED_DATA_WIDTH-1 : 0]
+	reg [31:0] req_step      [`DIDX(MOTOR_RR):`DIDX(MOTOR_LP)];	// par2[C_STEP_NUMBER_WIDTH-1: 0]
+	reg [15:0] req_img_tol   [`DIDX(MOTOR_RR):`DIDX(MOTOR_LP)];	// par3[C_IMG_WW-1+16 : 16]
+	reg [15:0] req_img_dst   [`DIDX(MOTOR_RR):`DIDX(MOTOR_LP)];	// par3[C_IMG_WW-1 : 0]
+generate
+	genvar i;
+	for (i = DBIT_MOTOR_LP; i <= DBIT_MOTOR_RR; i=i+1) begin : record_motor_params
+		always @ (posedge clk) begin
+			if (resetn == 1'b0) begin
+				req_single_dir[i] <= 0;
+				req_dir_back  [i] <= 0;
+				req_dep_img   [i] <= 0;
+				req_ecf       [i] <= 0;
+				req_speed     [i] <= 0;
+				req_step      [i] <= 0;
+				req_img_tol   [i] <= 0;
+				req_img_dst   [i] <= 0;
+			end
+			else if (req_en && (req_cmd == i)) begin
+				req_single_dir[i] <= req_par0[0];
+				req_dir_back  [i] <= req_par0[1];
+				req_dep_img   [i] <= req_par0[2];
+				req_ecf       [i] <= req_par0[3];
+				req_speed     [i] <= req_par1;
+				req_step      [i] <= req_par2;
+				req_img_tol   [i] <= req_par3[31:16];
+				req_img_dst   [i] <= req_par3[15: 0];
+			end
+		end
+	end
+endgenerate
 	always @ (posedge clk) begin
 		if (resetn == 1'b0) begin
-			dev_oper_bmp <= 0;
-			cfg_img_delay_frm <= 0;
-			cfg_img_delay_cnt <= 0;
+			dev_oper_bmp_stage <= 0;
 		end
 		else if (req_en) begin
 			case (req_cmd)
-			0: begin
-				dev_oper_bmp      <= 0;
-				cfg_img_delay_frm <= req_par0;
-				cfg_img_delay_cnt <= req_par1;
-			end
-			1: dev_oper_bmp <= `DBIT(MOTOR_LFT);
-			2: dev_oper_bmp <= `DBIT(MOTOR_RT);
-			3: dev_oper_bmp <= (`DBIT(MOTOR_LFT) | `DBIT(MOTOR_RT));
-			4: dev_oper_bmp <= `DBIT(MOTOR_X);
-			5: dev_oper_bmp <= `DBIT(MOTOR_Y);
-			6: dev_oper_bmp <= (`DBIT(MOTOR_X) | `DBIT(MOTOR_Y));
-			default:
-				dev_oper_bmp <= 0;
+			`RECORD_DEV(MOTOR_LP);
+			`RECORD_DEV(MOTOR_RP);
+			`RECORD_DEV(MOTOR_XA);
+			`RECORD_DEV(MOTOR_YA);
+			`RECORD_DEV(MOTOR_LR);
+			`RECORD_DEV(MOTOR_RR);
+			REQ_STOP: dev_oper_bmp_stage <= 0;
+			default:  dev_oper_bmp_stage <= 0;
+			endcase
+		end
+		else if (req_done_bmp == dev_oper_bmp)	/// ensure one clock reset at least
+			dev_oper_bmp_stage <= 0;
+	end
+
+	///////////////////////////// record devices ///////////////////////////
+	reg [31:0] dev_oper_bmp_stage;
+	`define RECORD_DEV(_x) `DIDX(_x): dev_oper_bmp_stage <= dev_oper_bmp_stage | `DBIT(_x)
+	always @ (posedge clk) begin
+		if (resetn == 1'b0) begin
+			dev_oper_bmp_stage <= 0;
+		end
+		else if (req_en) begin
+			case (req_cmd)
+			`RECORD_DEV(MOTOR_LP);
+			`RECORD_DEV(MOTOR_RP);
+			`RECORD_DEV(MOTOR_XA);
+			`RECORD_DEV(MOTOR_YA);
+			`RECORD_DEV(MOTOR_LR);
+			`RECORD_DEV(MOTOR_RR);
+			REQ_STOP: dev_oper_bmp_stage <= 0;
+			default:  dev_oper_bmp_stage <= 0;
+			endcase
+		end
+		else if (req_done_bmp == dev_oper_bmp)	/// ensure one clock reset at least
+			dev_oper_bmp_stage <= 0;
+	end
+
+	always @ (posedge clk) begin
+		if (resetn == 1'b0) begin
+			dev_oper_bmp <= 0;
+		end
+		else if (req_en) begin
+			case (req_cmd)
+			REQ_EXE:   dev_oper_bmp <= dev_oper_bmp_stage;
+			REQ_STOP:  dev_oper_bmp <= 0;
 			endcase
 		end
 		else if (req_done_bmp == dev_oper_bmp)	/// ensure one clock reset at least
 			dev_oper_bmp <= 0;
 	end
+
+	always @ (posedge clk) begin
+		if (resetn == 1'b0) begin
+			cfg_img_delay_frm <= 0;
+			cfg_img_delay_cnt <= 0;
+		end
+		else if (req_en) begin
+			case (req_cmd)
+			REQ_FRM_DLY: begin
+				cfg_img_delay_frm <= req_par0;
+				cfg_img_delay_cnt <= req_par1;
+			end
+			endcase
+		end
+	end
+
 	reg r_req_done;
 	assign req_done = r_req_done;
 	assign req_err  = 0;	/// TODO: fix it
@@ -228,20 +316,19 @@ module fscpu #(
 		.C_L2R(1)
 	) lft_motor_ctl (
 		.clk          (clk   ),
-		.resetn       (dev_oper_bmp[`DIDX(MOTOR_LFT)]),
-		.exe_done     (req_done_bmp[`DIDX(MOTOR_LFT)]),
+		.resetn       (dev_oper_bmp[`DIDX(MOTOR_LP)]),
+		.exe_done     (req_done_bmp[`DIDX(MOTOR_LP)]),
 
 		.img_delay_cnt(cfg_img_delay_cnt),
 		.img_delay_frm(cfg_img_delay_frm),
 
-		.req_single_dir(req_par0[0]),
-		.req_dir_back  (req_par0[1]),
-		.req_dep_img   (req_par0[2]),
-		.req_img_tol   (req_par0[C_IMG_WW-1+16        :16]),
-		.req_speed     (req_par1[C_SPEED_DATA_WIDTH-1 : 0]),
-
-		.req_img_dst   (req_par2[C_IMG_WW-1           : 0]),
-		.req_step      (req_par2[C_STEP_NUMBER_WIDTH-1: 0]),
+		.req_single_dir(req_single_dir[`DIDX(MOTOR_LP)]),
+		.req_dir_back  (req_dir_back  [`DIDX(MOTOR_LP)]),
+		.req_dep_img   (req_dep_img   [`DIDX(MOTOR_LP)]),
+		.req_speed     (req_speed     [`DIDX(MOTOR_LP)][C_SPEED_DATA_WIDTH-1 :0]),
+		.req_step      (req_step      [`DIDX(MOTOR_LP)][C_STEP_NUMBER_WIDTH-1:0]),
+		.req_img_tol   (req_img_tol   [`DIDX(MOTOR_LP)][C_IMG_WW-1           :0]),
+		.req_img_dst   (req_img_dst   [`DIDX(MOTOR_LP)][C_IMG_WW-1           :0]),
 
 		.img_pulse(x_ana_done ),
 		.img_valid(x_lft_valid),
@@ -274,20 +361,19 @@ module fscpu #(
 		.C_L2R(0)
 	) rt_motor_ctl (
 		.clk          (clk   ),
-		.resetn       (dev_oper_bmp[`DIDX(MOTOR_RT)]),
-		.exe_done     (req_done_bmp[`DIDX(MOTOR_RT)]),
+		.resetn       (dev_oper_bmp[`DIDX(MOTOR_RP)]),
+		.exe_done     (req_done_bmp[`DIDX(MOTOR_RP)]),
 
 		.img_delay_cnt(cfg_img_delay_cnt),
 		.img_delay_frm(cfg_img_delay_frm),
 
-		.req_single_dir(req_par0[0]),
-		.req_dir_back  (req_par0[1]),
-		.req_dep_img   (req_par0[2]),
-		.req_img_tol   (req_par0[C_IMG_WW-1+16        :16]),
-		.req_speed     (req_par1[C_SPEED_DATA_WIDTH-1 : 0]),
-
-		.req_img_dst   (req_par3[C_IMG_WW-1           : 0]),
-		.req_step      (req_par3[C_STEP_NUMBER_WIDTH-1: 0]),
+		.req_single_dir(req_single_dir[`DIDX(MOTOR_RP)]),
+		.req_dir_back  (req_dir_back  [`DIDX(MOTOR_RP)]),
+		.req_dep_img   (req_dep_img   [`DIDX(MOTOR_RP)]),
+		.req_speed     (req_speed     [`DIDX(MOTOR_RP)][C_SPEED_DATA_WIDTH-1 :0]),
+		.req_step      (req_step      [`DIDX(MOTOR_RP)][C_STEP_NUMBER_WIDTH-1:0]),
+		.req_img_tol   (req_img_tol   [`DIDX(MOTOR_RP)][C_IMG_WW-1           :0]),
+		.req_img_dst   (req_img_dst   [`DIDX(MOTOR_RP)][C_IMG_WW-1           :0]),
 
 		.img_pulse(x_ana_done ),
 		.img_valid(x_rt_valid ),
@@ -320,17 +406,16 @@ module fscpu #(
 		.C_L2R(1)
 	) x_motor_ctl (
 		.clk          (clk   ),
-		.resetn       (dev_oper_bmp[`DIDX(MOTOR_X)]),
-		.exe_done     (req_done_bmp[`DIDX(MOTOR_X)]),
+		.resetn       (dev_oper_bmp[`DIDX(MOTOR_XA)]),
+		.exe_done     (req_done_bmp[`DIDX(MOTOR_XA)]),
 
-		.req_ecf       (req_par0[0]),
-		.req_dir_back  (req_par0[1]),
-		.req_dep_img   (req_par0[2]),
-		.req_img_tol   (req_par0[C_IMG_WW-1+16        :16]),
-		.req_speed     (req_par1[C_SPEED_DATA_WIDTH-1 : 0]),
-
-		.req_img_dst   (req_par2[C_IMG_WW-1           : 0]),
-		.req_step      (req_par2[C_STEP_NUMBER_WIDTH-1: 0]),
+		.req_ecf       (req_ecf       [`DIDX(MOTOR_XA)]),
+		.req_dir_back  (req_dir_back  [`DIDX(MOTOR_XA)]),
+		.req_dep_img   (req_dep_img   [`DIDX(MOTOR_XA)]),
+		.req_speed     (req_speed     [`DIDX(MOTOR_XA)][C_SPEED_DATA_WIDTH-1 :0]),
+		.req_step      (req_step      [`DIDX(MOTOR_XA)][C_STEP_NUMBER_WIDTH-1:0]),
+		.req_img_tol   (req_img_tol   [`DIDX(MOTOR_XA)][C_IMG_HW-1           :0]),
+		.req_img_dst   (req_img_dst   [`DIDX(MOTOR_XA)][C_IMG_HW-1           :0]),
 
 		.img_pulse   (x_ana_done),
 		.img_lo_valid(x_lft_header_outer_valid),
@@ -371,17 +456,16 @@ module fscpu #(
 		.C_L2R(0)
 	) y_motor_ctl (
 		.clk          (clk   ),
-		.resetn       (dev_oper_bmp[`DIDX(MOTOR_Y)]),
-		.exe_done     (req_done_bmp[`DIDX(MOTOR_Y)]),
+		.resetn       (dev_oper_bmp[`DIDX(MOTOR_YA)]),
+		.exe_done     (req_done_bmp[`DIDX(MOTOR_YA)]),
 
-		.req_ecf       (req_par0[0]),
-		.req_dir_back  (req_par0[1]),
-		.req_dep_img   (req_par0[2]),
-		.req_img_tol   (req_par0[C_IMG_WW-1+16        :16]),
-		.req_speed     (req_par1[C_SPEED_DATA_WIDTH-1 : 0]),
-
-		.req_img_dst   (req_par3[C_IMG_WW-1           : 0]),
-		.req_step      (req_par3[C_STEP_NUMBER_WIDTH-1: 0]),
+		.req_ecf       (req_ecf       [`DIDX(MOTOR_YA)]),
+		.req_dir_back  (req_dir_back  [`DIDX(MOTOR_YA)]),
+		.req_dep_img   (req_dep_img   [`DIDX(MOTOR_YA)]),
+		.req_speed     (req_speed     [`DIDX(MOTOR_YA)][C_SPEED_DATA_WIDTH-1 :0]),
+		.req_step      (req_step      [`DIDX(MOTOR_YA)][C_STEP_NUMBER_WIDTH-1:0]),
+		.req_img_tol   (req_img_tol   [`DIDX(MOTOR_YA)][C_IMG_HW-1           :0]),
+		.req_img_dst   (req_img_dst   [`DIDX(MOTOR_YA)][C_IMG_HW-1           :0]),
 
 		.img_pulse   (y_ana_done),
 		.img_lo_valid(y_lft_header_outer_valid),
