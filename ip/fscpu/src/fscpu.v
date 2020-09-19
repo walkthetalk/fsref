@@ -129,6 +129,7 @@ module fscpu #(
 
 	reg  [31:0] dev_oper_bmp;
 	wire [31:0] req_done_bmp;
+	assign req_done_bmp[31:4] = 0;
 
 	reg  [31:0] cfg_img_delay_cnt;
 	reg  [1:0]  cfg_img_delay_frm;
@@ -169,26 +170,8 @@ generate
 		end
 	end
 endgenerate
-	always @ (posedge clk) begin
-		if (resetn == 1'b0) begin
-			dev_oper_bmp_stage <= 0;
-		end
-		else if (req_en) begin
-			case (req_cmd)
-			`RECORD_DEV(MOTOR_LP);
-			`RECORD_DEV(MOTOR_RP);
-			`RECORD_DEV(MOTOR_XA);
-			`RECORD_DEV(MOTOR_YA);
-			`RECORD_DEV(MOTOR_LR);
-			`RECORD_DEV(MOTOR_RR);
-			REQ_STOP: dev_oper_bmp_stage <= 0;
-			default:  dev_oper_bmp_stage <= 0;
-			endcase
-		end
-		else if (req_done_bmp == dev_oper_bmp)	/// ensure one clock reset at least
-			dev_oper_bmp_stage <= 0;
-	end
-
+	wire wire_done;
+	assign wire_done = ((req_done_bmp & dev_oper_bmp) == dev_oper_bmp && dev_oper_bmp != 0);
 	///////////////////////////// record devices ///////////////////////////
 	reg [31:0] dev_oper_bmp_stage;
 	`define RECORD_DEV(_x) `DIDX(_x): dev_oper_bmp_stage <= dev_oper_bmp_stage | `DBIT(_x)
@@ -208,7 +191,7 @@ endgenerate
 			default:  dev_oper_bmp_stage <= 0;
 			endcase
 		end
-		else if (req_done_bmp == dev_oper_bmp)	/// ensure one clock reset at least
+		else if (wire_done)	/// ensure one clock reset at least
 			dev_oper_bmp_stage <= 0;
 	end
 
@@ -222,7 +205,7 @@ endgenerate
 			REQ_STOP:  dev_oper_bmp <= 0;
 			endcase
 		end
-		else if (req_done_bmp == dev_oper_bmp)	/// ensure one clock reset at least
+		else if (wire_done)	/// ensure one clock reset at least
 			dev_oper_bmp <= 0;
 	end
 
@@ -249,7 +232,7 @@ endgenerate
 			r_req_done <= 0;
 		else if (req_en)
 			r_req_done <= 0;
-		else if (req_done_bmp == dev_oper_bmp && dev_oper_bmp != 0)
+		else if (wire_done)
 			r_req_done <= 1;
 	end
 	////////////////// block ram //////////////////////////////

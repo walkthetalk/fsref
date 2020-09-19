@@ -228,12 +228,15 @@ always @ (posedge clk) begin
 	end
 	else if (time_cnt == 1200) begin
 		req_en <= 1;
-		//req_cmd <= 1;
-		//req_param <= {32'b0, 32'hFF, 32'b0, 32'b11};
-		//req_param <= {32'b0, 32'hFF, 32'h400FF, 32'b101};
-		/// push x
-		req_cmd <= 4;
-		req_param <= {32'h0, 32'h0, 32'h1000, 32'h40004};
+		/// push left
+		req_cmd <= 0;
+		req_param <= {32'h0, 32'h0, 32'h1000, 32'h3};
+	end
+	else if (time_cnt == 1205) begin
+		req_en <= 1;
+		/// exe
+		req_cmd <= 30;
+		req_param <= {32'h0, 32'h0, 32'h1000, 32'h0};
 	end
 	else begin
 		req_en <= 0;
@@ -274,6 +277,12 @@ always @ (posedge clk) begin
 		mx_position <= 0;
 		my_state    <= 0;
 		my_position <= 0;
+	end
+	else if (time_cnt == 1220) begin
+		ml_state    <= 1;
+	end
+	else if (time_cnt == 1230) begin
+		ml_state    <= 0;
 	end
 end
 
