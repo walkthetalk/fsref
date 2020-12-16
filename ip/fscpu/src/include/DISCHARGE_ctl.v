@@ -115,7 +115,7 @@ module DISCHARGE_ctl #
 	always @ (posedge clk) begin
 		if (resetn == 0)
 			numerator_ext <= 0;
-		else if (eop_p1) begin
+		else if (eop_p1 && ~exe_done) begin
 			case (pwm_state)
 				STATE_IDLE: begin
 					numerator_ext <= {numerator0, {(C_FRACTIONAL_WIDTH){1'b0}}};

@@ -107,7 +107,9 @@ module fscpu #(
 	output wire [C_STEP_NUMBER_WIDTH-1:0] my_step    ,
 	output wire                           my_dir     ,
 	output wire                           my_mod_remain,
-	output wire [C_STEP_NUMBER_WIDTH-1:0] my_new_remain
+	output wire [C_STEP_NUMBER_WIDTH-1:0] my_new_remain,
+
+	output wire                           discharge_drive
 );
 	`define DIDX(_x) DBIT_``_x
 	`define DBIT(_x) (1 << DBIT_``_x)
@@ -117,8 +119,11 @@ module fscpu #(
 	localparam integer DBIT_MOTOR_YA = 3;
 	localparam integer DBIT_MOTOR_LR = 4;
 	localparam integer DBIT_MOTOR_RR = 5;
+
+	localparam integer DBIT_DISCHARGE = 8;
+
 	// @todo add new req command
-	localparam integer REQ_FRM_DLY   = 29;
+	localparam integer REQ_CFG       = 29;
 	localparam integer REQ_EXE       = 30;
 	localparam integer REQ_STOP      = 31;
 
@@ -133,6 +138,7 @@ module fscpu #(
 
 	reg  [31:0] cfg_img_delay_cnt;
 	reg  [1:0]  cfg_img_delay_frm;
+	reg  [31:0] cfg_discharge_denominator;
 
 	/////////////////////////// record parameters for motor ////////////////
 	reg        req_single_dir[`DIDX(MOTOR_RR):`DIDX(MOTOR_LP)];	// par0[0]
@@ -187,6 +193,7 @@ endgenerate
 			`RECORD_DEV(MOTOR_YA);
 			`RECORD_DEV(MOTOR_LR);
 			`RECORD_DEV(MOTOR_RR);
+			`RECORD_DEV(DISCHARGE);
 			REQ_STOP: dev_oper_bmp_stage <= 0;
 			default:  dev_oper_bmp_stage <= 0;
 			endcase
@@ -209,16 +216,47 @@ endgenerate
 			dev_oper_bmp <= 0;
 	end
 
+	//////////////////////////// record discharge //////////////////////////
+	localparam integer C_DISCHARGE_DEFAULT_VALUE = 0,
+	localparam integer C_DISCHARGE_PWM_CNT_WIDTH = 16,
+	localparam integer C_DISCHARGE_FRACTIONAL_WIDTH = 16,
+	localparam integer C_DISCHARGE_PWM_NUM_WIDTH = 32
+
+	reg[C_DISCHARGE_PWM_CNT_WIDTH-1:0] discharge_numerator0;
+	reg[C_DISCHARGE_PWM_CNT_WIDTH-1:0] discharge_numerator1;
+	reg[C_DISCHARGE_PWM_NUM_WIDTH-1:0] discharge_number0;
+	reg[C_DISCHARGE_PWM_NUM_WIDTH-1:0] discharge_number1;
+	reg[C_DISCHARGE_PWM_CNT_WIDTH+C_FRACTIONAL_WIDTH-1:0] discharge_inc0;
+	always @ (posedge clk) begin
+		if (resetn == 0) begin
+			discharge_numerator0 <= 0;
+			discharge_numerator1 <= 0;
+			discharge_number0 <= 0;
+			discharge_number1 <= 0;
+			discharge_inc0 <= 0;
+		end
+		else if (req_en && req_cmd == `DIDX(DISCHARGE)) begin
+			discharge_numerator0 <= req_par0[C_DISCHARGE_PWM_CNT_WIDTH-1:0];
+			discharge_numerator1 <= req_par0[C_DISCHARGE_PWM_CNT_WIDTH + 15 : 16];
+			discharge_number0    <= req_par1;
+			discharge_number1    <= req_par2;
+			discharge_inc0       <= req_par3;
+		end
+	end
+
+	//////////////////////////// record configs ////////////////////////////
 	always @ (posedge clk) begin
 		if (resetn == 1'b0) begin
 			cfg_img_delay_frm <= 0;
 			cfg_img_delay_cnt <= 0;
+			cfg_discharge_denominator <= 0;
 		end
 		else if (req_en) begin
 			case (req_cmd)
-			REQ_FRM_DLY: begin
+			REQ_CFG: begin
 				cfg_img_delay_frm <= req_par0;
 				cfg_img_delay_cnt <= req_par1;
+				cfg_discharge_denominator <= req_par2;
 			end
 			endcase
 		end
@@ -478,6 +516,27 @@ endgenerate
 		//.rd_en  (bam_reA  ),
 		.rd_addr(bam_addrB),
 		.rd_data(bam_qB   )
+	);
+
+	///////////////////// discharge ////////////////////////////////////////
+	DISCHARGE_ctl # (
+		.C_DEFAULT_VALUE(C_DISCHARGE_DEFAULT_VALUE),
+		.C_PWM_CNT_WIDTH(C_DISCHARGE_PWM_CNT_WIDTH),
+		.C_FRACTIONAL_WIDTH(C_DISCHARGE_FRACTIONAL_WIDTH),
+		.C_NUMBER_WIDTH(C_DISCHARGE_PWM_NUM_WIDTH)
+	) discharge_ctl (
+		.clk          (clk   ),
+		.resetn       (dev_oper_bmp[`DIDX(DISCHARGE)]),
+		.exe_done     (req_done_bmp[`DIDX(DISCHARGE)]),
+
+		.denominator  (cfg_discharge_denominator),
+		.numerator0   (discharge_numerator0),
+		.numerator1   (discharge_numerator1),
+		.number0      (discharge_number0),
+		.number1      (discharge_number1),
+		.inc0         (discharge_inc0),
+
+		.drive        (discharge_drive)
 	);
 
 endmodule
