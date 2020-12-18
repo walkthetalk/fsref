@@ -163,14 +163,19 @@ module fsa_stream_v2 #(
 			rd_en_d4  <= rd_en_d3;
 			py_d4     <= py_d3;
 			data_d4   <= data_d3;
-			lc_t      <= lft_corner_valid && ((lft_corner_top_y <= py_d3 && py_d3 < rd_top_outer)
+			// @note if we use single result for multiple blockram, the image noise will result in vibrate
+			//       header, then the defect will extent to image top at header column.
+			//       if we blockram and result is one2one, then we can drop 'rd_val_outer', the lef_edge/rt_edge
+			//       will work as expected.
+			lc_t      <= (lft_corner_valid && rd_val_outer) && ((lft_corner_top_y <= py_d3 && py_d3 < rd_top_outer)
 					&& (lft_corner_top_x < px_d3 && px_d3 <= lft_edge));
-			lc_b      <= lft_corner_valid && ((lft_corner_bot_y >= py_d3 && py_d3 > rd_bot_outer)
+			lc_b      <= (lft_corner_valid && rd_val_outer) && ((lft_corner_bot_y >= py_d3 && py_d3 > rd_bot_outer)
 					&& (lft_corner_bot_x < px_d3 && px_d3 <= lft_edge));
-			rc_t      <= rt_corner_valid && ((rt_corner_top_y <= py_d3 && py_d3 < rd_top_outer)
+			rc_t      <= (rt_corner_valid && rd_val_outer) && ((rt_corner_top_y <= py_d3 && py_d3 < rd_top_outer)
 					&& (rt_edge <= px_d3 && px_d3 < rt_corner_top_x));
-			rc_b      <= rt_corner_valid && ((rt_corner_bot_y >= py_d3 && py_d3 > rd_bot_outer)
+			rc_b      <= (rt_corner_valid && rd_val_outer) && ((rt_corner_bot_y >= py_d3 && py_d3 > rd_bot_outer)
 					&& (rt_edge <= px_d3 && px_d3 < rt_corner_bot_x));
+
 			lb        <= lft_header_outer_valid && (px_d3 <= lft_header_outer_x);
 			rb        <= rt_header_outer_valid && (px_d3 >= rt_header_outer_x);
 			lb_t      <= lft_corner_valid && ((px_d3 <= lft_corner_top_x) && (py_d3 < rd_top_outer));

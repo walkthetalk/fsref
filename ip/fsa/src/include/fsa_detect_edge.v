@@ -373,27 +373,27 @@ module fsa_detect_edge #(
 			res_rt_header_inner_y      <= 0;
 		end
 		else if (wr_sof_d5) begin
-			res_lft_edge  <= lft_edge_p5;
+			res_lft_edge  <= lft_edge_p5 ;
 			res_lft_valid <= lft_valid_p5;
-			res_rt_edge   <= rt_edge_p5;
-			res_rt_valid  <= rt_valid_p5;
+			res_rt_edge   <= rt_edge_p5  ;
+			res_rt_valid  <= rt_valid_p5 ;
 
-			res_lft_header_outer_valid <= lft_header_outer_valid;
-			res_lft_header_outer_x     <= lft_header_outer_x    ;
-			res_lft_header_outer_y     <= lft_header_outer_y    ;
-			res_lft_corner_valid <= lft_corner_found;
-			res_lft_corner_top_x <= lft_corner_top_x;
-			res_lft_corner_top_y <= lft_corner_top_y;
-			res_lft_corner_bot_x <= lft_corner_bot_x;
-			res_lft_corner_bot_y <= lft_corner_bot_y;
-			res_rt_header_outer_valid  <= rt_header_outer_valid ;
-			res_rt_header_outer_x      <= rt_header_outer_x     ;
-			res_rt_header_outer_y      <= rt_header_outer_y    ;
-			res_rt_corner_valid  <= rt_corner_found ;
-			res_rt_corner_top_x  <= rt_corner_top_x ;
-			res_rt_corner_top_y  <= rt_corner_top_y ;
-			res_rt_corner_bot_x  <= rt_corner_bot_x ;
-			res_rt_corner_bot_y  <= rt_corner_bot_y ;
+			res_lft_header_outer_valid <= lft_header_outer_valid ;
+			res_lft_header_outer_x     <= lft_header_outer_x     ;
+			res_lft_header_outer_y     <= lft_header_outer_y     ;
+			res_lft_corner_valid       <= lft_corner_found       ;
+			res_lft_corner_top_x       <= lft_corner_top_x       ;
+			res_lft_corner_top_y       <= lft_corner_top_y       ;
+			res_lft_corner_bot_x       <= lft_corner_bot_x       ;
+			res_lft_corner_bot_y       <= lft_corner_bot_y       ;
+			res_rt_header_outer_valid  <= rt_header_outer_valid  ;
+			res_rt_header_outer_x      <= rt_header_outer_x      ;
+			res_rt_header_outer_y      <= rt_header_outer_y      ;
+			res_rt_corner_valid        <= rt_corner_found        ;
+			res_rt_corner_top_x        <= rt_corner_top_x        ;
+			res_rt_corner_top_y        <= rt_corner_top_y        ;
+			res_rt_corner_bot_x        <= rt_corner_bot_x        ;
+			res_rt_corner_bot_y        <= rt_corner_bot_y        ;
 
 			res_lft_header_inner_valid <= lft_header_inner_valid ;
 			res_lft_header_inner_x     <= lft_header_inner_x     ;

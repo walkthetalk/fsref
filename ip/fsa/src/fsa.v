@@ -58,18 +58,18 @@ module fsa #(
 	output wire [C_IMG_WW-1:0]      rt_header_inner_y     ,
 
 	input  wire                     s_axis_tvalid,
-	input  wire [C_PIXEL_WIDTH-1:0] s_axis_tdata,
-	input  wire                     s_axis_tuser,
-	input  wire                     s_axis_tlast,
+	input  wire [C_PIXEL_WIDTH-1:0] s_axis_tdata ,
+	input  wire                     s_axis_tuser ,
+	input  wire                     s_axis_tlast ,
 	output wire                     s_axis_tready,
 
-	input  wire                       m_axis_fsync,
+	input  wire                       m_axis_fsync ,
 	input  wire                       m_axis_resetn,
 
 	output wire                       m_axis_tvalid,
-	output wire [C_TEST+C_OUT_DW-1:0] m_axis_tdata,
-	output wire                       m_axis_tuser,
-	output wire                       m_axis_tlast,
+	output wire [C_TEST+C_OUT_DW-1:0] m_axis_tdata ,
+	output wire                       m_axis_tuser ,
+	output wire                       m_axis_tlast ,
 	input  wire                       m_axis_tready
 );
 	localparam integer RD_OUT_STREAM = (C_OUT_DW > 0 ? 1 : 0);
