@@ -89,7 +89,7 @@ module DISCHARGE_ctl #
 	always @ (posedge clk) begin
 		if (resetn == 0)
 			pwm_state <= STATE_IDLE;
-		else if (eop_p1) begin
+		else if (eop_p1 && ~exe_done) begin
 			case (pwm_state)
 				STATE_IDLE:
 					pwm_state <= STATE_PRE;

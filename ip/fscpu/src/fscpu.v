@@ -134,7 +134,9 @@ module fscpu #(
 
 	reg  [31:0] dev_oper_bmp;
 	wire [31:0] req_done_bmp;
-	assign req_done_bmp[31:4] = 0;
+	/// @note only assign for empty device index
+	assign req_done_bmp[7:6] = 0;
+	assign req_done_bmp[31:9] = 0;
 
 	reg  [31:0] cfg_img_delay_cnt;
 	reg  [1:0]  cfg_img_delay_frm;
@@ -217,16 +219,16 @@ endgenerate
 	end
 
 	//////////////////////////// record discharge //////////////////////////
-	localparam integer C_DISCHARGE_DEFAULT_VALUE = 0,
-	localparam integer C_DISCHARGE_PWM_CNT_WIDTH = 16,
-	localparam integer C_DISCHARGE_FRACTIONAL_WIDTH = 16,
-	localparam integer C_DISCHARGE_PWM_NUM_WIDTH = 32
+	localparam integer C_DISCHARGE_DEFAULT_VALUE = 0;
+	localparam integer C_DISCHARGE_PWM_CNT_WIDTH = 16;
+	localparam integer C_DISCHARGE_FRACTIONAL_WIDTH = 16;
+	localparam integer C_DISCHARGE_PWM_NUM_WIDTH = 32;
 
 	reg[C_DISCHARGE_PWM_CNT_WIDTH-1:0] discharge_numerator0;
 	reg[C_DISCHARGE_PWM_CNT_WIDTH-1:0] discharge_numerator1;
 	reg[C_DISCHARGE_PWM_NUM_WIDTH-1:0] discharge_number0;
 	reg[C_DISCHARGE_PWM_NUM_WIDTH-1:0] discharge_number1;
-	reg[C_DISCHARGE_PWM_CNT_WIDTH+C_FRACTIONAL_WIDTH-1:0] discharge_inc0;
+	reg[C_DISCHARGE_PWM_CNT_WIDTH+C_DISCHARGE_PWM_NUM_WIDTH-1:0] discharge_inc0;
 	always @ (posedge clk) begin
 		if (resetn == 0) begin
 			discharge_numerator0 <= 0;

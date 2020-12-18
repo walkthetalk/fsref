@@ -99,6 +99,8 @@ module test_fscpu # (
 	wire                           my_mod_remain;
 	wire [C_STEP_NUMBER_WIDTH-1:0] my_new_remain;
 
+	wire                           discharge_drive;
+
 	fscpu # (
 		.C_IMG_HW(C_IMG_HW),
 		.C_IMG_WW(C_IMG_WW),
@@ -183,7 +185,9 @@ module test_fscpu # (
 		.my_step      (my_step      ),
 		.my_dir       (my_dir       ),
 		.my_mod_remain(my_mod_remain),
-		.my_new_remain(my_new_remain)
+		.my_new_remain(my_new_remain),
+
+		.discharge_drive(discharge_drive)
 	);
 
 initial begin
@@ -222,15 +226,45 @@ always @ (posedge clk) begin
 	end
 end
 
+wire[31:0] img_dly_frm;
+assign img_dly_frm = 0;
+wire[31:0] img_dly_cnt;
+assign img_dly_cnt = 1200000;
+
+wire[15:0] discharge_denominator;
+assign discharge_denominator = 19;
+
+wire[15:0] dis_numerator0;
+wire[15:0] dis_numerator1;
+wire[31:0] dis_number0;
+wire[31:0] dis_number1;
+wire[31:0] dis_inc;
+assign dis_numerator0 = 17;
+assign dis_numerator1 = 5;
+assign dis_number0 = 3;
+assign dis_number1 = 5;
+assign dis_inc = (17 - 5) * 65536 / 14;
 always @ (posedge clk) begin
 	if (resetn == 1'b0) begin
 		req_en <= 0;
+	end
+	else if (time_cnt == 1195) begin
+		req_en <= 1;
+		/// config
+		req_cmd <= 29;
+		req_param <= {32'h0, {16'h00, discharge_denominator}, img_dly_cnt, img_dly_frm};
 	end
 	else if (time_cnt == 1200) begin
 		req_en <= 1;
 		/// push left
 		req_cmd <= 0;
 		req_param <= {32'h0, 32'h0, 32'h1000, 32'h3};
+	end
+	else if (time_cnt == 1203) begin
+		req_en <= 1;
+		/// discharge
+		req_cmd <= 8;
+		req_param <= {dis_inc, dis_number1, dis_number0, {dis_numerator1, dis_numerator0}};
 	end
 	else if (time_cnt == 1205) begin
 		req_en <= 1;
