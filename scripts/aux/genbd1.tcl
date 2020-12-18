@@ -386,6 +386,10 @@ foreach i {cmos0_light cmos1_light} {
         connect_bd_net [get_bd_pins /fscore/$i] [get_bd_ports $i]
 }
 
+# connect from/to external discharge
+create_bd_port -dir O discharge_drive
+connect_bd_net [get_bd_ports discharge_drive] [get_bd_pins fscore/discharge_mag]
+
 # connect interrupt
 connect_bd_net [get_bd_pins fscore/intr] [get_bd_pins cpu/IRQ_F2P]
 

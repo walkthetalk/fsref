@@ -111,6 +111,11 @@ module fscpu #(
 
 	output wire                           discharge_drive
 );
+	localparam integer C_DISCHARGE_DEFAULT_VALUE = 0;
+	localparam integer C_DISCHARGE_PWM_CNT_WIDTH = 16;
+	localparam integer C_DISCHARGE_FRACTIONAL_WIDTH = 16;
+	localparam integer C_DISCHARGE_PWM_NUM_WIDTH = 32;
+
 	`define DIDX(_x) DBIT_``_x
 	`define DBIT(_x) (1 << DBIT_``_x)
 	localparam integer DBIT_MOTOR_LP = 0;
@@ -140,7 +145,7 @@ module fscpu #(
 
 	reg  [31:0] cfg_img_delay_cnt;
 	reg  [1:0]  cfg_img_delay_frm;
-	reg  [31:0] cfg_discharge_denominator;
+	reg  [C_DISCHARGE_PWM_CNT_WIDTH-1:0] cfg_discharge_denominator;
 
 	/////////////////////////// record parameters for motor ////////////////
 	reg        req_single_dir[`DIDX(MOTOR_RR):`DIDX(MOTOR_LP)];	// par0[0]
@@ -219,16 +224,11 @@ endgenerate
 	end
 
 	//////////////////////////// record discharge //////////////////////////
-	localparam integer C_DISCHARGE_DEFAULT_VALUE = 0;
-	localparam integer C_DISCHARGE_PWM_CNT_WIDTH = 16;
-	localparam integer C_DISCHARGE_FRACTIONAL_WIDTH = 16;
-	localparam integer C_DISCHARGE_PWM_NUM_WIDTH = 32;
-
 	reg[C_DISCHARGE_PWM_CNT_WIDTH-1:0] discharge_numerator0;
 	reg[C_DISCHARGE_PWM_CNT_WIDTH-1:0] discharge_numerator1;
 	reg[C_DISCHARGE_PWM_NUM_WIDTH-1:0] discharge_number0;
 	reg[C_DISCHARGE_PWM_NUM_WIDTH-1:0] discharge_number1;
-	reg[C_DISCHARGE_PWM_CNT_WIDTH+C_DISCHARGE_PWM_NUM_WIDTH-1:0] discharge_inc0;
+	reg[C_DISCHARGE_PWM_CNT_WIDTH+C_DISCHARGE_FRACTIONAL_WIDTH-1:0] discharge_inc0;
 	always @ (posedge clk) begin
 		if (resetn == 0) begin
 			discharge_numerator0 <= 0;
@@ -258,7 +258,7 @@ endgenerate
 			REQ_CFG: begin
 				cfg_img_delay_frm <= req_par0;
 				cfg_img_delay_cnt <= req_par1;
-				cfg_discharge_denominator <= req_par2;
+				cfg_discharge_denominator <= req_par2[C_DISCHARGE_PWM_CNT_WIDTH-1:0];
 			end
 			endcase
 		end

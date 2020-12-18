@@ -85,7 +85,7 @@ module DISCHARGE_ctl #
 		end
 	end
 
-	reg[C_PWM_CNT_WIDTH-1:0] peroid_cnt;
+	reg[C_NUMBER_WIDTH-1:0] peroid_cnt;
 	always @ (posedge clk) begin
 		if (resetn == 0)
 			pwm_state <= STATE_IDLE;

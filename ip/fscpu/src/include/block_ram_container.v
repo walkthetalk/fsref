@@ -1,3 +1,5 @@
+`timescale 1ns / 1ps
+
 module block_ram_container #(
 	parameter C_DATA_WIDTH = 8,
 	parameter C_ADDRESS_WIDTH = 8

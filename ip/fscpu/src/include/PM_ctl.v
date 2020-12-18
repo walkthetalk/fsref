@@ -1,3 +1,5 @@
+`timescale 1ns / 1ps
+
 module PM_ctl # (
 	parameter integer C_IMG_WW = 12,
 	parameter integer C_IMG_HW = 12,

@@ -3,6 +3,7 @@
 `include "../src/include/img_delay_ctl.v"
 `include "../src/include/PM_ctl.v"
 `include "../src/include/AM_ctl.v"
+`include "../src/include/DISCHARGE_ctl.v"
 `include "../src/fscpu.v"
 
 module test_fscpu # (
@@ -260,13 +261,13 @@ always @ (posedge clk) begin
 		req_cmd <= 0;
 		req_param <= {32'h0, 32'h0, 32'h1000, 32'h3};
 	end
-	else if (time_cnt == 1203) begin
+	else if (time_cnt == 1203 || time_cnt == 1655) begin
 		req_en <= 1;
 		/// discharge
 		req_cmd <= 8;
 		req_param <= {dis_inc, dis_number1, dis_number0, {dis_numerator1, dis_numerator0}};
 	end
-	else if (time_cnt == 1205) begin
+	else if (time_cnt == 1205 || time_cnt == 1656) begin
 		req_en <= 1;
 		/// exe
 		req_cmd <= 30;

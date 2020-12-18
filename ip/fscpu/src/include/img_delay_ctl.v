@@ -1,3 +1,5 @@
+`timescale 1ns / 1ps
+
 module img_delay_ctl # (
 	parameter integer C_STEP_NUMBER_WIDTH = 32,
 	parameter integer C_FRMN_WIDTH = 2,
