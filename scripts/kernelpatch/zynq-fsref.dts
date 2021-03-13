@@ -16,7 +16,7 @@
 
 	// copy from system-top.dts, add uio settings for bootargs
 	chosen {
-		bootargs = "earlycon uio_pdrv_genirq.of_id=generic-uio root=/dev/mmcblk0p2 rw rootfstype=ext4 rootwait";
+		bootargs = "earlycon uio_pdrv_genirq.of_id=generic-uio random.trust_cpu=on root=/dev/mmcblk0p2 rw rootfstype=ext4 rootwait";
 		// NOTE: indeed we use uart1, but here must be serial0, or
 		//       we will get no any output after bootconsole disabled.
 		//       so we changed the alias to swap uart0 and uart1.

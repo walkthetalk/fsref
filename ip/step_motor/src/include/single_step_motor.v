@@ -121,6 +121,14 @@ module single_step_motor #(
 	end
 
 	/// stop
+	reg last_ext_sel;
+	always @ (posedge clk) begin
+		if (resetn == 1'b0)
+			last_ext_sel <= 0;
+		else
+			last_ext_sel <= ext_sel;
+	end
+
 	reg stop_pulse;
 	always @ (posedge clk) begin
 		if (resetn == 1'b0)
@@ -131,7 +139,13 @@ module single_step_motor #(
 		end
 		else begin
 			if (is_running) begin
-				if (ext_sel == 1'b0) begin
+				/**
+				 * auto stop when swith control interface
+				 */
+				if (last_ext_sel != ext_sel) begin
+					stop_pulse <= 1'b1;
+				end
+				else if (ext_sel == 1'b0) begin
 					if (pri_stop)
 						stop_pulse <= 1'b1;
 				end
