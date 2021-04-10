@@ -33,6 +33,8 @@ proc creat_stream_v2 {
 	set_property -dict [list \
 		CONFIG.C_PIXEL_WIDTH $channel_width \
 		CONFIG.C_BYPASS $stream_bypass_bayer_extractor \
+		CONFIG.C_COL_ODD {true} \
+		CONFIG.C_ROW_ODD {true} \
 	] [get_bd_cells $mname/axis_bayer_extractor]
 
 	create_pvdma_v2 $mname/pvdma bidirection $channel_width $stream_w_width $stream_h_width $vdma_addr_width $vdma_data_width $vdma_burst_length $vdma_fifo_depth $vdma_timestamp_width $vdma_stride_size
