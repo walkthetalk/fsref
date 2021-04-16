@@ -28,6 +28,7 @@ module DISCHARGE_ctl #
 	input  wire [C_NUMBER_WIDTH-1:0]  number1,
 	input  wire [C_PWM_CNT_WIDTH+C_FRACTIONAL_WIDTH-1:0] inc0,
 
+	output wire                       o_resetn,
 	output wire                       drive
 );
 
@@ -38,6 +39,8 @@ module DISCHARGE_ctl #
 	reg[1:0] pwm_state;
 
 	assign def_val = C_DEFAULT_VALUE;
+
+	assign o_resetn = resetn;
 
 	reg[C_PWM_CNT_WIDTH+C_FRACTIONAL_WIDTH-1:0] numerator_ext;
 	reg[C_PWM_CNT_WIDTH-1:0] cnt;

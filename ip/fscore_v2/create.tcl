@@ -537,4 +537,15 @@ proc create_fscore_v2 {
 	pip_connect_pin $mname/fsctl/st_out_resetn [subst {
 		$mname/st_out_resetn
 	}]
+
+	create_bd_pin -dir O $mname/discharge_resetn
+	pip_connect_pin $mname/fscpu/discharge_resetn [subst {
+		$mname/discharge_resetn
+	}]
+
+	create_bd_pin -dir O $mname/discharge_drive
+	pip_connect_pin $mname/fscpu/discharge_drive [subst {
+		$mname/discharge_drive
+	}]
+
 }

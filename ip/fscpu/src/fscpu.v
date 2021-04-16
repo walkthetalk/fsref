@@ -109,6 +109,7 @@ module fscpu #(
 	output wire                           my_mod_remain,
 	output wire [C_STEP_NUMBER_WIDTH-1:0] my_new_remain,
 
+	output wire                           discharge_resetn,
 	output wire                           discharge_drive
 );
 	localparam integer C_DISCHARGE_DEFAULT_VALUE = 0;
@@ -538,6 +539,7 @@ endgenerate
 		.number1      (discharge_number1),
 		.inc0         (discharge_inc0),
 
+		.o_resetn     (discharge_resetn),
 		.drive        (discharge_drive)
 	);
 
