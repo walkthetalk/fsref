@@ -342,7 +342,7 @@ module PM_ctl # (
 		if (resetn == 1'b0)
 			exe_done <= 1'b0;
 		else if (req_single_dir) begin
-			if (m_stopped)
+			if (m_stopped || pos_over)
 				exe_done <= 1'b1;
 		end
 	end
