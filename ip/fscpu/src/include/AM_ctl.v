@@ -21,10 +21,14 @@ module AM_ctl # (
 	input wire [C_STEP_NUMBER_WIDTH-1:0] req_step,
 
 	input wire                img_pulse,
+	input wire                img_l_valid,
+	input wire                img_r_valid,
+
 	input wire                img_lo_valid,
 	input wire [C_IMG_HW-1:0] img_lo_y    ,
 	input wire                img_ro_valid,
 	input wire [C_IMG_HW-1:0] img_ro_y    ,
+
 	input wire                img_li_valid,
 	input wire [C_IMG_HW-1:0] img_li_y    ,
 	input wire                img_ri_valid,
@@ -61,10 +65,17 @@ module AM_ctl # (
 	reg                img_i_valid_d1;
 	reg [C_IMG_HW-1:0] img_i_diff_d1 ;
 	always @ (posedge clk) begin
-		if (img_pulse) begin
+		if (resetn == 1'b0) begin
+			img_o_valid_d1 <= 1'b0;
+			img_i_valid_d1 <= 1'b0;
+			img_o_diff_d1  <= 0;
+			img_i_diff_d1  <= 0;
+		end
+		else if (img_pulse) begin
 			img_o_valid_d1 <= (img_lo_valid & img_ro_valid);
 			img_i_valid_d1 <= (img_li_valid & img_ri_valid);
 			if (C_L2R) begin
+				/// @note check sign
 				img_o_diff_d1  <= ($signed(img_lo_y) - $signed(img_ro_y));
 				img_i_diff_d1  <= ($signed(img_li_y) - $signed(img_ri_y));
 			end
@@ -94,12 +105,20 @@ module AM_ctl # (
 		end
 	end
 
+	/// @note cladding must valid
 	reg pen_d1;
 	always @ (posedge clk) begin
 		if (resetn == 1'b0)
 			pen_d1 <= 0;
-		else
-			pen_d1 <= (img_pulse && req_dep_img);
+		else if (pen_d1 == 1'b1)
+			pen_d1 <= 0;
+		else if (img_pulse) begin
+			pen_d1 <= (req_dep_img
+				&& img_l_valid
+				&& img_r_valid
+				&& img_lo_valid
+				&& img_ro_valid);
+		end
 	end
 //////////////////////////////// delay2 ////////////////////////////////////////
 	/// calc eccentric
@@ -112,6 +131,7 @@ module AM_ctl # (
 		end
 		else if (pen_d1) begin
 			if (req_ecf)
+				/// @note compensate 1/4
 				img_ecf_d2 <= ($signed(img_o_diff_d1) - $signed(img_i_diff_d1)) >>> 2;
 			else
 				img_ecf_d2 <= 0;
@@ -147,12 +167,12 @@ module AM_ctl # (
 			img_pos_d3    <= 0;
 		end
 		else if (pen_d2) begin
-			case ({img_o_valid_d1, img_i_valid_d1})
-			2'b11:	img_pos_d3 <= ($signed(img_i_diff_d2) - $signed(img_ecf_d2));
-			2'b10:	img_pos_d3 <= img_o_diff_d1;
-			2'b01:	img_pos_d3 <= img_i_diff_d1;
-			default:img_pos_d3 <= 0;
-			endcase
+			if (req_ecf && img_i_valid_d1) begin
+				img_pos_d3 <= ($signed(img_i_diff_d2) - $signed(img_ecf_d2));
+			end
+			else begin
+				img_pos_d3 <= img_o_diff_d1;
+			end
 		end
 	end
 
@@ -323,19 +343,21 @@ module AM_ctl # (
 			test4 <= 0;
 			processed <= 0;
 		end
-		else if (~processed && pen_d7 && img_self_valid && ~pos_ok) begin
-			processed <= 1;
+		else if (~processed) begin
+			if (pen_d7 && img_self_valid && ~pos_ok) begin
+				processed <= 1;
 
-			test1 <= req_speed;
-			test2 <= rd_data;
+				test1 <= req_speed;
+				test2 <= rd_data;
 
-			test3[15:0] <= img_pos_d3;
-			test3[31:16] <= img_dst_d4;
-			test4[15:0] <= img_dst_d5;
-			test4[31:16] <= rd_addr;
+				test3[15:0] <= img_pos_d3;
+				test3[31:16] <= img_dst_d4;
+				test4[15:0] <= img_dst_d5;
+				test4[31:16] <= rd_addr;
+			end
 		end
 	end
-	
+
 	assign m_mod_remain = 0;
 	assign m_new_remain = 0;
 	assign m_stop       = 0;
