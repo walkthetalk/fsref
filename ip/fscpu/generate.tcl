@@ -50,7 +50,7 @@ foreach i {x y} {
 	append_associate_busif clk FSA_RESULT_[string toupper $i]
 }
 
-foreach i {l r x y} {
+foreach i {lp rp xa ya lr rr} {
 	pip_add_bus_if $core M[set i]_REQ [subst {
 		abstraction_type_vlnv $VENDOR:interface:step_motor_req_ctl_rtl:1.0
 		bus_type_vlnv $VENDOR:interface:step_motor_req_ctl:1.0

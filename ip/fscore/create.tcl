@@ -385,10 +385,12 @@ proc create_fscore {
 		$mname/fsctl/REQ0_CTL           $mname/fscpu/REQ_CTL
 		$mname/stream0/RESULT1          $mname/fscpu/FSA_RESULT_X
 		$mname/stream1/RESULT1          $mname/fscpu/FSA_RESULT_Y
-		$mname/fscpu/Ml_REQ             $mname/push_motor/S0_EXT_REQ
-		$mname/fscpu/Mr_REQ             $mname/push_motor/S1_EXT_REQ
-		$mname/fscpu/Mx_REQ             $mname/align_motor/S0_EXT_REQ
-		$mname/fscpu/My_REQ             $mname/align_motor/S1_EXT_REQ
+		$mname/fscpu/Mlp_REQ            $mname/push_motor/S0_EXT_REQ
+		$mname/fscpu/Mrp_REQ            $mname/push_motor/S1_EXT_REQ
+		$mname/fscpu/Mxa_REQ            $mname/align_motor/S0_EXT_REQ
+		$mname/fscpu/Mya_REQ            $mname/align_motor/S1_EXT_REQ
+		$mname/fscpu/Mlr_REQ            $mname/rotate_motor/S0_EXT_REQ
+		$mname/fscpu/Mrr_REQ            $mname/rotate_motor/S1_EXT_REQ
 	}]
 
 	pip_connect_net [subst {
@@ -397,10 +399,12 @@ proc create_fscore {
 		$mname/fsctl/s1_dst_bmp         $mname/pblender/s1_dst_bmp
 		$mname/fsctl/s0_wr_done         $mname/stream0/wr_done
 		$mname/fsctl/s1_wr_done         $mname/stream1/wr_done
-		$mname/fscpu/ml_sel             $mname/push_motor/s0_ext_sel
-		$mname/fscpu/mr_sel             $mname/push_motor/s1_ext_sel
-		$mname/fscpu/mx_sel             $mname/align_motor/s0_ext_sel
-		$mname/fscpu/my_sel             $mname/align_motor/s1_ext_sel
+		$mname/fscpu/mlp_sel            $mname/push_motor/s0_ext_sel
+		$mname/fscpu/mrp_sel            $mname/push_motor/s1_ext_sel
+		$mname/fscpu/mxa_sel            $mname/align_motor/s0_ext_sel
+		$mname/fscpu/mya_sel            $mname/align_motor/s1_ext_sel
+		$mname/fscpu/mlr_sel            $mname/rotate_motor/s0_ext_sel
+		$mname/fscpu/mrr_sel            $mname/rotate_motor/s1_ext_sel
 	}]
 
 	# external interface
