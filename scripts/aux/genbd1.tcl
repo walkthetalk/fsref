@@ -250,6 +250,8 @@ pip_connect_intf_net {
         fscore/PUSH_MOTOR1_IC_CTL   fsmotor/S1
         fscore/ALIGN_MOTOR0_IC_CTL  fsmotor/S2
         fscore/ALIGN_MOTOR1_IC_CTL  fsmotor/S3
+        fscore/ROTATE_MOTOR0_IC_CTL fsmotor/S4
+        fscore/ROTATE_MOTOR1_IC_CTL fsmotor/S5
 }
 
 # connect signal
