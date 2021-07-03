@@ -394,6 +394,12 @@ connect_bd_net [get_bd_ports discharge_resetn] [get_bd_pins fscore/discharge_res
 create_bd_port -dir O discharge_drive
 connect_bd_net [get_bd_ports discharge_drive] [get_bd_pins fscore/discharge_drive]
 
+# connect from external keyboard
+set_property -dict [list \
+	CONFIG.PCW_GPIO_EMIO_GPIO_ENABLE {1} \
+	CONFIG.PCW_GPIO_EMIO_GPIO_IO {12}] [get_bd_cells cpu]
+make_bd_intf_pins_external -name gpio_key [get_bd_intf_pins cpu/GPIO_0]
+
 # connect interrupt
 connect_bd_net [get_bd_pins fscore/intr] [get_bd_pins cpu/IRQ_F2P]
 

@@ -164,6 +164,19 @@ set_property -dict {IOSTANDARD LVCMOS33 PACKAGE_PIN L19 } [get_ports {discharge_
 set_clock_groups -asynchronous -group [get_clocks {clk_fpga_0 clk_fpga_1}]
 set_clock_groups -asynchronous -group [get_clocks {clk_fpga_2 clk_fpga_1}]
 
+# keyboard
+set_property -dict {PACKAGE_PIN AB5 } [get_ports {gpio_key_tri_io[ 0]}]
+set_property -dict {PACKAGE_PIN AB4 } [get_ports {gpio_key_tri_io[ 1]}]
+set_property -dict {PACKAGE_PIN AA4 } [get_ports {gpio_key_tri_io[ 2]}]
+set_property -dict {PACKAGE_PIN Y4  } [get_ports {gpio_key_tri_io[ 3]}]
+set_property -dict {PACKAGE_PIN AB2 } [get_ports {gpio_key_tri_io[ 4]}]
+set_property -dict {PACKAGE_PIN AB1 } [get_ports {gpio_key_tri_io[ 5]}]
+set_property -dict {PACKAGE_PIN V5  } [get_ports {gpio_key_tri_io[ 6]}]
+set_property -dict {PACKAGE_PIN W16 } [get_ports {gpio_key_tri_io[ 7]}]
+set_property -dict {PACKAGE_PIN Y16 } [get_ports {gpio_key_tri_io[ 8]}]
+set_property -dict {PACKAGE_PIN Y14 } [get_ports {gpio_key_tri_io[ 9]}]
+set_property -dict {PACKAGE_PIN AA14} [get_ports {gpio_key_tri_io[10]}]
+set_property -dict {PACKAGE_PIN U19 } [get_ports {gpio_key_tri_io[11]}]
 
 ####################### temporarily
 set_property BITSTREAM.General.UnconstrainedPins {Allow} [current_design]
