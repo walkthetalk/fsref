@@ -112,6 +112,97 @@
 		#phy-cells = <0>;
 		reset-gpios = <&gpio0 8 GPIO_ACTIVE_LOW>;
 	};
+
+	gpio-keys {
+		compatible = "gpio-keys";
+		#address-cells = <1>;
+		#size-cells = <0>;
+		autorepeat;
+		sw0 {
+			label = "key_esc";
+			gpios = <&gpio0 54 0>;
+			linux,code = <KEY_ESC>;
+			gpio-key,wakeup;
+			autorepeat;
+		};
+		sw1 {
+			label = "key_right";
+			gpios = <&gpio0 55 0>;
+			linux,code = <KEY_RIGHT>;
+			gpio-key,wakeup;
+			autorepeat;
+		};
+		sw2 {
+			label = "key_up";
+			gpios = <&gpio0 56 0>;
+			linux,code = <KEY_UP>;
+			gpio-key,wakeup;
+			autorepeat;
+		};
+		sw3 {
+			label = "key_menu";
+			gpios = <&gpio0 57 0>;
+			linux,code = <KEY_MENU>;
+			gpio-key,wakeup;
+			autorepeat;
+		};
+		sw4 {
+			label = "key_down";
+			gpios = <&gpio0 58 0>;
+			linux,code = <KEY_DOWN>;
+			gpio-key,wakeup;
+			autorepeat;
+		};
+		sw5 {
+			label = "key_left";
+			gpios = <&gpio0 59 0>;
+			linux,code = <KEY_LEFT>;
+			gpio-key,wakeup;
+			autorepeat;
+		};
+		sw6 {
+			label = "key_space";
+			gpios = <&gpio0 60 0>;
+			linux,code = <KEY_SPACE>;
+			gpio-key,wakeup;
+			autorepeat;
+		};
+		sw7 {
+			label = "key_enter";
+			gpios = <&gpio0 61 0>;
+			linux,code = <KEY_ENTER>; /* auto */
+			gpio-key,wakeup;
+			autorepeat;
+		};
+		sw8 {
+			label = "key_backspace";
+			gpios = <&gpio0 62 0>;
+			linux,code = <KEY_BACKSPACE>; /* reset */
+			gpio-key,wakeup;
+			autorepeat;
+		};
+		sw9 {
+			label = "key_h";
+			gpios = <&gpio0 63 0>;
+			linux,code = <KEY_H>; /* heat */
+			gpio-key,wakeup;
+			autorepeat;
+		};
+		sw10 {
+			label = "key_a";
+			gpios = <&gpio0 64 0>;
+			linux,code = <KEY_A>; /* arc */
+			gpio-key,wakeup;
+			autorepeat;
+		};
+		sw11 {
+			label = "key_tab";
+			gpios = <&gpio0 65 0>;
+			linux,code = <KEY_TAB>;	/* XY */
+			gpio-key,wakeup;
+			autorepeat;
+		};
+	};
 };
 
 
