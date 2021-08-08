@@ -378,9 +378,9 @@
 		compatible = "simple-framebuffer";
 		//reg = <0x3FF00000 (320 * 240 * 4)>;
 		memory-region = <&fb0mem>;
-		width = <480>;
-		height = <272>;
-		stride = <(480 * 4)>;
+		width = <800>;
+		height = <480>;
+		stride = <(800 * 4)>;
 		format = "x8r8g8b8";
 		clocks = <&clkc 15>, <&clkc 16>, <&clkc 17>, <&clkc 18>;
 		// lcd-supply = <&reg_dc1sw>;
@@ -388,9 +388,9 @@
 	framebuffer1 {
 		compatible = "simple-framebuffer";
 		memory-region = <&fb1mem>;
-		width = <480>;
-		height = <272>;
-		stride = <(480 * 4)>;
+		width = <800>;
+		height = <480>;
+		stride = <(800 * 4)>;
 		format = "a8r8g8b8";
 		clocks = <&clkc 15>, <&clkc 16>, <&clkc 17>, <&clkc 18>;
 		// lcd-supply = <&reg_dc1sw>;

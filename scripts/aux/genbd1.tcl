@@ -1,10 +1,5 @@
-# 1. cpu
-create_bd_cell -type ip -vlnv xilinx.com:ip:processing_system7:5.5 cpu
-
-# @note: if using hp as 32bit, you should set the cpu register in software
-# @note: frame sync should be center of interspace between frames to adapting
-#        different window control
-set dic [dict create \
+# 0. global config
+set cfg_tm043 [dict create \
 	lcd_clk_freqmhz 9 \
 	lcd_max_clocks_per_line 1024 \
 	lcd_max_lines_per_frame 512 \
@@ -22,6 +17,32 @@ set dic [dict create \
 	lcd_f0_vblank_hend 520 \
 	lcd_fsync_hstart0 480 \
 	lcd_fsync_vstart0 272 \
+	lcd_hsync_polarity Low \
+	lcd_vsync_polarity Low \
+]
+set cfg_tm050 [dict create \
+	lcd_clk_freqmhz 30 \
+	lcd_max_clocks_per_line 1024 \
+	lcd_max_lines_per_frame 1024 \
+	lcd_hactive_size 800 \
+	lcd_hframe_size 928 \
+	lcd_hsync_start 840 \
+	lcd_hsync_end 888 \
+	lcd_vactive_size 480 \
+	lcd_f0_vframe_size 525 \
+	lcd_f0_vsync_start 493 \
+	lcd_f0_vsync_end 496 \
+	lcd_f0_vsync_hstart 848 \
+	lcd_f0_vsync_hend 880 \
+	lcd_f0_vblank_hstart 848 \
+	lcd_f0_vblank_hend 880 \
+	lcd_fsync_hstart0 800 \
+	lcd_fsync_vstart0 480 \
+	lcd_hsync_polarity Low \
+	lcd_vsync_polarity Low \
+]
+
+set cfg_common [dict create \
 	stream_pixel_width 8 \
 	stream_w_width 12 \
 	stream_h_width 12 \
@@ -39,6 +60,18 @@ set dic [dict create \
 	motor_ms_width 3 \
 	pwm_num 4 \
 ]
+
+set dic [dict merge \
+	$cfg_tm050 \
+	$cfg_common \
+]
+
+# 1. cpu
+create_bd_cell -type ip -vlnv xilinx.com:ip:processing_system7:5.5 cpu
+
+# @note: if using hp as 32bit, you should set the cpu register in software
+# @note: frame sync should be center of interspace between frames to adapting
+#        different window control
 
 set_property -dict [list \
     CONFIG.PCW_EN_CLK0_PORT {1} \
@@ -129,7 +162,10 @@ set_property -dict [list \
     CONFIG.GEN_F0_VSYNC_HEND [dict get $dic lcd_f0_vsync_hend] \
     CONFIG.GEN_F0_VBLANK_HSTART [dict get $dic lcd_f0_vblank_hstart] \
     CONFIG.GEN_F0_VBLANK_HEND [dict get $dic lcd_f0_vblank_hend] \
-    CONFIG.enable_detection {false}] [get_bd_cells vtc]
+    CONFIG.GEN_HSYNC_POLARITY [dict get $dic lcd_hsync_polarity] \
+    CONFIG.GEN_VSYNC_POLARITY [dict get $dic lcd_vsync_polarity] \
+    CONFIG.enable_detection {false} \
+] [get_bd_cells vtc]
 # 6. lcd
 create_bd_cell -type ip -vlnv $VENDOR:$LIBRARY:fslcd:$VERSION fslcd
 set_property -dict [list \
