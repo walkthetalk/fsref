@@ -115,11 +115,22 @@
 		reset-gpios = <&gpio0 8 GPIO_ACTIVE_LOW>;
 	};
 
+	gpio-poweroff {
+		compatible = "gpio-poweroff";
+		gpios = <&gpio0 12 GPIO_ACTIVE_HIGH>;
+	};
+
 	gpio-keys {
 		compatible = "gpio-keys";
 		#address-cells = <1>;
 		#size-cells = <0>;
 		autorepeat;
+		power-button {
+			label = "key_power";
+			gpios = <&gpio0 13 GPIO_ACTIVE_LOW>;
+			linux,code = <KEY_POWER>;
+			gpio-key,wakeup;
+		};
 		sw0 {
 			label = "key_esc";
 			gpios = <&gpio0 54 GPIO_ACTIVE_LOW>;
@@ -322,7 +333,7 @@
 	cts-override ;
 	device_type = "serial";
 	port-number = <1>;
-	status = "okay";
+	status = "disabled";
 };
 &usb0 {
 	status = "okay";
