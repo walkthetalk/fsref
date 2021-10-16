@@ -93,6 +93,8 @@ set_property -dict [list \
     CONFIG.PCW_QSPI_PERIPHERAL_ENABLE {1} \
     CONFIG.PCW_QSPI_GRP_SINGLE_SS_ENABLE {1} \
     CONFIG.PCW_QSPI_GRP_FBCLK_ENABLE {0} \
+    CONFIG.PCW_SPI0_PERIPHERAL_ENABLE {1} \
+    CONFIG.PCW_SPI0_SPI0_IO {EMIO} \
     CONFIG.PCW_ENET0_PERIPHERAL_ENABLE {1} \
     CONFIG.PCW_ENET0_ENET0_IO {MIO 16 .. 27} \
     CONFIG.PCW_ENET0_GRP_MDIO_ENABLE {1} \
@@ -346,6 +348,9 @@ set_property -dict [list \
     ] [get_bd_cells cpu]
 make_bd_intf_pins_external -name cmos0_i2c [get_bd_intf_pins cpu/IIC_0]
 make_bd_intf_pins_external -name cmos1_i2c [get_bd_intf_pins cpu/IIC_1]
+
+# spi
+make_bd_intf_pins_external -name spi0 [get_bd_intf_pins cpu/SPI_0]
 
 # connect from/to external lcd
 create_bd_port -dir O lcd_reset
