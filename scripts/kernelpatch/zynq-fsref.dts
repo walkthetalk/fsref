@@ -216,6 +216,28 @@
 			autorepeat;
 		};
 	};
+
+	spigpio {
+		compatible = "spi-gpio";
+		#address-cells = <0x1>;
+		ranges;
+
+		sck-gpios = <&gpio0 66 0>;
+		mosi-gpios = <&gpio0 67 0>;
+		miso-gpios = <&gpio0 68 0>;
+		cs-gpios = <&gpio0 69 0>;
+		num-chipselects = <1>;
+
+		/* clients */
+		rtc@0 {
+			compatible = "maxim,ds1302";
+			reg = <0>;
+			spi-max-frequency = <500000>;
+			spi-3wire;
+			spi-lsb-first;
+			spi-cs-high;
+		};
+	};
 };
 
 
@@ -334,19 +356,6 @@
 	device_type = "serial";
 	port-number = <1>;
 	status = "disabled";
-};
-&spi0 {
-	status = "okay";
-	num-cs = <1>;
-	is-decoded-cs = <0>;
-	rtc@0 {
-		compatible = "maxim,ds1302";
-		reg = <0>;
-		spi-max-frequency = <500000>;
-		spi-3wire;
-		spi-lsb-first;
-		spi-cs-high;
-	};
 };
 &usb0 {
 	status = "okay";

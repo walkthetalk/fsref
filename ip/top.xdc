@@ -160,14 +160,6 @@ set_property -dict {IOSTANDARD LVCMOS33 PACKAGE_PIN U16 } [get_ports {rm1_drive}
 set_property -dict {IOSTANDARD LVCMOS33 PACKAGE_PIN Y20 } [get_ports {discharge_drive}]
 set_property -dict {IOSTANDARD LVCMOS33 PACKAGE_PIN L19 } [get_ports {discharge_resetn}]
 
-# rtc
-set_property -dict {IOSTANDARD LVCMOS33 PULLUP true PACKAGE_PIN D21} [get_ports {spi0_sck_io}]
-set_property -dict {IOSTANDARD LVCMOS33 PULLUP true PACKAGE_PIN D22} [get_ports {spi0_io0_io}]
-set_property -dict {IOSTANDARD LVCMOS33 PULLUP true PACKAGE_PIN E21} [get_ports {spi0_io1_io}]
-set_property -dict {IOSTANDARD LVCMOS33 PULLUP true PACKAGE_PIN C22} [get_ports {spi0_ss_io}]
-set_property -dict {IOSTANDARD LVCMOS33 PULLUP true PACKAGE_PIN L17} [get_ports {spi0_ss1_o}]
-set_property -dict {IOSTANDARD LVCMOS33 PULLUP true PACKAGE_PIN M17} [get_ports {spi0_ss2_o}]
-
 # clock
 set_clock_groups -asynchronous -group [get_clocks {clk_fpga_0 clk_fpga_1}]
 set_clock_groups -asynchronous -group [get_clocks {clk_fpga_2 clk_fpga_1}]
@@ -188,3 +180,4 @@ set_property -dict {IOSTANDARD LVCMOS33 PACKAGE_PIN U19 } [get_ports {gpio_key_t
 
 ####################### temporarily
 set_property BITSTREAM.General.UnconstrainedPins {Allow} [current_design]
+set_output_delay -clock [get_clocks clk_fpga_2] 0.000 [get_ports {{lcd_B[0]} {lcd_B[1]} {lcd_B[2]} {lcd_B[3]} {lcd_B[4]} {lcd_B[5]} {lcd_B[6]} {lcd_B[7]} {lcd_G[0]} {lcd_G[1]} {lcd_G[2]} {lcd_G[3]} {lcd_G[4]} {lcd_G[5]} {lcd_G[6]} {lcd_G[7]} {lcd_R[0]} {lcd_R[1]} {lcd_R[2]} {lcd_R[3]} {lcd_R[4]} {lcd_R[5]} {lcd_R[6]} {lcd_R[7]} lcd_vsync lcd_hsync lcd_de lcd_clk}]
