@@ -117,7 +117,7 @@
 
 	gpio-poweroff {
 		compatible = "gpio-poweroff";
-		gpios = <&gpio0 12 GPIO_ACTIVE_HIGH>;
+		gpios = <&gpio0 67 GPIO_ACTIVE_HIGH>;
 	};
 
 	gpio-keys {
@@ -127,7 +127,7 @@
 		autorepeat;
 		power-button {
 			label = "key_power";
-			gpios = <&gpio0 13 GPIO_ACTIVE_LOW>;
+			gpios = <&gpio0 66 GPIO_ACTIVE_LOW>;
 			linux,code = <KEY_POWER>;
 			gpio-key,wakeup;
 		};

@@ -191,6 +191,9 @@ copy_bd_objs /  [get_bd_cells videoin_0]
 
 # 8. fsmotor
 create_bd_cell -type ip -vlnv $VENDOR:$LIBRARY:fsmotor:$VERSION fsmotor
+set_property -dict [list \
+    CONFIG.C_INVERT_DIR {1} \
+    ] [get_bd_cells fsmotor]
 
 # X. fusion splicer core
 create_fscore_v2 /fscore $dic
@@ -203,6 +206,9 @@ copy_bd_objs /  [get_bd_cells ic_data_1]
 
 # 7. constant 1
 create_bd_cell -type ip -vlnv xilinx.com:ip:xlconstant:1.1 xlconstant_0
+set_property -dict [list CONFIG.CONST_WIDTH {1} CONFIG.CONST_VAL {0}] [get_bd_cells xlconstant_0]
+create_bd_cell -type ip -vlnv xilinx.com:ip:xlconstant:1.1 xlconstant_1
+set_property -dict [list CONFIG.CONST_WIDTH {1} CONFIG.CONST_VAL {1}] [get_bd_cells xlconstant_1]
 # 8. reset for fclock
 create_bd_cell -type ip -vlnv xilinx.com:ip:proc_sys_reset:5.0 rst_cpu_fclk0
 create_bd_cell -type ip -vlnv xilinx.com:ip:proc_sys_reset:5.0 rst_cpu_fclk1
@@ -294,7 +300,7 @@ pip_connect_net [subst {
 	vtc/fsync_out             fscore/fsync
 }]
 
-pip_connect_pin xlconstant_0/dout {
+pip_connect_pin xlconstant_1/dout {
 	vtc/clken
 	vtc/gen_clken
 	videoin_*/aclken
@@ -309,8 +315,9 @@ create_bd_port -dir I -type clk -freq_hz 50000000 osc_clk
 
 # connect from/to external cmos
 create_bd_port -dir O cmos0_resetn
-pip_connect_pin xlconstant_0/dout { cmos0_resetn }
+pip_connect_pin xlconstant_1/dout { cmos0_resetn }
 create_bd_port -dir O -type ce cmos0_pwdn
+pip_connect_pin xlconstant_0/dout { cmos0_pwdn }
 create_bd_port -type clk -dir O cmos0_xclk
 connect_bd_net [get_bd_pins cpu/FCLK_CLK3] [get_bd_ports cmos0_xclk]
 create_bd_port -dir I cmos0_pclk
@@ -324,11 +331,12 @@ create_bd_port -dir I -from 7 -to 0 cmos0_data
 connect_bd_net [get_bd_pins /fscmos_0/cmos_data] [get_bd_ports cmos0_data]
 
 # @note use same resetn/powerdown/xclk with cmos0
-#create_bd_port -dir O cmos1_resetn
-#pip_connect_pin xlconstant_0/dout { cmos1_resetn }
-#create_bd_port -dir O -type ce cmos1_pwdn
-#create_bd_port -type clk -dir O cmos1_xclk
-#connect_bd_net [get_bd_pins cpu/FCLK_CLK3] [get_bd_ports cmos1_xclk]
+create_bd_port -dir O cmos1_resetn
+pip_connect_pin xlconstant_1/dout { cmos1_resetn }
+create_bd_port -dir O -type ce cmos1_pwdn
+pip_connect_pin xlconstant_0/dout { cmos1_pwdn }
+create_bd_port -type clk -dir O cmos1_xclk
+connect_bd_net [get_bd_pins cpu/FCLK_CLK3] [get_bd_ports cmos1_xclk]
 create_bd_port -dir I cmos1_pclk
 connect_bd_net [get_bd_pins /fscmos_1/cmos_pclk]      [get_bd_ports cmos1_pclk]
 connect_bd_net [get_bd_pins /videoin_1/vid_io_in_clk] [get_bd_ports cmos1_pclk]
@@ -349,9 +357,9 @@ make_bd_intf_pins_external -name cmos1_i2c [get_bd_intf_pins cpu/IIC_1]
 
 # connect from/to external lcd
 create_bd_port -dir O lcd_reset
-connect_bd_net [get_bd_ports lcd_reset] [get_bd_pins xlconstant_0/dout]
+connect_bd_net [get_bd_ports lcd_reset] [get_bd_pins xlconstant_1/dout]
 create_bd_port -dir O lcd_power
-connect_bd_net [get_bd_ports lcd_power] [get_bd_pins xlconstant_0/dout]
+connect_bd_net [get_bd_ports lcd_power] [get_bd_pins xlconstant_1/dout]
 
 create_bd_port -dir O lcd_clk
 connect_bd_net [get_bd_pins fslcd/out_clk] [get_bd_ports lcd_clk]
@@ -411,9 +419,9 @@ foreach i {pm0_zpd pm1_zpd
 create_bd_port -dir O pm_decay
 create_bd_port -dir O am_decay
 create_bd_port -dir O rm_decay
-connect_bd_net [get_bd_ports pm_decay] [get_bd_pins xlconstant_0/dout]
-connect_bd_net [get_bd_ports am_decay] [get_bd_pins xlconstant_0/dout]
-connect_bd_net [get_bd_ports rm_decay] [get_bd_pins xlconstant_0/dout]
+connect_bd_net [get_bd_ports pm_decay] [get_bd_pins xlconstant_1/dout]
+connect_bd_net [get_bd_ports am_decay] [get_bd_pins xlconstant_1/dout]
+connect_bd_net [get_bd_ports rm_decay] [get_bd_pins xlconstant_1/dout]
 
 
 # connect from/to external cmoslight
@@ -432,7 +440,7 @@ connect_bd_net [get_bd_ports discharge_drive] [get_bd_pins fscore/discharge_driv
 # connect from external keyboard
 set_property -dict [list \
 	CONFIG.PCW_GPIO_EMIO_GPIO_ENABLE {1} \
-	CONFIG.PCW_GPIO_EMIO_GPIO_IO {12}] [get_bd_cells cpu]
+	CONFIG.PCW_GPIO_EMIO_GPIO_IO {14}] [get_bd_cells cpu]
 make_bd_intf_pins_external -name gpio_key [get_bd_intf_pins cpu/GPIO_0]
 
 # connect interrupt

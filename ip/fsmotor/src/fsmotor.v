@@ -20,7 +20,8 @@
 //////////////////////////////////////////////////////////////////////////////////
 module fsmotor #
 (
-	parameter integer C_MICROSTEP_WIDTH = 3
+	parameter integer C_MICROSTEP_WIDTH = 3,
+	parameter integer C_INVERT_DIR = 0
 ) (
 	output wire                           s0_zpd,
 	input  wire                           s0_xen,
@@ -103,30 +104,60 @@ module fsmotor #
 	assign pm0_xen   = s0_xen;
 	assign pm0_xrst  = s0_xrst;
 	assign pm0_drive = s0_drive;
-	assign pm0_dir   = s0_dir;
+	if (C_INVERT_DIR == 0) begin
+		assign pm0_dir   = s0_dir;
+	end
+	else begin
+		assign pm0_dir   = ~s0_dir;
+	end
 	assign pm1_xen   = s1_xen;
 	assign pm1_xrst  = s1_xrst;
 	assign pm1_drive = s1_drive;
-	assign pm1_dir   = s1_dir;
+	if (C_INVERT_DIR == 0) begin
+		assign pm1_dir   = s1_dir;
+	end
+	else begin
+		assign pm1_dir   = ~s1_dir;
+	end
 
 	assign am_ms   = s2_ms;
 	assign am0_xen   = s2_xen;
 	assign am0_xrst  = s2_xrst;
 	assign am0_drive = s2_drive;
-	assign am0_dir   = s2_dir;
+	if (C_INVERT_DIR == 0) begin
+		assign am0_dir   = s2_dir;
+	end
+	else begin
+		assign am0_dir   = ~s2_dir;
+	end
 	assign am1_xen   = s3_xen;
 	assign am1_xrst  = s3_xrst;
 	assign am1_drive = s3_drive;
-	assign am1_dir   = s3_dir;
+	if (C_INVERT_DIR == 0) begin
+		assign am1_dir   = s3_dir;
+	end
+	else begin
+		assign am1_dir   = ~s3_dir;
+	end
 
 	assign rm_ms   = s4_ms;
 	assign rm0_xen   = s4_xen;
 	assign rm0_xrst  = s4_xrst;
 	assign rm0_drive = s4_drive;
-	assign rm0_dir   = s4_dir;
+	if (C_INVERT_DIR == 0) begin
+		assign rm0_dir   = s4_dir;
+	end
+	else begin
+		assign rm0_dir   = ~s4_dir;
+	end
 	assign rm1_xen   = s5_xen;
 	assign rm1_xrst  = s5_xrst;
 	assign rm1_drive = s5_drive;
-	assign rm1_dir   = s5_dir;
+	if (C_INVERT_DIR == 0) begin
+		assign rm1_dir   = s5_dir;
+	end
+	else begin
+		assign rm1_dir   = ~s5_dir;
+	end
 
 endmodule

@@ -27,3 +27,16 @@ pip_add_usr_par $core {C_MICROSTEP_WIDTH} {
 	value 3
 	value_format long
 }
+
+pip_add_usr_par $core {C_INVERT_DIR} {
+	display_name {invert direction}
+	tooltip {Invert Direction}
+	widget {checkBox}
+} {
+	value_resolve_type user
+	value false
+	value_format bool
+} {
+	value false
+	value_format bool
+}
