@@ -117,7 +117,7 @@
 
 	gpio-poweroff {
 		compatible = "gpio-poweroff";
-		gpios = <&gpio0 67 GPIO_ACTIVE_HIGH>;
+		gpios = <&gpio0 67 GPIO_ACTIVE_LOW>;
 	};
 
 	gpio-keys {
@@ -399,6 +399,11 @@
 
 &i2c0 {
 	status = "okay";
+
+	rtc@68 {
+		compatible = "ti,bq32000";
+		reg = <0x68>;
+	};
 };
 
 &i2c1 {
