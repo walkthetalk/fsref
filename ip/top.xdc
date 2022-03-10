@@ -162,8 +162,8 @@ set_property -dict {IOSTANDARD LVCMOS33 PACKAGE_PIN Y13 } [get_ports {rm1_drive}
 ###set_property -dict {IOSTANDARD LVCMOS33 PACKAGE_PIN AA9 } [get_ports {om1_drive}]
 
 # discharge
-set_property -dict {IOSTANDARD LVCMOS33 PACKAGE_PIN M21 } [get_ports {discharge_drive}]
-set_property -dict {IOSTANDARD LVCMOS33 PACKAGE_PIN L19 } [get_ports {discharge_resetn}]
+set_property -dict {IOSTANDARD LVCMOS33 PACKAGE_PIN M21 } [get_ports {discharge_resetn}]
+set_property -dict {IOSTANDARD LVCMOS33 PACKAGE_PIN L19 } [get_ports {discharge_power}]
 
 # clock
 set_clock_groups -asynchronous -group [get_clocks {clk_fpga_0 clk_fpga_1}]

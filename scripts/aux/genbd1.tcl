@@ -434,8 +434,10 @@ foreach i {cmos0_light cmos1_light} {
 # connect from/to external discharge
 create_bd_port -dir O discharge_resetn
 connect_bd_net [get_bd_ports discharge_resetn] [get_bd_pins fscore/discharge_resetn]
-create_bd_port -dir O discharge_drive
-connect_bd_net [get_bd_ports discharge_drive] [get_bd_pins fscore/discharge_drive]
+#create_bd_port -dir O discharge_drive
+#connect_bd_net [get_bd_ports discharge_drive] [get_bd_pins fscore/discharge_drive]
+create_bd_port -dir O discharge_power
+connect_bd_net [get_bd_ports discharge_power] [get_bd_pins fscore/discharge_power]
 
 # connect from external keyboard
 set_property -dict [list \

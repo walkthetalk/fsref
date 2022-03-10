@@ -517,9 +517,9 @@ proc create_fscore_v2 {
 	pip_connect_pin $mname/pwm2/drive [subst {
 		$mname/lcd_lum
 	}]
-	create_bd_pin -dir O $mname/discharge_mag
+	create_bd_pin -dir O $mname/discharge_power
 	pip_connect_pin $mname/pwm3/drive [subst {
-		$mname/discharge_mag
+		$mname/discharge_power
 	}]
 
 	create_bd_pin -dir O -type intr $mname/intr
