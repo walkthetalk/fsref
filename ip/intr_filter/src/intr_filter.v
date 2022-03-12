@@ -78,7 +78,7 @@ module intr_filter #
 				if (filter[i] == {C_NUMBER{1'b1}}) begin
 					intr_out[i] <= 1;
 				end
-				else begin
+				else if (filter[i] == 0) begin
 					intr_out[i] <= 0;
 				end
 			end

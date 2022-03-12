@@ -681,9 +681,16 @@ class VIntface(VBase):
 			ret += suppline(lvl+1, "{}[i] <= 0;".format(dststr))
 			ret += suppline(lvl, "else if ({}[i])".format(str4intclr(self.name, item.name)))
 			ret += suppline(lvl+1, "{}[i] <= 0;".format(dststr))
-			condstr = "{}[i] == {} && {}[i] == {}".format(
-				str4intdly(self.name, item.name), "0" if item._get("trigint") == "posedge" else "1",
-				str4array(self.name, item.name), "0" if item._get("trigint") == "negedge" else "1")
+
+			condstr = ""
+			__dlystr = str4intdly(self.name, item.name)
+			__oristr = str4array(self.name, item.name)
+			if item._get("trigint") == "doubleedge":
+				condstr = "{}[i] != {}[i]".format(__dlystr, __oristr)
+			elif item._get("trigint") == "posedge":
+				condstr = "{}[i] == 0 && {}[i] == 1".format(__dlystr, __oristr)
+			elif item._get("trigint") == "negedge":
+				condstr = "{}[i] == 1 && {}[i] == 0".format(__dlystr, __oristr)
 			ret += suppline(lvl, "else if ({})".format(condstr))
 			ret += suppline(lvl+1, "{}[i] <= 1;".format(dststr))
 			lvl -= 1
@@ -829,7 +836,7 @@ class VIfExtIntSrc(VIntface):
 	def __init__(self, dictData):
 		super(VIfExtIntSrc, self).__init__(dictData)
 
-		self._addPort({'ftype': 'intsrc',  'iotype': 'input',  'name': 'src',   "trigint": "posedge" })
+		self._addPort({'ftype': 'intsrc',  'iotype': 'input',  'name': 'src',   "trigint": "doubleedge" })
 
 class VerilogModuleFile:
 	def __init__(self, name):
