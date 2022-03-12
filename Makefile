@@ -87,6 +87,7 @@ IP_list := fscmos \
 	timestamper \
 	fsa \
 	fsa_v2 \
+	intr_filter \
 	fscpu \
 
 $(foreach temp,${IP_list},$(eval $(call IP_template,${temp})))

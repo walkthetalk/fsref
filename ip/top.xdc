@@ -187,6 +187,10 @@ set_property -dict {IOSTANDARD LVCMOS33 PACKAGE_PIN W21 } [get_ports {gpio_key_t
 
 set_property -dict {IOSTANDARD LVCMOS33 PACKAGE_PIN W20 } [get_ports {gpio_key_tri_io[13]}]
 
+# misc
+set_property -dict {IOSTANDARD LVCMOS33 PACKAGE_PIN Y19 } [get_ports {fs_cover}]
+set_property -dict {IOSTANDARD LVCMOS33 PACKAGE_PIN W11 } [get_ports {heat_cover}]
+
 ####################### temporarily
 set_property BITSTREAM.General.UnconstrainedPins {Allow} [current_design]
 set_output_delay -clock [get_clocks clk_fpga_2] 0.000 [get_ports {{lcd_B[0]} {lcd_B[1]} {lcd_B[2]} {lcd_B[3]} {lcd_B[4]} {lcd_B[5]} {lcd_B[6]} {lcd_B[7]} {lcd_G[0]} {lcd_G[1]} {lcd_G[2]} {lcd_G[3]} {lcd_G[4]} {lcd_G[5]} {lcd_G[6]} {lcd_G[7]} {lcd_R[0]} {lcd_R[1]} {lcd_R[2]} {lcd_R[3]} {lcd_R[4]} {lcd_R[5]} {lcd_R[6]} {lcd_R[7]} lcd_vsync lcd_hsync lcd_de lcd_clk}]

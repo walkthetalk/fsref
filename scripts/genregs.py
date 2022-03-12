@@ -131,13 +131,21 @@ def drc_RW(lvl, ridx, lbit, width, name, defv=0, autoclr='false', dep=''):
 	ret += drc_RL(lvl, ridx, lbit, width, name)
 	return ret
 
-def drc_int_ena(lvl, ridx, lbit, name):
-	return drc_RW(lvl, ridx, lbit, 1, name, 0)
-def drc_int_sta(lvl, ridx, lbit, name):
-	return drc_RL(lvl, ridx, lbit, 1, name)
-def drc_int_clr(lvl, ridx, lbit, name):
-	return suppline(lvl, 'assign {} = wre_sync[{}] && wrd_sync[{}];'.format(
-			name, str(ridx), str(lbit)))
+def drc_int_ena(lvl, ridx, lbit, name, width=1):
+	return drc_RW(lvl, ridx, lbit, width, name, 0)
+def drc_int_sta(lvl, ridx, lbit, name, width=1):
+	return drc_RL(lvl, ridx, lbit, width, name)
+def drc_int_clr(lvl, ridx, lbit, name, width=1):
+	if width == 1:
+		return suppline(lvl, 'assign {} = wre_sync[{}] && wrd_sync[{}];'.format(
+				name, str(ridx), str(lbit)))
+	elif (isinstance(lbit,int) and isinstance(width,int)):
+		return suppline(lvl, 'assign {} = wre_sync[{}] && wrd_sync[{}:{}];'.format(
+				name, str(ridx), str(lbit + width - 1), str(lbit)))
+	else:
+		return suppline(lvl, 'assign {} = wre_sync[{}] && wrd_sync[{}:{}];'.format(
+				name, str(ridx), str(lbit) + '+' + str(width) + '-1', str(lbit)))
+
 def drc_rw(lvl, ridx, lbit, width, name, defv=0, autoclr='false', dep=''):
 	return drc_RW(lvl, ridx, lbit, width, name, defv, autoclr, dep)
 def drc_wo(lvl, ridx, lbit, width, name, defv=0, autoclr='false', dep=''):
@@ -817,6 +825,12 @@ class VIfReqCtl(VIntface):
 		self._addPort({'ftype': 'intsrc',  'iotype': 'input',  'name': 'done',    "trigint": "posedge" })
 		self._addPort({'ftype': 'inro',    'iotype': 'input',  'name': 'err',   'width': "32"})
 
+class VIfExtIntSrc(VIntface):
+	def __init__(self, dictData):
+		super(VIfExtIntSrc, self).__init__(dictData)
+
+		self._addPort({'ftype': 'intsrc',  'iotype': 'input',  'name': 'src',   "trigint": "posedge" })
+
 class VerilogModuleFile:
 	def __init__(self, name):
 		self.name = name
@@ -983,6 +997,7 @@ class VMFsctl(VerilogModuleFile):
 		self.addParam({'dtype': 'integer', 'name': 'C_MICROSTEP_WIDTH',   'defV': "3"           })
 		self.addParam({'dtype': 'integer', 'name': 'C_PWM_NBR',           'defV': "8"           })
 		self.addParam({'dtype': 'integer', 'name': 'C_PWM_CNT_WIDTH',     'defV': "16"          })
+		self.addParam({'dtype': 'integer', 'name': 'C_EXT_INT_WIDTH',     'defV': "8"          })
 		self.addParam({'dtype': 'integer', 'name': 'C_TEST',              'defV': "0"           })
 	def __addports(self):
 		self.addExtPort({'iotype': 'input',  'wrtype': 'wire', 'name': 'clk'})
@@ -1064,8 +1079,15 @@ class VMFsctl(VerilogModuleFile):
 			"comments": "request to fscpu"
 		})
 
-		for i in range(0, 16):
-			self.addExtPort({'iotype': 'input',  'wrtype': 'wire', 'name': 'test' + str(i), 'width': '32'})
+		self.addExtInterface("VIfExtIntSrc", {
+			"name": "extint",
+			"size": "8",
+			"realsize": "C_EXT_INT_WIDTH",
+			"comments": "external interrupt source"
+		})
+
+		#for i in range(0, 16):
+		#	self.addExtPort({'iotype': 'input',  'wrtype': 'wire', 'name': 'test' + str(i), 'width': '32'})
 	def __addlocalparams(self):
 		self.addLocalparam({ "name": "C_REG_NUM", "comments": "register number", "defV": "2**C_REG_IDX_WIDTH" })
 
@@ -1097,6 +1119,11 @@ class VMFsctl(VerilogModuleFile):
 			"name": "reqctl_int",
 			"wrtype": "reg",
 			'comments': "request interrupt"
+		})
+		self.addIntPort({
+			"name": "ext_int",
+			"wrtype": "reg",
+			'comments': "external interrupt"
 		})
 		self.addIntPort({
 			"name": "update_stream_cfg",
@@ -1525,6 +1552,7 @@ class VMFsctl(VerilogModuleFile):
 		ret += drc_ro(lvl, ridx, 0, 1, 'stream_int')
 		ret += drc_ro(lvl, ridx, 1, 1, 'motor_int')
 		ret += drc_ro(lvl, ridx, 2, 1, 'reqctl_int')
+		ret += drc_ro(lvl, ridx, 3, 1, 'ext_int')
 		ret += suppline(lvl, 'assign intr = (slv_reg[{}] != 0);'.format(all_int_ridx))
 
 		ridx += 1
@@ -1595,12 +1623,46 @@ class VMFsctl(VerilogModuleFile):
 			ret += drc_rw(lvl, ridx, 0, 32, str4array(intf.name, 'param') + '[0]' + strtemp, 0)
 			#ret += suppreadreg0(lvl, ridx)
 
-		for i in range(0, 16):
-			ridx += 1
-			ret += suppcomment(lvl, str4regdefcomment(ridx))
-			ret += drc_ro(lvl, ridx, 0, 32, 'test' + str(i))
+		ridx += 1
+		ret += suppreadreg0(lvl, ridx)
+		ridx += 1
+		ret += suppreadreg0(lvl, ridx)
+		ridx += 1
+		ret += suppreadreg0(lvl, ridx)
+		################################ extint ########################################
+		intf = self.getif('extint')
 
 		ridx += 1
+		ext_int_ena_ridx = ridx
+		ret += suppcomment(lvl, str4regdefcomment(ridx))
+		ret += self.gen_loop(lvl, intf.realsize, str4regdef(ridx),
+				drc_int_ena(lvl+1, ridx+0, 'i', str4intena(intf.name,'src')+'[i]'))
+		ridx += 1
+		ext_int_sta_ridx = ridx
+		ret += suppcomment(lvl, str4regdefcomment(ridx))
+		ret += self.gen_loop(lvl, intf.realsize, str4regdef(ridx),
+				drc_int_sta(lvl+1, ridx, "i", str4intsta(intf.name,'src') + '[i]'))
+		ret += self.gen_loop(lvl, intf.realsize, 'loop4' + str4intclr(intf.name,'src'),
+				drc_int_clr(lvl+1, ridx, "i", str4intclr(intf.name,'src') + '[i]'))
+		ret += suppline(lvl, str4alwaysbegin())
+		ret += suppline(lvl+1, 'ext_int <= ((slv_reg[{}] & slv_reg[{}]) != 0);'.format(
+				ext_int_ena_ridx, ext_int_sta_ridx
+			))
+		ret += suppline(lvl, str4alwaysend())
+
+		ridx += 1
+		ret += suppcomment(lvl, str4regdefcomment(ridx))
+		ret += self.gen_loop(lvl, 'C_EXT_INT_WIDTH', str4regdef(ridx),
+				drc_ro(lvl+1, ridx, 'i', 1, 'extint_src[i]'))
+		################################ test ##########################################
+		#for i in range(0, 16):
+		#	ridx += 1
+		#	ret += suppcomment(lvl, str4regdefcomment(ridx))
+		#	ret += drc_ro(lvl, ridx, 0, 32, 'test' + str(i))
+
+		############################### remained #######################################
+		ridx += 1
+		ret += suppcomment(lvl, "remain regs from " + str(ridx) + '-C_REG_NUM')
 		ret += suppline(lvl, str4loopheader(ridx, 'C_REG_NUM', 'remain_regs', 'i'))
 		ret += suppreadreg0(lvl+1, 'i')
 		ret += suppline(lvl, str4looptail())

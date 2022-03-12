@@ -374,6 +374,18 @@ pip_add_bus_if $core intr {
 	INTERRUPT intr
 }
 
+for {set i 0} {$i < 8} {incr i} {
+	pip_add_bus_if $core EXT_INT[set i] [subst {
+		abstraction_type_vlnv xilinx.com:signal:interrupt_rtl:1.0
+		bus_type_vlnv xilinx.com:signal:interrupt:1.0
+		interface_mode slave
+		enablement_dependency {\$C_EXT_INT_WIDTH > $i}
+	}] [subst {
+		INTERRUPT  extint[set i]_src
+	}]
+	append_associate_busif o_clk_busif EXT_INT[set i]
+}
+
 ###################################################################### parameters
 
 pip_add_usr_par $core C_CORE_VERSION {
@@ -390,6 +402,21 @@ pip_add_usr_par $core C_CORE_VERSION {
 	value_bit_string_length 32
 	value {0xFF00FF00}
 	value_format bitString
+}
+
+pip_add_usr_par $core {C_EXT_INT_WIDTH} {
+	display_name {External Interrupt Width}
+	tooltip {External Interrupt WIDTH}
+	widget {comboBox}
+} {
+	value_resolve_type user
+	value 8
+	value_format long
+	value_validation_type list
+	value_validation_list {0 1 2 3 4 5 6 7 8}
+} {
+	value 8
+	value_format long
 }
 
 pip_add_usr_par $core {C_TS_WIDTH} {
@@ -452,6 +479,7 @@ pip_add_usr_par $core {C_TEST} {
 
 gui_new $core {page "Default"} {
 	{param C_CORE_VERSION}
+	{param C_EXT_INT_WIDTH}
 	{param C_TS_WIDTH}
 	{param C_DATA_WIDTH}
 	{param C_REG_IDX_WIDTH}

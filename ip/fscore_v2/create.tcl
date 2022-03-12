@@ -282,22 +282,22 @@ proc create_fscore_v2 {
 		CONFIG.C_OPT_BR_TIME {true} \
 	] [get_bd_cells $mname/rotate_motor]
 
-	create_bd_cell -type ip -vlnv ocfb:pvip:pwm:1.0.9 $mname/pwm0
+	create_bd_cell -type ip -vlnv $VENDOR:$LIBRARY:pwm:$VERSION $mname/pwm0
 	set_property -dict [list \
 		CONFIG.C_PWM_CNT_WIDTH {16} \
 	] [get_bd_cells $mname/pwm0]
 
-	create_bd_cell -type ip -vlnv ocfb:pvip:pwm:1.0.9 $mname/pwm1
+	create_bd_cell -type ip -vlnv $VENDOR:$LIBRARY:pwm:$VERSION $mname/pwm1
 	set_property -dict [list \
 		CONFIG.C_PWM_CNT_WIDTH {16} \
 	] [get_bd_cells $mname/pwm1]
 
-	create_bd_cell -type ip -vlnv ocfb:pvip:pwm:1.0.9 $mname/pwm2
+	create_bd_cell -type ip -vlnv $VENDOR:$LIBRARY:pwm:$VERSION $mname/pwm2
 	set_property -dict [list \
 		CONFIG.C_PWM_CNT_WIDTH {16} \
 	] [get_bd_cells $mname/pwm2]
 
-	create_bd_cell -type ip -vlnv ocfb:pvip:pwm:1.0.9 $mname/pwm3
+	create_bd_cell -type ip -vlnv $VENDOR:$LIBRARY:pwm:$VERSION $mname/pwm3
 	set_property -dict [list \
 		CONFIG.C_PWM_CNT_WIDTH {16} \
 	] [get_bd_cells $mname/pwm3]
@@ -323,6 +323,7 @@ proc create_fscore_v2 {
 		CONFIG.C_SPEED_DATA_WIDTH $motor_speed_width \
 		CONFIG.C_MICROSTEP_WIDTH $motor_ms_width \
 		CONFIG.C_PWM_NBR $pwm_num \
+		CONFIG.C_EXT_INT_WIDTH {2} \
 	] [get_bd_cells $mname/fsctl]
 
 	create_bd_cell -type ip -vlnv $VENDOR:$LIBRARY:fscpu:$VERSION $mname/fscpu
@@ -378,6 +379,17 @@ proc create_fscore_v2 {
 		$mname/fscpu/mya_sel            $mname/align_motor/s1_ext_sel
 		$mname/fscpu/mlr_sel            $mname/rotate_motor/s0_ext_sel
 		$mname/fscpu/mrr_sel            $mname/rotate_motor/s1_ext_sel
+	}]
+
+	create_bd_cell -type ip -vlnv $VENDOR:$LIBRARY:intr_filter:$VERSION $mname/intr_filter
+	set_property -dict [list \
+		CONFIG.C_NUMBER {2} \
+	] [get_bd_cells $mname/intr_filter]
+	pip_connect_pin $mname/fsctl/extint0_src [subst {
+		$mname/intr_filter/intr_out0
+	}]
+	pip_connect_pin $mname/fsctl/extint1_src [subst {
+		$mname/intr_filter/intr_out1
 	}]
 
 	# external interface
@@ -491,6 +503,7 @@ proc create_fscore_v2 {
 		$mname/pwm2/clk
 		$mname/pwm3/clk
 		$mname/fscpu/clk
+		$mname/intr_filter/clk
 	}]
 	create_bd_pin -dir I $mname/resetn
 	pip_connect_pin $mname/resetn [subst {
@@ -503,6 +516,7 @@ proc create_fscore_v2 {
 		$mname/push_motor/resetn
 		$mname/align_motor/resetn
 		$mname/rotate_motor/resetn
+		$mname/intr_filter/resetn
 	}]
 
 	create_bd_pin -dir O $mname/cmos0_light
@@ -552,4 +566,12 @@ proc create_fscore_v2 {
 		$mname/discharge_drive
 	}]
 
+	create_bd_pin -dir I $mname/FS_COVER
+	create_bd_pin -dir I $mname/HEAT_COVER
+	pip_connect_pin $mname/intr_filter/intr_in0 [subst {
+		$mname/FS_COVER
+	}]
+	pip_connect_pin $mname/intr_filter/intr_in1 [subst {
+		$mname/HEAT_COVER
+	}]
 }

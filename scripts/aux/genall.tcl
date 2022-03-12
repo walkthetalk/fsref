@@ -93,6 +93,9 @@ set ip_list [list \
 	fsa_v2 \
 		{Fusion Splicer Image Analyzer Advance version} \
 		{Fusion Splicer Image Analyzer Advance version} \
+	intr_filter \
+		{Interrupt Source Filter} \
+		{Interrupt Source Filter} \
 	fscpu \
 		{Fusion Splicer CPU} \
 		{Fusion Splicer CPU} \

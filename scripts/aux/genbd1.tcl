@@ -447,6 +447,10 @@ make_bd_intf_pins_external -name gpio_key [get_bd_intf_pins cpu/GPIO_0]
 
 # connect interrupt
 connect_bd_net [get_bd_pins fscore/intr] [get_bd_pins cpu/IRQ_F2P]
+create_bd_port -dir I fs_cover
+create_bd_port -dir I heat_cover
+connect_bd_net [get_bd_ports fs_cover] [get_bd_pins fscore/FS_COVER]
+connect_bd_net [get_bd_ports heat_cover] [get_bd_pins fscore/HEAT_COVER]
 
 # 9. address
 # auto assign all addresses
