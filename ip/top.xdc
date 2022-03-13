@@ -188,10 +188,14 @@ set_property -dict {IOSTANDARD LVCMOS33 PACKAGE_PIN D16 } [get_ports {gpio_key_t
 set_property -dict {IOSTANDARD LVCMOS33 PACKAGE_PIN E19 } [get_ports {gpio_key_tri_io[9]}]
 set_property -dict {IOSTANDARD LVCMOS33 PACKAGE_PIN E20 } [get_ports {gpio_key_tri_io[10]}]
 set_property -dict {IOSTANDARD LVCMOS33 PACKAGE_PIN H22 } [get_ports {gpio_key_tri_io[11]}]
-
+######## KEY_POWER
 set_property -dict {IOSTANDARD LVCMOS33 PACKAGE_PIN W21 } [get_ports {gpio_key_tri_io[12]}]
-
+######## FPGA_CONTROL (POWER)
 set_property -dict {IOSTANDARD LVCMOS33 PACKAGE_PIN W20 } [get_ports {gpio_key_tri_io[13]}]
+######## RTC_IRQ
+set_property -dict {IOSTANDARD LVCMOS33 PACKAGE_PIN G22 } [get_ports {gpio_key_tri_io[14]}]
+######## POWER_LED
+set_property -dict {IOSTANDARD LVCMOS33 PACKAGE_PIN M22 } [get_ports {gpio_key_tri_io[15]}]
 
 # misc
 set_property -dict {IOSTANDARD LVCMOS33 PACKAGE_PIN Y19 } [get_ports {fs_cover}]
