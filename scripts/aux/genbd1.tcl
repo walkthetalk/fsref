@@ -58,7 +58,7 @@ set cfg_common [dict create \
 	motor_speed_width 32 \
 	motor_br_addr_width 12 \
 	motor_ms_width 3 \
-	pwm_num 4 \
+	pwm_num 8 \
 ]
 
 set dic [dict merge \
@@ -438,6 +438,14 @@ connect_bd_net [get_bd_ports discharge_resetn] [get_bd_pins fscore/discharge_res
 #connect_bd_net [get_bd_ports discharge_drive] [get_bd_pins fscore/discharge_drive]
 create_bd_port -dir O discharge_power
 connect_bd_net [get_bd_ports discharge_power] [get_bd_pins fscore/discharge_power]
+create_bd_port -dir O fan_en
+connect_bd_net [get_bd_ports fan_en] [get_bd_pins fscore/fan_en]
+create_bd_port -dir O heater_power
+connect_bd_net [get_bd_ports heater_power] [get_bd_pins fscore/heater_power]
+create_bd_port -dir O buzz_en
+connect_bd_net [get_bd_ports buzz_en] [get_bd_pins fscore/beeper_en]
+create_bd_port -dir O heater_en
+connect_bd_net [get_bd_ports heater_en] [get_bd_pins fscore/heater_en]
 
 # connect from external keyboard
 set_property -dict [list \

@@ -216,7 +216,7 @@ proc create_fscore_v2 {
 		motor_ms_width 3 \
 		vdma_timestamp_width 64 \
 		stream_bypass_bayer_extractor 0 \
-		pwm_num 4 \
+		pwm_num 8 \
 	]
 	dict append dic coreversion [format 0x%08x [clock seconds]]
 	dict for { k v } $dic {
@@ -293,6 +293,7 @@ proc create_fscore_v2 {
 	] [get_bd_cells $mname/pwm1]
 
 	create_bd_cell -type ip -vlnv $VENDOR:$LIBRARY:pwm:$VERSION $mname/pwm2
+	# light lcd by default
 	set_property -dict [list \
 		CONFIG.C_PWM_CNT_WIDTH {16} \
 	] [get_bd_cells $mname/pwm2]
@@ -301,6 +302,27 @@ proc create_fscore_v2 {
 	set_property -dict [list \
 		CONFIG.C_PWM_CNT_WIDTH {16} \
 	] [get_bd_cells $mname/pwm3]
+
+	create_bd_cell -type ip -vlnv $VENDOR:$LIBRARY:pwm:$VERSION $mname/pwm4
+	set_property -dict [list \
+		CONFIG.C_PWM_CNT_WIDTH {16} \
+	] [get_bd_cells $mname/pwm4]
+
+	create_bd_cell -type ip -vlnv $VENDOR:$LIBRARY:pwm:$VERSION $mname/pwm5
+	set_property -dict [list \
+		CONFIG.C_PWM_CNT_WIDTH {16} \
+	] [get_bd_cells $mname/pwm5]
+
+	create_bd_cell -type ip -vlnv $VENDOR:$LIBRARY:pwm:$VERSION $mname/pwm6
+	set_property -dict [list \
+		CONFIG.C_PWM_CNT_WIDTH {16} \
+	] [get_bd_cells $mname/pwm6]
+
+	create_bd_cell -type ip -vlnv $VENDOR:$LIBRARY:pwm:$VERSION $mname/pwm7
+	# disable heater by default
+	set_property -dict [list \
+		CONFIG.C_PWM_CNT_WIDTH {16} \
+	] [get_bd_cells $mname/pwm7]
 
 	create_bd_cell -type ip -vlnv $VENDOR:$LIBRARY:axilite2regctl:$VERSION $mname/axilite2regctl
 
@@ -447,6 +469,10 @@ proc create_fscore_v2 {
 		$mname/fsctl/PWM1_CTL            $mname/pwm1/S_CTL
 		$mname/fsctl/PWM2_CTL            $mname/pwm2/S_CTL
 		$mname/fsctl/PWM3_CTL            $mname/pwm3/S_CTL
+		$mname/fsctl/PWM4_CTL            $mname/pwm4/S_CTL
+		$mname/fsctl/PWM5_CTL            $mname/pwm5/S_CTL
+		$mname/fsctl/PWM6_CTL            $mname/pwm6/S_CTL
+		$mname/fsctl/PWM7_CTL            $mname/pwm7/S_CTL
 	}]
 
 	pip_connect_pin $mname/fsctl/st_out_resetn [subst {
@@ -502,6 +528,10 @@ proc create_fscore_v2 {
 		$mname/pwm1/clk
 		$mname/pwm2/clk
 		$mname/pwm3/clk
+		$mname/pwm4/clk
+		$mname/pwm5/clk
+		$mname/pwm6/clk
+		$mname/pwm7/clk
 		$mname/fscpu/clk
 		$mname/intr_filter/clk
 	}]
@@ -534,6 +564,22 @@ proc create_fscore_v2 {
 	create_bd_pin -dir O $mname/discharge_power
 	pip_connect_pin $mname/pwm3/drive [subst {
 		$mname/discharge_power
+	}]
+	create_bd_pin -dir O $mname/fan_en
+	pip_connect_pin $mname/pwm4/drive [subst {
+		$mname/fan_en
+	}]
+	create_bd_pin -dir O $mname/heater_power
+	pip_connect_pin $mname/pwm5/drive [subst {
+		$mname/heater_power
+	}]
+	create_bd_pin -dir O $mname/beeper_en
+	pip_connect_pin $mname/pwm6/drive [subst {
+		$mname/beeper_en
+	}]
+	create_bd_pin -dir O $mname/heater_en
+	pip_connect_pin $mname/pwm7/drive [subst {
+		$mname/heater_en
 	}]
 
 	create_bd_pin -dir O -type intr $mname/intr

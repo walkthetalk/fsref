@@ -267,7 +267,7 @@ for {set i 0} {$i < 8} {incr i} {
 	append_associate_busif o_clk_busif MOTOR[set i]_REQ
 }
 
-for {set i 0} {$i < 8} {incr i} {
+for {set i 0} {$i < 16} {incr i} {
 	pip_add_bus_if $core PWM[set i]_CTL [subst {
 		abstraction_type_vlnv $VENDOR:interface:pwm_ctl_rtl:1.0
 		bus_type_vlnv $VENDOR:interface:pwm_ctl:1.0
@@ -784,7 +784,7 @@ pip_add_usr_par $core {C_PWM_NBR} {
 	value 4
 	value_format long
 	value_validation_type list
-	value_validation_list {0 1 2 3 4 5 6 7 8}
+	value_validation_list {0 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16}
 } {
 	value 4
 	value_format long

@@ -1072,7 +1072,7 @@ class VMFsctl(VerilogModuleFile):
 		})
 		self.addExtInterface("VIfPwmCtl", {
 			"name": "pwm",
-			"size": "8",
+			"size": "16",
 			"realsize": "C_PWM_NBR",
 			"comments": "pwm interface",
 			"ndwidth": 'C_PWM_CNT_WIDTH',

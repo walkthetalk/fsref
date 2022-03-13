@@ -165,6 +165,12 @@ set_property -dict {IOSTANDARD LVCMOS33 PACKAGE_PIN Y13 } [get_ports {rm1_drive}
 set_property -dict {IOSTANDARD LVCMOS33 PACKAGE_PIN M21 } [get_ports {discharge_resetn}]
 set_property -dict {IOSTANDARD LVCMOS33 PACKAGE_PIN L19 } [get_ports {discharge_power}]
 
+# misc
+set_property -dict {IOSTANDARD LVCMOS33 PACKAGE_PIN P18 } [get_ports {fan_en}]
+set_property -dict {IOSTANDARD LVCMOS33 PACKAGE_PIN N22 } [get_ports {heater_power}]
+set_property -dict {IOSTANDARD LVCMOS33 PACKAGE_PIN P22 } [get_ports {buzz_en}]
+set_property -dict {IOSTANDARD LVCMOS33 PACKAGE_PIN AA19 } [get_ports {heater_en}]
+
 # clock
 set_clock_groups -asynchronous -group [get_clocks {clk_fpga_0 clk_fpga_1}]
 set_clock_groups -asynchronous -group [get_clocks {clk_fpga_2 clk_fpga_1}]
