@@ -200,6 +200,10 @@ set_property -dict {IOSTANDARD LVCMOS33 PACKAGE_PIN M22 } [get_ports {gpio_key_t
 # misc
 set_property -dict {IOSTANDARD LVCMOS33 PACKAGE_PIN Y19 } [get_ports {fs_cover}]
 set_property -dict {IOSTANDARD LVCMOS33 PACKAGE_PIN W11 } [get_ports {heat_cover}]
+set_property -dict {IOSTANDARD LVCMOS33 PACKAGE_PIN F16 } [get_ports {power_volt_v_p}]
+set_property -dict {IOSTANDARD LVCMOS33 PACKAGE_PIN E16 } [get_ports {power_volt_v_n}]
+set_property -dict {IOSTANDARD LVCMOS33 PACKAGE_PIN E15 } [get_ports {heater_temp_v_p}]
+set_property -dict {IOSTANDARD LVCMOS33 PACKAGE_PIN D15 } [get_ports {heater_temp_v_n}]
 
 ####################### temporarily
 set_property BITSTREAM.General.UnconstrainedPins {Allow} [current_design]

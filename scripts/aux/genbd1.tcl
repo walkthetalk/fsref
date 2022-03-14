@@ -180,7 +180,7 @@ set_property -dict [list \
     ] [get_bd_cells fscmos_0]
 copy_bd_objs /  [get_bd_cells {fscmos_0}]
 
-create_bd_cell -type ip -vlnv xilinx.com:ip:v_vid_in_axi4s:4.0 videoin_0
+create_bd_cell -type ip -vlnv xilinx.com:ip:v_vid_in_axi4s:5.0 videoin_0
 set_property -dict [list \
     CONFIG.C_PIXELS_PER_CLOCK {1} \
     CONFIG.C_M_AXIS_VIDEO_FORMAT {12} \
@@ -197,6 +197,38 @@ set_property -dict [list \
 
 # X. fusion splicer core
 create_fscore_v2 /fscore $dic
+
+# Y. xadc
+create_bd_cell -type ip -vlnv xilinx.com:ip:xadc_wiz:3.3 xadc
+set_property -dict [list \
+    CONFIG.INTERFACE_SELECTION {None} \
+    CONFIG.XADC_STARUP_SELECTION {channel_sequencer} \
+    CONFIG.ENABLE_AXI4STREAM {false} \
+    CONFIG.ENABLE_DCLK {false} \
+    CONFIG.ENABLE_CALIBRATION_AVERAGING {true} \
+    CONFIG.ENABLE_RESET {false} \
+    CONFIG.OT_ALARM {false} \
+    CONFIG.USER_TEMP_ALARM {false} \
+    CONFIG.VCCINT_ALARM {false} \
+    CONFIG.VCCAUX_ALARM {false} \
+    CONFIG.ENABLE_VBRAM_ALARM {false} \
+    CONFIG.ENABLE_VCCPINT_ALARM {false} \
+    CONFIG.ENABLE_VCCPAUX_ALARM {false} \
+    CONFIG.ENABLE_VCCDDRO_ALARM {false} \
+    CONFIG.CHANNEL_AVERAGING {None} \
+    CONFIG.CHANNEL_ENABLE_VP_VN {false} \
+    CONFIG.CHANNEL_ENABLE_VREFP {false} \
+    CONFIG.CHANNEL_ENABLE_VREFN {false} \
+    CONFIG.CHANNEL_ENABLE_VAUXP0_VAUXN0 {true} \
+    CONFIG.CHANNEL_ENABLE_VAUXP1_VAUXN1 {true} \
+    CONFIG.ENABLE_JTAG_ARBITER {false} \
+    CONFIG.SEQUENCER_MODE {Continuous} \
+    CONFIG.ENABLE_DRP {false} \
+    CONFIG.EXTERNAL_MUX_CHANNEL {VP_VN} \
+    CONFIG.SINGLE_CHANNEL_SELECTION \
+    {TEMPERATURE}\
+] [get_bd_cells xadc]
+
 
 # interconnection of data
 create_bd_cell -type ip -vlnv xilinx.com:ip:axi_interconnect:2.1 ic_data_0
@@ -452,6 +484,18 @@ set_property -dict [list \
 	CONFIG.PCW_GPIO_EMIO_GPIO_ENABLE {1} \
 	CONFIG.PCW_GPIO_EMIO_GPIO_IO {16}] [get_bd_cells cpu]
 make_bd_intf_pins_external -name gpio_key [get_bd_intf_pins cpu/GPIO_0]
+
+# connect xadc
+create_bd_intf_port -mode Slave -vlnv xilinx.com:interface:diff_analog_io_rtl:1.0 power_volt
+connect_bd_intf_net [get_bd_intf_ports power_volt] [get_bd_intf_pins xadc/Vaux0]
+create_bd_intf_port -mode Slave -vlnv xilinx.com:interface:diff_analog_io_rtl:1.0 heater_temp
+connect_bd_intf_net [get_bd_intf_ports heater_temp] [get_bd_intf_pins xadc/Vaux1]
+
+# NOTE: pcb is not connect xx_N, so we connect it to low level directly
+pip_connect_pin xlconstant_0/dout {
+	xadc/vauxn0
+	xadc/vauxn1
+}
 
 # connect interrupt
 connect_bd_net [get_bd_pins fscore/intr] [get_bd_pins cpu/IRQ_F2P]

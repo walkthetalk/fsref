@@ -3,8 +3,9 @@ dir_self := $(shell dirname $(shell readlink -fe $(lastword ${MAKEFILE_LIST})))
 dir_main := $(shell readlink -fe ${dir_self})
 
 # TOOLS
-dir_xilinx := "/opt/xilinx"
-XILINX_VER := "2019.2"
+dir_xilinx := "/opt/Xilinx"
+#dir_xilinx := "/mnt/udatum/sw/xilinx"
+XILINX_VER := "2021.2"
 VIVADO := "${dir_xilinx}/Vivado/${XILINX_VER}/bin/vivado"
 XSCT := "${dir_xilinx}/Vitis/${XILINX_VER}/bin/xsct"
 dir_repodt := "${dir_main}/../device-tree-xlnx"

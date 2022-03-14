@@ -21,7 +21,7 @@ add_files -norecurse $origin_dir/fsref.srcs/sources_1/bd/bd1/hdl/bd1_wrapper.v
 
 # set property of bd1
 set_property used_in_simulation false [get_files  $origin_dir/fsref.srcs/sources_1/bd/bd1/bd1.bd]
-set_property used_in_simulation false [get_files  $origin_dir/fsref.srcs/sources_1/bd/bd1/hdl/bd1_wrapper.v]
+set_property used_in_simulation false [get_files  $origin_dir/fsref.gen/sources_1/bd/bd1/hdl/bd1_wrapper.v]
 update_compile_order -fileset sources_1
 
 # xdc
