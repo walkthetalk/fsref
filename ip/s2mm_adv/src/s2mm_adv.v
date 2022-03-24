@@ -126,6 +126,8 @@ module s2mm_adv #
 		end
 	endgenerate
 
+	wire f2mm_resetting;
+	wire f2mm_write_resp_error;
 	FIFO2MM_adv # (
 		.C_DATACOUNT_BITS(C_DATACOUNT_BITS),
 		.C_M_AXI_BURST_LEN(C_M_AXI_BURST_LEN),
@@ -140,7 +142,7 @@ module s2mm_adv #
 		.img_stride(C_IMG_STRIDE_SIZE),
 
 		.soft_resetn(soft_resetn),
-		//.resetting(resetting),
+		.resetting(f2mm_resetting),
 
 		//.sof(s2mm_rd_data[sofIdx(reverseI(0))]),
 		.din(s2mm_pixel_data),
@@ -170,7 +172,9 @@ module s2mm_adv #
 		.M_AXI_WREADY(m_axi_wready),
 		.M_AXI_BRESP(m_axi_bresp),
 		.M_AXI_BVALID(m_axi_bvalid),
-		.M_AXI_BREADY(m_axi_bready)
+		.M_AXI_BREADY(m_axi_bready),
+
+		.write_resp_error(f2mm_write_resp_error)
 	);
 
 endmodule

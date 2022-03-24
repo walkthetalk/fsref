@@ -797,13 +797,15 @@ class VIfMotorCtl(VIntface):
 
 		self._addPort({'ftype': 'cfg',     'iotype': 'output', 'name': 'xen'})
 		self._addPort({'ftype': 'cfg',     'iotype': 'output', 'name': 'xrst'})
-		self._addPort({'ftype': 'cfg',     'iotype': 'output', 'name': 'stroke',   'width': dictData["stepwidth"] })
+		self._addPort({'ftype': 'cfg',     'iotype': 'output', 'name': 'min_pos',  'width': dictData["stepwidth"] })
+		self._addPort({'ftype': 'cfg',     'iotype': 'output', 'name': 'max_pos',  'width': dictData["stepwidth"] })
 		self._addPort({'ftype': 'cfg',     'iotype': 'output', 'name': 'ms',       'width': dictData["mswidth"] })
 
+		self._addPort({'ftype': 'intsrc', "trigint": "posedge",  'iotype': 'input',  'name': 'ntsign'})
 		self._addPort({'ftype': 'intsrc', "trigint": "posedge",  'iotype': 'input',  'name': 'zpsign'})
-		self._addPort({'ftype': 'intsrc', "trigint": "posedge",  'iotype': 'input',  'name': 'tpsign'})
+		self._addPort({'ftype': 'intsrc', "trigint": "posedge",  'iotype': 'input',  'name': 'ptsign'})
 
-		self._addPort({'ftype': 'intsrc', "trigint": "negedge", 'iotype': 'input',  'name': 'state'})
+		self._addPort({'ftype': 'intsrc', "trigint": "negedge", 'iotype': 'input', 'name': 'state'})
 		self._addPort({'ftype': 'inro',    'iotype': 'input',  'name': 'rt_speed', 'width': dictData["speedwidth"] })
 		self._addPort({'ftype': 'inro',    'iotype': 'input',  'name': 'position', 'width': dictData["stepwidth"] })
 
@@ -811,7 +813,7 @@ class VIfMotorCtl(VIntface):
 		self._addPort({'ftype': 'cfg',     'iotype': 'output', 'name': 'stop'})
 		self._addPort({'ftype': 'cfg',     'iotype': 'output', 'name': 'speed',    'width': dictData["speedwidth"] })
 		self._addPort({'ftype': 'cfg',     'iotype': 'output', 'name': 'step',     'width': dictData["stepwidth"] })
-		self._addPort({'ftype': 'cfg',     'iotype': 'output', 'name': 'dir'})
+		self._addPort({'ftype': 'cfg',     'iotype': 'output', 'name': 'abs'})
 class VIfPwmCtl(VIntface):
 	def __init__(self, dictData):
 		super(VIfPwmCtl, self).__init__(dictData)
@@ -1093,8 +1095,8 @@ class VMFsctl(VerilogModuleFile):
 			"comments": "external interrupt source"
 		})
 
-		#for i in range(0, 16):
-		#	self.addExtPort({'iotype': 'input',  'wrtype': 'wire', 'name': 'test' + str(i), 'width': '32'})
+		for i in range(0, 16):
+			self.addExtPort({'iotype': 'input',  'wrtype': 'wire', 'name': 'test' + str(i), 'width': '32'})
 	def __addlocalparams(self):
 		self.addLocalparam({ "name": "C_REG_NUM", "comments": "register number", "defV": "2**C_REG_IDX_WIDTH" })
 
@@ -1443,21 +1445,24 @@ class VMFsctl(VerilogModuleFile):
 		motor_int_ena_ridx = ridx
 		ret += suppcomment(lvl, str4regdefcomment(ridx))
 		ret += self.gen_loop(lvl, intf.realsize, str4regdef(ridx),
-			  drc_int_ena(lvl+1, ridx, "i*4+0", str4intena(intf.name,'zpsign') + '[i]')
-			+ drc_int_ena(lvl+1, ridx, "i*4+1", str4intena(intf.name,'tpsign') + '[i]')
-			+ drc_int_ena(lvl+1, ridx, "i*4+2", str4intena(intf.name,'state') + '[i]'))
+			  drc_int_ena(lvl+1, ridx, "i*4+0", str4intena(intf.name,'ntsign') + '[i]')
+			+ drc_int_ena(lvl+1, ridx, "i*4+1", str4intena(intf.name,'zpsign') + '[i]')
+			+ drc_int_ena(lvl+1, ridx, "i*4+2", str4intena(intf.name,'ptsign') + '[i]')
+			+ drc_int_ena(lvl+1, ridx, "i*4+3", str4intena(intf.name,'state')  + '[i]'))
 
 		ridx += 1
 		motor_int_sta_ridx = ridx
 		ret += suppcomment(lvl, str4regdefcomment(ridx))
 		ret += self.gen_loop(lvl, intf.realsize, str4regdef(ridx),
-			  drc_int_sta(lvl+1, ridx, "i*4+0", str4intsta(intf.name,'zpsign') + '[i]')
-			+ drc_int_sta(lvl+1, ridx, "i*4+1", str4intsta(intf.name,'tpsign') + '[i]')
-			+ drc_int_sta(lvl+1, ridx, "i*4+2", str4intsta(intf.name,'state') + '[i]'))
+			  drc_int_sta(lvl+1, ridx, "i*4+0", str4intsta(intf.name,'ntsign') + '[i]')
+			+ drc_int_sta(lvl+1, ridx, "i*4+1", str4intsta(intf.name,'zpsign') + '[i]')
+			+ drc_int_sta(lvl+1, ridx, "i*4+2", str4intsta(intf.name,'ptsign') + '[i]')
+			+ drc_int_sta(lvl+1, ridx, "i*4+3", str4intsta(intf.name,'state') + '[i]'))
 		ret += self.gen_loop(lvl, intf.realsize, 'loop4' + str4intclr(intf.name,'motor'),
-			  drc_int_clr(lvl+1, ridx, "i*4+0", str4intclr(intf.name,'zpsign') + '[i]')
-			+ drc_int_clr(lvl+1, ridx, "i*4+1", str4intclr(intf.name,'tpsign') + '[i]')
-			+ drc_int_clr(lvl+1, ridx, "i*4+2", str4intclr(intf.name,'state') + '[i]'))
+			  drc_int_clr(lvl+1, ridx, "i*4+0", str4intclr(intf.name,'ntsign') + '[i]')
+			+ drc_int_clr(lvl+1, ridx, "i*4+1", str4intclr(intf.name,'zpsign') + '[i]')
+			+ drc_int_clr(lvl+1, ridx, "i*4+2", str4intclr(intf.name,'ptsign') + '[i]')
+			+ drc_int_clr(lvl+1, ridx, "i*4+3", str4intclr(intf.name,'state')  + '[i]'))
 		ret += suppline(lvl, str4alwaysbegin())
 		ret += suppline(lvl+1, 'motor_int <= ((slv_reg[{}] & slv_reg[{}]) != 0);'.format(
 				motor_int_ena_ridx, motor_int_sta_ridx
@@ -1467,9 +1472,10 @@ class VMFsctl(VerilogModuleFile):
 		ridx += 1
 		ret += suppcomment(lvl, str4regdefcomment(ridx))
 		ret += self.gen_loop(lvl, intf.realsize, str4regdef(ridx),
-			  drc_ro(lvl+1, ridx, 'i*4+0', 1, str4array(intf.name, 'zpsign') + '[i]')
-			+ drc_ro(lvl+1, ridx, 'i*4+1', 1, str4array(intf.name, 'tpsign') + '[i]')
-			+ drc_ro(lvl+1, ridx, 'i*4+2', 1, str4array(intf.name, 'state') + '[i]'))
+			  drc_ro(lvl+1, ridx, 'i*4+0', 1, str4array(intf.name, 'ntsign') + '[i]')
+			+ drc_ro(lvl+1, ridx, 'i*4+1', 1, str4array(intf.name, 'zpsign') + '[i]')
+			+ drc_ro(lvl+1, ridx, 'i*4+2', 1, str4array(intf.name, 'ptsign') + '[i]')
+			+ drc_ro(lvl+1, ridx, 'i*4+3', 1, str4array(intf.name, 'state')  + '[i]'))
 
 		ridx += 1
 		ret += suppcomment(lvl, str4regdefcomment(ridx))
@@ -1489,11 +1495,15 @@ class VMFsctl(VerilogModuleFile):
 
 		ridx += 1
 		ret += suppcomment(lvl, str4regdefcomment(ridx))
-		ret += self.gen_ind_reg(lvl, ridx, 0, 'rw', 'motor', 'stroke', 32)
+		ret += self.gen_ind_reg(lvl, ridx, 0, 'rw', 'motor', 'min_pos', 32)
 
 		ridx += 1
 		ret += suppcomment(lvl, str4regdefcomment(ridx))
-		ret += self.gen_ind_reg(lvl, ridx, 0, 'rw', 'motor', 'dir', 32)
+		ret += self.gen_ind_reg(lvl, ridx, 0, 'rw', 'motor', 'max_pos', 32)
+
+		ridx += 1
+		ret += suppcomment(lvl, str4regdefcomment(ridx))
+		ret += self.gen_ind_reg(lvl, ridx, 0, 'rw', 'motor', 'abs', 32)
 
 		ridx += 1
 		ret += suppcomment(lvl, str4regdefcomment(ridx))
@@ -1503,9 +1513,6 @@ class VMFsctl(VerilogModuleFile):
 		ret += suppcomment(lvl, str4regdefcomment(ridx))
 		ret += self.gen_ind_reg(lvl, ridx, 0, 'rw', 'motor', 'speed', 32)
 
-		ridx += 1
-		ret += suppcomment(lvl, str4regdefcomment(ridx))
-		ret += suppreadreg0(lvl, ridx)
 		ridx += 1
 		ret += suppcomment(lvl, str4regdefcomment(ridx))
 		ret += suppreadreg0(lvl, ridx)
@@ -1662,10 +1669,10 @@ class VMFsctl(VerilogModuleFile):
 		ret += self.gen_loop(lvl, 'C_EXT_INT_WIDTH', str4regdef(ridx),
 				drc_ro(lvl+1, ridx, 'i', 1, 'extint_src[i]'))
 		################################ test ##########################################
-		#for i in range(0, 16):
-		#	ridx += 1
-		#	ret += suppcomment(lvl, str4regdefcomment(ridx))
-		#	ret += drc_ro(lvl, ridx, 0, 32, 'test' + str(i))
+		for i in range(0, 16):
+			ridx += 1
+			ret += suppcomment(lvl, str4regdefcomment(ridx))
+			ret += drc_ro(lvl, ridx, 0, 32, 'test' + str(i))
 
 		############################### remained #######################################
 		ridx += 1

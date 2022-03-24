@@ -34,10 +34,11 @@ for {set i 0} {$i < 8} {incr i} {
 		interface_mode slave
 		enablement_dependency {spirit:decode(id('MODELPARAM_VALUE.C_MOTOR_NBR')) > $i}
 	}] [subst {
-		XEN       s[set i]_xen
-		XRST      s[set i]_xrst
-		STROKE    s[set i]_stroke
-		MICROSTEP s[set i]_ms
+		XEN             s[set i]_xen
+		XRST            s[set i]_xrst
+		MIN_POSITION    s[set i]_min_pos
+		MAX_POSITION    s[set i]_max_pos
+		MICROSTEP       s[set i]_ms
 	}]
 	append_associate_busif clk_busif S[set i]_CFG
 
@@ -47,8 +48,9 @@ for {set i 0} {$i < 8} {incr i} {
 		interface_mode slave
 		enablement_dependency {spirit:decode(id('MODELPARAM_VALUE.C_MOTOR_NBR')) > $i}
 	}] [subst {
+		NTSIGN    s[set i]_ntsign
 		ZPSIGN    s[set i]_zpsign
-		TPSIGN    s[set i]_tpsign
+		PTSIGN    s[set i]_ptsign
 		STATE     s[set i]_state
 		RT_SPEED  s[set i]_rt_speed
 		POSITION  s[set i]_position
@@ -56,7 +58,7 @@ for {set i 0} {$i < 8} {incr i} {
 		STOP      s[set i]_stop
 		SPEED     s[set i]_speed
 		STEP      s[set i]_step
-		DIRECTION s[set i]_dir
+		ABSOLUTE  s[set i]_abs
 	}]
 	append_associate_busif clk_busif S[set i]_REQ
 
@@ -66,8 +68,9 @@ for {set i 0} {$i < 8} {incr i} {
 		interface_mode slave
 		enablement_dependency {spirit:decode(id('MODELPARAM_VALUE.C_MOTOR_NBR')) > $i}
 	}] [subst {
+		NTSIGN     s[set i]_ext_ntsign
 		ZPSIGN     s[set i]_ext_zpsign
-		TPSIGN     s[set i]_ext_tpsign
+		PTSIGN     s[set i]_ext_ptsign
 		STATE      s[set i]_ext_state
 		RT_SPEED   s[set i]_ext_rt_speed
 		POSITION   s[set i]_ext_position
@@ -75,7 +78,7 @@ for {set i 0} {$i < 8} {incr i} {
 		STOP       s[set i]_ext_stop
 		SPEED      s[set i]_ext_speed
 		STEP       s[set i]_ext_step
-		DIRECTION  s[set i]_ext_dir
+		ABSOLUTE   s[set i]_ext_abs
 		MOD_REMAIN s[set i]_ext_mod_remain
 		NEW_REMAIN s[set i]_ext_new_remain
 	}]

@@ -32,10 +32,10 @@ module DISCHARGE_ctl #
 	output wire                       drive
 );
 
-	parameter integer STATE_IDLE = 0;
-	parameter integer STATE_PRE  = 1;
-	parameter integer STATE_INC  = 2;
-	parameter integer STATE_KEEP = 3;
+	localparam integer STATE_IDLE = 0;
+	localparam integer STATE_PRE  = 1;
+	localparam integer STATE_INC  = 2;
+	localparam integer STATE_KEEP = 3;
 	reg[1:0] pwm_state;
 
 	assign def_val = C_DEFAULT_VALUE;

@@ -93,6 +93,12 @@ module FIFO2MM_adv #
  	reg [C_IMG_WBITS-1:0] r_img_col_idx;
  	reg [C_IMG_HBITS-1:0] r_img_row_idx;
 
+	reg end_of_col;
+	reg end_of_row;
+	wire final_data;
+	assign final_data = (end_of_col && end_of_row);
+	reg [C_TRANSACTIONS_NUM-1:0] next_burst_len;
+
 	assign wnext = M_AXI_WREADY & M_AXI_WVALID;
 	assign burst_done = M_AXI_BVALID && M_AXI_BREADY;
 
@@ -269,7 +275,6 @@ module FIFO2MM_adv #
 	end
 
 	// @note next_burst_len is real length - 1
-	reg [C_TRANSACTIONS_NUM-1:0] next_burst_len;
 	always @(posedge M_AXI_ACLK) begin
 		if (M_AXI_ARESETN == 1'b0) begin
 			next_burst_len <= 0;
@@ -301,10 +306,7 @@ module FIFO2MM_adv #
 			end
 		end
 	end
-	reg end_of_col;
-	reg end_of_row;
-	wire final_data;
-	assign final_data = (end_of_col && end_of_row);
+
 	// @note img must > 2x2
 	always @(posedge M_AXI_ACLK) begin
 		if (M_AXI_ARESETN == 1'b0 || soft_resetn == 1'b0) begin

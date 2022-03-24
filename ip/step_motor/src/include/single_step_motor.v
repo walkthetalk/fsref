@@ -31,37 +31,45 @@ module single_step_motor #(
 	output wire o_xen,
 	output wire o_xrst,
 
-	input  wire                             i_xen  ,
-	input  wire                             i_xrst ,
-	input  wire [C_STEP_NUMBER_WIDTH-1:0]   stroke ,
-	input  wire [C_MICROSTEP_WIDTH-1:0]     i_ms   ,
+	input  wire                                    i_xen    ,
+	input  wire                                    i_xrst   ,
+	input  wire signed [C_STEP_NUMBER_WIDTH-1:0]   i_min_pos,
+	input  wire signed [C_STEP_NUMBER_WIDTH-1:0]   i_max_pos,
+	input  wire [C_MICROSTEP_WIDTH-1:0]            i_ms     ,
 
 	/// valid when C_ZPD == 1
-	output wire                             pri_zpsign ,
-	output wire                             pri_tpsign ,	/// terminal position detection
-	output wire                             pri_state,
-	output wire [C_SPEED_DATA_WIDTH-1:0]    pri_rt_speed,
-	output wire [C_STEP_NUMBER_WIDTH-1:0]   pri_position,
-	input  wire                             pri_start,	/// pulse sync to clk
-	input  wire                             pri_stop ,	/// pulse sync to clk
-	input  wire [C_SPEED_DATA_WIDTH-1:0]	pri_speed,
-	input  wire [C_STEP_NUMBER_WIDTH-1:0]	pri_step ,
-	input  wire                             pri_dir  ,
+	output wire                                    pri_zpsign ,	/// zero position sign
+	output wire                                    pri_ntsign ,	/// negative terminal sign
+	output wire                                    pri_ptsign ,	/// positive terminal sign
+	output wire                                    pri_state  ,
+	output wire [C_SPEED_DATA_WIDTH-1:0]           pri_rt_speed,
+	output wire signed [C_STEP_NUMBER_WIDTH-1:0]   pri_position,
+	input  wire                                    pri_start,	/// pulse sync to clk
+	input  wire                                    pri_stop ,	/// pulse sync to clk
+	input  wire [C_SPEED_DATA_WIDTH-1:0]	       pri_speed,
+	input  wire signed [C_STEP_NUMBER_WIDTH-1:0]   pri_step ,
+	input  wire                                    pri_abs  ,
 
-	input  wire                             ext_sel ,
+	input  wire                                    ext_sel ,
 
-	output wire                             ext_zpsign ,
-	output wire                             ext_tpsign ,	/// terminal position detection
-	output wire                             ext_state,
-	output wire [C_SPEED_DATA_WIDTH-1:0]    ext_rt_speed,
-	output wire [C_STEP_NUMBER_WIDTH-1:0]   ext_position,
-	input  wire                             ext_start,	/// pulse sync to clk
-	input  wire                             ext_stop ,	/// pulse sync to clk
-	input  wire [C_SPEED_DATA_WIDTH-1:0]	ext_speed,
-	input  wire [C_STEP_NUMBER_WIDTH-1:0]	ext_step ,
-	input  wire                             ext_dir,
-	input  wire                             ext_mod_remain,
-	input  wire [C_STEP_NUMBER_WIDTH-1:0]   ext_new_remain
+	output wire                                    ext_zpsign ,	/// zero position sign
+	output wire                                    ext_ntsign ,	/// negative terminal sign
+	output wire                                    ext_ptsign ,	/// positive terminal sign
+	output wire                                    ext_state  ,
+	output wire [C_SPEED_DATA_WIDTH-1:0]           ext_rt_speed,
+	output wire signed [C_STEP_NUMBER_WIDTH-1:0]   ext_position,	/// signed integer
+	input  wire                                    ext_start,	/// pulse sync to clk
+	input  wire                                    ext_stop ,	/// pulse sync to clk
+	input  wire [C_SPEED_DATA_WIDTH-1:0]           ext_speed,
+	input  wire signed [C_STEP_NUMBER_WIDTH-1:0]   ext_step ,	/// signed intger (sign -> direction)
+	input  wire                                    ext_abs,
+	input  wire                                    ext_mod_remain,
+	input  wire signed [C_STEP_NUMBER_WIDTH-1:0]   ext_new_remain,
+
+	output reg [31:0] test0,
+	output reg [31:0] test1,
+	output reg [31:0] test2,
+	output reg [31:0] test3
 );
 	/// state macro
 	localparam integer IDLE = 2'b00;
@@ -73,21 +81,37 @@ module single_step_motor #(
 	reg [C_SPEED_DATA_WIDTH-1:0]    speed_cur;
 	reg [C_SPEED_DATA_WIDTH-1:0]    speed_cnt;
 	reg [C_STEP_NUMBER_WIDTH-1:0]   step_cnt;
-	reg [C_STEP_NUMBER_WIDTH-1:0]	step_remain;
+	reg signed [C_STEP_NUMBER_WIDTH-1:0]	step_remain;
 	reg step_done;	/// keep one between final half step
 	reg[1:0] motor_state;
 	assign pri_state = motor_state[1];
 	wire is_idle; assign is_idle = (pri_state == 0);
 	wire is_running; assign is_running = (pri_state);
 	reg rd_en;
+	/// posedge of out drive
+	reg o_drive_d1;
+	always @ (posedge clk) begin
+		o_drive_d1 <= o_drive;
+	end
+	wire posedge_drive;
+	assign posedge_drive = o_drive_d1 && ~o_drive;
+
+	/// backwarding
+	wire backwarding;
+	assign backwarding = o_dir;
 
 	/// for zpd
+	reg signed [C_STEP_NUMBER_WIDTH-1:0] cur_position;
+	wire reach_neg_term;
+	wire reach_pos_term;
+	wire reach_zero_position;
 	wire shouldStop;
 
 	/// control selection
 	reg [C_SPEED_DATA_WIDTH-1:0]    req_speed;
-	reg [C_STEP_NUMBER_WIDTH-1:0]   req_step ;
+	reg signed [C_STEP_NUMBER_WIDTH-1:0]   req_step ;
 	reg                             req_dir  ;
+	reg                             req_abs  ;
 
 	/// start_pulse
 	reg start_pulse;
@@ -105,7 +129,10 @@ module single_step_motor #(
 						start_pulse <= 1'b1;
 						req_speed   <= pri_speed;
 						req_step    <= pri_step;
-						req_dir     <= pri_dir;
+						req_dir     <= pri_abs
+								? (pri_step > cur_position ? 0 : 1)
+								: pri_step[C_STEP_NUMBER_WIDTH-1];
+						req_abs     <= pri_abs;
 					end
 				end
 				else begin
@@ -113,9 +140,35 @@ module single_step_motor #(
 						start_pulse <= 1'b1;
 						req_speed   <= ext_speed;
 						req_step    <= ext_step;
-						req_dir     <= ext_dir;
+						req_dir     <= ext_abs
+								? (ext_step > cur_position ? 0 : 1)
+								: ext_step[C_STEP_NUMBER_WIDTH-1];
+						req_abs     <= ext_abs;
 					end
 				end
+			end
+		end
+	end
+
+	always @ (posedge clk) begin
+		if (resetn == 1'b0) begin
+			test0 <= 32'b1;
+			test1 <= 32'b1;
+			test2 <= 32'b1;
+			test3 <= 32'b1;
+		end
+		else begin
+			if (clk_en) begin
+				case (motor_state)
+				RUNNING: begin
+					if (shouldStop) begin
+						test3 <= cur_position;
+						test2 <= reach_neg_term;
+						test1 <= reach_pos_term;
+						test0 <= backwarding;
+					end
+				end
+				endcase
 			end
 		end
 	end
@@ -252,8 +305,23 @@ module single_step_motor #(
 				step_done <= 0;
 			end
 			RUNNING: begin
-				if (o_drive == 1 && speed_cnt == 0 && step_remain == 0)
-					step_done <= 1;
+				if (o_drive == 1 && speed_cnt == 0) begin
+				/// @note not simplify it, the cur_position is not stable
+					if (req_abs) begin
+						if (req_step == 0) begin
+							if (reach_zero_position)
+								step_done <= 1;
+						end
+						else begin
+							if (cur_position == req_step)
+								step_done <= 1;
+						end
+					end
+					else begin
+					 	if (step_remain == 0)
+						 	step_done <= 1;
+					end
+				end
 			end
 			endcase
 		end
@@ -276,6 +344,15 @@ module single_step_motor #(
 			endcase
 		end
 	end
+
+	wire [C_STEP_NUMBER_WIDTH-1:0] abs_remain;
+	abs #(
+		.C_WIDTH(C_STEP_NUMBER_WIDTH)
+	) abs_inst (
+		.din(step_remain),
+		.dout(abs_remain)
+	);
+
 	always @ (posedge clk) begin
 		if (resetn == 1'b0)
 			step_remain <= 0;
@@ -284,12 +361,20 @@ module single_step_motor #(
 		else if (clk_en) begin
 			case (motor_state)
 			IDLE: begin
-				if (start_pulse)
-					step_remain <= req_step - 1;
+				if (start_pulse) begin
+					if (req_dir)
+						step_remain <= req_step + 1;
+					else
+						step_remain <= req_step - 1;
+				end
 			end
 			RUNNING: begin
-				if (speed_cnt == 0 && o_drive == 1)
-					step_remain <= step_remain - 1;
+				if (speed_cnt == 0 && o_drive == 1) begin
+					if (req_dir)
+						step_remain <= step_remain + 1;
+					else
+						step_remain <= step_remain - 1;
+				end
 			end
 			endcase
 		end
@@ -314,8 +399,8 @@ module single_step_motor #(
 	reg   deac_ing;
 	always @ (posedge clk) begin
 		if (rd_en) begin
-			acce_ing <= (step_cnt    < acce_addr_max);
-			deac_ing <= (step_remain < deac_addr_max);
+			acce_ing <= (step_cnt   < acce_addr_max);
+			deac_ing <= (abs_remain < deac_addr_max);
 		end
 	end
 
@@ -328,8 +413,8 @@ module single_step_motor #(
 	assign deac_addr = r_deac_addr;
 	always @ (posedge clk) begin
 		if (rd_en_d1) begin
-			r_acce_addr <= (acce_ing ? step_cnt    : acce_addr_max);
-			r_deac_addr <= (deac_ing ? step_remain : deac_addr_max);
+			r_acce_addr <= (acce_ing ? step_cnt   : acce_addr_max);
+			r_deac_addr <= (deac_ing ? abs_remain : deac_addr_max);
 		end
 	end
 
@@ -429,93 +514,85 @@ endgenerate
 	/// zero position process
 	generate
 	if (C_ZPD) begin
-		wire forwarding;
-		assign forwarding = (o_dir == 1'b0);
-		wire backwarding;
-		assign backwarding = o_dir;
 
-		reg internal_zpd;
-		always @ (posedge clk) begin
-			if (resetn == 1'b0)
-				internal_zpd <= 0;
-			else begin
-				case (motor_state)
-				RUNNING: begin
-					if (forwarding) begin
-						if (zpd == 0)
-							internal_zpd <= 0;
-					end
-					else begin
-						if (zpd == 1)
-							internal_zpd <= 1;
-					end
-				end
-				default: begin
-					if (zpd == 1)
-						internal_zpd <= 1;
-				end
-				endcase
-			end
-		end
+		//reg internal_zpd;
+		//reg internal_ptd;
+		//reg internal_ntd;
+		//always @ (posedge clk) begin
+		//	if (resetn == 1'b0) begin
+		//		internal_zpd <= 0;
+		//		internal_ptd <= 0;
+		//		internal_ntd <= 0;
+		//	end
+		//	else begin
+		//		internal_zpd <= zpd;
+		//		internal_ptd <= (cur_position >= i_max_pos);
+		//		internal_ntd <= (cur_position <= i_min_pos);
+		//	end
+		//end
 
-		wire reach_zero_position;
-		assign reach_zero_position = (internal_zpd == 1'b1);
 		/// for shouldStop
-		assign pri_zpsign = internal_zpd;
-		reg r_tpsign;
-		assign pri_tpsign = r_tpsign;
 		assign shouldStop = ((step_done && (speed_cnt == 0))
-			|| (r_tpsign && forwarding)
-			|| (reach_zero_position && backwarding));
-
-		localparam integer C_INIT_POSITION = 1;
-		reg [C_STEP_NUMBER_WIDTH-1:0] cur_position;//stroke,
-		assign pri_position = cur_position;
-		wire reached_terminal_position;
-		assign reached_terminal_position = (cur_position == stroke);
-
-		/// posedge of out drive
-		reg o_drive_d1;
-		always @ (posedge clk) begin
-			o_drive_d1 <= o_drive;
-		end
-		wire posedge_drive;
-		assign posedge_drive = o_drive_d1 && ~o_drive;
+			|| (backwarding ? reach_neg_term : reach_pos_term));
 
 		/// current position
 		always @ (posedge clk) begin
-			if (resetn == 1'b0 || reach_zero_position)
-				cur_position <= C_INIT_POSITION;
+			if (resetn == 1'b0)
+				cur_position <= 0;
+			else if (reach_zero_position)
+				cur_position <= 0;
 			else if (posedge_drive) begin
-				if (forwarding) begin
-					if (~reached_terminal_position)
-						cur_position <= cur_position + 1;
+				if (backwarding) begin
+					if (cur_position > i_min_pos)
+						cur_position <= cur_position - 1;
 				end
 				else begin
-					if (cur_position > C_INIT_POSITION)
-						cur_position <= cur_position - 1;
+					if (cur_position < i_max_pos)
+						cur_position <= cur_position + 1;
 				end
 			end
 		end
 
-		/// terminal sign
-		always @ (posedge clk) begin
-			if (resetn == 1'b0)
-				r_tpsign <= 0;
-			else if (posedge_drive)
-				r_tpsign <= reached_terminal_position;
-		end
+		assign reach_neg_term = cur_position <= i_min_pos;
+		assign reach_pos_term = cur_position >= i_max_pos;
+		assign reach_zero_position = (zpd == 1'b1);
+
+		assign pri_zpsign = reach_zero_position;
+		assign pri_ptsign = reach_pos_term;
+		assign pri_ntsign = reach_neg_term;
+		assign pri_position = cur_position;
 	end
 	else begin
+		assign reach_neg_term = cur_position <= i_min_pos;
+		assign reach_pos_term = cur_position >= i_max_pos;
+		assign reach_zero_position = (cur_position == 0);
+		/// current position
+		always @ (posedge clk) begin
+			if (resetn == 1'b0)
+				cur_position <= 0;
+			else if (posedge_drive) begin
+				if (backwarding) begin
+					if (cur_position > i_min_pos)
+						cur_position <= cur_position - 1;
+				end
+				else begin
+					if (cur_position < i_max_pos)
+						cur_position <= cur_position + 1;
+				end
+			end
+		end
+
 		assign pri_zpsign = 0;
-		assign pri_tpsign = 0;
+		assign pri_ptsign = 0;
+		assign pri_ntsign = 0;
 		assign pri_position = 0;
 		assign shouldStop = (step_done && (speed_cnt == 0));
 	end
 	endgenerate
 
 	assign ext_zpsign   = pri_zpsign  ;
-	assign ext_tpsign   = pri_tpsign  ;
+	assign ext_ntsign   = pri_ntsign  ;
+	assign ext_ptsign   = pri_ptsign  ;
 	assign ext_state    = pri_state   ;
 	assign ext_rt_speed = pri_rt_speed;
 	assign ext_position = pri_position;

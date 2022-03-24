@@ -492,10 +492,10 @@ create_bd_intf_port -mode Slave -vlnv xilinx.com:interface:diff_analog_io_rtl:1.
 connect_bd_intf_net [get_bd_intf_ports heater_temp] [get_bd_intf_pins xadc/Vaux1]
 
 # NOTE: pcb is not connect xx_N, so we connect it to low level directly
-pip_connect_pin xlconstant_0/dout {
-	xadc/vauxn0
-	xadc/vauxn1
-}
+# pip_connect_pin xlconstant_0/dout {
+#	xadc/vauxn0
+#	xadc/vauxn1
+# }
 
 # connect interrupt
 connect_bd_net [get_bd_pins fscore/intr] [get_bd_pins cpu/IRQ_F2P]

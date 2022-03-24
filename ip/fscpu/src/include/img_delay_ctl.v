@@ -10,10 +10,10 @@ module img_delay_ctl # (
 
 	input  wire [31:0]              delay0_cnt,
 	input  wire [C_FRMN_WIDTH-1:0]  delay0_frm,
-	output reg         delay0_pulse,
+	output reg                      delay0_pulse,
 
-	input wire [C_STEP_NUMBER_WIDTH-1:0] cur_pos,
-	output reg [C_STEP_NUMBER_WIDTH-1:0] movie_pos
+	input wire signed [C_STEP_NUMBER_WIDTH-1:0] cur_pos,
+	output reg signed [C_STEP_NUMBER_WIDTH-1:0] movie_pos
 );
 
 	reg [31:0] time_cnt;
@@ -33,8 +33,8 @@ module img_delay_ctl # (
 	end
 
 	localparam integer C_MAX_FRMN = 2**C_FRMN_WIDTH;
-	reg [C_STEP_NUMBER_WIDTH-1:0]	history_pos[C_MAX_FRMN-1:1];
-	wire [C_STEP_NUMBER_WIDTH-1:0] hisAcur_pos[C_MAX_FRMN-1:0];
+	reg signed [C_STEP_NUMBER_WIDTH-1:0]	history_pos[C_MAX_FRMN-1:1];
+	wire signed [C_STEP_NUMBER_WIDTH-1:0]   hisAcur_pos[C_MAX_FRMN-1:0];
 	always @ (posedge clk) begin
 		if (delay0_pulse)
 			history_pos[1] <= cur_pos;

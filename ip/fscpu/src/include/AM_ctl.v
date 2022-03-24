@@ -13,12 +13,12 @@ module AM_ctl # (
 	output reg          exe_done,
 
 	input wire                req_ecf,
-	input wire                req_dir_back,
+	input wire                req_abs,
 	input wire                req_dep_img,
 	input wire [C_IMG_HW-1:0] req_img_dst,
 	input wire [C_IMG_HW-1:0] req_img_tol,
 	input wire [C_SPEED_DATA_WIDTH-1:0]  req_speed,
-	input wire [C_STEP_NUMBER_WIDTH-1:0] req_step,
+	input wire signed [C_STEP_NUMBER_WIDTH-1:0] req_step,
 
 	input wire                img_pulse,
 	input wire                img_l_valid,
@@ -34,22 +34,23 @@ module AM_ctl # (
 	input wire                img_ri_valid,
 	input wire [C_IMG_HW-1:0] img_ri_y    ,
 
-	output wire                           m_sel     ,
-	input  wire                           m_zpsign  ,
-	input  wire                           m_tpsign  ,
-	input  wire                           m_state   ,
-	input  wire [C_STEP_NUMBER_WIDTH-1:0] m_position,
-	output reg                            m_start   ,
-	output wire                           m_stop    ,
-	output reg  [C_SPEED_DATA_WIDTH-1:0]  m_speed   ,
-	output reg  [C_STEP_NUMBER_WIDTH-1:0] m_step    ,
-	output reg                            m_dir     ,
-	output wire                           m_mod_remain,
-	output wire [C_STEP_NUMBER_WIDTH-1:0] m_new_remain,
+	output wire                                  m_sel     ,
+	input  wire                                  m_ntsign  ,
+	input  wire                                  m_zpsign  ,
+	input  wire                                  m_ptsign  ,
+	input  wire                                  m_state   ,
+	input  wire signed [C_STEP_NUMBER_WIDTH-1:0] m_position,
+	output reg                                   m_start   ,
+	output wire                                  m_stop    ,
+	output reg  [C_SPEED_DATA_WIDTH-1:0]         m_speed   ,
+	output reg  signed [C_STEP_NUMBER_WIDTH-1:0] m_step    ,
+	output reg                                   m_abs     ,
+	output wire                                  m_mod_remain,
+	output wire signed [C_STEP_NUMBER_WIDTH-1:0] m_new_remain,
 
 	input  wire                           m_dep_state,
 
-	output reg                 rd_en,
+	//output reg                 rd_en,
 	output reg  [C_IMG_HW-1:0] rd_addr,
 	input  wire [C_STEP_NUMBER_WIDTH-1:0] rd_data,
 
@@ -60,19 +61,19 @@ module AM_ctl # (
 );
 
 //////////////////////////////// delay1 ////////////////////////////////////////
-	reg                img_o_valid_d1;
+	//reg                img_o_valid_d1;
 	reg [C_IMG_HW-1:0] img_o_diff_d1 ;
 	reg                img_i_valid_d1;
 	reg [C_IMG_HW-1:0] img_i_diff_d1 ;
 	always @ (posedge clk) begin
 		if (resetn == 1'b0) begin
-			img_o_valid_d1 <= 1'b0;
+			//img_o_valid_d1 <= 1'b0;
 			img_i_valid_d1 <= 1'b0;
 			img_o_diff_d1  <= 0;
 			img_i_diff_d1  <= 0;
 		end
 		else if (img_pulse) begin
-			img_o_valid_d1 <= (img_lo_valid & img_ro_valid);
+			//img_o_valid_d1 <= (img_lo_valid & img_ro_valid);
 			img_i_valid_d1 <= (img_li_valid & img_ri_valid);
 			if (C_L2R) begin
 				/// @note check sign
@@ -239,7 +240,7 @@ module AM_ctl # (
 	reg pos_ok;
 	always @ (posedge clk) begin
 		if (resetn == 1'b0) begin
-			rd_en        <= 1'b0;
+			//rd_en        <= 1'b0;
 			pos_ok       <= 0;
 			pos_needback <= 0;
 			rd_addr      <= 0;
@@ -247,11 +248,11 @@ module AM_ctl # (
 		else if (pen_d5) begin
 			pos_ok       <= (img_dst_d5 < req_img_tol);
 			pos_needback <= img_needback_d5;
-			rd_en        <= 1'b1;
+			//rd_en        <= 1'b1;
 			rd_addr      <= img_dst_d5;
 		end
 		else begin
-			rd_en <= 1'b0;
+			//rd_en <= 1'b0;
 		end
 	end
 
@@ -320,8 +321,8 @@ module AM_ctl # (
 			if (pen_d7 && img_self_valid && ~pos_ok) begin
 				m_start <= 1'b1;
 				m_speed <= req_speed;
-				m_step  <= rd_data;
-				m_dir   <= pos_needback;
+				m_step  <= (pos_needback ? (0-rd_data) : rd_data);
+				m_abs   <= 1'b0;
 			end
 		end
 		else begin
@@ -329,7 +330,7 @@ module AM_ctl # (
 				m_start <= 1'b1;
 				m_speed <= req_speed;
 				m_step  <= req_step;
-				m_dir   <= req_dir_back;
+				m_abs   <= req_abs;
 			end
 		end
 	end

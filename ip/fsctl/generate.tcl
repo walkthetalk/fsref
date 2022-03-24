@@ -240,10 +240,11 @@ for {set i 0} {$i < 8} {incr i} {
 		interface_mode {master}
 		enablement_dependency {\$C_MOTOR_NBR > $i}
 	}] [subst {
-		XEN       motor[set i]_xen
-		XRST      motor[set i]_xrst
-		STROKE    motor[set i]_stroke
-		MICROSTEP motor[set i]_ms
+		XEN          motor[set i]_xen
+		XRST         motor[set i]_xrst
+		MIN_POSITION motor[set i]_min_pos
+		MAX_POSITION motor[set i]_max_pos
+		MICROSTEP    motor[set i]_ms
 	}]
 	append_associate_busif o_clk_busif MOTOR[set i]_CFG
 
@@ -253,8 +254,9 @@ for {set i 0} {$i < 8} {incr i} {
 		interface_mode {master}
 		enablement_dependency {\$C_MOTOR_NBR > $i}
 	}] [subst {
+		NTSIGN    motor[set i]_ntsign
 		ZPSIGN    motor[set i]_zpsign
-		TPSIGN    motor[set i]_tpsign
+		PTSIGN    motor[set i]_ptsign
 		STATE     motor[set i]_state
 		RT_SPEED  motor[set i]_rt_speed
 		POSITION  motor[set i]_position
@@ -262,7 +264,7 @@ for {set i 0} {$i < 8} {incr i} {
 		STOP      motor[set i]_stop
 		SPEED     motor[set i]_speed
 		STEP      motor[set i]_step
-		DIRECTION motor[set i]_dir
+		ABSOLUTE  motor[set i]_abs
 	}]
 	append_associate_busif o_clk_busif MOTOR[set i]_REQ
 }

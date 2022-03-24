@@ -17,31 +17,32 @@ module PM_ctl # (
 	input wire [C_FRMN_WIDTH-1:0]    img_delay_frm,
 
 	input wire                req_single_dir,
-	input wire                req_dir_back,
+        input wire                req_abs,
 	input wire                req_dep_img,
 	input wire [C_IMG_WW-1:0] req_img_dst,
 	input wire [C_IMG_WW-1:0] req_img_tol,
 	input wire [C_SPEED_DATA_WIDTH-1:0]  req_speed,
-	input wire [C_STEP_NUMBER_WIDTH-1:0] req_step,
+        input wire signed [C_STEP_NUMBER_WIDTH-1:0] req_step,
 
 	input wire                img_pulse,
 	input wire                img_valid,	/// image position valid
 	input wire [C_IMG_WW-1:0] img_pos,	/// sync as pen[0]
 
 	output wire                           m_sel     ,
+	input  wire                           m_ntsign  ,
 	input  wire                           m_zpsign  ,
-	input  wire                           m_tpsign  ,
+	input  wire                           m_ptsign  ,
 	input  wire                           m_state   ,
-	input  wire [C_STEP_NUMBER_WIDTH-1:0] m_position,
+	input  wire signed [C_STEP_NUMBER_WIDTH-1:0] m_position,
 	output reg                            m_start   ,
 	output reg                            m_stop    ,
 	output reg  [C_SPEED_DATA_WIDTH-1:0]  m_speed   ,
-	output reg  [C_STEP_NUMBER_WIDTH-1:0] m_step    ,
-	output reg                            m_dir     ,
+	output reg signed [C_STEP_NUMBER_WIDTH-1:0] m_step    ,
+        output reg                            m_abs     ,
 	output reg                            m_mod_remain,
-	output reg  [C_STEP_NUMBER_WIDTH-1:0] m_new_remain,
+	output reg signed [C_STEP_NUMBER_WIDTH-1:0] m_new_remain,
 
-	output reg                 rd_en,
+	//output reg                 rd_en,
 	output reg  [C_IMG_WW-1:0] rd_addr,
 	input  wire [C_STEP_NUMBER_WIDTH-1:0] rd_data,
 
@@ -51,8 +52,11 @@ module PM_ctl # (
 	output wire [31:0]         test4
 );
 
+	wire req_dir_back;
+	assign req_dir_back = req_step[C_STEP_NUMBER_WIDTH-1];
+
 /////////////////// motor_pos ///////////////////////////////////////////
-	wire [C_STEP_NUMBER_WIDTH-1:0] movie_pos;
+	wire signed [C_STEP_NUMBER_WIDTH-1:0] movie_pos;
 	img_delay_ctl # (
 		.C_STEP_NUMBER_WIDTH(C_STEP_NUMBER_WIDTH),
 		.C_FRMN_WIDTH(C_FRMN_WIDTH),
@@ -135,7 +139,7 @@ module PM_ctl # (
 	reg pos_ok;
 	always @ (posedge clk) begin
 		if (resetn == 1'b0) begin
-			rd_en        <= 1'b0;
+			//rd_en        <= 1'b0;
 			pos_ok       <= 0;
 			pos_needback <= 0;
 			rd_addr      <= 0;
@@ -144,7 +148,7 @@ module PM_ctl # (
 			if (pos_rofr == 1'b0 && pos_lofl == 1'b0)
 				pos_ok <= 1'b1;
 			pos_needback <= (pos_lofd != C_L2R);
-			rd_en <= 1'b1;
+			//rd_en <= 1'b1;
 			if (pos_rofr)
 				rd_addr <= pos_cmd;
 			else if (pos_lofl)
@@ -153,7 +157,7 @@ module PM_ctl # (
 				rd_addr <= 0;
 		end
 		else begin
-			rd_en <= 1'b0;
+			//rd_en <= 1'b0;
 		end
 	end
 
@@ -187,7 +191,7 @@ module PM_ctl # (
 			pen_d4 <= pen_d3;
 	end
 //////////////////////////////// delay5 ////////////////////////////////////////
-	reg [C_STEP_NUMBER_WIDTH-1:0] dst_pos;
+	reg signed [C_STEP_NUMBER_WIDTH-1:0] dst_pos;
 	reg pos_over;
 	reg pos_ok_d5;
 	always @ (posedge clk) begin
@@ -268,6 +272,7 @@ module PM_ctl # (
 	always @ (posedge clk) begin
 		if (resetn == 1'b0) begin
 			m_start  <= 1'b0;
+			m_abs    <= 1'b0;
 			need_dyn_adjust <= 1'b0;
 		end
 		else if (m_start == 1'b1) begin
@@ -284,7 +289,7 @@ module PM_ctl # (
 						else begin
 							m_step <= 0;
 						end
-						m_dir <= req_dir_back;
+						m_abs <= 1'b0;
 					end
 
 					need_dyn_adjust <= ~img_valid;
@@ -296,7 +301,7 @@ module PM_ctl # (
 				m_start <= 1'b1;
 				m_speed <= req_speed;
 				m_step  <= req_step;
-				m_dir   <= req_dir_back;
+				m_abs   <= req_abs;
 			end
 		end
 	end

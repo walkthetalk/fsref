@@ -9,22 +9,23 @@ module RM_ctl # (
 
 	output reg          exe_done,
 
-	input wire                req_dir_back,
-	input wire [C_SPEED_DATA_WIDTH-1:0]  req_speed,
-	input wire [C_STEP_NUMBER_WIDTH-1:0] req_step,
+        input wire                                  req_abs,
+        input wire [C_SPEED_DATA_WIDTH-1:0]         req_speed,
+        input wire signed [C_STEP_NUMBER_WIDTH-1:0] req_step,
 
-	output wire                           m_sel     ,
-	input  wire                           m_zpsign  ,
-	input  wire                           m_tpsign  ,
-	input  wire                           m_state   ,
-	input  wire [C_STEP_NUMBER_WIDTH-1:0] m_position,
-	output reg                            m_start   ,
-	output reg                            m_stop    ,
-	output reg  [C_SPEED_DATA_WIDTH-1:0]  m_speed   ,
-	output reg  [C_STEP_NUMBER_WIDTH-1:0] m_step    ,
-	output reg                            m_dir     ,
-	output reg                            m_mod_remain,
-	output reg  [C_STEP_NUMBER_WIDTH-1:0] m_new_remain
+        output wire                                  m_sel     ,
+        input  wire                                  m_ntsign  ,
+        input  wire                                  m_zpsign  ,
+        input  wire                                  m_ptsign  ,
+        input  wire                                  m_state   ,
+        input  wire signed [C_STEP_NUMBER_WIDTH-1:0] m_position,
+        output reg                                   m_start   ,
+        output reg                                   m_stop    ,
+        output reg  [C_SPEED_DATA_WIDTH-1:0]         m_speed   ,
+        output reg signed [C_STEP_NUMBER_WIDTH-1:0]  m_step    ,
+        output reg                                   m_abs     ,
+        output reg                                   m_mod_remain,
+        output reg signed [C_STEP_NUMBER_WIDTH-1:0]  m_new_remain
 );
 
 	reg m_started;
@@ -68,7 +69,7 @@ module RM_ctl # (
 			m_start <= 1'b1;
 			m_speed <= req_speed;
 			m_step  <= req_step;
-			m_dir   <= req_dir_back;
+                        m_abs   <= req_abs;
 		end
 	end
 

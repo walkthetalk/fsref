@@ -56,8 +56,9 @@ foreach i {lp rp xa ya lr rr} {
 		bus_type_vlnv $VENDOR:interface:step_motor_req_ctl:1.0
 		interface_mode master
 	}] [subst {
+		NTSIGN     m[set i]_ntsign
 		ZPSIGN     m[set i]_zpsign
-		TPSIGN     m[set i]_tpsign
+		PTSIGN     m[set i]_ptsign
 		STATE      m[set i]_state
 		RT_SPEED   m[set i]_rt_speed
 		POSITION   m[set i]_position
@@ -65,7 +66,7 @@ foreach i {lp rp xa ya lr rr} {
 		STOP       m[set i]_stop
 		SPEED      m[set i]_speed
 		STEP       m[set i]_step
-		DIRECTION  m[set i]_dir
+		ABSOLUTE   m[set i]_abs
 		MOD_REMAIN m[set i]_mod_remain
 		NEW_REMAIN m[set i]_new_remain
 	}]

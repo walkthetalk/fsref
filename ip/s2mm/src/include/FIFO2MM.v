@@ -89,6 +89,9 @@ module FIFO2MM #
  	reg [C_IMG_WBITS-1:0] r_img_col_idx;
  	reg [C_IMG_HBITS-1:0] r_img_row_idx;
 
+	wire final_data;
+	assign final_data = (r_img_col_idx == 0 && r_img_row_idx == 0);
+
 	assign wnext = M_AXI_WREADY & M_AXI_WVALID;
 	assign burst_done = M_AXI_BVALID && M_AXI_BREADY;
 
@@ -263,9 +266,6 @@ module FIFO2MM #
 		else
 			burst_active <= burst_active;
 	end
-
-	wire final_data;
-	assign final_data = (r_img_col_idx == 0 && r_img_row_idx == 0);
 
 	always @(posedge M_AXI_ACLK) begin
 		if (M_AXI_ARESETN == 1'b0 || soft_resetn == 1'b0) begin

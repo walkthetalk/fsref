@@ -15,7 +15,12 @@ pip_add_bus_abstraction_port $busabs XRST {
 }
 
 # stroke
-pip_add_bus_abstraction_port $busabs STROKE {
+pip_add_bus_abstraction_port $busabs MIN_POSITION {
+	default_value 0
+	master_direction out
+	is_data true
+}
+pip_add_bus_abstraction_port $busabs MAX_POSITION {
 	default_value 0
 	master_direction out
 	is_data true

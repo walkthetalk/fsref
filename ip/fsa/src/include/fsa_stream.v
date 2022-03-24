@@ -255,7 +255,7 @@ module fsa_stream #(
 	reg rd_en_d4;
 	reg pfirst_d4;
 	reg xlast_d4;
-	reg [C_IMG_HW-1:0] py_d4;
+	//reg [C_IMG_HW-1:0] py_d4;
 	/// corner
 	reg lc_t;
 	reg lc_b;
@@ -271,7 +271,7 @@ module fsa_stream #(
 	always @ (posedge clk) begin
 		if (resetn == 1'b0) begin
 			rd_en_d4  <= 0;
-			py_d4     <= 0;
+			//py_d4     <= 0;
 			pfirst_d4 <= 0;
 			xlast_d4  <= 0;
 			lc_t <= 0;
@@ -287,7 +287,7 @@ module fsa_stream #(
 		end
 		else begin
 			rd_en_d4  <= rd_en_d3;
-			py_d4     <= py_d3;
+			//py_d4     <= py_d3;
 			pfirst_d4 <= pfirst_d3;
 			xlast_d4  <= xlast_d3;
 			lc_t      <= r_lft_corner_valid && ((r_lft_corner_top_y <= py_d3 && py_d3 < rd_top_outer)

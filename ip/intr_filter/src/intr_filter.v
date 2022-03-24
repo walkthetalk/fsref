@@ -43,25 +43,43 @@ module intr_filter #
 		assign intr_out2 = intr_out[2];
 		assign intr_in[2] = intr_in2;
 	end
+	else begin
+		assign intr_out2 = 0;
+	end
 	if (C_NUMBER > 3) begin
 		assign intr_out3 = intr_out[3];
 		assign intr_in[3] = intr_in3;
+	end
+	else begin
+		assign intr_out3 = 0;
 	end
 	if (C_NUMBER > 4) begin
 		assign intr_out4 = intr_out[4];
 		assign intr_in[4] = intr_in4;
 	end
+	else begin
+		assign intr_out4 = 0;
+	end
 	if (C_NUMBER > 5) begin
 		assign intr_out5 = intr_out[5];
 		assign intr_in[5] = intr_in5;
+	end
+	else begin
+		assign intr_out5 = 0;
 	end
 	if (C_NUMBER > 6) begin
 		assign intr_out6 = intr_out[6];
 		assign intr_in[6] = intr_in6;
 	end
+	else begin
+		assign intr_out6 = 0;
+	end
 	if (C_NUMBER > 7) begin
 		assign intr_out7 = intr_out[7];
 		assign intr_in[7] = intr_in7;
+	end
+	else begin
+		assign intr_out7 = 0;
 	end
 	endgenerate
 	

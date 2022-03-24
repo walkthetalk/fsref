@@ -1,3 +1,12 @@
+# negative terminal position sign
+pip_add_bus_abstraction_port $busabs NTSIGN {
+	default_value 0
+	master_direction in
+	master_width 1
+	slave_width 1
+	is_data true
+}
+
 # zero position sign
 pip_add_bus_abstraction_port $busabs ZPSIGN {
 	default_value 0
@@ -7,8 +16,8 @@ pip_add_bus_abstraction_port $busabs ZPSIGN {
 	is_data true
 }
 
-# terminal position sign
-pip_add_bus_abstraction_port $busabs TPSIGN {
+# positive terminal position sign
+pip_add_bus_abstraction_port $busabs PTSIGN {
 	default_value 0
 	master_direction in
 	master_width 1
@@ -72,7 +81,7 @@ pip_add_bus_abstraction_port $busabs STEP {
 	is_data true
 }
 
-pip_add_bus_abstraction_port $busabs DIRECTION {
+pip_add_bus_abstraction_port $busabs ABSOLUTE {
 	default_value 0
 	master_direction out
 	master_presence required

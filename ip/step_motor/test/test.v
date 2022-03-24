@@ -1,3 +1,4 @@
+`include "../src/include/abs.v"
 `include "../src/include/single_step_motor.v"
 `include "../src/include/block_ram.v"
 `include "../src/step_motor.v"
@@ -28,17 +29,19 @@ wire [C_MICROSTEP_WIDTH-1:0]   m0_ms;
 wire			       m0_xen;
 wire			       m0_xrst;
 
+wire                   s0_ntsign;
 wire			       s0_zpsign;
-wire			       s0_tpsign;
+wire			       s0_ptsign;
 wire			       s0_state;
-reg  [C_STEP_NUMBER_WIDTH-1:0] s0_stroke = 100;
+reg  [C_STEP_NUMBER_WIDTH-1:0] s0_min_pos = 0;
+reg  [C_STEP_NUMBER_WIDTH-1:0] s0_max_pos = 100;
 wire [C_SPEED_DATA_WIDTH-1:0]  s0_rt_speed;
 wire [C_STEP_NUMBER_WIDTH-1:0] s0_position;
 reg  [C_SPEED_DATA_WIDTH-1:0]  s0_speed;
 reg  [C_STEP_NUMBER_WIDTH-1:0] s0_step;
 reg			       s0_start;
 reg			       s0_stop;
-reg			       s0_dir;
+reg			       s0_abs;
 reg  [C_MICROSTEP_WIDTH-1:0]   s0_ms = 0;
 reg			       s0_xen = 0;
 reg			       s0_xrst = 0;
@@ -50,16 +53,18 @@ wire [C_MICROSTEP_WIDTH-1:0]   m1_ms;
 wire			       m1_xen;
 wire			       m1_xrst;
 
+wire                   s1_ntsign;
 wire			       s1_zpsign;
-wire			       s1_tpsign;
+wire			       s1_ptsign;
 wire			       s1_state;
-reg  [C_STEP_NUMBER_WIDTH-1:0] s1_stroke = 100;
+reg  [C_STEP_NUMBER_WIDTH-1:0] s1_min_pos = 0;
+reg  [C_STEP_NUMBER_WIDTH-1:0] s1_max_pos = 100;
 wire [C_SPEED_DATA_WIDTH-1:0]  s1_rt_speed;
 reg  [C_SPEED_DATA_WIDTH-1:0]  s1_speed;
 reg  [C_STEP_NUMBER_WIDTH-1:0] s1_step;
 reg			       s1_start;
 reg			       s1_stop;
-reg			       s1_dir;
+reg			       s1_abs;
 reg  [C_MICROSTEP_WIDTH-1:0]   s1_ms = 0;
 reg			       s1_xen = 0;
 reg			       s1_xrst = 0;
@@ -86,16 +91,18 @@ step_motor # (
 	.m0_ms    (m0_ms    ),
 	.m0_xen   (m0_xen   ),
 	.m0_xrst  (m0_xrst  ),
+	.s0_ntsign(s0_ntsign),
 	.s0_zpsign(s0_zpsign),
-	.s0_tpsign(s0_tpsign),
-	.s0_stroke(s0_stroke),
+	.s0_ptsign(s0_ptsign),
+	.s0_min_pos(s0_min_pos),
+	.s0_max_pos(s0_max_pos),
 	.s0_speed (s0_speed ),
 	.s0_rt_speed(s0_rt_speed),
 	.s0_position(s0_position),
 	.s0_step  (s0_step  ),
 	.s0_start (s0_start ),
 	.s0_stop  (s0_stop  ),
-	.s0_dir   (s0_dir   ),
+	.s0_abs   (s0_abs   ),
 	.s0_ms    (s0_ms    ),
 	.s0_state (s0_state ),
 	.s0_xen   (s0_xen   ),
@@ -108,15 +115,17 @@ step_motor # (
 	.m1_ms    (m1_ms    ),
 	.m1_xen   (m1_xen   ),
 	.m1_xrst  (m1_xrst  ),
+	.s1_ntsign(s1_ntsign),
 	.s1_zpsign(s1_zpsign),
-	.s1_tpsign(s1_tpsign),
-	.s1_stroke(s1_stroke),
+	.s1_ptsign(s1_ptsign),
+	.s1_min_pos(s1_min_pos),
+	.s1_max_pos(s1_max_pos),
 	.s1_speed (s1_speed ),
 	.s1_rt_speed(s1_rt_speed),
 	.s1_step  (s1_step  ),
 	.s1_start (s1_start ),
 	.s1_stop  (s1_stop  ),
-	.s1_dir   (s1_dir   ),
+	.s1_abs   (s1_abs   ),
 	.s1_ms    (s1_ms    ),
 	.s1_state (s1_state ),
 	.s1_xen   (s1_xen   ),
@@ -169,7 +178,7 @@ always @ (posedge ctl_clk) begin
 	else if (s0_state == 1'b0 && ~s0_start && ({$random}%1000 == 0) && ~br_init) begin
 		s0_speed <= 15;
 		s0_step  <= 30;
-		s0_dir   <= 0;
+		s0_abs   <= 0;
 		s0_start <= 1;
 		s0_ms    <= C_MS;
 	end
@@ -203,10 +212,10 @@ always @ (posedge ctl_clk) begin
 	if (resetn == 1'b0) begin
 		s1_start <= 0;
 	end
-	else if (s1_state == 1'b0 && ~s1_start && s1_cnt == 0) begin
+	else if (s1_state == 1'b0 && ~s1_start && s1_cnt == 1) begin
 		s1_speed <= 2;
 		s1_step  <= 30;
-		s1_dir   <= 0;
+		//s1_abs   <= 0;
 		s1_start <= 1;
 	end
 	else begin

@@ -84,7 +84,7 @@ module axis_generator #
 
 	//reg [C_IMG_WBITS-1:0] cidx;
 	reg [C_IMG_WBITS-1:0] cidx_next;
-	reg [C_IMG_HBITS-1:0] ridx;
+	//reg [C_IMG_HBITS-1:0] ridx;
 	reg [C_IMG_HBITS-1:0] ridx_next;
 
 	reg m_tuser;
@@ -175,12 +175,12 @@ endgenerate
 	//		cidx <= cidx_next;
 	//end
 
-	always @ (posedge clk) begin
-		if (resetn == 1'b0)
-			ridx <= 0;
-		else if (rupdate)
-			ridx <= ridx_next;
-	end
+	//always @ (posedge clk) begin
+	//	if (resetn == 1'b0)
+	//		ridx <= 0;
+	//	else if (rupdate)
+	//		ridx <= ridx_next;
+	//end
 
 	always @ (posedge clk) begin
 		if (resetn == 1'b0) begin
