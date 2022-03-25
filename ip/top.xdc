@@ -130,14 +130,14 @@ set_property -dict {IOSTANDARD LVCMOS33 PACKAGE_PIN V14 } [get_ports {rm_ms[2]}]
 set_property -dict {IOSTANDARD LVCMOS33 PACKAGE_PIN AB15} [get_ports {rm_ms[1]}]
 set_property -dict {IOSTANDARD LVCMOS33 PACKAGE_PIN Y15 } [get_ports {rm_ms[0]}]
 
-#set_property -dict {IOSTANDARD LVCMOS33 PACKAGE_PIN L21 } [get_ports {rm0_zpd}]
+set_property -dict {IOSTANDARD LVCMOS33 PACKAGE_PIN L21 } [get_ports {rm0_zpd}]
 
 set_property -dict {IOSTANDARD LVCMOS33 PACKAGE_PIN AB14} [get_ports {rm0_xen}]
 set_property -dict {IOSTANDARD LVCMOS33 PACKAGE_PIN AA13} [get_ports {rm0_xrst}]
 set_property -dict {IOSTANDARD LVCMOS33 PACKAGE_PIN W15 } [get_ports {rm0_dir}]
 set_property -dict {IOSTANDARD LVCMOS33 PACKAGE_PIN AA16} [get_ports {rm0_drive}]
 
-#set_property -dict {IOSTANDARD LVCMOS33 PACKAGE_PIN D18 } [get_ports {rm1_zpd}]
+set_property -dict {IOSTANDARD LVCMOS33 PACKAGE_PIN D18 } [get_ports {rm1_zpd}]
 
 set_property -dict {IOSTANDARD LVCMOS33 PACKAGE_PIN V13 } [get_ports {rm1_xen}]
 set_property -dict {IOSTANDARD LVCMOS33 PACKAGE_PIN H15 } [get_ports {rm1_xrst}]

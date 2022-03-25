@@ -433,6 +433,8 @@ create_bd_port -dir O am1_xrst
 create_bd_port -dir O am1_drive
 create_bd_port -dir O am1_dir
 create_bd_port -dir O -from 2 -to 0 rm_ms
+create_bd_port -dir I rm0_zpd
+create_bd_port -dir I rm1_zpd
 create_bd_port -dir O rm0_xen
 create_bd_port -dir O rm0_xrst
 create_bd_port -dir O rm0_drive
@@ -441,7 +443,7 @@ create_bd_port -dir O rm1_xen
 create_bd_port -dir O rm1_xrst
 create_bd_port -dir O rm1_drive
 create_bd_port -dir O rm1_dir
-foreach i {pm0_zpd pm1_zpd
+foreach i {pm0_zpd pm1_zpd rm0_zpd rm1_zpd
 	pm_ms pm0_xen pm0_xrst pm0_drive pm0_dir pm1_xen pm1_xrst pm1_drive pm1_dir
 	am_ms am0_xen am0_xrst am0_drive am0_dir am1_xen am1_xrst am1_drive am1_dir
 	rm_ms rm0_xen rm0_xrst rm0_drive rm0_dir rm1_xen rm1_xrst rm1_drive rm1_dir} {

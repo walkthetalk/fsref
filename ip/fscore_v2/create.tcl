@@ -273,7 +273,7 @@ proc create_fscore_v2 {
 	set_property -dict [list \
 		CONFIG.C_CLK_DIV_NBR 32 \
 		CONFIG.C_MOTOR_NBR 2 \
-		CONFIG.C_ZPD_SEQ {"00"} \
+		CONFIG.C_ZPD_SEQ {"11"} \
 		CONFIG.C_MICROSTEP_PASSTHOUGH_SEQ {"11"} \
 		CONFIG.C_STEP_NUMBER_WIDTH $motor_step_width \
 		CONFIG.C_SPEED_DATA_WIDTH $motor_speed_width \

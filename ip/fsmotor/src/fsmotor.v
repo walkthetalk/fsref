@@ -88,10 +88,12 @@ module fsmotor #
 	output wire                           am1_dir,
 
 	output wire [C_MICROSTEP_WIDTH-1:0]   rm_ms,
+	input  wire                           rm0_zpd,
 	output wire                           rm0_xen,
 	output wire                           rm0_xrst,
 	output wire                           rm0_drive,
 	output wire                           rm0_dir,
+	input  wire                           rm1_zpd,
 	output wire                           rm1_xen,
 	output wire                           rm1_xrst,
 	output wire                           rm1_drive,
@@ -100,7 +102,9 @@ module fsmotor #
 
 	assign s0_zpd = pm0_zpd;
 	assign s1_zpd = pm1_zpd;
-	assign pm_ms   = s0_ms;
+	assign s4_zpd = rm0_zpd;
+	assign s5_zpd = rm1_zpd;
+	assign pm_ms     = s0_ms;
 	assign pm0_xen   = s0_xen;
 	assign pm0_xrst  = s0_xrst;
 	assign pm0_drive = s0_drive;
