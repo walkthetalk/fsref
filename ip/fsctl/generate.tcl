@@ -299,6 +299,26 @@ for {set i 0} {$i < 1} {incr i} {
 	append_associate_busif o_clk_busif REQ[set i]_CTL
 }
 
+for {set i 0} {$i < 1} {incr i} {
+	pip_add_bus_if $core HEATER[set i]_CTL [subst {
+		abstraction_type_vlnv $VENDOR:interface:heater_cfg_ctl_rtl:1.0
+		bus_type_vlnv $VENDOR:interface:heater_cfg_ctl:1.0
+		interface_mode master
+	}] [subst {
+		AUTO_START heater[set i]_auto_start
+		AUTO_HOLD  heater[set i]_auto_hold
+		HOLD_V     heater[set i]_holdv
+		HEAT_V     heater[set i]_keepv
+		HEAT_TIME  heater[set i]_keept
+		FINISH_V   heater[set i]_finishv
+		START      heater[set i]_start
+		STOP       heater[set i]_stop
+		STATE      heater[set i]_state
+		VALUE      heater[set i]_value
+	}]
+	append_associate_busif o_clk_busif HEATER[set i]_CTL
+}
+
 # clock & reset
 pip_add_bus_if $core resetn {
 	abstraction_type_vlnv xilinx.com:signal:reset_rtl:1.0
@@ -355,6 +375,17 @@ pip_add_bus_if $core st_out_resetn {
 	POLARITY {ACTIVE_LOW}
 }
 append_associate_busif o_clk_reset st_out_resetn
+
+pip_add_bus_if $core heater0_resetn {
+	abstraction_type_vlnv xilinx.com:signal:reset_rtl:1.0
+	bus_type_vlnv xilinx.com:signal:reset:1.0
+	interface_mode master
+} {
+	RST heater0_resetn
+} {
+	POLARITY {ACTIVE_LOW}
+}
+append_associate_busif o_clk_reset heater0_resetn
 
 pip_add_bus_if $core o_clk {
 	abstraction_type_vlnv xilinx.com:signal:clock_rtl:1.0
@@ -809,4 +840,39 @@ pip_add_usr_par $core {C_PWM_CNT_WIDTH} {
 gui_new $core {page "pwm"} {
 	{param C_PWM_NBR}
 	{param C_PWM_CNT_WIDTH}
+}
+
+########################## page heater #############################
+pip_add_usr_par $core {C_HEAT_VALUE_WIDTH} {
+	display_name {Heater Value Width}
+	tooltip {Heater value Width}
+	widget {comboBox}
+} {
+	value_resolve_type user
+	value 12
+	value_format long
+	value_validation_type list
+	value_validation_list {10 12 14 16}
+} {
+	value 12
+	value_format long
+}
+pip_add_usr_par $core {C_HEAT_TIME_WIDTH} {
+	display_name {Heater Time Width}
+	tooltip {Heater Time Width}
+	widget {comboBox}
+} {
+	value_resolve_type user
+	value 32
+	value_format long
+	value_validation_type list
+	value_validation_list {16 32 64}
+} {
+	value 32
+	value_format long
+}
+
+gui_new $core {page "heater"} {
+	{param C_HEAT_VALUE_WIDTH}
+	{param C_HEAT_TIME_WIDTH}
 }

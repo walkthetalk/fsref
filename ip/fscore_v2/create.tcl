@@ -217,6 +217,8 @@ proc create_fscore_v2 {
 		vdma_timestamp_width 64 \
 		stream_bypass_bayer_extractor 0 \
 		pwm_num 8 \
+		heat_value_width 12 \
+		heat_time_width 64 \
 	]
 	dict append dic coreversion [format 0x%08x [clock seconds]]
 	dict for { k v } $dic {
@@ -346,6 +348,8 @@ proc create_fscore_v2 {
 		CONFIG.C_MICROSTEP_WIDTH $motor_ms_width \
 		CONFIG.C_PWM_NBR $pwm_num \
 		CONFIG.C_EXT_INT_WIDTH {2} \
+		CONFIG.C_HEAT_VALUE_WIDTH $heat_value_width \
+		CONFIG.C_HEAT_TIME_WIDTH $heat_time_width \
 	] [get_bd_cells $mname/fsctl]
 
 	create_bd_cell -type ip -vlnv $VENDOR:$LIBRARY:fscpu:$VERSION $mname/fscpu
@@ -413,8 +417,33 @@ proc create_fscore_v2 {
 	pip_connect_pin $mname/fsctl/extint1_src [subst {
 		$mname/intr_filter/intr_out1
 	}]
+######################################### heater ####################################
+	create_bd_cell -type ip -vlnv $VENDOR:$LIBRARY:heater:$VERSION $mname/heater
+	set_property -dict [list \
+		CONFIG.C_HEAT_VALUE_WIDTH $heat_value_width \
+		CONFIG.C_HEAT_TIME_WIDTH $heat_time_width \
+	] [get_bd_cells $mname/heater]
 
-	# external interface
+	create_bd_pin -dir O $mname/ext_heater_power
+	pip_connect_pin $mname/ext_heater_power [subst {
+		$mname/heater/power
+	}]
+	create_bd_pin -dir O $mname/ext_heater_enable
+	pip_connect_pin $mname/ext_heater_enable [subst {
+		$mname/heater/en
+	}]
+	create_bd_pin -dir O $mname/ext_heater_fan
+	pip_connect_pin $mname/ext_heater_fan [subst {
+		$mname/heater/fan
+	}]
+
+	create_bd_pin -dir O $mname/adc_resetn
+	pip_connect_pin $mname/fsctl/heater0_resetn [subst {
+		$mname/adc_resetn
+		$mname/heater/resetn
+	}]
+
+	################################ external interface #############################
 	create_bd_intf_pin -mode Slave -vlnv xilinx.com:interface:aximm_rtl:1.0 $mname/S_AXI_LITE
 
 	create_bd_intf_pin -mode Master -vlnv xilinx.com:interface:aximm_rtl:1.0 $mname/M0_AXI
@@ -423,6 +452,7 @@ proc create_fscore_v2 {
 
 	create_bd_intf_pin -mode Slave -vlnv xilinx.com:interface:axis_rtl:1.0 $mname/S0_AXIS
 	create_bd_intf_pin -mode Slave -vlnv xilinx.com:interface:axis_rtl:1.0 $mname/S1_AXIS
+	create_bd_intf_pin -mode Slave -vlnv xilinx.com:interface:axis_rtl:1.0 $mname/ADC_AXIS
 
 	create_bd_intf_pin -mode Master -vlnv xilinx.com:interface:axis_rtl:1.0 $mname/M_AXIS
 
@@ -473,6 +503,8 @@ proc create_fscore_v2 {
 		$mname/fsctl/PWM5_CTL            $mname/pwm5/S_CTL
 		$mname/fsctl/PWM6_CTL            $mname/pwm6/S_CTL
 		$mname/fsctl/PWM7_CTL            $mname/pwm7/S_CTL
+		$mname/fsctl/HEATER0_CTL         $mname/heater/CTL
+		$mname/heater/S_AXIS             $mname/ADC_AXIS
 	}]
 
 	pip_connect_pin $mname/fsctl/st_out_resetn [subst {
@@ -534,6 +566,7 @@ proc create_fscore_v2 {
 		$mname/pwm7/clk
 		$mname/fscpu/clk
 		$mname/intr_filter/clk
+		$mname/heater/clk
 	}]
 	create_bd_pin -dir I $mname/resetn
 	pip_connect_pin $mname/resetn [subst {

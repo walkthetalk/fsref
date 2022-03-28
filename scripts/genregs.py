@@ -32,6 +32,8 @@ def suppsection(lvl, s):
 	return ret
 def suppreadreg0(lvl, ridx):
 	return suppline(lvl, "assign slv_reg[{}] = 0;".format(str(ridx)))
+def suppreadreg_highpart0(lvl, ridx, lidx):
+	return suppline(lvl, "assign slv_reg[{}][31:{}] = 0;".format(str(ridx), str(lidx)))
 
 def str4array(ifname='', pname='', namelen = 0):
 	ifprefix = '' if ifname == '' else (ifname + '_')
@@ -328,7 +330,7 @@ class VPort(VBase):
 			return self._get("hbit") + "+1"
 		if self._has("width"):
 			return self._get("width")
-		return ""
+		return 1
 	@property
 	def lidx(self):
 		if self._has("hidx"):
@@ -503,7 +505,7 @@ class VIntface(VBase):
 			ret += suppline(lvl, stringfy2(
 					VBase({}), hlwname,
 					self, hlsname,
-					str4intdly(self.name), item.name, item.iotype, "reg",
+					str4intdly(self.name), item.name, item.iotype, ("reg" if str(item.width) == "1" else "reg[{} - 1 : 0]".format(str(item.width))),
 					self.__lendict(self._inttriggerports), False, False
 				))
 			ret += suppline(lvl, stringfy2(
@@ -822,6 +824,21 @@ class VIfPwmCtl(VIntface):
 		self._addPort({'ftype': 'cfg',     'iotype': 'output', 'name': 'en'})
 		self._addPort({'ftype': 'cfg',     'iotype': 'output', 'name': 'numerator',   'width': dictData["ndwidth"] })
 		self._addPort({'ftype': 'cfg',     'iotype': 'output', 'name': 'denominator', 'width': dictData["ndwidth"] })
+class VIfHeaterCtl(VIntface):
+	def __init__(self, dictData):
+		super(VIfHeaterCtl, self).__init__(dictData)
+
+		self._addPort({'ftype': 'cfg',     'iotype': 'output', 'name': 'resetn'})
+		self._addPort({'ftype': 'cfg',     'iotype': 'output', 'name': 'auto_start'})
+		self._addPort({'ftype': 'cfg',     'iotype': 'output', 'name': 'auto_hold'})
+		self._addPort({'ftype': 'cfg',     'iotype': 'output', 'name': 'holdv',   'width': dictData["vwidth"] })
+		self._addPort({'ftype': 'cfg',     'iotype': 'output', 'name': 'keepv',   'width': dictData["vwidth"] })
+		self._addPort({'ftype': 'cfg',     'iotype': 'output', 'name': 'keept',    'width': dictData["twidth"] })
+		self._addPort({'ftype': 'cfg',     'iotype': 'output', 'name': 'finishv', 'width': dictData["vwidth"] })
+		self._addPort({'ftype': 'cfg',     'iotype': 'output', 'name': 'start'})
+		self._addPort({'ftype': 'cfg',     'iotype': 'output', 'name': 'stop'})
+		self._addPort({'ftype': 'intsrc', "trigint": "doubleedge", 'iotype': 'input',  'name': 'state', 'width': '2' })
+		self._addPort({'ftype': 'inro',    'iotype': 'input',  'name': 'value',   'width': dictData["vwidth"] })
 
 class VIfReqCtl(VIntface):
 	def __init__(self, dictData):
@@ -1007,6 +1024,8 @@ class VMFsctl(VerilogModuleFile):
 		self.addParam({'dtype': 'integer', 'name': 'C_PWM_NBR',           'defV': "8"           })
 		self.addParam({'dtype': 'integer', 'name': 'C_PWM_CNT_WIDTH',     'defV': "16"          })
 		self.addParam({'dtype': 'integer', 'name': 'C_EXT_INT_WIDTH',     'defV': "8"          })
+		self.addParam({'dtype': 'integer', 'name': 'C_HEAT_VALUE_WIDTH',     'defV': "12"          })
+		self.addParam({'dtype': 'integer', 'name': 'C_HEAT_TIME_WIDTH',     'defV': "32"          })
 		self.addParam({'dtype': 'integer', 'name': 'C_TEST',              'defV': "0"           })
 	def __addports(self):
 		self.addExtPort({'iotype': 'input',  'wrtype': 'wire', 'name': 'clk'})
@@ -1088,6 +1107,14 @@ class VMFsctl(VerilogModuleFile):
 			"comments": "request to fscpu"
 		})
 
+		self.addExtInterface("VIfHeaterCtl", {
+			"name": "heater",
+			"size": "1",
+			"realsize": "1",
+			"vwidth": "C_HEAT_VALUE_WIDTH",
+			"twidth": "C_HEAT_TIME_WIDTH",
+		})
+
 		self.addExtInterface("VIfExtIntSrc", {
 			"name": "extint",
 			"size": "8",
@@ -1126,6 +1153,11 @@ class VMFsctl(VerilogModuleFile):
 		})
 		self.addIntPort({
 			"name": "reqctl_int",
+			"wrtype": "reg",
+			'comments': "request interrupt"
+		})
+		self.addIntPort({
+			"name": "heater_int",
 			"wrtype": "reg",
 			'comments': "request interrupt"
 		})
@@ -1566,7 +1598,8 @@ class VMFsctl(VerilogModuleFile):
 		ret += drc_ro(lvl, ridx, 0, 1, 'stream_int')
 		ret += drc_ro(lvl, ridx, 1, 1, 'motor_int')
 		ret += drc_ro(lvl, ridx, 2, 1, 'reqctl_int')
-		ret += drc_ro(lvl, ridx, 3, 1, 'ext_int')
+		ret += drc_ro(lvl, ridx, 3, 1, 'heater_int')
+		ret += drc_ro(lvl, ridx, 4, 1, 'ext_int')
 		ret += suppline(lvl, 'assign intr = (slv_reg[{}] != 0);'.format(all_int_ridx))
 
 		ridx += 1
@@ -1668,8 +1701,109 @@ class VMFsctl(VerilogModuleFile):
 		ret += suppcomment(lvl, str4regdefcomment(ridx))
 		ret += self.gen_loop(lvl, 'C_EXT_INT_WIDTH', str4regdef(ridx),
 				drc_ro(lvl+1, ridx, 'i', 1, 'extint_src[i]'))
+
+		ridx += 1
+		ret += suppcomment(lvl, str4regdefcomment(ridx))
+		ret += suppreadreg0(lvl, ridx)
+		################################ heater#########################################
+		intf = self.getif('heater')
+
+		ridx += 1
+		ret += suppcomment(lvl, str4regdefcomment(ridx))
+		ret += drc_rw(lvl, ridx, 0, 1, str4array(intf.name, 'resetn') + '[0]')
+
+		ridx += 1
+		heater_int_ena_ridx = ridx
+		ret += suppcomment(lvl, str4regdefcomment(ridx))
+		ret += self.gen_loop(lvl, intf.realsize, str4regdef(ridx),
+				drc_int_ena(lvl+1, ridx+0, "i", str4intena(intf.name,'state') + '[i]'))
+		ridx += 1
+		heater_int_sta_ridx = ridx
+		ret += suppcomment(lvl, str4regdefcomment(ridx))
+		ret += self.gen_loop(lvl, intf.realsize, str4regdef(ridx),
+				drc_int_sta(lvl+1, ridx, "i", str4intsta(intf.name,'state') + '[i]'))
+		ret += self.gen_loop(lvl, intf.realsize, 'loop4' + str4intclr(intf.name,'state'),
+				drc_int_clr(lvl+1, ridx, "i", str4intclr(intf.name,'state') + '[i]'))
+		ret += suppline(lvl, str4alwaysbegin())
+		ret += suppline(lvl+1, 'heater_int <= ((slv_reg[{}] & slv_reg[{}]) != 0);'.format(
+				heater_int_ena_ridx, heater_int_sta_ridx
+			))
+		ret += suppline(lvl, str4alwaysend())
+
+		ridx += 1
+		ret += suppcomment(lvl, str4regdefcomment(ridx))
+		# @note only one heater
+		heater_state_width = intf.getport('state').width
+		ret += drc_ro(lvl, ridx, 0, heater_state_width, str4array(intf.name, 'state') + '[0]')
+		
+		ridx += 1
+		ret += suppcomment(lvl, str4regdefcomment(ridx))
+		ret += drc_ro(lvl, ridx, 0, 32, str4array(intf.name, 'value') + '[0]')
+
+		# @note heater config
+		ridx += 1
+		ret += suppcomment(lvl, str4regdefcomment(ridx))
+		ret += drc_rw(lvl, ridx, 0, 1, str4array(intf.name, 'auto_start') + '[0]', 0)
+		ret += drc_rw(lvl, ridx, 1, 1, str4array(intf.name, 'auto_hold') + '[0]', 0)
+		ret += suppreadreg_highpart0(lvl, ridx, 2)
+		ridx += 1
+		ret += suppcomment(lvl, str4regdefcomment(ridx))
+		tmp_width = intf.getport('holdv').width
+		ret += drc_rw(lvl, ridx, 0, tmp_width, str4array(intf.name, 'holdv') + '[0]', 0)
+		ret += suppreadreg_highpart0(lvl, ridx, tmp_width)
+		ridx += 1
+		ret += suppcomment(lvl, str4regdefcomment(ridx))
+		tmp_width = intf.getport('keepv').width
+		ret += drc_rw(lvl, ridx, 0, tmp_width, str4array(intf.name, 'keepv') + '[0]', 0)
+		ret += suppreadreg_highpart0(lvl, ridx, tmp_width)
+		ridx += 1
+		ret += suppcomment(lvl, str4regdefcomment(ridx))
+		tmp_width = intf.getport('keept').width
+		ret += suppline(lvl, "if ({} < 32) begin: reg{}_l32".format(tmp_width, ridx))
+		ret += drc_rw(lvl+1, ridx, 0, tmp_width, str4array(intf.name, 'keept') + '[0]', 0)
+		ret += suppreadreg_highpart0(lvl+1, ridx, tmp_width)
+		ret += suppline(lvl, "end")
+		ret += suppline(lvl, "else begin")
+		ret += drc_rw(lvl+1, ridx, 0, 32, str4array(intf.name, 'keept') + '[0][31:0]', 0)
+		ret += suppline(lvl, "end")
+		ridx += 1
+		ret += suppcomment(lvl, str4regdefcomment(ridx))
+		ret += suppline(lvl, "if ({} <= 32) begin: reg{}_le32".format(tmp_width, ridx))
+		ret += suppreadreg0(lvl, ridx)
+		ret += suppline(lvl, "end")
+		ret += suppline(lvl, "else if ({} < 64) begin: reg{}_l64".format(tmp_width, ridx))
+		ret += drc_rw(lvl+1, ridx, 0, (str(tmp_width) + "-32"), str4array(intf.name, 'keept') + '[0][{}-1:32]'.format(tmp_width), 0)
+		ret += suppreadreg_highpart0(lvl+1, ridx, (str(tmp_width) + "-32"))
+		ret += suppline(lvl, "end")
+		ret += suppline(lvl, "else begin")
+		ret += drc_rw(lvl+1, ridx, 0, 32, str4array(intf.name, 'keept') + '[0][63:32]', 0)
+		ret += suppline(lvl, "end")
+		ridx += 1
+		ret += suppcomment(lvl, str4regdefcomment(ridx))
+		tmp_width = intf.getport('finishv').width
+		ret += drc_rw(lvl, ridx, 0, tmp_width, str4array(intf.name, 'finishv') + '[0]', 0)
+		ret += suppreadreg_highpart0(lvl, ridx, tmp_width)
+
+		ridx += 1
+		ret += suppcomment(lvl, str4regdefcomment(ridx))
+		ret += drc_wo(lvl, ridx, 0, 1, str4array(intf.name, 'start') + '[0]', 0, 'true')
+		ret += drc_wo(lvl, ridx, 1, 1, str4array(intf.name, 'stop') + '[0]', 0, 'true')
+		ret += suppreadreg0(lvl, ridx)
+
+		ridx += 1
+		ret += suppreadreg0(lvl, ridx)
+		ridx += 1
+		ret += suppreadreg0(lvl, ridx)
+		ridx += 1
+		ret += suppreadreg0(lvl, ridx)
+		ridx += 1
+		ret += suppreadreg0(lvl, ridx)
+		ridx += 1
+		ret += suppreadreg0(lvl, ridx)
+		ridx += 1
+		ret += suppreadreg0(lvl, ridx)
 		################################ test ##########################################
-		for i in range(0, 16):
+		for i in range(0, 8):
 			ridx += 1
 			ret += suppcomment(lvl, str4regdefcomment(ridx))
 			ret += drc_ro(lvl, ridx, 0, 32, 'test' + str(i))

@@ -15,6 +15,7 @@ set if_list [list \
 	fsa_ctl \
 	fsa_result \
 	req_ctl \
+	heater_cfg_ctl \
 ]
 
 set ip_list [list \
@@ -99,6 +100,9 @@ set ip_list [list \
 	fscpu \
 		{Fusion Splicer CPU} \
 		{Fusion Splicer CPU} \
+	heater \
+		{Heater Controller} \
+		{Heater Controller} \
 ]
 
 if { $argc eq 1 } {

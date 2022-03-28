@@ -64,6 +64,7 @@ ${XPR_FILE}: ${REG_FILE}
 	-tclargs "${dir_main}"
 
 IP_list := fscmos \
+	heater_cfg_ctl \
 	fslcd \
 	pwm \
 	fsmotor \
@@ -90,6 +91,7 @@ IP_list := fscmos \
 	fsa_v2 \
 	intr_filter \
 	fscpu \
+	heater \
 
 $(foreach temp,${IP_list},$(eval $(call IP_template,${temp})))
 

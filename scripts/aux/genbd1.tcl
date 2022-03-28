@@ -207,6 +207,7 @@ set_property -dict [list \
     CONFIG.ENABLE_DCLK {false} \
     CONFIG.ENABLE_CALIBRATION_AVERAGING {true} \
     CONFIG.ENABLE_RESET {false} \
+    CONFIG.ENABLE_AXI4STREAM {true} \
     CONFIG.OT_ALARM {false} \
     CONFIG.USER_TEMP_ALARM {false} \
     CONFIG.VCCINT_ALARM {false} \
@@ -225,8 +226,7 @@ set_property -dict [list \
     CONFIG.SEQUENCER_MODE {Continuous} \
     CONFIG.ENABLE_DRP {false} \
     CONFIG.EXTERNAL_MUX_CHANNEL {VP_VN} \
-    CONFIG.SINGLE_CHANNEL_SELECTION \
-    {TEMPERATURE}\
+    CONFIG.SINGLE_CHANNEL_SELECTION {TEMPERATURE} \
 ] [get_bd_cells xadc]
 
 
@@ -313,6 +313,7 @@ pip_connect_intf_net {
 	cpu/M_AXI_GP0            ic_ctl/S00_AXI
 	ic_ctl/M00_AXI           fscore/S_AXI_LITE
 	fscore/M_AXIS            videoout/video_in
+	xadc/M_AXIS              fscore/ADC_AXIS
 	videoout/vid_io_out      fslcd/vid_io_in
 	fscmos_0/vid_io_out      videoin_0/vid_io_in
 	videoin_0/video_out      fscore/S0_AXIS
@@ -475,11 +476,11 @@ connect_bd_net [get_bd_ports discharge_power] [get_bd_pins fscore/discharge_powe
 create_bd_port -dir O fan_en
 connect_bd_net [get_bd_ports fan_en] [get_bd_pins fscore/fan_en]
 create_bd_port -dir O heater_power
-connect_bd_net [get_bd_ports heater_power] [get_bd_pins fscore/heater_power]
+connect_bd_net [get_bd_ports heater_power] [get_bd_pins fscore/ext_heater_power]
 create_bd_port -dir O buzz_en
 connect_bd_net [get_bd_ports buzz_en] [get_bd_pins fscore/beeper_en]
 create_bd_port -dir O heater_en
-connect_bd_net [get_bd_ports heater_en] [get_bd_pins fscore/heater_en]
+connect_bd_net [get_bd_ports heater_en] [get_bd_pins fscore/ext_heater_enable]
 
 # connect from external keyboard
 set_property -dict [list \
@@ -492,6 +493,16 @@ create_bd_intf_port -mode Slave -vlnv xilinx.com:interface:diff_analog_io_rtl:1.
 connect_bd_intf_net [get_bd_intf_ports power_volt] [get_bd_intf_pins xadc/Vaux0]
 create_bd_intf_port -mode Slave -vlnv xilinx.com:interface:diff_analog_io_rtl:1.0 heater_temp
 connect_bd_intf_net [get_bd_intf_ports heater_temp] [get_bd_intf_pins xadc/Vaux1]
+pip_connect_pin fscore/adc_resetn {
+	xadc/m_axis_resetn
+}
+pip_connect_intf_net {
+	xadc/M_AXIS              fscore/ADC_AXIS
+}
+pip_connect_pin cpu/FCLK_CLK1 {
+	xadc/m_axis_aclk
+	xadc/s_axis_aclk
+}
 
 # NOTE: pcb is not connect xx_N, so we connect it to low level directly
 # pip_connect_pin xlconstant_0/dout {
