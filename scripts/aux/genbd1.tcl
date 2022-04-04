@@ -485,7 +485,7 @@ connect_bd_net [get_bd_ports heater_en] [get_bd_pins fscore/ext_heater_enable]
 # connect from external keyboard
 set_property -dict [list \
 	CONFIG.PCW_GPIO_EMIO_GPIO_ENABLE {1} \
-	CONFIG.PCW_GPIO_EMIO_GPIO_IO {16}] [get_bd_cells cpu]
+	CONFIG.PCW_GPIO_EMIO_GPIO_IO {17}] [get_bd_cells cpu]
 make_bd_intf_pins_external -name gpio_key [get_bd_intf_pins cpu/GPIO_0]
 
 # connect xadc

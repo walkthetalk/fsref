@@ -196,6 +196,8 @@ set_property -dict {IOSTANDARD LVCMOS33 PACKAGE_PIN W20 } [get_ports {gpio_key_t
 set_property -dict {IOSTANDARD LVCMOS33 PACKAGE_PIN G22 } [get_ports {gpio_key_tri_io[14]}]
 ######## POWER_LED
 set_property -dict {IOSTANDARD LVCMOS33 PACKAGE_PIN M22 } [get_ports {gpio_key_tri_io[15]}]
+######## W1 - DS18B20
+set_property -dict {IOSTANDARD LVCMOS33 PACKAGE_PIN W10 } [get_ports {gpio_key_tri_io[16]}]
 
 # misc
 set_property -dict {IOSTANDARD LVCMOS33 PACKAGE_PIN Y19 } [get_ports {fs_cover}]
