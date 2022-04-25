@@ -95,12 +95,8 @@ proc create_pvdma_v2 {
 			CONFIG.Almost_Full_Flag {true} \
 		] [get_bd_cells $mname/fifo_s2mm]
 
-		create_bd_cell -type ip -vlnv $VENDOR:$LIBRARY:axis_relay:$VERSION $mname/s2mm_relay
-		set_property -dict [list CONFIG.C_PIXEL_WIDTH $pixel_width] [get_bd_cells $mname/s2mm_relay]
-
 		create_bd_intf_pin -mode Slave -vlnv xilinx.com:interface:axis_rtl:1.0 $mname/S_AXIS
-		connect_bd_intf_net [get_bd_intf_pins $mname/s2mm/S_AXIS] [get_bd_intf_pins $mname/s2mm_relay/M_AXIS]
-		connect_bd_intf_net [get_bd_intf_pins $mname/s2mm_relay/S_AXIS] [get_bd_intf_pins $mname/S_AXIS]
+		connect_bd_intf_net [get_bd_intf_pins $mname/s2mm/S_AXIS] [get_bd_intf_pins $mname/S_AXIS]
 
 		connect_bd_intf_net [get_bd_intf_pins $mname/s2mm/FIFO_WRITE] [get_bd_intf_pins $mname/fifo_s2mm/FIFO_WRITE]
 		connect_bd_intf_net [get_bd_intf_pins $mname/s2mm/FIFO_READ] [get_bd_intf_pins $mname/fifo_s2mm/FIFO_READ]

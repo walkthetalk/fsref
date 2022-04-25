@@ -24,7 +24,7 @@ proc creat_stream_v2 {
 
 	create_bd_cell -type hier $mname
 
-	create_bd_cell -type ip -vlnv $VENDOR:$LIBRARY:axis_reshaper:$VERSION $mname/axis_reshaper
+	create_bd_cell -type ip -vlnv $VENDOR:$LIBRARY:axis_reshaper_v2:$VERSION $mname/axis_reshaper
 	set_property -dict [list \
 		CONFIG.C_PIXEL_WIDTH $channel_width \
 	] [get_bd_cells $mname/axis_reshaper]
@@ -89,8 +89,6 @@ proc creat_stream_v2 {
 	create_bd_pin -dir I $mname/s_resetn
 	pip_connect_pin $mname/s_resetn [subst {
 		$mname/axis_reshaper/resetn
-		$mname/axis_bayer_extractor/resetn
-		$mname/pvdma/s2mm_resetn
 	}]
 	create_bd_pin -dir I $mname/m_resetn
 	pip_connect_pin $mname/m_resetn [subst {
@@ -120,7 +118,10 @@ proc creat_stream_v2 {
 		] [get_bd_cells $mname/axis_broadcaster]
 
 		create_bd_cell -type ip -vlnv $VENDOR:$LIBRARY:window_broadcaster:$VERSION $mname/size_broadcaster
-		set_property -dict [list CONFIG.C_HAS_POSITION {false}] [get_bd_cells $mname/size_broadcaster]
+		set_property -dict [list \
+			CONFIG.C_MASTER_NUM 3 \
+			CONFIG.C_HAS_POSITION {false} \
+		] [get_bd_cells $mname/size_broadcaster]
 
 		create_bd_cell -type ip -vlnv $VENDOR:$LIBRARY:window_broadcaster:$VERSION $mname/window_broadcaster
 		set_property -dict [list CONFIG.C_HAS_POSITION {true}] [get_bd_cells $mname/window_broadcaster]
@@ -146,6 +147,7 @@ proc creat_stream_v2 {
 			$mname/IMG_SIZE                     $mname/size_broadcaster/S_WIN
 			$mname/size_broadcaster/M0_WIN      $mname/fsa/IMG_SIZE
 			$mname/size_broadcaster/M1_WIN      $mname/pvdma/IMG_SIZE
+			$mname/size_broadcaster/M2_WIN      $mname/axis_reshaper/S_SIZE
 			$mname/M_WIN                        $mname/window_broadcaster/S_WIN
 			$mname/window_broadcaster/M0_WIN    $mname/fsa/S_WIN_CTL
 			$mname/window_broadcaster/M1_WIN    $mname/pvdma/S_WIN
@@ -156,9 +158,11 @@ proc creat_stream_v2 {
 			$mname/axis_broadcaster/aclk
 		}]
 
-		pip_connect_pin $mname/s_resetn [subst {
+		pip_connect_pin $mname/axis_reshaper/o_resetn [subst {
 			$mname/fsa/resetn
 			$mname/axis_broadcaster/aresetn
+			$mname/axis_bayer_extractor/resetn
+			$mname/pvdma/s2mm_resetn
 		}]
 
 		pip_connect_pin $mname/fsync [subst {
