@@ -77,6 +77,7 @@ IP_list := fscmos \
 	axis_relay \
 	axis_bayer_extractor \
 	axis_reshaper \
+	axis_reshaper_v2 \
 	axis_scaler \
 	mutex_buffer \
 	s2mm \

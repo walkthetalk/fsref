@@ -58,6 +58,9 @@ set ip_list [list \
 	axis_reshaper \
 		{AXI Stream Reshaper} \
 		{AXI Stream Reshaper} \
+	axis_reshaper_v2 \
+		{AXI Stream Reshaper v2} \
+		{AXI Stream Reshaper v2} \
 	axis_scaler \
 		{AXI Stream Scaler} \
 		{AXI Stream Scaler} \
