@@ -44,9 +44,9 @@ proc creat_stream_v2 {
 	create_bd_intf_pin -mode Slave -vlnv xilinx.com:interface:axis_rtl:1.0 $mname/S_AXIS
 	create_bd_intf_pin -mode Master -vlnv xilinx.com:interface:axis_rtl:1.0 $mname/M_AXIS
 	pip_connect_intf_net [subst {
-		$mname/S_AXIS                       $mname/axis_reshaper/S_AXIS
-		$mname/axis_reshaper/M_AXIS         $mname/axis_bayer_extractor/S_AXIS
-		$mname/axis_bayer_extractor/M_AXIS  $mname/pvdma/S_AXIS
+		$mname/S_AXIS                       $mname/axis_bayer_extractor/S_AXIS
+		$mname/axis_bayer_extractor/M_AXIS  $mname/axis_reshaper/S_AXIS
+		$mname/axis_reshaper/M_AXIS         $mname/pvdma/S_AXIS
 		$mname/pvdma/M_AXIS                 $mname/M_AXIS
 	}]
 
@@ -84,6 +84,7 @@ proc creat_stream_v2 {
 	}]
 	create_bd_pin -dir I $mname/resetn
 	pip_connect_pin $mname/resetn [subst {
+		$mname/axis_bayer_extractor/resetn
 		$mname/pvdma/resetn
 	}]
 	create_bd_pin -dir I $mname/s_resetn
@@ -137,11 +138,11 @@ proc creat_stream_v2 {
 			CONFIG.C_OUT_DV {0xFFFF0000} \
 		] [get_bd_cells $mname/fsa]
 
-		delete_bd_objs [get_bd_intf_nets $mname/axis_bayer_extractor_M_AXIS]
+		delete_bd_objs [get_bd_intf_nets $mname/axis_reshaper_M_AXIS]
 		delete_bd_objs [get_bd_intf_nets $mname/IMG_SIZE_1]
 		delete_bd_objs [get_bd_intf_nets $mname/M_WIN_1]
 		pip_connect_intf_net [subst {
-			$mname/axis_bayer_extractor/M_AXIS  $mname/axis_broadcaster/S_AXIS
+			$mname/axis_reshaper/M_AXIS         $mname/axis_broadcaster/S_AXIS
 			$mname/axis_broadcaster/M00_AXIS    $mname/pvdma/S_AXIS
 			$mname/axis_broadcaster/M01_AXIS    $mname/fsa/S_AXIS
 			$mname/IMG_SIZE                     $mname/size_broadcaster/S_WIN
@@ -159,10 +160,13 @@ proc creat_stream_v2 {
 		}]
 
 		pip_connect_pin $mname/axis_reshaper/o_resetn [subst {
-			$mname/fsa/resetn
+			$mname/fsa/s_axis_resetn
 			$mname/axis_broadcaster/aresetn
-			$mname/axis_bayer_extractor/resetn
 			$mname/pvdma/s2mm_resetn
+		}]
+
+		pip_connect_pin $mname/m_resetn [subst {
+			$mname/fsa/resetn
 		}]
 
 		pip_connect_pin $mname/fsync [subst {

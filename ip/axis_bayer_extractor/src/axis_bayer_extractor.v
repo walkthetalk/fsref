@@ -66,17 +66,25 @@ else begin: extract_quater
 
 	reg sline_lsb;
 	reg spixel_lsb;
+	wire wline_lsb;
+	assign wline_lsb = (s_axis_tuser ? 0 : sline_lsb);
 	always @ (posedge clk) begin
 		if (resetn == 1'b0)
 			sline_lsb <= 0;
 		else if (snext && s_axis_tlast)
-			sline_lsb <= ~sline_lsb;
+			sline_lsb <= ~wline_lsb;
+		else
+			sline_lsb <= wline_lsb;
 	end
 	always @ (posedge clk) begin
 		if (resetn == 1'b0)
 			spixel_lsb <= 0;
-		else if (snext)
-			spixel_lsb <= ~spixel_lsb;
+		else if (snext) begin
+			if (s_axis_tlast)
+				spixel_lsb <= 0;
+			else
+				spixel_lsb <= ~spixel_lsb;
+		end
 	end
 
 	always @ (posedge clk) begin

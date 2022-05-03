@@ -147,7 +147,7 @@ pip_add_bus_if $core clk {
 	CLK clk
 } [subst {
 	ASSOCIATED_BUSIF [get_associate_busif clk]
-	ASSOCIATED_RESET {resetn m_axis_resetn}
+	ASSOCIATED_RESET {resetn:m_axis_resetn}
 }]
 
 # parameters

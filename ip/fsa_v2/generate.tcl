@@ -150,6 +150,16 @@ pip_add_bus_if $core resetn {
 	POLARITY {ACTIVE_LOW}
 }
 
+pip_add_bus_if $core s_axis_resetn {
+	abstraction_type_vlnv xilinx.com:signal:reset_rtl:1.0
+	bus_type_vlnv xilinx.com:signal:reset:1.0
+	interface_mode slave
+} {
+	RST s_axis_resetn
+} {
+	POLARITY {ACTIVE_LOW}
+}
+
 pip_add_bus_if $core en_overlay {
 	abstraction_type_vlnv xilinx.com:signal:reset_rtl:1.0
 	bus_type_vlnv xilinx.com:signal:reset:1.0
@@ -169,7 +179,7 @@ pip_add_bus_if $core clk {
 	CLK clk
 } [subst {
 	ASSOCIATED_BUSIF [get_associate_busif clk]
-	ASSOCIATED_RESET {resetn en_overlay}
+	ASSOCIATED_RESET {resetn:en_overlay:s_axis_resetn}
 }]
 
 # parameters

@@ -65,6 +65,8 @@ module fsa_v2 #(
 	input  wire                     s_axis_tlast,
 	output wire                     s_axis_tready,
 
+	input  wire                     s_axis_resetn,
+
 	input  wire                       si_axis_tvalid,
 	input  wire [C_CHANNEL_WIDTH*C_S_CHANNEL-1:0] si_axis_tdata,
 	input  wire                       si_axis_tuser,
@@ -221,7 +223,7 @@ generate
 			.width(width),
 
 			.fsync(m_axis_fsync),
-			.en_overlay(en_overlay),
+			.en_overlay(en_overlay && s_axis_resetn),
 
 			.rd_sof(r_sof_stream),
 			.rd_en(rd_en_p1[RD_NUM-2]),
@@ -295,7 +297,7 @@ endgenerate
 		.BR_AW    (BR_AW   )	/// same as C_IMG_WW
 	) algo (
 		.clk(clk),
-		.resetn(resetn),
+		.resetn(resetn && s_axis_resetn),
 
 		.height(height),
 		.width (width),
@@ -360,7 +362,7 @@ endgenerate
 		.BR_AW    (BR_AW   )	/// same as C_IMG_WW
 	) edge_detector (
 		.clk(clk),
-		.resetn(resetn),
+		.resetn(resetn && s_axis_resetn),
 
 		.wr_sof_d3   (fsaic_wr_sof_d3   ),
 		.rd_en_d3    (fsaic_rd_en_d3    ),

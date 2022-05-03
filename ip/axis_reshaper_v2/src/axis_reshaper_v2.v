@@ -77,13 +77,17 @@ module axis_reshaper_v2 #
 	/// count column / row
 	reg [C_WIDTH_BITS-1:0]  col;
 	reg [C_HEIGHT_BITS-1:0]  row;
+	wire col_equal_width;
+	assign col_equal_width = (col == m_width);
+	wire row_equal_height;
+	assign row_equal_height = (row == m_height);
 	always @ (posedge clk) begin
 		if (resetn == 1'b0)
 			col <= 1;
 		else if (snext) begin
 			if (s_axis_tuser)
 				col <= 2;
-			else if (col == m_width)
+			else if (col_equal_width)
 				col <= 1;
 			else
 				col  <= col + 1;
@@ -95,8 +99,8 @@ module axis_reshaper_v2 #
 		else if (snext) begin
 			if (s_axis_tuser)
 				row <= 1;
-			else if (col == m_width) begin
-				if (row == m_height)
+			else if (col_equal_width) begin
+				if (row_equal_height)
 					row <= 1;
 				else
 					row <= row + 1;
@@ -125,8 +129,8 @@ module axis_reshaper_v2 #
 				drop_input <= 0;
 			end
 			else begin
-				if ((s_axis_tlast && col != m_width)
-					|| (~s_axis_tlast && col == m_width)) begin
+				if ((s_axis_tlast && ~col_equal_width)
+					|| (~s_axis_tlast && col_equal_width)) begin
 					drop_input <= 1;
 				end
 			end

@@ -59,7 +59,10 @@ module FIFO2MM_adv #
 	input wire  M_AXI_BVALID,
 	output wire  M_AXI_BREADY,
 
-	output wire write_resp_error
+	output wire write_resp_error,
+
+	output wire [C_IMG_WBITS-1:0] col_idx,
+	output wire [C_IMG_HBITS-1:0] row_idx
 );
 	// 1 -> 1, 2 -> 2, 3 -> 2, 4 -> 3
 	function integer clogb2 (input integer bit_depth);
@@ -90,8 +93,10 @@ module FIFO2MM_adv #
 	wire	wnext;
 	reg	need_data;
 	reg	r_dvalid;
- 	reg [C_IMG_WBITS-1:0] r_img_col_idx;
- 	reg [C_IMG_HBITS-1:0] r_img_row_idx;
+	reg [C_IMG_WBITS-1:0] r_img_col_idx;
+	reg [C_IMG_HBITS-1:0] r_img_row_idx;
+	assign col_idx = r_img_col_idx;
+	assign row_idx = r_img_row_idx;
 
 	reg end_of_col;
 	reg end_of_row;
@@ -102,13 +107,6 @@ module FIFO2MM_adv #
 	assign wnext = M_AXI_WREADY & M_AXI_WVALID;
 	assign burst_done = M_AXI_BVALID && M_AXI_BREADY;
 
-	///  resetting
-	reg soft_resetn_d1;
-	always @ (posedge M_AXI_ACLK) begin
-		if (M_AXI_ARESETN == 1'b0) soft_resetn_d1 <= 1'b0;
-		else soft_resetn_d1 <= soft_resetn;
-	end
-
 	reg r_soft_resetting;
 	assign resetting = r_soft_resetting;
 	always @ (posedge M_AXI_ACLK) begin
@@ -118,7 +116,7 @@ module FIFO2MM_adv #
 			r_soft_resetting <= 1'b0;
 		else if (burst_done)
 			r_soft_resetting <= 1'b0;
-		else if (~soft_resetn && soft_resetn_d1)	/// soft_resetn_negedge
+		else if (soft_resetn == 1'b0)
 			r_soft_resetting <= 1'b1;
 	end
 
@@ -162,7 +160,7 @@ module FIFO2MM_adv #
 	//All bursts are complete and aligned
 	assign M_AXI_WSTRB	= {(C_M_AXI_DATA_WIDTH/8){1'b1}};
 	assign M_AXI_WLAST	= axi_wlast;
-	assign M_AXI_WVALID	= r_dvalid | r_soft_resetting;
+	assign M_AXI_WVALID	= r_dvalid;
 	//Write Response (B)
 	assign M_AXI_BREADY	= axi_bready;
 
@@ -261,7 +259,7 @@ module FIFO2MM_adv #
 			sob_d0 <= 1'b0;
 		else if (sob_d0)
 			sob_d0 <= 1'b0;
-		else if (framing && ~burst_active && (rd_data_count > next_burst_len))
+		else if (framing && ~burst_active && (soft_resetn == 0 || rd_data_count > next_burst_len))
 			sob_d0 <= 1'b1;
 	end
 

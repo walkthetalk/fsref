@@ -72,7 +72,10 @@ module s2mm_adv #
 	input wire  m_axi_wready,
 	input wire [1 : 0] m_axi_bresp,
 	input wire  m_axi_bvalid,
-	output wire  m_axi_bready
+	output wire  m_axi_bready,
+
+	output reg [31:0] test0,
+	output reg [31:0] test1
 );
 	localparam C_PM1 = C_PIXEL_WIDTH - 1;
 	localparam C_PP1 = C_PIXEL_WIDTH + 1;
@@ -109,10 +112,29 @@ module s2mm_adv #
 	always @ (posedge clk) begin
 		if (resetting)
 			sready <= 0;
-		else if (s2mm_wr_en && s2mm_almost_full)
+		else if (/*s2mm_wr_en &&*/ s2mm_almost_full)
 			sready <= 0;
 		else
 			sready <= 1;
+	end
+
+
+	wire col_idx;
+	wire row_idx;
+	always @ (posedge clk) begin
+		if (resetting) begin
+			test0 <= 'hFFFFFFFF;
+			test1 <= 'hFFFFFFFF;
+		end
+		else if (s2mm_wr_en && s_axis_tuser) begin
+			if (test0 == 'hFFFFFFFF) begin
+				test0[15:0] <= col_idx;
+				test0[31:16] <= row_idx;
+			end
+			if (test1 == 'hFFFFFFFF) begin
+				test1 <= s2mm_rd_data_count;
+			end
+		end
 	end
 
 // fifo to mm
@@ -174,7 +196,10 @@ module s2mm_adv #
 		.M_AXI_BVALID(m_axi_bvalid),
 		.M_AXI_BREADY(m_axi_bready),
 
-		.write_resp_error(f2mm_write_resp_error)
+		.write_resp_error(f2mm_write_resp_error),
+
+		.col_idx(col_idx),
+		.row_idx(row_idx)
 	);
 
 endmodule
