@@ -21,7 +21,7 @@ module fscpu #(
 
 	input  wire         req_en  ,
 	input  wire [ 31:0] req_cmd ,
-	input  wire [127:0] req_param,
+	input  wire [159:0] req_param,
 	output wire         req_done,
 	output wire [ 31:0] req_err,
 
@@ -171,6 +171,7 @@ module fscpu #(
 	wire [31:0] req_par1;	assign req_par1 = req_param[ 63:32];
 	wire [31:0] req_par2;	assign req_par2 = req_param[ 95:64];
 	wire [31:0] req_par3;	assign req_par3 = req_param[127:96];
+	wire [31:0] req_par4;	assign req_par4 = req_param[159:128];
 
 	reg  [31:0] dev_oper_bmp;
 	wire [31:0] req_done_bmp;
@@ -192,6 +193,8 @@ module fscpu #(
 	reg signed [31:0] req_step      [`DIDX(MOTOR_RR):`DIDX(MOTOR_LP)];	// par2[C_STEP_NUMBER_WIDTH-1: 0]
 	reg [15:0] req_img_tol   [`DIDX(MOTOR_RR):`DIDX(MOTOR_LP)];	// par3[C_IMG_WW-1+16 : 16]
 	reg [15:0] req_img_dst   [`DIDX(MOTOR_RR):`DIDX(MOTOR_LP)];	// par3[C_IMG_WW-1 : 0]
+	reg [31:0] req_delay_push[`DIDX(MOTOR_RR):`DIDX(MOTOR_LP)];	// par4[31: 0]
+	reg        req_delay_resetn[`DIDX(MOTOR_RR):`DIDX(MOTOR_LP)];
 generate
 	genvar i;
 	for (i = DBIT_MOTOR_LP; i <= DBIT_MOTOR_RR; i=i+1) begin : record_motor_params
@@ -206,6 +209,8 @@ generate
 				req_step      [i] <= 0;
 				req_img_tol   [i] <= 0;
 				req_img_dst   [i] <= 0;
+				req_delay_push[i] <= 0;
+				req_delay_resetn[i] <= 0;
 			end
 			else if (req_en && (req_cmd == i)) begin
 				req_single_dir[i] <= req_par0[0];
@@ -217,6 +222,14 @@ generate
 				req_step      [i] <= req_par2;
 				req_img_tol   [i] <= req_par3[31:16];
 				req_img_dst   [i] <= req_par3[15: 0];
+				req_delay_push[i] <= req_par4[31:0];
+				req_delay_resetn[i] <= (req_par4[31:0] == 0);
+			end
+			else begin
+				if (req_delay_push[i] != 0)
+					req_delay_push[i] <= req_delay_push[i] - 1;
+				if (req_delay_push[i] == 1)
+					req_delay_resetn[i] <= 1;
 			end
 		end
 	end
@@ -377,7 +390,7 @@ endgenerate
 		.C_L2R(1)
 	) lft_motor_ctl (
 		.clk          (clk   ),
-		.resetn       (dev_oper_bmp[`DIDX(MOTOR_LP)]),
+		.resetn       (dev_oper_bmp[`DIDX(MOTOR_LP)] && req_delay_resetn[`DIDX(MOTOR_LP)]),
 		.exe_done     (req_done_bmp[`DIDX(MOTOR_LP)]),
 
 		.img_delay_cnt(cfg_img_delay_cnt),
@@ -423,7 +436,7 @@ endgenerate
 		.C_L2R(0)
 	) rt_motor_ctl (
 		.clk          (clk   ),
-		.resetn       (dev_oper_bmp[`DIDX(MOTOR_RP)]),
+		.resetn       (dev_oper_bmp[`DIDX(MOTOR_RP)] && req_delay_resetn[`DIDX(MOTOR_RP)]),
 		.exe_done     (req_done_bmp[`DIDX(MOTOR_RP)]),
 
 		.img_delay_cnt(cfg_img_delay_cnt),

@@ -847,7 +847,7 @@ class VIfReqCtl(VIntface):
 		self._addPort({'ftype': 'cfg',     'iotype': 'output', 'name': 'resetn'})
 		self._addPort({'ftype': 'cfg',     'iotype': 'output', 'name': 'en'})
 		self._addPort({'ftype': 'cfg',     'iotype': 'output', 'name': 'cmd',   'width': "32"})
-		self._addPort({'ftype': 'cfg',     'iotype': 'output', 'name': 'param', 'width': "128"})
+		self._addPort({'ftype': 'cfg',     'iotype': 'output', 'name': 'param', 'width': "160"})
 		self._addPort({'ftype': 'intsrc',  'iotype': 'input',  'name': 'done',    "trigint": "posedge" })
 		self._addPort({'ftype': 'inro',    'iotype': 'input',  'name': 'err',   'width': "32"})
 
@@ -1662,16 +1662,14 @@ class VMFsctl(VerilogModuleFile):
 		ret += suppcomment(lvl, "note: issue command just when write command")
 		ret += drc_from_wre_sync(lvl, ridx, str4array(intf.name, 'en') + '[0]', 0, 'true')
 
-
-		for i in range(0,128,32):
+		paramPort = intf.getport('param')
+		for i in range(0,int(paramPort.width),32):
 			ridx += 1
 			ret += suppcomment(lvl, str4regdefcomment(ridx))
 			strtemp = '[' + str(i + 32 - 1) + ':' + str(i) + ']'
 			ret += drc_rw(lvl, ridx, 0, 32, str4array(intf.name, 'param') + '[0]' + strtemp, 0)
 			#ret += suppreadreg0(lvl, ridx)
 
-		ridx += 1
-		ret += suppreadreg0(lvl, ridx)
 		ridx += 1
 		ret += suppreadreg0(lvl, ridx)
 		ridx += 1
