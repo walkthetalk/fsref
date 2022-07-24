@@ -135,15 +135,14 @@ module single_step_motor #(
 						req_step    <= pri_step;
 						req_abs     <= pri_abs;
 						if ((pri_abs == 1'b1) && (pri_step == 0) && C_ZPD) begin
-							req_dir <= 1'b1;	/// backward
 							req_reset2zero <= 1'b1;
 						end
 						else begin
-							req_dir <= pri_abs
-									? (pri_step > cur_position ? 0 : 1)
-									: pri_step[C_STEP_NUMBER_WIDTH-1];
 							req_reset2zero <= 1'b0;
 						end
+						req_dir <= pri_abs
+								? (pri_step > cur_position ? 0 : 1)
+								: pri_step[C_STEP_NUMBER_WIDTH-1];
 					end
 				end
 				else begin
@@ -153,15 +152,14 @@ module single_step_motor #(
 						req_step    <= ext_step;
 						req_abs     <= ext_abs;
 						if ((ext_abs == 1'b1) && (ext_step == 0) && C_ZPD) begin
-							req_dir <= 1'b1;	/// backward
 							req_reset2zero <= 1'b1;
 						end
 						else begin
-							req_dir <= ext_abs
-									? (ext_step > cur_position ? 0 : 1)
-									: ext_step[C_STEP_NUMBER_WIDTH-1];
 							req_reset2zero <= 1'b0;
 						end
+						req_dir <= ext_abs
+								? (ext_step > cur_position ? 0 : 1)
+								: ext_step[C_STEP_NUMBER_WIDTH-1];
 					end
 				end
 			end
