@@ -532,8 +532,12 @@ set_property -dict [list offset {0x00000000} range {1G}] [get_bd_addr_segs {fsco
 set_property -dict [list offset {0x00000000} range {1G}] [get_bd_addr_segs {fscore/stream1/pvdma/s2mm/M_AXI_REG/SEG_axi_combiner_Reg}]
 set_property -dict [list offset {0x00000000} range {1G}] [get_bd_addr_segs {fscore/stream1/pvdma/axi_combiner/M_AXI_REG/SEG_cpu_HP2_DDR_LOWOCM}]
 
-# modify for alinx board: light lcd by default
-set_property -dict [list CONFIG.C_DEFAULT_VALUE {1}] [get_bd_cells fscore/pwm2]
+# modify for alinx board: cmos x light off
+set_property -dict [list CONFIG.C_DEFAULT_VALUE {1}] [get_bd_cells fscore/pwm0]
+# modify for alinx board: cmos y light off
+set_property -dict [list CONFIG.C_DEFAULT_VALUE {1}] [get_bd_cells fscore/pwm1]
+# modify for alinx board: lcd backlight off
+set_property -dict [list CONFIG.C_DEFAULT_VALUE {0}] [get_bd_cells fscore/pwm2]
 
 # modify for fsref
 set_property -dict [list CONFIG.PCW_QSPI_GRP_SINGLE_SS_ENABLE {1} CONFIG.PCW_SD0_GRP_CD_IO {MIO 9}] [get_bd_cells cpu]
