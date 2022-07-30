@@ -355,7 +355,7 @@ proc create_fscore_v2 {
 		CONFIG.C_SPEED_DATA_WIDTH $motor_speed_width \
 		CONFIG.C_MICROSTEP_WIDTH $motor_ms_width \
 		CONFIG.C_PWM_NBR $pwm_num \
-		CONFIG.C_EXT_INT_WIDTH {2} \
+		CONFIG.C_EXT_INT_WIDTH {4} \
 		CONFIG.C_HEAT_VALUE_WIDTH $heat_value_width \
 		CONFIG.C_HEAT_TIME_WIDTH $heat_time_width \
 	] [get_bd_cells $mname/fsctl]
@@ -417,7 +417,7 @@ proc create_fscore_v2 {
 
 	create_bd_cell -type ip -vlnv $VENDOR:$LIBRARY:intr_filter:$VERSION $mname/intr_filter
 	set_property -dict [list \
-		CONFIG.C_NUMBER {2} \
+		CONFIG.C_NUMBER {4} \
 	] [get_bd_cells $mname/intr_filter]
 	pip_connect_pin $mname/fsctl/extint0_src [subst {
 		$mname/intr_filter/intr_out0
@@ -660,5 +660,11 @@ proc create_fscore_v2 {
 	}]
 	pip_connect_pin $mname/intr_filter/intr_in1 [subst {
 		$mname/HEAT_COVER
+	}]
+	pip_connect_pin $mname/intr_filter/intr_in2 [subst {
+		$mname/ext_heater_enable
+	}]
+	pip_connect_pin $mname/intr_filter/intr_in3 [subst {
+		$mname/ext_heater_power
 	}]
 }
