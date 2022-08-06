@@ -39,6 +39,12 @@ pip_add_bus_abstraction_port $busabs RT_SPEED {
 	is_data true
 }
 
+pip_add_bus_abstraction_port $busabs RT_DIR {
+	default_value 0
+	master_direction in
+	is_data true
+}
+
 pip_add_bus_abstraction_port $busabs POSITION {
 	default_value 0
 	master_direction in

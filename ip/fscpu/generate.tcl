@@ -61,6 +61,7 @@ foreach i {lp rp xa ya lr rr} {
 		PTSIGN     m[set i]_ptsign
 		STATE      m[set i]_state
 		RT_SPEED   m[set i]_rt_speed
+		RT_DIR     m[set i]_rt_dir
 		POSITION   m[set i]_position
 		START      m[set i]_start
 		STOP       m[set i]_stop

@@ -53,6 +53,7 @@ for {set i 0} {$i < 8} {incr i} {
 		PTSIGN    s[set i]_ptsign
 		STATE     s[set i]_state
 		RT_SPEED  s[set i]_rt_speed
+		RT_DIR    s[set i]_rt_speed
 		POSITION  s[set i]_position
 		START     s[set i]_start
 		STOP      s[set i]_stop
@@ -73,6 +74,7 @@ for {set i 0} {$i < 8} {incr i} {
 		PTSIGN     s[set i]_ext_ptsign
 		STATE      s[set i]_ext_state
 		RT_SPEED   s[set i]_ext_rt_speed
+		RT_DIR     s[set i]_ext_rt_dir
 		POSITION   s[set i]_ext_position
 		START      s[set i]_ext_start
 		STOP       s[set i]_ext_stop

@@ -37,6 +37,7 @@ module step_motor #(
 	output wire                                  s0_ptsign,
 	output wire                                  s0_state,
 	output wire [C_SPEED_DATA_WIDTH-1:0]         s0_rt_speed,
+	output wire                                  s0_rt_dir,
 	output wire signed [C_STEP_NUMBER_WIDTH-1:0] s0_position,
 	input  wire                                  s0_start,
 	input  wire                                  s0_stop,
@@ -49,6 +50,7 @@ module step_motor #(
 	output wire                                  s0_ext_ptsign,
 	output wire                                  s0_ext_state,
 	output wire [C_SPEED_DATA_WIDTH-1:0]         s0_ext_rt_speed,
+	output wire                                  s0_ext_rt_dir,
 	output wire signed [C_STEP_NUMBER_WIDTH-1:0] s0_ext_position,
 	input  wire                                  s0_ext_start,
 	input  wire                                  s0_ext_stop,
@@ -76,6 +78,7 @@ module step_motor #(
 	output wire                                  s1_ptsign,
 	output wire                                  s1_state,
 	output wire [C_SPEED_DATA_WIDTH-1:0]         s1_rt_speed,
+	output wire                                  s1_rt_dir,
 	output wire signed [C_STEP_NUMBER_WIDTH-1:0] s1_position,
 	input  wire                                  s1_start,
 	input  wire                                  s1_stop,
@@ -88,6 +91,7 @@ module step_motor #(
 	output wire                                  s1_ext_ptsign,
 	output wire                                  s1_ext_state,
 	output wire [C_SPEED_DATA_WIDTH-1:0]         s1_ext_rt_speed,
+	output wire                                  s1_ext_rt_dir,
 	output wire signed [C_STEP_NUMBER_WIDTH-1:0] s1_ext_position,
 	input  wire                                  s1_ext_start,
 	input  wire                                  s1_ext_stop,
@@ -114,6 +118,7 @@ module step_motor #(
 	output wire                                  s2_ptsign,
 	output wire                                  s2_state,
 	output wire [C_SPEED_DATA_WIDTH-1:0]         s2_rt_speed,
+	output wire                                  s2_rt_dir,
 	output wire signed [C_STEP_NUMBER_WIDTH-1:0] s2_position,
 	input  wire                                  s2_start,
 	input  wire                                  s2_stop,
@@ -126,6 +131,7 @@ module step_motor #(
 	output wire                                  s2_ext_ptsign,
 	output wire                                  s2_ext_state,
 	output wire [C_SPEED_DATA_WIDTH-1:0]         s2_ext_rt_speed,
+	output wire                                  s2_ext_rt_dir,
 	output wire signed [C_STEP_NUMBER_WIDTH-1:0] s2_ext_position,
 	input  wire                                  s2_ext_start,
 	input  wire                                  s2_ext_stop,
@@ -152,6 +158,7 @@ module step_motor #(
 	output wire                                  s3_ptsign,
 	output wire                                  s3_state,
 	output wire [C_SPEED_DATA_WIDTH-1:0]         s3_rt_speed,
+	output wire                                  s3_rt_dir,
 	output wire signed [C_STEP_NUMBER_WIDTH-1:0] s3_position,
 	input  wire                                  s3_start,
 	input  wire                                  s3_stop,
@@ -164,6 +171,7 @@ module step_motor #(
 	output wire                                  s3_ext_ptsign,
 	output wire                                  s3_ext_state,
 	output wire [C_SPEED_DATA_WIDTH-1:0]         s3_ext_rt_speed,
+	output wire                                  s3_ext_rt_dir,
 	output wire signed [C_STEP_NUMBER_WIDTH-1:0] s3_ext_position,
 	input  wire                                  s3_ext_start,
 	input  wire                                  s3_ext_stop,
@@ -190,6 +198,7 @@ module step_motor #(
 	output wire                                  s4_ptsign,
 	output wire                                  s4_state,
 	output wire [C_SPEED_DATA_WIDTH-1:0]         s4_rt_speed,
+	output wire                                  s4_rt_dir,
 	output wire signed [C_STEP_NUMBER_WIDTH-1:0] s4_position,
 	input  wire                                  s4_start,
 	input  wire                                  s4_stop,
@@ -202,6 +211,7 @@ module step_motor #(
 	output wire                                  s4_ext_ptsign,
 	output wire                                  s4_ext_state,
 	output wire [C_SPEED_DATA_WIDTH-1:0]         s4_ext_rt_speed,
+	output wire                                  s4_ext_rt_dir,
 	output wire signed [C_STEP_NUMBER_WIDTH-1:0] s4_ext_position,
 	input  wire                                  s4_ext_start,
 	input  wire                                  s4_ext_stop,
@@ -228,6 +238,7 @@ module step_motor #(
 	output wire                                  s5_ptsign,
 	output wire                                  s5_state,
 	output wire [C_SPEED_DATA_WIDTH-1:0]         s5_rt_speed,
+	output wire                                  s5_rt_dir,
 	output wire signed [C_STEP_NUMBER_WIDTH-1:0] s5_position,
 	input  wire                                  s5_start,
 	input  wire                                  s5_stop,
@@ -240,6 +251,7 @@ module step_motor #(
 	output wire                                  s5_ext_ptsign,
 	output wire                                  s5_ext_state,
 	output wire [C_SPEED_DATA_WIDTH-1:0]         s5_ext_rt_speed,
+	output wire                                  s5_ext_rt_dir,
 	output wire signed [C_STEP_NUMBER_WIDTH-1:0] s5_ext_position,
 	input  wire                                  s5_ext_start,
 	input  wire                                  s5_ext_stop,
@@ -266,6 +278,7 @@ module step_motor #(
 	output wire                                  s6_ptsign,
 	output wire                                  s6_state,
 	output wire [C_SPEED_DATA_WIDTH-1:0]         s6_rt_speed,
+	output wire                                  s6_rt_dir,
 	output wire signed [C_STEP_NUMBER_WIDTH-1:0] s6_position,
 	input  wire                                  s6_start,
 	input  wire                                  s6_stop,
@@ -278,6 +291,7 @@ module step_motor #(
 	output wire                                  s6_ext_ptsign,
 	output wire                                  s6_ext_state,
 	output wire [C_SPEED_DATA_WIDTH-1:0]         s6_ext_rt_speed,
+	output wire                                  s6_ext_rt_dir,
 	output wire signed [C_STEP_NUMBER_WIDTH-1:0] s6_ext_position,
 	input  wire                                  s6_ext_start,
 	input  wire                                  s6_ext_stop,
@@ -304,6 +318,7 @@ module step_motor #(
 	output wire                                  s7_ptsign,
 	output wire                                  s7_state,
 	output wire [C_SPEED_DATA_WIDTH-1:0]         s7_rt_speed,
+	output wire                                  s7_rt_dir,
 	output wire signed [C_STEP_NUMBER_WIDTH-1:0] s7_position,
 	input  wire                                  s7_start,
 	input  wire                                  s7_stop,
@@ -316,6 +331,7 @@ module step_motor #(
 	output wire                                  s7_ext_ptsign,
 	output wire                                  s7_ext_state,
 	output wire [C_SPEED_DATA_WIDTH-1:0]         s7_ext_rt_speed,
+	output wire                                  s7_ext_rt_dir,
 	output wire signed [C_STEP_NUMBER_WIDTH-1:0] s7_ext_position,
 	input  wire                                  s7_ext_start,
 	input  wire                                  s7_ext_stop,
@@ -441,6 +457,7 @@ module step_motor #(
 	wire                           s_ptsign   [C_MOTOR_NBR-1:0];
 	wire                           s_state    [C_MOTOR_NBR-1:0];
 	wire [C_SPEED_DATA_WIDTH-1:0]  s_rt_speed [C_MOTOR_NBR-1:0];
+	wire                           s_rt_dir   [C_MOTOR_NBR-1:0];
 	wire signed [C_STEP_NUMBER_WIDTH-1:0] s_position [C_MOTOR_NBR-1:0];
 	wire                           s_start    [C_MOTOR_NBR-1:0];
 	wire                           s_stop     [C_MOTOR_NBR-1:0];
@@ -455,6 +472,7 @@ module step_motor #(
 	wire                           s_ext_ptsign   [C_MOTOR_NBR-1:0];
 	wire                           s_ext_state    [C_MOTOR_NBR-1:0];
 	wire [C_SPEED_DATA_WIDTH-1:0]  s_ext_rt_speed [C_MOTOR_NBR-1:0];
+	wire                           s_ext_rt_dir   [C_MOTOR_NBR-1:0];
 	wire signed [C_STEP_NUMBER_WIDTH-1:0] s_ext_position [C_MOTOR_NBR-1:0];
 	wire                           s_ext_start    [C_MOTOR_NBR-1:0];
 	wire                           s_ext_stop     [C_MOTOR_NBR-1:0];
@@ -487,6 +505,7 @@ module step_motor #(
 	`ASSIGN_S_OUT(_i, ptsign); \
 	`ASSIGN_S_OUT(_i, state); \
 	`ASSIGN_S_OUT(_i, rt_speed); \
+	`ASSIGN_S_OUT(_i, rt_dir); \
 	`ASSIGN_S_OUT(_i, position); \
 	`ASSIGN_S_IN(_i,  start); \
 	`ASSIGN_S_IN(_i,  stop); \
@@ -499,6 +518,7 @@ module step_motor #(
 	`ASSIGN_S_OUT(_i, ext_ptsign); \
 	`ASSIGN_S_OUT(_i, ext_state); \
 	`ASSIGN_S_OUT(_i, ext_rt_speed); \
+	`ASSIGN_S_OUT(_i, ext_rt_dir); \
 	`ASSIGN_S_OUT(_i, ext_position); \
 	`ASSIGN_S_IN(_i,  ext_start); \
 	`ASSIGN_S_IN(_i,  ext_stop); \
@@ -519,12 +539,14 @@ module step_motor #(
 	`ZERO_S_OUT(_i, ptsign); \
 	`ZERO_S_OUT(_i, state); \
 	`ZERO_S_OUT(_i, rt_speed); \
+	`ZERO_S_OUT(_i, rt_dir); \
 	`ZERO_S_OUT(_i, position); \
 	`ZERO_S_OUT(_i, ext_ntsign); \
 	`ZERO_S_OUT(_i, ext_zpsign); \
 	`ZERO_S_OUT(_i, ext_ptsign); \
 	`ZERO_S_OUT(_i, ext_state); \
 	`ZERO_S_OUT(_i, ext_rt_speed); \
+	`ZERO_S_OUT(_i, ext_rt_dr); \
 	`ZERO_S_OUT(_i, ext_position); \
 	end
 generate
@@ -590,6 +612,7 @@ endgenerate
 			.pri_ptsign  (s_ptsign  [i]),
 			.pri_state   (s_state   [i]),
 			.pri_rt_speed(s_rt_speed[i]),
+			.pri_rt_dir  (s_rt_dir  [i]),
 			.pri_position(s_position[i]),
 			.pri_start   (s_start   [i]),
 			.pri_stop    (s_stop    [i]),
@@ -604,6 +627,7 @@ endgenerate
 			.ext_ptsign  (s_ext_ptsign  [i]),
 			.ext_state   (s_ext_state   [i]),
 			.ext_rt_speed(s_ext_rt_speed[i]),
+			.ext_rt_dir  (s_ext_rt_dir  [i]),
 			.ext_position(s_ext_position[i]),
 			.ext_start   (s_ext_start   [i]),
 			.ext_stop    (s_ext_stop    [i]),

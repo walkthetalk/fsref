@@ -43,6 +43,7 @@ module single_step_motor #(
 	output wire                                    pri_ptsign ,	/// positive terminal sign
 	output wire                                    pri_state  ,
 	output wire [C_SPEED_DATA_WIDTH-1:0]           pri_rt_speed,
+	output wire                                    pri_rt_dir,
 	output wire signed [C_STEP_NUMBER_WIDTH-1:0]   pri_position,
 	input  wire                                    pri_start,	/// pulse sync to clk
 	input  wire                                    pri_stop ,	/// pulse sync to clk
@@ -57,6 +58,7 @@ module single_step_motor #(
 	output wire                                    ext_ptsign ,	/// positive terminal sign
 	output wire                                    ext_state  ,
 	output wire [C_SPEED_DATA_WIDTH-1:0]           ext_rt_speed,
+	output wire                                    ext_rt_dir,
 	output wire signed [C_STEP_NUMBER_WIDTH-1:0]   ext_position,	/// signed integer
 	input  wire                                    ext_start,	/// pulse sync to clk
 	input  wire                                    ext_stop ,	/// pulse sync to clk
@@ -75,6 +77,9 @@ module single_step_motor #(
 	localparam integer IDLE = 2'b00;
 	localparam integer PREPARE = 2'b10;
 	localparam integer RUNNING = 2'b11;
+	
+	assign pri_rt_dir = o_dir;
+	assign ext_rt_dir = o_dir;
 
 	/// motor logic
 	reg [C_SPEED_DATA_WIDTH-1:0]	speed_max;
@@ -126,41 +131,39 @@ module single_step_motor #(
 			if (clk_en)
 				start_pulse <= 0;
 		end
-		else begin
-			if (is_idle) begin
-				if (ext_sel == 1'b0) begin
-					if (pri_start) begin
-						start_pulse <= 1'b1;
-						req_speed   <= pri_speed;
-						req_step    <= pri_step;
-						req_abs     <= pri_abs;
-						if ((pri_abs == 1'b1) && (pri_step == 0) && C_ZPD) begin
-							req_reset2zero <= 1'b1;
-						end
-						else begin
-							req_reset2zero <= 1'b0;
-						end
-						req_dir <= pri_abs
-								? (pri_step > cur_position ? 0 : 1)
-								: pri_step[C_STEP_NUMBER_WIDTH-1];
+		else if (is_idle) begin
+			if (ext_sel == 1'b0) begin
+				if (pri_start) begin
+					start_pulse <= 1'b1;
+					req_speed   <= pri_speed;
+					req_step    <= pri_step;
+					req_abs     <= pri_abs;
+					if ((pri_abs == 1'b1) && (pri_step == 0) && C_ZPD) begin
+						req_reset2zero <= 1'b1;
 					end
+					else begin
+						req_reset2zero <= 1'b0;
+					end
+					req_dir <= pri_abs
+							? (pri_step > cur_position ? 0 : 1)
+							: pri_step[C_STEP_NUMBER_WIDTH-1];
 				end
-				else begin
-					if (ext_start) begin
-						start_pulse <= 1'b1;
-						req_speed   <= ext_speed;
-						req_step    <= ext_step;
-						req_abs     <= ext_abs;
-						if ((ext_abs == 1'b1) && (ext_step == 0) && C_ZPD) begin
-							req_reset2zero <= 1'b1;
-						end
-						else begin
-							req_reset2zero <= 1'b0;
-						end
-						req_dir <= ext_abs
-								? (ext_step > cur_position ? 0 : 1)
-								: ext_step[C_STEP_NUMBER_WIDTH-1];
+			end
+			else begin
+				if (ext_start) begin
+					start_pulse <= 1'b1;
+					req_speed   <= ext_speed;
+					req_step    <= ext_step;
+					req_abs     <= ext_abs;
+					if ((ext_abs == 1'b1) && (ext_step == 0) && C_ZPD) begin
+						req_reset2zero <= 1'b1;
 					end
+					else begin
+						req_reset2zero <= 1'b0;
+					end
+					req_dir <= ext_abs
+							? (ext_step > cur_position ? 0 : 1)
+							: ext_step[C_STEP_NUMBER_WIDTH-1];
 				end
 			end
 		end

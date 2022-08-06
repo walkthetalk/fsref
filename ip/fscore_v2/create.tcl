@@ -425,6 +425,12 @@ proc create_fscore_v2 {
 	pip_connect_pin $mname/fsctl/extint1_src [subst {
 		$mname/intr_filter/intr_out1
 	}]
+	pip_connect_pin $mname/fsctl/extint2_src [subst {
+		$mname/intr_filter/intr_out2
+	}]
+	pip_connect_pin $mname/fsctl/extint3_src [subst {
+		$mname/intr_filter/intr_out3
+	}]
 ######################################### heater ####################################
 	create_bd_cell -type ip -vlnv $VENDOR:$LIBRARY:heater:$VERSION $mname/heater
 	set_property -dict [list \
