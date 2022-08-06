@@ -482,29 +482,34 @@ endgenerate
 	wire push_done;
 	assign push_done = (~dev_oper_bmp[`DIDX(MOTOR_LP)] || req_done_bmp[`DIDX(MOTOR_LP)])
 		&& (~dev_oper_bmp[`DIDX(MOTOR_RP)] || req_done_bmp[`DIDX(MOTOR_RP)]);
+
+
 	////////////////// x motor //////////////////////////////
-	AM_ctl # (
+	wire mxa_resetn;
+	assign mxa_resetn = (dev_oper_bmp[`DIDX(MOTOR_XA)] && (~req_wait_push[`DIDX(MOTOR_XA)] || push_done));
+	wire mxa_dep_state;
+	assign mxa_dep_state = (mlp_state | mrp_state | mxa_state | mya_state);
+	wire mxa_img_pulse;
+	wire signed [C_STEP_NUMBER_WIDTH-1:0] mxa_img_step;
+	wire mxa_img_ok;
+	wire mxa_img_should_start;
+	AM_img # (
 		.C_IMG_WW(C_IMG_WW),
 		.C_IMG_HW(C_IMG_HW),
 		.C_STEP_NUMBER_WIDTH(C_STEP_NUMBER_WIDTH),
-		.C_SPEED_DATA_WIDTH (C_SPEED_DATA_WIDTH ),
 		.C_L2R(1)
-	) x_motor_ctl (
+	) hw_x_img2step (
 		.clk          (clk   ),
-		.resetn       (dev_oper_bmp[`DIDX(MOTOR_XA)] && (~req_wait_push[`DIDX(MOTOR_XA)] || push_done)),
-		.exe_done     (req_done_bmp[`DIDX(MOTOR_XA)]),
+		.resetn       (mxa_resetn),
 
-		.req_ecf       (req_ecf       [`DIDX(MOTOR_XA)]),
-		.req_abs       (req_abs       [`DIDX(MOTOR_XA)]),
-		.req_dep_img   (req_dep_img   [`DIDX(MOTOR_XA)]),
-		.req_speed     (req_speed     [`DIDX(MOTOR_XA)][C_SPEED_DATA_WIDTH-1 :0]),
-		.req_step      (req_step      [`DIDX(MOTOR_XA)][C_STEP_NUMBER_WIDTH-1:0]),
-		.req_img_tol   (req_img_tol   [`DIDX(MOTOR_XA)][C_IMG_HW-1           :0]),
-		.req_img_dst   (req_img_dst   [`DIDX(MOTOR_XA)][C_IMG_HW-1           :0]),
+		.req_ecf       (req_ecf    [`DIDX(MOTOR_XA)]),
+		.req_dep_img   (req_dep_img[`DIDX(MOTOR_XA)]),
+		.req_img_tol   (req_img_tol[`DIDX(MOTOR_XA)][C_IMG_HW-1:0]),
+		.req_img_dst   (req_img_dst[`DIDX(MOTOR_XA)][C_IMG_HW-1:0]),
 
 		.img_pulse   (x_ana_done),
-		.img_l_valid (y_lft_valid),
-		.img_r_valid (y_rt_valid),
+		.img_l_valid (x_lft_valid),
+		.img_r_valid (x_rt_valid),
 		.img_lo_valid(x_lft_header_outer_valid),
 		.img_lo_y    (x_lft_header_outer_y    ),
 		.img_ro_valid(x_rt_header_outer_valid ),
@@ -513,6 +518,31 @@ endgenerate
 		.img_li_y    (x_lft_header_inner_y    ),
 		.img_ri_valid(x_rt_header_inner_valid ),
 		.img_ri_y    (x_rt_header_inner_y     ),
+
+		.m_state     (mxa_state),
+		.m_dep_state (mxa_dep_state),
+
+		//.rd_en  (bam_reA  ),
+		.rd_addr(bam_addrA),
+		.rd_data(bam_qA),
+
+		.o_pulse       (mxa_img_pulse),
+		.o_step        (mxa_img_step),
+		.o_ok          (mxa_img_ok),
+		.o_should_start(mxa_img_should_start)
+	);
+	AM_ctl # (
+		.C_STEP_NUMBER_WIDTH(C_STEP_NUMBER_WIDTH),
+		.C_SPEED_DATA_WIDTH (C_SPEED_DATA_WIDTH )
+	) x_motor_ctl (
+		.clk          (clk   ),
+		.resetn       (mxa_resetn),
+		.exe_done     (req_done_bmp[`DIDX(MOTOR_XA)]),
+
+		.req_abs       (req_abs       [`DIDX(MOTOR_XA)]),
+		.req_dep_img   (req_dep_img   [`DIDX(MOTOR_XA)]),
+		.req_speed     (req_speed     [`DIDX(MOTOR_XA)][C_SPEED_DATA_WIDTH-1 :0]),
+		.req_step      (req_step      [`DIDX(MOTOR_XA)][C_STEP_NUMBER_WIDTH-1:0]),
 
 		.m_sel       (mxa_sel       ),
 		.m_ntsign    (mxa_ntsign    ),
@@ -529,32 +559,36 @@ endgenerate
 		.m_mod_remain(mxa_mod_remain),
 		.m_new_remain(mxa_new_remain),
 
-		.m_dep_state(mlp_state | mrp_state | mxa_state | mya_state),
+		.m_dep_state(mxa_dep_state),
 
-		//.rd_en  (bam_reA  ),
-		.rd_addr(bam_addrA),
-		.rd_data(bam_qA   )
+		.img_pulse       (mxa_img_pulse),
+		.img_step        (mxa_img_step),
+		.img_ok          (mxa_img_ok),
+		.img_should_start(mxa_img_should_start)
 	);
 
 	////////////////// y motor //////////////////////////////
-	AM_ctl # (
+	wire mya_resetn;
+	assign mya_resetn = (dev_oper_bmp[`DIDX(MOTOR_YA)] && (~req_wait_push[`DIDX(MOTOR_YA)] || push_done));
+	wire mya_dep_state;
+	assign mya_dep_state = (mlp_state | mrp_state | mxa_state | mya_state);
+	wire mya_img_pulse;
+	wire signed [C_STEP_NUMBER_WIDTH-1:0] mya_img_step;
+	wire mya_img_ok;
+	wire mya_img_should_start;
+	AM_img # (
 		.C_IMG_WW(C_IMG_WW),
 		.C_IMG_HW(C_IMG_HW),
 		.C_STEP_NUMBER_WIDTH(C_STEP_NUMBER_WIDTH),
-		.C_SPEED_DATA_WIDTH (C_SPEED_DATA_WIDTH ),
 		.C_L2R(0)
-	) y_motor_ctl (
+	) hw_y_img2step (
 		.clk          (clk   ),
-		.resetn       (dev_oper_bmp[`DIDX(MOTOR_YA)] && (~req_wait_push[`DIDX(MOTOR_YA)] || push_done)),
-		.exe_done     (req_done_bmp[`DIDX(MOTOR_YA)]),
+		.resetn       (mya_resetn),
 
-		.req_ecf       (req_ecf       [`DIDX(MOTOR_YA)]),
-		.req_abs       (req_abs       [`DIDX(MOTOR_YA)]),
-		.req_dep_img   (req_dep_img   [`DIDX(MOTOR_YA)]),
-		.req_speed     (req_speed     [`DIDX(MOTOR_YA)][C_SPEED_DATA_WIDTH-1 :0]),
-		.req_step      (req_step      [`DIDX(MOTOR_YA)][C_STEP_NUMBER_WIDTH-1:0]),
-		.req_img_tol   (req_img_tol   [`DIDX(MOTOR_YA)][C_IMG_HW-1           :0]),
-		.req_img_dst   (req_img_dst   [`DIDX(MOTOR_YA)][C_IMG_HW-1           :0]),
+		.req_ecf       (req_ecf    [`DIDX(MOTOR_YA)]),
+		.req_dep_img   (req_dep_img[`DIDX(MOTOR_YA)]),
+		.req_img_tol   (req_img_tol[`DIDX(MOTOR_YA)][C_IMG_HW-1:0]),
+		.req_img_dst   (req_img_dst[`DIDX(MOTOR_YA)][C_IMG_HW-1:0]),
 
 		.img_pulse   (y_ana_done),
 		.img_l_valid (y_lft_valid),
@@ -567,6 +601,31 @@ endgenerate
 		.img_li_y    (y_lft_header_inner_y    ),
 		.img_ri_valid(y_rt_header_inner_valid ),
 		.img_ri_y    (y_rt_header_inner_y     ),
+
+		.m_state     (mya_state),
+		.m_dep_state (mya_dep_state),
+
+		//.rd_en  (bam_reA  ),
+		.rd_addr(bam_addrB),
+		.rd_data(bam_qB),
+
+		.o_pulse       (mya_img_pulse),
+		.o_step        (mya_img_step),
+		.o_ok          (mya_img_ok),
+		.o_should_start(mya_img_should_start)
+	);
+	AM_ctl # (
+		.C_STEP_NUMBER_WIDTH(C_STEP_NUMBER_WIDTH),
+		.C_SPEED_DATA_WIDTH (C_SPEED_DATA_WIDTH )
+	) y_motor_ctl (
+		.clk          (clk   ),
+		.resetn       (mya_resetn),
+		.exe_done     (req_done_bmp[`DIDX(MOTOR_YA)]),
+
+		.req_abs       (req_abs       [`DIDX(MOTOR_YA)]),
+		.req_dep_img   (req_dep_img   [`DIDX(MOTOR_YA)]),
+		.req_speed     (req_speed     [`DIDX(MOTOR_YA)][C_SPEED_DATA_WIDTH-1 :0]),
+		.req_step      (req_step      [`DIDX(MOTOR_YA)][C_STEP_NUMBER_WIDTH-1:0]),
 
 		.m_sel       (mya_sel       ),
 		.m_ntsign    (mya_ntsign    ),
@@ -583,11 +642,12 @@ endgenerate
 		.m_mod_remain(mya_mod_remain),
 		.m_new_remain(mya_new_remain),
 
-		.m_dep_state(mlp_state | mrp_state | mxa_state | mya_state),
+		.m_dep_state(mya_dep_state),
 
-		//.rd_en  (bam_reA  ),
-		.rd_addr(bam_addrB),
-		.rd_data(bam_qB   )
+		.img_pulse       (mya_img_pulse),
+		.img_step        (mya_img_step),
+		.img_ok          (mya_img_ok),
+		.img_should_start(mya_img_should_start)
 	);
 
 	////////////////// left rotate motor //////////////////////////////
