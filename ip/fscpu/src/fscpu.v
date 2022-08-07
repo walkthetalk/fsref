@@ -169,6 +169,7 @@ module fscpu #(
 	localparam integer DBIT_DISCHARGE = 8;
 
 	// @todo add new req command
+	localparam integer REQ_UPDATE_DIST = 28;
 	localparam integer REQ_CFG       = 29;
 	localparam integer REQ_EXE       = 30;
 	localparam integer REQ_STOP      = 31;
@@ -195,6 +196,7 @@ module fscpu #(
 	reg        req_dep_img   [`DIDX(MOTOR_RR):`DIDX(MOTOR_LP)];	// par0[2]
 	reg        req_ecf       [`DIDX(MOTOR_RR):`DIDX(MOTOR_LP)];	// par0[3]
 	reg        req_wait_push [`DIDX(MOTOR_RR):`DIDX(MOTOR_LP)];	// par0[4]
+	reg        req_sw_img    [`DIDX(MOTOR_RR):`DIDX(MOTOR_LP)];	// par0[5]
 	reg [31:0] req_speed     [`DIDX(MOTOR_RR):`DIDX(MOTOR_LP)];	// par1[C_SPEED_DATA_WIDTH-1 : 0]
 	reg signed [31:0] req_step      [`DIDX(MOTOR_RR):`DIDX(MOTOR_LP)];	// par2[C_STEP_NUMBER_WIDTH-1: 0]
 	reg [15:0] req_img_tol   [`DIDX(MOTOR_RR):`DIDX(MOTOR_LP)];	// par3[C_IMG_WW-1+16 : 16]
@@ -211,6 +213,7 @@ generate
 				req_dep_img   [i] <= 0;
 				req_ecf       [i] <= 0;
 				req_wait_push [i] <= 0;
+				req_sw_img    [i] <= 0;
 				req_speed     [i] <= 0;
 				req_step      [i] <= 0;
 				req_img_tol   [i] <= 0;
@@ -224,6 +227,7 @@ generate
 				req_dep_img   [i] <= req_par0[2];
 				req_ecf       [i] <= req_par0[3];
 				req_wait_push [i] <= req_par0[4];
+				req_sw_img    [i] <= req_par0[5];
 				req_speed     [i] <= req_par1;
 				req_step      [i] <= req_par2;
 				req_img_tol   [i] <= req_par3[31:16];
@@ -332,6 +336,30 @@ endgenerate
 		else if (wire_done)
 			r_req_done <= 1;
 	end
+
+	///////////////////////////// update dist by software ////////////////////generate
+	reg sw_img_pulse[`DIDX(MOTOR_YA):`DIDX(MOTOR_XA)];
+	reg [C_STEP_NUMBER_WIDTH-1:0] sw_img_step[`DIDX(MOTOR_YA):`DIDX(MOTOR_XA)];
+	reg sw_img_ok[`DIDX(MOTOR_YA):`DIDX(MOTOR_XA)];
+generate
+	for (i = DBIT_MOTOR_XA; i <= DBIT_MOTOR_YA; i=i+1) begin : accept_sw_img_info
+		always @ (posedge clk) begin
+			if (resetn == 1'b0) begin
+				sw_img_pulse[i] <= 0;
+				sw_img_step [i] <= 0;
+				sw_img_ok   [i] <= 0;
+			end
+			else if (req_en && (req_cmd == REQ_UPDATE_DIST) && (req_par0 == i)) begin
+				sw_img_pulse[i] <= 1'b1;
+				sw_img_ok   [i] <= req_par1[0];
+				sw_img_step [i] <= req_par2[C_STEP_NUMBER_WIDTH-1:0];
+			end
+			else begin
+				sw_img_pulse[i] <= 0;
+			end
+		end
+	end
+endgenerate
 	////////////////// block ram //////////////////////////////
 	//wire                          bpm_reA  ;	/// blockram for push motor
 	wire [C_IMG_WW-1:0]           bpm_addrA;
@@ -489,10 +517,11 @@ endgenerate
 	assign mxa_resetn = (dev_oper_bmp[`DIDX(MOTOR_XA)] && (~req_wait_push[`DIDX(MOTOR_XA)] || push_done));
 	wire mxa_dep_state;
 	assign mxa_dep_state = (mlp_state | mrp_state | mxa_state | mya_state);
-	wire mxa_img_pulse;
-	wire signed [C_STEP_NUMBER_WIDTH-1:0] mxa_img_step;
-	wire mxa_img_ok;
-	wire mxa_img_should_start;
+	
+	wire mxa_img_pulse[1:0];
+	wire signed [C_STEP_NUMBER_WIDTH-1:0] mxa_img_step[1:0];
+	wire mxa_img_ok[1:0];
+	wire mxa_img_should_start[1:0];
 	AM_img # (
 		.C_IMG_WW(C_IMG_WW),
 		.C_IMG_HW(C_IMG_HW),
@@ -526,11 +555,58 @@ endgenerate
 		.rd_addr(bam_addrA),
 		.rd_data(bam_qA),
 
-		.o_pulse       (mxa_img_pulse),
-		.o_step        (mxa_img_step),
-		.o_ok          (mxa_img_ok),
-		.o_should_start(mxa_img_should_start)
+		.o_pulse       (mxa_img_pulse[0]),
+		.o_step        (mxa_img_step [0]),
+		.o_ok          (mxa_img_ok   [0]),
+		.o_should_start(mxa_img_should_start[0])
 	);
+	AM_sw_img # (
+		.C_STEP_NUMBER_WIDTH(C_STEP_NUMBER_WIDTH)
+	) sw_x_img2step (
+		.clk          (clk   ),
+		.resetn       (mxa_resetn),
+
+		.req_dep_img   (req_sw_img[`DIDX(MOTOR_XA)]),
+
+		.img_pulse(sw_img_pulse[`DIDX(MOTOR_XA)]),
+		.img_step (sw_img_step [`DIDX(MOTOR_XA)]),
+		.img_ok   (sw_img_ok   [`DIDX(MOTOR_XA)]),
+
+		.m_state     (mxa_state),
+		.m_dep_state (mxa_dep_state),
+
+		.o_pulse       (mxa_img_pulse[1]),
+		.o_step        (mxa_img_step [1]),
+		.o_ok          (mxa_img_ok   [1]),
+		.o_should_start(mxa_img_should_start[1])
+	);
+	
+	wire mxa_final_img_pulse;
+	wire signed [C_STEP_NUMBER_WIDTH-1:0] mxa_final_img_step;
+	wire mxa_final_img_ok;
+	wire mxa_final_img_should_start;
+	AM_sel_img # (
+		.C_STEP_NUMBER_WIDTH(C_STEP_NUMBER_WIDTH)
+	) sel_x_img2step (
+		.clk (clk),
+		.resetn (mxa_resetn),
+
+		.i0_pulse(mxa_img_pulse[0]),
+		.i0_step (mxa_img_step [0]),
+		.i0_ok   (mxa_img_ok   [0]),
+		.i0_should_start(mxa_img_should_start[0]),
+
+		.i1_pulse(mxa_img_pulse[1]),
+		.i1_step (mxa_img_step [1]),
+		.i1_ok   (mxa_img_ok   [1]),
+		.i1_should_start(mxa_img_should_start[1]),
+		
+		.o_pulse(mxa_final_img_pulse),
+		.o_step (mxa_final_img_step),
+		.o_ok   (mxa_final_img_ok),
+		.o_should_start(mxa_final_img_should_start)
+	);
+
 	AM_ctl # (
 		.C_STEP_NUMBER_WIDTH(C_STEP_NUMBER_WIDTH),
 		.C_SPEED_DATA_WIDTH (C_SPEED_DATA_WIDTH )
@@ -540,7 +616,7 @@ endgenerate
 		.exe_done     (req_done_bmp[`DIDX(MOTOR_XA)]),
 
 		.req_abs       (req_abs       [`DIDX(MOTOR_XA)]),
-		.req_dep_img   (req_dep_img   [`DIDX(MOTOR_XA)]),
+		.req_dep_img   (req_dep_img   [`DIDX(MOTOR_XA)] | req_sw_img   [`DIDX(MOTOR_XA)]),
 		.req_speed     (req_speed     [`DIDX(MOTOR_XA)][C_SPEED_DATA_WIDTH-1 :0]),
 		.req_step      (req_step      [`DIDX(MOTOR_XA)][C_STEP_NUMBER_WIDTH-1:0]),
 
@@ -561,10 +637,10 @@ endgenerate
 
 		.m_dep_state(mxa_dep_state),
 
-		.img_pulse       (mxa_img_pulse),
-		.img_step        (mxa_img_step),
-		.img_ok          (mxa_img_ok),
-		.img_should_start(mxa_img_should_start)
+		.img_pulse       (mxa_final_img_pulse),
+		.img_step        (mxa_final_img_step),
+		.img_ok          (mxa_final_img_ok),
+		.img_should_start(mxa_final_img_should_start)
 	);
 
 	////////////////// y motor //////////////////////////////
@@ -572,10 +648,12 @@ endgenerate
 	assign mya_resetn = (dev_oper_bmp[`DIDX(MOTOR_YA)] && (~req_wait_push[`DIDX(MOTOR_YA)] || push_done));
 	wire mya_dep_state;
 	assign mya_dep_state = (mlp_state | mrp_state | mxa_state | mya_state);
-	wire mya_img_pulse;
-	wire signed [C_STEP_NUMBER_WIDTH-1:0] mya_img_step;
-	wire mya_img_ok;
-	wire mya_img_should_start;
+
+	wire mya_img_pulse[1:0];
+	wire signed [C_STEP_NUMBER_WIDTH-1:0] mya_img_step[1:0];
+	wire mya_img_ok[1:0];
+	wire mya_img_should_start[1:0];
+
 	AM_img # (
 		.C_IMG_WW(C_IMG_WW),
 		.C_IMG_HW(C_IMG_HW),
@@ -609,11 +687,58 @@ endgenerate
 		.rd_addr(bam_addrB),
 		.rd_data(bam_qB),
 
-		.o_pulse       (mya_img_pulse),
-		.o_step        (mya_img_step),
-		.o_ok          (mya_img_ok),
-		.o_should_start(mya_img_should_start)
+		.o_pulse       (mya_img_pulse[0]),
+		.o_step        (mya_img_step [0]),
+		.o_ok          (mya_img_ok   [0]),
+		.o_should_start(mya_img_should_start[0])
 	);
+	AM_sw_img # (
+		.C_STEP_NUMBER_WIDTH(C_STEP_NUMBER_WIDTH)
+	) sw_y_img2step (
+		.clk          (clk   ),
+		.resetn       (mya_resetn),
+
+		.req_dep_img   (req_sw_img[`DIDX(MOTOR_YA)]),
+
+		.img_pulse(sw_img_pulse[`DIDX(MOTOR_YA)]),
+		.img_step (sw_img_step [`DIDX(MOTOR_YA)]),
+		.img_ok   (sw_img_ok   [`DIDX(MOTOR_YA)]),
+
+		.m_state     (mya_state),
+		.m_dep_state (mya_dep_state),
+
+		.o_pulse       (mya_img_pulse[1]),
+		.o_step        (mya_img_step [1]),
+		.o_ok          (mya_img_ok   [1]),
+		.o_should_start(mya_img_should_start[1])
+	);
+	
+	wire mya_final_img_pulse;
+	wire signed [C_STEP_NUMBER_WIDTH-1:0] mya_final_img_step;
+	wire mya_final_img_ok;
+	wire mya_final_img_should_start;
+	AM_sel_img # (
+		.C_STEP_NUMBER_WIDTH(C_STEP_NUMBER_WIDTH)
+	) sel_y_img2step (
+		.clk (clk),
+		.resetn (mya_resetn),
+
+		.i0_pulse(mya_img_pulse[0]),
+		.i0_step (mya_img_step [0]),
+		.i0_ok   (mya_img_ok   [0]),
+		.i0_should_start(mya_img_should_start[0]),
+
+		.i1_pulse(mya_img_pulse[1]),
+		.i1_step (mya_img_step [1]),
+		.i1_ok   (mya_img_ok   [1]),
+		.i1_should_start(mya_img_should_start[1]),
+		
+		.o_pulse(mya_final_img_pulse),
+		.o_step (mya_final_img_step),
+		.o_ok   (mya_final_img_ok),
+		.o_should_start(mya_final_img_should_start)
+	);
+
 	AM_ctl # (
 		.C_STEP_NUMBER_WIDTH(C_STEP_NUMBER_WIDTH),
 		.C_SPEED_DATA_WIDTH (C_SPEED_DATA_WIDTH )
@@ -623,7 +748,7 @@ endgenerate
 		.exe_done     (req_done_bmp[`DIDX(MOTOR_YA)]),
 
 		.req_abs       (req_abs       [`DIDX(MOTOR_YA)]),
-		.req_dep_img   (req_dep_img   [`DIDX(MOTOR_YA)]),
+		.req_dep_img   (req_dep_img   [`DIDX(MOTOR_YA)] | req_sw_img   [`DIDX(MOTOR_YA)]),
 		.req_speed     (req_speed     [`DIDX(MOTOR_YA)][C_SPEED_DATA_WIDTH-1 :0]),
 		.req_step      (req_step      [`DIDX(MOTOR_YA)][C_STEP_NUMBER_WIDTH-1:0]),
 
@@ -644,10 +769,10 @@ endgenerate
 
 		.m_dep_state(mya_dep_state),
 
-		.img_pulse       (mya_img_pulse),
-		.img_step        (mya_img_step),
-		.img_ok          (mya_img_ok),
-		.img_should_start(mya_img_should_start)
+		.img_pulse       (mya_final_img_pulse),
+		.img_step        (mya_final_img_step),
+		.img_ok          (mya_final_img_ok),
+		.img_should_start(mya_final_img_should_start)
 	);
 
 	////////////////// left rotate motor //////////////////////////////
