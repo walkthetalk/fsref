@@ -8,6 +8,8 @@ module AM_img # (
 ) (
 	input wire clk,
 	input wire resetn,
+	
+	input wire done_if_img_invalid,
 
 	input wire                req_ecf,
 	input wire                req_dep_img,
@@ -265,6 +267,12 @@ module AM_img # (
 			o_pulse <= 0;
 			o_step  <= 0;
 			o_ok    <= 0;
+			o_should_start <= 0;
+		end
+		else if (img_pulse && done_if_img_invalid) begin
+			o_pulse <= 1;
+			o_step  <= 0;
+			o_ok    <= 1;
 			o_should_start <= 0;
 		end
 		else if (pen_d7) begin

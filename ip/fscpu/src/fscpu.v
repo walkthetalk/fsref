@@ -197,6 +197,7 @@ module fscpu #(
 	reg        req_ecf       [`DIDX(MOTOR_RR):`DIDX(MOTOR_LP)];	// par0[3]
 	reg        req_wait_push [`DIDX(MOTOR_RR):`DIDX(MOTOR_LP)];	// par0[4]
 	reg        req_sw_img    [`DIDX(MOTOR_RR):`DIDX(MOTOR_LP)];	// par0[5]
+	reg [`DIDX(MOTOR_RR):`DIDX(MOTOR_LP)] req_can_ignore;	// par0[6]
 	reg [31:0] req_speed     [`DIDX(MOTOR_RR):`DIDX(MOTOR_LP)];	// par1[C_SPEED_DATA_WIDTH-1 : 0]
 	reg signed [31:0] req_step      [`DIDX(MOTOR_RR):`DIDX(MOTOR_LP)];	// par2[C_STEP_NUMBER_WIDTH-1: 0]
 	reg [15:0] req_img_tol   [`DIDX(MOTOR_RR):`DIDX(MOTOR_LP)];	// par3[C_IMG_WW-1+16 : 16]
@@ -214,6 +215,7 @@ generate
 				req_ecf       [i] <= 0;
 				req_wait_push [i] <= 0;
 				req_sw_img    [i] <= 0;
+				req_can_ignore[i] <= 0;
 				req_speed     [i] <= 0;
 				req_step      [i] <= 0;
 				req_img_tol   [i] <= 0;
@@ -228,6 +230,7 @@ generate
 				req_ecf       [i] <= req_par0[3];
 				req_wait_push [i] <= req_par0[4];
 				req_sw_img    [i] <= req_par0[5];
+				req_can_ignore[i] <= req_par0[6];
 				req_speed     [i] <= req_par1;
 				req_step      [i] <= req_par2;
 				req_img_tol   [i] <= req_par3[31:16];
@@ -531,6 +534,8 @@ endgenerate
 		.clk          (clk   ),
 		.resetn       (mxa_resetn),
 
+		.done_if_img_invalid(req_can_ignore[`DIDX(MOTOR_XA)]),
+
 		.req_ecf       (req_ecf    [`DIDX(MOTOR_XA)]),
 		.req_dep_img   (req_dep_img[`DIDX(MOTOR_XA)]),
 		.req_img_tol   (req_img_tol[`DIDX(MOTOR_XA)][C_IMG_HW-1:0]),
@@ -662,6 +667,8 @@ endgenerate
 	) hw_y_img2step (
 		.clk          (clk   ),
 		.resetn       (mya_resetn),
+
+		.done_if_img_invalid(req_can_ignore[`DIDX(MOTOR_YA)]),
 
 		.req_ecf       (req_ecf    [`DIDX(MOTOR_YA)]),
 		.req_dep_img   (req_dep_img[`DIDX(MOTOR_YA)]),
