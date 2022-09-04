@@ -12,6 +12,7 @@ module PM_ctl # (
 	input wire resetn,
 
 	output reg          exe_done,
+	output reg          exe_over,
 
 	input wire [31:0]                img_delay_cnt,
 	input wire [C_FRMN_WIDTH-1:0]    img_delay_frm,
@@ -349,6 +350,15 @@ module PM_ctl # (
 		else if (req_single_dir) begin
 			if (m_stopped || pos_over)
 				exe_done <= 1'b1;
+		end
+	end
+	
+	always @ (posedge clk) begin
+		if (resetn == 1'b0)
+			exe_over <= 1'b0;
+		else if (req_single_dir) begin
+			if (pos_over)
+				exe_over <= 1'b1;
 		end
 	end
 

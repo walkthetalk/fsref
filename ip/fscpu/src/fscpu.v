@@ -249,6 +249,11 @@ generate
 endgenerate
 	wire wire_done;
 	assign wire_done = ((req_done_bmp & dev_oper_bmp) == dev_oper_bmp && dev_oper_bmp != 0);
+	
+	localparam integer ERR_LP_OVER = 0;
+	localparam integer ERR_RP_OVER = 1;
+	wire[31:0] realtime_err;
+	assign realtime_err[31:2] = 0;
 	///////////////////////////// record devices ///////////////////////////
 	reg [31:0] dev_oper_bmp_stage;
 	`define RECORD_DEV(_x) `DIDX(_x): dev_oper_bmp_stage <= dev_oper_bmp_stage | `DBIT(_x)
@@ -330,14 +335,31 @@ endgenerate
 
 	reg r_req_done;
 	assign req_done = r_req_done;
-	assign req_err  = 0;	/// TODO: fix it
 	always @ (posedge clk) begin
 		if (resetn == 1'b0)
 			r_req_done <= 0;
 		else if (req_en)
 			r_req_done <= 0;
-		else if (wire_done)
+		else if (wire_done || realtime_err != 0)
 			r_req_done <= 1;
+	end
+
+	reg [31:0] r_req_err;
+	reg has_err;
+	assign req_err  = r_req_err;
+	always @ (posedge clk) begin
+		if (resetn == 1'b0) begin
+			r_req_err <= 0;
+			has_err <= 0;
+		end
+		else if (req_en) begin
+			r_req_err <= 0;
+			has_err <= 0;
+		end
+		else if (realtime_err != 0) begin
+			r_req_err <= realtime_err;
+			has_err <= 1'b1;
+		end
 	end
 
 	///////////////////////////// update dist by software ////////////////////generate
@@ -427,8 +449,9 @@ endgenerate
 		.C_L2R(1)
 	) lft_motor_ctl (
 		.clk          (clk   ),
-		.resetn       (dev_oper_bmp[`DIDX(MOTOR_LP)] && req_delay_resetn[`DIDX(MOTOR_LP)]),
+		.resetn       (dev_oper_bmp[`DIDX(MOTOR_LP)] && req_delay_resetn[`DIDX(MOTOR_LP)] && !has_err),
 		.exe_done     (req_done_bmp[`DIDX(MOTOR_LP)]),
+		.exe_over     (realtime_err[ERR_LP_OVER]),
 
 		.img_delay_cnt(cfg_img_delay_cnt),
 		.img_delay_frm(cfg_img_delay_frm),
@@ -473,8 +496,9 @@ endgenerate
 		.C_L2R(0)
 	) rt_motor_ctl (
 		.clk          (clk   ),
-		.resetn       (dev_oper_bmp[`DIDX(MOTOR_RP)] && req_delay_resetn[`DIDX(MOTOR_RP)]),
+		.resetn       (dev_oper_bmp[`DIDX(MOTOR_RP)] && req_delay_resetn[`DIDX(MOTOR_RP)] && !has_err),
 		.exe_done     (req_done_bmp[`DIDX(MOTOR_RP)]),
+		.exe_over     (realtime_err[ERR_RP_OVER]),
 
 		.img_delay_cnt(cfg_img_delay_cnt),
 		.img_delay_frm(cfg_img_delay_frm),
@@ -517,7 +541,7 @@ endgenerate
 
 	////////////////// x motor //////////////////////////////
 	wire mxa_resetn;
-	assign mxa_resetn = (dev_oper_bmp[`DIDX(MOTOR_XA)] && (~req_wait_push[`DIDX(MOTOR_XA)] || push_done));
+	assign mxa_resetn = (dev_oper_bmp[`DIDX(MOTOR_XA)] && (~req_wait_push[`DIDX(MOTOR_XA)] || push_done) && !has_err);
 	wire mxa_dep_state;
 	assign mxa_dep_state = (mlp_state | mrp_state | mxa_state | mya_state);
 	
@@ -650,7 +674,7 @@ endgenerate
 
 	////////////////// y motor //////////////////////////////
 	wire mya_resetn;
-	assign mya_resetn = (dev_oper_bmp[`DIDX(MOTOR_YA)] && (~req_wait_push[`DIDX(MOTOR_YA)] || push_done));
+	assign mya_resetn = (dev_oper_bmp[`DIDX(MOTOR_YA)] && (~req_wait_push[`DIDX(MOTOR_YA)] || push_done) && !has_err);
 	wire mya_dep_state;
 	assign mya_dep_state = (mlp_state | mrp_state | mxa_state | mya_state);
 
