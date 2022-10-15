@@ -77,6 +77,7 @@ proc create_pvdma_v2 {
 			CONFIG.C_M_AXI_ADDR_WIDTH $addr_width \
 			CONFIG.C_M_AXI_DATA_WIDTH $data_width \
 			CONFIG.C_DATACOUNT_BITS $datacount_width \
+			CONFIG.C_IMG_STRIDE_SIZE $stride_size \
 		] [get_bd_cells $mname/s2mm]
 
 		set pixel_store_width [get_property CONFIG.C_PIXEL_STORE_WIDTH [get_bd_cells $mname/s2mm]]
