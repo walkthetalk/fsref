@@ -51,7 +51,7 @@ set cfg_common [dict create \
 	vdma_burst_length 16 \
 	vdma_fifo_depth 128 \
 	vdma_timestamp_width 64 \
-	vdma_stride_size 1024 \
+	vdma_stride_size 4096 \
 	stream_bypass_bayer_extractor 0 \
 	motor_num 6 \
 	motor_step_width 32 \
