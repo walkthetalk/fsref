@@ -15,7 +15,8 @@ patch_name="add_fsref.patch"
 
 file_list=(
 	"arch/arm/configs/fsref_defconfig"
-	"arch/arm/boot/dts/zynq-fsref.dts"
+	"arch/arm/boot/dts/zynq-fsref-sdcard.dts"
+	"arch/arm/boot/dts/zynq-fsref-emmc.dts"
 )
 
 cd ${kernel_dir}

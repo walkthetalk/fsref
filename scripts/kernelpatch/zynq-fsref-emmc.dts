@@ -20,7 +20,7 @@
 
 	// copy from system-top.dts, add uio settings for bootargs
 	chosen {
-		bootargs = "earlycon uio_pdrv_genirq.of_id=generic-uio random.trust_cpu=on root=/dev/mmcblk0p2 rw rootfstype=ext4 rootwait";
+		bootargs = "earlycon uio_pdrv_genirq.of_id=generic-uio random.trust_cpu=on root=/dev/mmcblk1p2 rw rootfstype=ext4 rootwait";
 		// NOTE: indeed we use uart1, but here must be serial0, or
 		//       we will get no any output after bootconsole disabled.
 		//       so we changed the alias to swap uart0 and uart1.
@@ -328,6 +328,19 @@
 	spi-rx-bus-width = <4>;
 	spi-tx-bus-width = <4>;
 	status = "okay";
+	flash@0 {
+		compatible = "w25q256";
+		reg = <0x0>;
+		spi-tx-bus-width = <1>;
+		spi-rx-bus-width = <4>;
+		spi-max-frequency = <50000000>;
+		#address-cells = <1>;
+		#size-cells = <1>;
+		partition@qspi-fsbl-uboot {
+			label = "qspi-fsbl-uboot";
+			reg = <0x0 0x100000>;
+		};
+	};
 };
 &sdhci0 {
 	status = "okay";

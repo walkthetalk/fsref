@@ -1,0 +1,489 @@
+/*
+ * system-top.dts
+ * system.dts
+ * pcw.dtsi
+ * NOTE: we dropped pl.dtsi for fscore registers, but use uio instead.
+ */
+
+/dts-v1/;
+#include "zynq-7000.dtsi"
+#include <dt-bindings/gpio/gpio.h>
+#include <dt-bindings/input/gpio-keys.h>
+#include <dt-bindings/input/input.h>
+#include <dt-bindings/leds/common.h>
+#include <dt-bindings/interrupt-controller/irq.h>
+
+/ {
+	// copy from microzed.dts
+	model = "walkthetalk,fsref";
+	compatible = "xlnx,zynq-7000";
+
+	// copy from system-top.dts, add uio settings for bootargs
+	chosen {
+		bootargs = "earlycon uio_pdrv_genirq.of_id=generic-uio random.trust_cpu=on root=/dev/mmcblk0p2 rw rootfstype=ext4 rootwait";
+		// NOTE: indeed we use uart1, but here must be serial0, or
+		//       we will get no any output after bootconsole disabled.
+		//       so we changed the alias to swap uart0 and uart1.
+		stdout-path = "serial0:115200n8";
+	};
+	aliases {
+		ethernet0 = &gem0;
+		serial0 = &uart0;
+		serial1 = &uart1;
+		//spi0 = &qspi;
+		mmc0 = &sdhci0;
+		mmc1 = &sdhci1;
+	};
+	memory@0 {
+		device_type = "memory";
+		reg = <0x0 0x40000000>;
+	};
+
+	// copy from pcw.dtsi for clock settings
+	cpus {
+		cpu@0 {
+			operating-points = <666666 1000000 333333 1000000>;
+		};
+	};
+
+	// custom reserved memory for fixed buffers used by display and cmos sensor
+	reserved-memory {
+		#address-cells = <1>;
+		#size-cells = <1>;
+		ranges;
+
+		fb0mem: buffer@3F000000 {
+			no-map;
+			reg = <0x3F000000 0x800000>;
+		};
+
+		fb1mem: buffer@3F800000 {
+			no-map;
+			reg = <0x3F800000 0x800000>;
+		};
+
+		cmos0mem0: buffer@3B000000 {
+			no-map;
+			reg = <0x3B000000 0x800000>;
+		};
+
+		cmos0mem1: buffer@3B800000 {
+			no-map;
+			reg = <0x3B800000 0x800000>;
+		};
+
+		cmos0mem2: buffer@3C000000 {
+			no-map;
+			reg = <0x3C000000 0x800000>;
+		};
+
+		cmos0mem3: buffer@3C800000 {
+			no-map;
+			reg = <0x3C800000 0x800000>;
+		};
+
+		cmos1mem0: buffer@3D000000 {
+			no-map;
+			reg = <0x3D000000 0x800000>;
+		};
+
+		cmos1mem1: buffer@3D800000 {
+			no-map;
+			reg = <0x3D800000 0x800000>;
+		};
+
+		cmos1mem2: buffer@3E000000 {
+			no-map;
+			reg = <0x3E000000 0x800000>;
+		};
+
+		cmos1mem3: buffer@3E800000 {
+			no-map;
+			reg = <0x3E800000 0x800000>;
+		};
+	};
+
+	// for fscore registers
+	uio_fscore@43C00000 {
+		compatible = "generic-uio";
+		reg = < 0x43C00000 0x1000 >;
+		interrupts = < 0 29 0x4 >;
+		interrupt-parent = <&intc>;
+	};
+
+	usb_phy0: phy0 {
+		compatible = "usb-nop-xceiv";
+		#phy-cells = <0>;
+		reset-gpios = <&gpio0 8 GPIO_ACTIVE_LOW>;
+	};
+
+	gpio-poweroff {
+		compatible = "gpio-poweroff";
+		gpios = <&gpio0 67 GPIO_ACTIVE_LOW>;
+	};
+
+	leds {
+		compatible = "gpio-leds";
+
+		led0 {
+			label = "power";
+			gpios = <&gpio0 69 GPIO_ACTIVE_HIGH>;
+			linux,default-trigger = "default-on";
+			function = LED_FUNCTION_POWER;
+		};
+	};
+
+	gpio-keys {
+		compatible = "gpio-keys";
+		#address-cells = <1>;
+		#size-cells = <0>;
+		autorepeat;
+		power-button {
+			label = "key_power";
+			gpios = <&gpio0 66 GPIO_ACTIVE_LOW>;
+			linux,code = <KEY_POWER>;
+			gpio-key,wakeup;
+		};
+		sw0 {
+			label = "key_esc";
+			gpios = <&gpio0 54 GPIO_ACTIVE_LOW>;
+			linux,code = <KEY_ESC>;
+			gpio-key,wakeup;
+			autorepeat;
+		};
+		sw1 {
+			label = "key_right";
+			gpios = <&gpio0 55 GPIO_ACTIVE_LOW>;
+			linux,code = <KEY_RIGHT>;
+			gpio-key,wakeup;
+			autorepeat;
+		};
+		sw2 {
+			label = "key_up";
+			gpios = <&gpio0 56 GPIO_ACTIVE_LOW>;
+			linux,code = <KEY_UP>;
+			gpio-key,wakeup;
+			autorepeat;
+		};
+		sw3 {
+			label = "key_compose";
+			gpios = <&gpio0 57 GPIO_ACTIVE_LOW>;
+			linux,code = <KEY_COMPOSE>;
+			gpio-key,wakeup;
+			autorepeat;
+		};
+		sw4 {
+			label = "key_down";
+			gpios = <&gpio0 58 GPIO_ACTIVE_LOW>;
+			linux,code = <KEY_DOWN>;
+			gpio-key,wakeup;
+			autorepeat;
+		};
+		sw5 {
+			label = "key_left";
+			gpios = <&gpio0 59 GPIO_ACTIVE_LOW>;
+			linux,code = <KEY_LEFT>;
+			gpio-key,wakeup;
+			autorepeat;
+		};
+		sw6 {
+			label = "key_space";
+			gpios = <&gpio0 60 GPIO_ACTIVE_LOW>;
+			linux,code = <KEY_SPACE>;
+			gpio-key,wakeup;
+			autorepeat;
+		};
+		sw7 {
+			label = "key_enter";
+			gpios = <&gpio0 61 GPIO_ACTIVE_LOW>;
+			linux,code = <KEY_ENTER>; /* auto */
+			gpio-key,wakeup;
+			autorepeat;
+		};
+		sw8 {
+			label = "key_backspace";
+			gpios = <&gpio0 62 GPIO_ACTIVE_LOW>;
+			linux,code = <KEY_BACKSPACE>; /* reset */
+			gpio-key,wakeup;
+			autorepeat;
+		};
+		sw9 {
+			label = "key_h";
+			gpios = <&gpio0 63 GPIO_ACTIVE_LOW>;
+			linux,code = <KEY_H>; /* heat */
+			gpio-key,wakeup;
+			autorepeat;
+		};
+		sw10 {
+			label = "key_a";
+			gpios = <&gpio0 64 GPIO_ACTIVE_LOW>;
+			linux,code = <KEY_A>; /* arc */
+			gpio-key,wakeup;
+			autorepeat;
+		};
+		sw11 {
+			label = "key_tab";
+			gpios = <&gpio0 65 GPIO_ACTIVE_LOW>;
+			linux,code = <KEY_TAB>;	/* XY */
+			gpio-key,wakeup;
+			autorepeat;
+		};
+	};
+
+	onewire {
+		compatible = "w1-gpio";
+		gpios = <&gpio0 70 GPIO_ACTIVE_HIGH>;
+	};
+};
+
+
+// copy from zynq-7000.dtsi generated by xsdk generated
+// for patching zynq-7000.dtsi in kernel
+&amba {
+	ocmc: ocmc@f800c000 {
+		compatible = "xlnx,zynq-ocmc-1.0";
+		interrupt-parent = <&intc>;
+		interrupts = <0 3 4>;
+		reg = <0xf800c000 0x1000>;
+	};
+
+	qspi: spi@e000d000 {
+		clock-names = "ref_clk", "pclk";
+		clocks = <&clkc 10>, <&clkc 43>;
+		compatible = "xlnx,zynq-qspi-1.0";
+		status = "disabled";
+		interrupt-parent = <&intc>;
+		interrupts = <0 19 4>;
+		reg = <0xe000d000 0x1000>;
+		#address-cells = <1>;
+		#size-cells = <0>;
+	};
+
+	smcc: memory-controller@e000e000 {
+		#address-cells = <1>;
+		#size-cells = <1>;
+		status = "disabled";
+		clock-names = "memclk", "apb_pclk";
+		clocks = <&clkc 11>, <&clkc 44>;
+		compatible = "arm,pl353-smc-r2p1", "arm,primecell";
+		interrupt-parent = <&intc>;
+		interrupts = <0 18 4>;
+		ranges ;
+		reg = <0xe000e000 0x1000>;
+		nand0: flash@e1000000 {
+			status = "disabled";
+			compatible = "arm,pl353-nand-r2p1";
+			reg = <0xe1000000 0x1000000>;
+			#address-cells = <0x1>;
+			#size-cells = <0x1>;
+		};
+		nor0: flash@e2000000 {
+			status = "disabled";
+			compatible = "cfi-flash";
+			reg = <0xe2000000 0x2000000>;
+			#address-cells = <1>;
+			#size-cells = <1>;
+		};
+	};
+
+	efuse: efuse@f800d000 {
+		compatible = "xlnx,zynq-efuse";
+		reg = <0xf800d000 0x20>;
+	};
+};
+
+&devcfg {
+	clocks = <&clkc 12>, <&clkc 15>, <&clkc 16>, <&clkc 17>, <&clkc 18>;
+	clock-names = "ref_clk", "fclk0", "fclk1", "fclk2", "fclk3";
+};
+
+// copy from pcw.dtsi
+// integrated the local-mac-address from system.dts
+&gem0 {
+	local-mac-address = [00 0a 35 00 00 00];
+	phy-mode = "rgmii-id";
+	status = "okay";
+
+	phy-handle = <&ethernet_phy>;
+	ethernet_phy: ethernet-phy@1 {
+		reg = <1>;
+		device_type = "ethernet-phy";
+		reset-gpios = <&gpio0 7 GPIO_ACTIVE_LOW>;
+		//reset-assert-us
+		//reset-deassert-us
+	};
+};
+&gpio0 {
+	emio-gpio-width = <64>;
+	gpio-mask-high = <0x0>;
+	gpio-mask-low = <0x5600>;
+};
+&intc {
+	num_cpus = <2>;
+	num_interrupts = <96>;
+};
+&qspi {
+	is-dual = <0>;
+	num-cs = <1>;
+	spi-rx-bus-width = <4>;
+	spi-tx-bus-width = <4>;
+	status = "okay";
+	flash@0 {
+		compatible = "w25q256";
+		reg = <0x0>;
+		spi-tx-bus-width = <1>;
+		spi-rx-bus-width = <4>;
+		spi-max-frequency = <50000000>;
+		#address-cells = <1>;
+		#size-cells = <1>;
+		partition@qspi-fsbl-uboot {
+			label = "qspi-fsbl-uboot";
+			reg = <0x0 0x100000>;
+		};
+	};
+};
+&sdhci0 {
+	status = "okay";
+	xlnx,has-cd = <0x1>;
+	xlnx,has-power = <0x0>;
+	xlnx,has-wp = <0x0>;
+};
+&sdhci1 {
+	status = "okay";
+	xlnx,has-cd = <0x0>;
+	xlnx,has-power = <0x0>;
+	xlnx,has-wp = <0x0>;
+};
+&uart0 {
+	cts-override ;
+	device_type = "serial";
+	port-number = <0>;
+	status = "okay";
+};
+&uart1 {
+	cts-override ;
+	device_type = "serial";
+	port-number = <1>;
+	status = "disabled";
+};
+&usb0 {
+	status = "okay";
+	dr_mode = "host";
+	usb-phy = <&usb_phy0>;
+
+	pinctrl-names = "default";
+	pinctrl-0 = <&pinctrl_usb0_default>;
+};
+
+&pinctrl0 {
+	pinctrl_usb0_default: usb0-default {
+		mux {
+			groups = "usb0_0_grp";
+			function = "usb0";
+		};
+
+		conf {
+			groups = "usb0_0_grp";
+			slew-rate = <0>;
+			io-standard = <1>;
+		};
+
+		conf-rx {
+			pins = "MIO29", "MIO31", "MIO36";
+			bias-high-impedance;
+		};
+
+		conf-tx {
+			pins = "MIO28", "MIO30", "MIO32", "MIO33", "MIO34",
+			       "MIO35", "MIO37", "MIO38", "MIO39";
+			bias-disable;
+		};
+	};
+};
+
+&clkc {
+	fclk-enable = <0xf>;
+	ps-clk-frequency = <33333333>;
+};
+
+&i2c0 {
+	status = "okay";
+
+	rtc@68 {
+		compatible = "ti,bq32000";
+		reg = <0x68>;
+		interrupt-parent = <&gpio0>;
+		interrupts = <68 IRQ_TYPE_EDGE_FALLING>;
+	};
+};
+
+&i2c1 {
+	status = "okay";
+
+	hp203n@77 {
+		compatible = "hp206c";
+		reg = <0x77>;
+	};
+};
+
+&adc {
+	xlnx,channels {
+		#address-cells = <1>;
+		#size-cells = <0>;
+		channel@0 {
+			reg = <0>;
+		};
+		channel@1 {
+			reg = <1>;
+		};
+		channel@2 {
+			reg = <2>;
+		};
+	};
+};
+
+// custom framebuffers
+&amba {
+	framebuffer0 {
+		compatible = "simple-framebuffer";
+		//reg = <0x3FF00000 (320 * 240 * 4)>;
+		memory-region = <&fb0mem>;
+		width = <800>;
+		height = <480>;
+		stride = <(800 * 4)>;
+		format = "x8r8g8b8";
+		clocks = <&clkc 15>, <&clkc 16>, <&clkc 17>, <&clkc 18>;
+		// lcd-supply = <&reg_dc1sw>;
+	};
+	framebuffer1 {
+		compatible = "simple-framebuffer";
+		memory-region = <&fb1mem>;
+		width = <800>;
+		height = <480>;
+		stride = <(800 * 4)>;
+		format = "a8r8g8b8";
+		clocks = <&clkc 15>, <&clkc 16>, <&clkc 17>, <&clkc 18>;
+		// lcd-supply = <&reg_dc1sw>;
+	};
+	framebuffer2 {
+		compatible = "simple-framebuffer";
+		memory-region = <&cmos0mem0>;
+		width = <160>;
+		height = <400>;
+		stride = <640>;
+		format = "a8r8g8b8";
+		clocks = <&clkc 15>, <&clkc 16>, <&clkc 17>, <&clkc 18>;
+		// lcd-supply = <&reg_dc1sw>;
+	};
+	framebuffer3 {
+		compatible = "simple-framebuffer";
+		memory-region = <&cmos1mem0>;
+		width = <160>;
+		height = <400>;
+		stride = <640>;
+		format = "a8r8g8b8";
+		clocks = <&clkc 15>, <&clkc 16>, <&clkc 17>, <&clkc 18>;
+		// lcd-supply = <&reg_dc1sw>;
+	};
+};
+
