@@ -119,7 +119,7 @@
 
 	gpio-poweroff {
 		compatible = "gpio-poweroff";
-		gpios = <&gpio0 67 GPIO_ACTIVE_LOW>;
+		gpios = <&gpio0 67 GPIO_ACTIVE_HIGH>;
 	};
 
 	leds {
