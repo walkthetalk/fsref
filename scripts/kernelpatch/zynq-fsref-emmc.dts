@@ -364,7 +364,7 @@
 	cts-override ;
 	device_type = "serial";
 	port-number = <1>;
-	status = "disabled";
+	status = "okay";
 };
 &usb0 {
 	status = "okay";
